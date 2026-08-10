@@ -11,7 +11,7 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg brotli zstd xz-utils python3-numpy python3-opencv git
+          sudo apt-get install -y -qq ffmpeg brotli zstd xz-utils python3-numpy python3-opencv python3-pil git
       - name: Verify full Beast natural-video path
         run: |
           set -euxo pipefail
