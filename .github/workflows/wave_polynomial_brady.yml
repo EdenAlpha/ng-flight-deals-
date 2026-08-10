@@ -40,7 +40,6 @@ jobs:
           @njit(cache=True)
           def encode(X,eps,alpha,slopes):
             m,n=X.shape;K=len(slopes);step=alpha*eps;Q=np.empty((m,n),np.int32);H=np.zeros((m,n),np.int32)
-            # K boundary channels: choose persistent legal states in time
             for i in range(K):
               last=0
               for t in range(n):
@@ -50,11 +49,10 @@ jobs:
                 Q[i,t]=q;last=q
             for i in range(K,m):
               for t in range(n):
-                p=0
                 if K==1:
                   u=t-slopes[0];u=0 if u<0 else n-1 if u>=n else u;p=Q[i-1,u]
                 elif K==2:
-                  u1=t-slopes[0];u2=t-slopes[1];u12=t-slopes[0]-slopes[1]
+                  a,b=slopes[0],slopes[1];u1=t-a;u2=t-b;u12=t-a-b
                   u1=0 if u1<0 else n-1 if u1>=n else u1;u2=0 if u2<0 else n-1 if u2>=n else u2;u12=0 if u12<0 else n-1 if u12>=n else u12
                   p=Q[i-1,u1]+Q[i-1,u2]-Q[i-2,u12]
                 else:
@@ -62,12 +60,12 @@ jobs:
                   u1=t-a;u2=t-b;u3=t-c;u12=t-a-b;u13=t-a-c;u23=t-b-c;u123=t-a-b-c
                   u1=0 if u1<0 else n-1 if u1>=n else u1;u2=0 if u2<0 else n-1 if u2>=n else u2;u3=0 if u3<0 else n-1 if u3>=n else u3;u12=0 if u12<0 else n-1 if u12>=n else u12;u13=0 if u13<0 else n-1 if u13>=n else u13;u23=0 if u23<0 else n-1 if u23>=n else u23;u123=0 if u123<0 else n-1 if u123>=n else u123
                   p=Q[i-1,u1]+Q[i-1,u2]+Q[i-1,u3]-Q[i-2,u12]-Q[i-2,u13]-Q[i-2,u23]+Q[i-3,u123]
-                lo=math.ceil((X[i,t]-eps)/step-1e-7);hi=math.floor((X[i,t]+eps)/step+1e-7);q=p
+                lo=math.ceil((X[i,t]-eps)/step-1e-7);hi=math.floor((X[i,t]+eps)/step-1e-7);q=p
                 if q<lo:q=lo
                 elif q>hi:q=hi
                 Q[i,t]=q;H[i,t]=q-p
             return Q,H
-          def bytes_for(Q,H,K,slopes):
+          def bytes_for(Q,H,K):
             bd=0
             for i in range(K):bd+=z(si(np.diff(Q[i],prepend=Q[i,0])))+z(np.asarray([Q[i,0]],np.int32))
             Z=H[K:];m=Z!=0;opts=[z(si(Z)),z(si(Z.T)),z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(Z[m])) if m.any() else 0)];hb=min(opts);return bd+hb+16+K,bd,hb,float(m.mean())
@@ -78,16 +76,15 @@ jobs:
             topS=[s for _,s in sorted(sing)[:8]]
             pairs=[]
             for a,b in itertools.combinations_with_replacement(topS,2):
-              H=Q0[2:]-shift(Q0[1:],a)-shift(Q0[1:],b)+shift(Q0[:-2],a+b);pairs.append((score(H),a,b))
+              H=Q0[2:]-shift(Q0[1:-1],a)-shift(Q0[1:-1],b)+shift(Q0[:-2],a+b);pairs.append((score(H),a,b))
             topP=sorted(pairs)[:8]
-            triples=[]
-            seed=topS[:5]
+            triples=[];seed=topS[:5]
             for a,b,c in itertools.combinations_with_replacement(seed,3):
-              H=Q0[3:]-shift(Q0[2:],a)-shift(Q0[2:],b)-shift(Q0[2:],c)+shift(Q0[1:],a+b)+shift(Q0[1:],a+c)+shift(Q0[1:],b+c)-shift(Q0[:-3],a+b+c);triples.append((score(H),a,b,c))
+              H=Q0[3:]-shift(Q0[2:-1],a)-shift(Q0[2:-1],b)-shift(Q0[2:-1],c)+shift(Q0[1:-2],a+b)+shift(Q0[1:-2],a+c)+shift(Q0[1:-2],b+c)-shift(Q0[:-3],a+b+c);triples.append((score(H),a,b,c))
             topT=sorted(triples)[:8]
             candidates=[(s,) for s in topS[:4]]+[(a,b) for _,a,b in topP[:5]]+[(a,b,c) for _,a,b,c in topT[:5]]
             for sl in candidates:
-              Q,H=encode(X,eps,alpha,sl);tot,bd,hb,nz=bytes_for(Q,H,len(sl),sl);me=float(np.max(np.abs(X-Q.astype(np.float32)*step)));row={'alpha':alpha,'K':len(sl),'slopes':list(sl),'bytes':tot,'ratio':raw/tot,'boundary':bd,'syndrome':hb,'nonzero':nz,'maxerr':me};rows.append(row);print('WP',json.dumps(row),flush=True)
+              Q,H=encode(X,eps,alpha,sl);tot,bd,hb,nz=bytes_for(Q,H,len(sl));me=float(np.max(np.abs(X-Q.astype(np.float32)*step)));row={'alpha':alpha,'K':len(sl),'slopes':list(sl),'bytes':tot,'ratio':raw/tot,'boundary':bd,'syndrome':hb,'nonzero':nz,'maxerr':me};rows.append(row);print('WP',json.dumps(row),flush=True)
           cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,np.float32,X.shape);sz3={'bytes':int(bb.size),'ratio':raw/int(bb.size),'maxerr':float(np.max(np.abs(X-R)))}
           rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':list(X.shape),'eps':eps,'std':std,'top':rows[:30],'sz3':sz3};print('BEST',json.dumps(rows[:15],indent=2),flush=True);print('SZ3',sz3,flush=True);open('wavepoly.json','w').write(json.dumps(out,indent=2))
           PY
