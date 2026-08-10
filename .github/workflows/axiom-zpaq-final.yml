@@ -2,6 +2,8 @@ name: AXIOM exact non-AI best benchmark
 on:
   push:
     branches: [axiom-v02-beast]
+  pull_request:
+    branches: [main]
 jobs:
   bench:
     if: github.actor != 'github-actions[bot]'
@@ -46,7 +48,13 @@ jobs:
           PY
           cat benchmark_results/android_best_nonai.txt
           cat /tmp/zpaq.log
-      - name: Commit benchmark result
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-exact-nonai-best
+          path: benchmark_results/android_best_nonai.txt
+          retention-days: 7
+      - name: Commit benchmark result on push runs
+        if: github.event_name == 'push'
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
