@@ -1,0 +1,37 @@
+name: AXIOM Bunny ancestry MDL sweep
+on:
+  pull_request:
+    branches: [axiom-bunny-v13-base]
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build corpus and residual coder
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg g++ curl
+          curl -L --retry 3 -sS https://media.w3.org/2010/05/bunny/trailer.mp4 -o bunny.mp4
+          ffmpeg -loglevel error -y -ss 0 -t 4 -i bunny.mp4 -vf scale=320:180 -r 24 -frames:v 96 -f rawvideo -pix_fmt yuv420p bunny.yuv
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/EdenAlpha/ng-flight-deals-/axiom-v02-beast/bench/axiom_video_residual_v13.cpp -o residual.cpp
+          g++ -O3 -std=c++17 residual.cpp -o residual
+      - name: Sweep AV1 ancestry rate-residual curve
+        run: |
+          set -euxo pipefail
+          : > mdl.txt
+          for q in 3 5 7 9 11 13 15 18; do
+            ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i bunny.yuv -frames:v 96 -c:v libaom-av1 -crf $q -b:v 0 -cpu-used 2 -row-mt 1 -f ivf b$q.ivf
+            ffmpeg -loglevel error -y -i b$q.ivf -frames:v 96 -f rawvideo -pix_fmt yuv420p b$q.yuv
+            ./residual e bunny.yuv b$q.yuv r$q.axr 320 180 96
+            ./residual d r$q.axr b$q.yuv recon$q.yuv 320 180 96
+            cmp bunny.yuv recon$q.yuv
+            bs=$(stat -c%s b$q.ivf); rs=$(stat -c%s r$q.axr); echo "AV1_CRF$q basis=$bs residual=$rs total=$((bs+rs+48))" | tee -a mdl.txt
+          done
+          sha256sum bunny.yuv >> mdl.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-bunny-mdl-sweep
+          path: mdl.txt
+          retention-days: 7
