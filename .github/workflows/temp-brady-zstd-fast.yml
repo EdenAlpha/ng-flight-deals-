@@ -1,0 +1,63 @@
+name: Temporary Brady Zstd fast check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  zstd-fast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy zfpy pysz zstandard
+      - name: Download land DAS record
+        run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140048.sgy'
+      - name: Fast fixed-M matched benchmark
+        shell: bash
+        run: |
+          cat > quick.py <<'PY'
+          import os,json,numpy as np,zfpy,zstandard as zstd
+          from pysz import sz,szConfig,szErrorBoundMode
+          BPS={1:4,2:4,3:2,5:4,8:1}
+          fn='land.sgy'; size=os.path.getsize(fn); h=open(fn,'rb').read(3600); cand=[]
+          for bo,npbo in [('big','>'),('little','<')]:
+              dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo)
+              if fmt in BPS and ns>0 and dt>0:
+                  stride=240+ns*BPS[fmt]
+                  if (size-3600)%stride==0:cand.append((bo,npbo,dt,ns,fmt,(size-3600)//stride,stride))
+          if len(cand)!=1:raise RuntimeError(cand)
+          bo,npbo,dt,ns,fmt,ntr,stride=cand[0];mm=np.memmap(fn,np.uint8,'r')
+          if fmt==1:
+              raw=np.empty((ntr,ns),dtype='>u4')
+              for i in range(ntr):
+                  off=3600+i*stride+240;raw[i]=np.frombuffer(mm[off:off+ns*4],dtype='>u4',count=ns)
+              u=raw.astype(np.uint32);sg=np.where((u>>31)!=0,-1.,1.);ex=((u>>24)&127).astype(np.int32)-64;fr=(u&0xffffff).astype(np.float64)/16777216.;X=(sg*fr*np.power(16.,ex)).astype(np.float32);X[u==0]=0
+          elif fmt==5:X=np.ndarray((ntr,ns),dtype=np.dtype(npbo+'f4'),buffer=mm,offset=3840,strides=(stride,4)).astype(np.float32,copy=True)
+          else:
+              typ={2:'i4',3:'i2',8:'i1'}[fmt];b=BPS[fmt];X=np.empty((ntr,ns),np.float32)
+              for i in range(ntr):
+                  off=3600+i*stride+240;X[i]=np.frombuffer(mm[off:off+ns*b],dtype=np.dtype(npbo+typ),count=ns).astype(np.float32)
+          C=zstd.ZstdCompressor(level=19); zc=lambda b:C.compress(b);std=float(X.std());rawb=X.nbytes;M=52;tests=[]
+          for rel in [0.025,0.05,0.10]:
+              eps=rel*std;idx=np.arange(0,ns,M,dtype=np.int32);idx=np.r_[idx,ns-1] if idx[-1]!=ns-1 else idx;Ai=np.rint(X[:,idx]/eps).astype(np.int32)
+              if Ai.min()<-32768 or Ai.max()>32767:raise RuntimeError(('anchor range',Ai.min(),Ai.max()))
+              A=Ai.astype(np.int16);Ad=A.astype(np.float32)*np.float32(eps);P=np.empty_like(X)
+              for j in range(len(idx)-1):
+                  a,b=int(idx[j]),int(idx[j+1]);L=b-a;u=np.arange(L,dtype=np.float32)/np.float32(L);P[:,a:b]=Ad[:,j,None]*(1-u)[None,:]+Ad[:,j+1,None]*u[None,:]
+              P[:,-1]=Ad[:,-1];S=np.rint((X-P)/(2*eps)).astype(np.int16);K=np.empty_like(S);K[:,0]=S[:,0];K[:,1:]=S[:,1:]-S[:,:-1];R=P+S.astype(np.float32)*np.float32(2*eps);pe=float(np.max(np.abs(X-R)))
+              D=A.astype(np.int32);D[:,1:]-=A[:,:-1].astype(np.int32);zz=((D<<1)^(D>>31)).astype(np.uint16);ab=sum(len(zc(np.packbits(((zz>>bit)&1).astype(np.uint8).reshape(-1)).tobytes())) for bit in range(16));mask=K!=0;mb=len(zc(np.packbits(mask.T.reshape(-1)).tobytes()));v=K[mask];vb=len(zc((v.astype(np.int8) if v.size and v.min()>=-128 and v.max()<=127 else v.astype(np.int16)).tobytes()));pb=ab+mb+vb
+              zb=zfpy.compress_numpy(X,tolerance=eps);Z=zfpy.decompress_numpy(zb);cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;sb,_=sz.compress(X,cfg);Q,_=sz.decompress(sb,np.float32,X.shape)
+              tests.append({'rel_std':rel,'epsilon':eps,'pulse_zstd_ratio_M52':rawb/pb,'pulse_bytes':pb,'pulse_maxerr':pe,'event_fraction':float(v.size/X.size),'anchor_bytes':ab,'topology_bytes':mb,'value_bytes':vb,'zfp_ratio':rawb/len(zb),'zfp_maxerr':float(np.max(np.abs(X-Z))),'sz3_ratio':rawb/int(sb.size),'sz3_maxerr':float(np.max(np.abs(X-Q))),'pulse_vs_sz3':(rawb/pb)/(rawb/int(sb.size))})
+          out={'file_bytes':size,'ntr':ntr,'ns':ns,'dt_us':dt,'fmt':fmt,'std':std,'rms':float(np.sqrt(np.mean(X.astype(np.float64)**2))),'peak':float(np.max(np.abs(X))),'tests':tests};open('brady_zstd_fast.json','w').write(json.dumps(out,indent=2));print(json.dumps(out,indent=2))
+          PY
+          python quick.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brady-zstd-fast-results
+          path: brady_zstd_fast.json
+          retention-days: 1
