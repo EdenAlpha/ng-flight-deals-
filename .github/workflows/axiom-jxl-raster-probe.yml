@@ -1,0 +1,47 @@
+name: AXIOM JXL raster probe
+on:
+  push:
+    branches: [axiom-v02-beast]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: axiom-v02-beast}
+      - name: Install codecs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libjxl-tools webp git python3-pil
+      - name: Get exact corpus
+        run: |
+          git clone -q https://github.com/android/architecture-samples.git src
+          cd src && git checkout -q ee66e1526b84c026615df032c705842b7d2a521f && cd ..
+      - name: Probe lossless semantic bases
+        run: |
+          set -e
+          : > jxl_probe.txt
+          find src/app -name '*.png' -type f | sort | while read f; do
+            rel=${f#src/}
+            # JXL distance=0 is lossless. Use maximum practical effort.
+            cjxl "$f" /tmp/a.jxl -d 0 -e 9 --brotli_effort=11 >/dev/null 2>&1
+            djxl /tmp/a.jxl /tmp/a.png >/dev/null 2>&1
+            # cwebp strongest lossless exact-alpha mode
+            cwebp -quiet -lossless -z 9 -exact "$f" -o /tmp/a.webp
+            python3 - "$f" /tmp/a.png <<'PY'
+from PIL import Image
+import sys
+A=Image.open(sys.argv[1]).convert('RGBA').tobytes();B=Image.open(sys.argv[2]).convert('RGBA').tobytes()
+assert A==B
+PY
+            printf '%s original=%s jxl=%s webp=%s\n' "$rel" "$(stat -c%s "$f")" "$(stat -c%s /tmp/a.jxl)" "$(stat -c%s /tmp/a.webp)" | tee -a jxl_probe.txt
+          done
+      - name: Persist
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add jxl_probe.txt
+          git commit -m 'Record JXL raster probe [skip ci]' || exit 0
+          git push
