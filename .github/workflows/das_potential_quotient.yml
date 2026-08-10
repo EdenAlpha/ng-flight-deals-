@@ -1,0 +1,47 @@
+name: DAS potential quotient benchmark
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  potential:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Integrate spatial strain and compress potential
+        shell: bash
+        run: |
+          cat > q.py <<'PY'
+          import os,json,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=np.square(T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;lo=4096;nch=256;X=A[lo:lo+nch].astype(np.float32,copy=True);raw=X.nbytes
+          def szc(Q,e):
+            cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(e);b,_=sz.compress(np.ascontiguousarray(Q.astype(np.float32)),cfg);R,_=sz.decompress(b,np.float32,Q.shape);return int(b.size),R
+          b0,R0=szc(X,eps);rows=[]
+          for g in [1,2,4,8,10,16,32]:
+            # U[i+g]-U[i] = X[i], one independent integration chain per residue class.
+            U=np.zeros((nch+g,ns),np.float32)
+            for i in range(nch):U[i+g]=U[i]+X[i]
+            ub,Ur=szc(U,eps/2.0001);Y=Ur[g:g+nch]-Ur[:nch];me=float(np.max(np.abs(X-Y)));rows.append({'order':1,'g':g,'potential_shape':list(U.shape),'bytes':ub,'ratio':raw/ub,'maxerr':me,'potential_rms':float(np.sqrt(np.mean(U.astype(np.float64)**2)))});print('POT',json.dumps(rows[-1]),flush=True)
+            # second anti-derivative: X = U2[i+2g]-2U2[i+g]+U2[i].
+            U2=np.zeros((nch+2*g,ns),np.float32)
+            # integrate U once again along same g chains
+            for i in range(nch+g):U2[i+g]=U2[i]+U[i]
+            vb,Vr=szc(U2,eps/4.0001);Y2=Vr[2*g:2*g+nch]-2*Vr[g:g+nch]+Vr[:nch];me2=float(np.max(np.abs(X-Y2)));rows.append({'order':2,'g':g,'potential_shape':list(U2.shape),'bytes':vb,'ratio':raw/vb,'maxerr':me2,'potential_rms':float(np.sqrt(np.mean(U2.astype(np.float64)**2)))});print('POT',json.dumps(rows[-1]),flush=True)
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':[nch,ns],'offset':lo,'global_std':std,'eps':eps,'sz3_original':{'bytes':b0,'ratio':raw/b0,'maxerr':float(np.max(np.abs(X-R0)))},'rows':rows};print('BEST',json.dumps(rows[:10],indent=2),flush=True);print('SZ3',out['sz3_original'],flush=True);open('potential.json','w').write(json.dumps(out,indent=2))
+          PY
+          python q.py
+      - uses: actions/upload-artifact@v4
+        with: {name: das-potential, path: potential.json, retention-days: 2}
