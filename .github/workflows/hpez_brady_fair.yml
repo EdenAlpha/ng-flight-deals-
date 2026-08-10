@@ -16,7 +16,6 @@ jobs:
           cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install
           cmake --build hpez-src/build -j2
           cmake --install hpez-src/build
-          $PWD/hpez-install/bin/hpez -h | head -100 || true
       - name: Download Brady and extract identical active block
         run: |
           pip install --quiet numpy pysz
@@ -38,8 +37,8 @@ jobs:
         run: |
           EPS=$(python -c "import json;print(json.load(open('meta.json'))['eps'])")
           BIN=$PWD/hpez-install/bin/hpez
-          $BIN -f -i block.bin -z block.hpez -2 20000 256 -M ABS "$EPS" -q 4
-          $BIN -f -z block.hpez -o block.hpez.out -2 20000 256
+          $BIN -f -i block.bin -z block.hpez -3 20000 256 1 -M ABS "$EPS" -q 4
+          $BIN -f -z block.hpez -o block.hpez.out -3 20000 256 1
           python - <<'PY'
           import json,os,numpy as np
           from pysz import sz,szConfig,szErrorBoundMode
