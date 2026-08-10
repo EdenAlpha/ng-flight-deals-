@@ -1,0 +1,51 @@
+name: Temporary Brady hysteretic PULSE
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  hysteresis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy zstandard
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140048.sgy'
+      - name: Compare ordinary and hysteretic certified correction
+        shell: bash
+        run: |
+          cat > h.py <<'PY'
+          import os,json,numpy as np,zstandard as zstd
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);C=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            ns=int.from_bytes(h[3220:3222],bo);dt=int.from_bytes(h[3216:3218],bo);fmt=int.from_bytes(h[3224:3226],bo)
+            if fmt==5 and ns>0:
+              st=240+4*ns
+              if (size-3600)%st==0:C.append((nb,ns,dt,(size-3600)//st,st))
+          nb,ns,dt,ntr,st=C[0];mm=np.memmap(f,np.uint8,'r');X=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True);std=float(X.std());eps=.1*std;M=52
+          idx=np.arange(0,ns,M,dtype=np.int32);idx=np.r_[idx,ns-1] if idx[-1]!=ns-1 else idx;Ai=np.rint(X[:,idx]/eps).astype(np.int16);Ad=Ai.astype(np.float32)*eps;P=np.empty_like(X)
+          for j in range(len(idx)-1):
+            a,b=int(idx[j]),int(idx[j+1]);L=b-a;u=np.arange(L,dtype=np.float32)/L;P[:,a:b]=Ad[:,j,None]*(1-u)[None,:]+Ad[:,j+1,None]*u[None,:]
+          P[:,-1]=Ad[:,-1]
+          # independent nearest correction
+          S0=np.rint((X-P)/(2*eps)).astype(np.int16);K0=np.empty_like(S0);K0[:,0]=S0[:,0];K0[:,1:]=S0[:,1:]-S0[:,:-1]
+          # certified hysteretic correction: retain prior integer whenever still in interval
+          SH=np.empty_like(S0);cur=np.zeros(ntr,dtype=np.int32)
+          for t in range(ns):
+            r=(X[:,t].astype(np.float64)-P[:,t].astype(np.float64));lo=np.ceil((r-eps)/(2*eps)-1e-12).astype(np.int32);hi=np.floor((r+eps)/(2*eps)+1e-12).astype(np.int32);cur=np.minimum(np.maximum(cur,lo),hi);SH[:,t]=cur.astype(np.int16)
+          KH=np.empty_like(SH);KH[:,0]=SH[:,0];KH[:,1:]=SH[:,1:]-SH[:,:-1];RH=P+SH.astype(np.float32)*(2*eps)
+          zc=zstd.ZstdCompressor(level=3).compress
+          def cost(K):
+            m=K!=0;v=K[m];mb=len(zc(np.packbits(m.T.reshape(-1)).tobytes()));vb=len(zc((v.astype(np.int8) if v.size and v.min()>=-128 and v.max()<=127 else v.astype(np.int16)).tobytes()));return {'event_fraction':float(v.size/K.size),'topology_bytes':mb,'value_bytes':vb,'total_residual_bytes':mb+vb}
+          out={'ntr':ntr,'ns':ns,'std':std,'eps':eps,'M':M,'ordinary':cost(K0),'hysteretic':cost(KH),'hysteretic_maxerr':float(np.max(np.abs(X-RH)))};print(json.dumps(out,indent=2));open('hysteresis.json','w').write(json.dumps(out,indent=2))
+          PY
+          python h.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brady-hysteresis-results
+          path: hysteresis.json
+          retention-days: 1
