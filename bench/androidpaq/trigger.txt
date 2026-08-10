@@ -1,0 +1,1 @@
+Rebuild the pinned Android TAR, derive AXIOM semantic coordinates, compress them with PAQ8px -10B, and verify the exact original TAR.
