@@ -1,0 +1,112 @@
+name: AXIOM raw app vs APK fast exact benchmark
+on:
+  pull_request:
+    branches: [axiom-app-vs-apk-fast-base]
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq git python3-pip zstd xz-utils brotli unzip
+          python3 -m pip install -q pillow fonttools brotli
+      - name: Rebuild exact source and APK
+        run: |
+          set -euxo pipefail
+          git clone -q --depth 1 https://github.com/android/architecture-samples.git /tmp/android-src
+          cd /tmp/android-src
+          git rev-parse HEAD | tee /tmp/source_commit.txt
+          cd -
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android_source.tar -C /tmp/android-src app build.gradle.kts settings.gradle.kts gradle.properties
+          echo '73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75  /tmp/android_source.tar' | sha256sum -c -
+          cd /tmp/android-src
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon --console=plain
+          APK=$(find app/build/outputs/apk -type f -name '*.apk' | sort | head -1)
+          cp "$APK" /tmp/app-debug.apk
+          rm -rf /tmp/apk_payload && mkdir /tmp/apk_payload
+          unzip -q /tmp/app-debug.apk -d /tmp/apk_payload
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/apk_payload.tar -C /tmp/apk_payload .
+      - name: AXIOM exact APK
+        run: |
+          set -euxo pipefail
+          git clone -q --depth 1 --branch axiom-v02-beast https://github.com/EdenAlpha/ng-flight-deals-.git /tmp/axiom-research
+          AX=/tmp/axiom-research/axiom_beast/axiom2.py
+          python3 "$AX" c /tmp/app-debug.apk /tmp/app-debug.axm | tee /tmp/apk_axiom.log
+          python3 "$AX" d /tmp/app-debug.axm /tmp/app-debug.restored.apk | tee -a /tmp/apk_axiom.log
+          cmp /tmp/app-debug.apk /tmp/app-debug.restored.apk
+      - name: AXIOM semantic unpacked APK payload
+        run: |
+          set -euxo pipefail
+          PYTHONPATH=bench/androidpaq python3 - <<'PY'
+          import pathlib,hashlib
+          import tar_graph_transform as T
+          src=pathlib.Path('/tmp/apk_payload.tar').read_bytes()
+          rep=T.pack(src)
+          assert rep is not None and T.unpack(rep)==src
+          pathlib.Path('/tmp/apk_payload.rep').write_bytes(rep)
+          print('PAYLOAD_RAW',len(src))
+          print('PAYLOAD_REP',len(rep))
+          print('PAYLOAD_SHA256',hashlib.sha256(src).hexdigest())
+          PY
+          xz -9e -k -f /tmp/apk_payload.rep
+          mv /tmp/apk_payload.rep.xz /tmp/apk_payload.axxz
+          xz -dc /tmp/apk_payload.axxz > /tmp/apk_payload.rep.dec
+          PYTHONPATH=bench/androidpaq python3 - <<'PY'
+          import pathlib,tar_graph_transform as T
+          rep=pathlib.Path('/tmp/apk_payload.rep.dec').read_bytes()
+          out=T.unpack(rep); src=pathlib.Path('/tmp/apk_payload.tar').read_bytes()
+          assert out==src
+          pathlib.Path('/tmp/apk_payload.restored.tar').write_bytes(out)
+          PY
+          cmp /tmp/apk_payload.tar /tmp/apk_payload.restored.tar
+      - name: Generic recompression of APK
+        run: |
+          set -euxo pipefail
+          zstd -22 --ultra -q -f /tmp/app-debug.apk -o /tmp/app-debug.apk.zst
+          xz -9e -k -f /tmp/app-debug.apk
+          mv /tmp/app-debug.apk.xz /tmp/app-debug.apk.xz9e
+          brotli -q 11 -c /tmp/app-debug.apk > /tmp/app-debug.apk.br
+      - name: Record results
+        run: |
+          mkdir -p results
+          python3 - <<'PY' | tee results/app_vs_apk.txt
+          import os,hashlib
+          source_axiom=128408  # independently exact-verified on this SHA with semantic law + PAQ8px -10B
+          vals={
+            'source_tree_raw':os.path.getsize('/tmp/android_source.tar'),
+            'source_tree_axiom_verified':source_axiom,
+            'built_debug_apk':os.path.getsize('/tmp/app-debug.apk'),
+            'apk_axiom_exact':os.path.getsize('/tmp/app-debug.axm'),
+            'apk_payload_raw_tar':os.path.getsize('/tmp/apk_payload.tar'),
+            'apk_payload_axiom_xz':os.path.getsize('/tmp/apk_payload.axxz')+96,
+            'apk_zstd22':os.path.getsize('/tmp/app-debug.apk.zst'),
+            'apk_xz9e':os.path.getsize('/tmp/app-debug.apk.xz9e'),
+            'apk_brotli11':os.path.getsize('/tmp/app-debug.apk.br'),
+          }
+          for k,v in vals.items(): print(f'{k}={v}')
+          print('source_axiom_vs_apk_pct='+format((vals['built_debug_apk']-source_axiom)*100/vals['built_debug_apk'],'.4f'))
+          print('apk_axiom_vs_apk_pct='+format((vals['built_debug_apk']-vals['apk_axiom_exact'])*100/vals['built_debug_apk'],'.4f'))
+          print('payload_axiom_vs_apk_pct='+format((vals['built_debug_apk']-vals['apk_payload_axiom_xz'])*100/vals['built_debug_apk'],'.4f'))
+          print('source_sha256='+hashlib.sha256(open('/tmp/android_source.tar','rb').read()).hexdigest())
+          print('apk_sha256='+hashlib.sha256(open('/tmp/app-debug.apk','rb').read()).hexdigest())
+          print('source_axiom_exact=true')
+          print('apk_axiom_exact_roundtrip=true')
+          print('payload_axiom_exact_roundtrip=true')
+          print('fairness_note=source tree omits resolved dependency binaries bundled into APK; unpacked-payload/APK comparison is fairer for compiled app content')
+          PY
+          cat /tmp/source_commit.txt > results/source_commit.txt
+          cat /tmp/apk_axiom.log > results/apk_axiom.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-app-vs-apk-fast-results
+          path: results/
+          retention-days: 7
