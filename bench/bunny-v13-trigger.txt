@@ -1,2 +1,3 @@
-AXIOM v0.13 isolated Big Buck Bunny verification trigger.
-MDL sweep 2026-08-10.
+AXIOM isolated Big Buck Bunny verification trigger.
+MDL sweep complete.
+Context-lattice v0.15 verification.
