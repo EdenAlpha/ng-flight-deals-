@@ -23,6 +23,7 @@ jobs:
           mkdir -p axiom_v03/data
           unzip -o /tmp/axiom_v03_corrupt.zip -d axiom_v03 || true
           rm -f axiom_v03/tar_transform.py
+          cp axiom_recovery/tar_transform.py axiom_v03/tar_transform.py
           test -s axiom_v03/bench_v03.py
           test -s axiom_v03/tar_graph_transform.py
           python3 -m py_compile axiom_v03/*.py
