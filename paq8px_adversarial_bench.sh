@@ -9,17 +9,18 @@ cd ../..
 python3 -m pip download -q --no-deps pygments==2.19.1 -d paqbench
 WHEEL=$(realpath $(echo paqbench/*.whl))
 # Same CSV corpus used by AXIOM: header + first 250,000 rows.
-curl -L --retry 3 -sS https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv | head -n 250001 > paqbench/data.csv
+curl -L --retry 3 -sS https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv -o paqbench/us-counties-full.csv
+head -n 250001 paqbench/us-counties-full.csv > paqbench/data.csv
+rm paqbench/us-counties-full.csv
 python3 - <<'PY'
-import json,os
-print('wheel',os.path.getsize(next(__import__('pathlib').Path('paqbench').glob('*.whl'))))
+import os,pathlib
+print('wheel',next(pathlib.Path('paqbench').glob('*.whl')).stat().st_size)
 print('csv',os.path.getsize('paqbench/data.csv'))
 PY
 # Explicitly NO L flag: PAQ context-mixing reference without its optional LSTM model.
 # -B asks its native DEFLATE detector to work harder on the wheel.
 "$BIN" -8B "$WHEEL" paqbench/wheel.paq8px216 > paqbench/wheel.log
 "$BIN" -8 paqbench/data.csv paqbench/csv.paq8px216 > paqbench/csv.log
-# Decode to explicit outputs and compare exact bytes.
 mkdir -p paqbench/out
 "$BIN" -d paqbench/wheel.paq8px216 paqbench/out/wheel.whl >/dev/null
 "$BIN" -d paqbench/csv.paq8px216 paqbench/out/data.csv >/dev/null
