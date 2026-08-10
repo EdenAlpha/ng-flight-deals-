@@ -12,6 +12,14 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg brotli zstd xz-utils python3-numpy python3-opencv python3-pil git
+      - name: Restore complete video transform source
+        run: |
+          python3 - <<'PY'
+          import base64,zlib,pathlib
+          src=base64.b64decode(pathlib.Path('axiom_beast/video_context_transform_v11.zlib.b64').read_bytes())
+          pathlib.Path('axiom_beast/video_context_transform.py').write_bytes(zlib.decompress(src))
+          PY
+          python3 -m py_compile axiom_beast/video_context_transform.py axiom_beast/axiom_beast.py
       - name: Verify full Beast natural-video path
         run: |
           set -euxo pipefail
