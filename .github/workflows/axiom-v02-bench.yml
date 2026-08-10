@@ -1,0 +1,33 @@
+name: AXIOM v0.2 beast benchmark
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install benchmark tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq zstd brotli ffmpeg xz-utils p7zip-full git curl unzip
+          python3 -m pip install -q numpy
+      - name: Unpack AXIOM v0.2
+        run: |
+          mkdir -p axiom_v02
+          base64 -d axiom_v02_payload.b64 > /tmp/axiom_v02.zip
+          unzip -q -o /tmp/axiom_v02.zip -d axiom_v02
+      - name: Run cross-format benchmark
+        run: |
+          cd axiom_v02
+          python3 run_v02.py | tee run.log
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: axiom-v02-beast-results
+          path: |
+            axiom_v02/out/results.csv
+            axiom_v02/out/results.txt
+            axiom_v02/run.log
+          retention-days: 7
