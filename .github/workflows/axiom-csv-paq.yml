@@ -1,0 +1,91 @@
+name: AXIOM CSV semantic + PAQ benchmark
+on:
+  pull_request:
+    branches: [axiom-csv-paq-base]
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools and build corpus
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential cmake git curl xz-utils
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv | head -n 250001 > /tmp/data.csv
+          sha256sum /tmp/data.csv | tee /tmp/source.sha256
+          stat -c 'ORIGINAL %s' /tmp/data.csv
+      - name: Build exact AXIOM semantic coordinates
+        run: |
+          set -euxo pipefail
+          PYTHONPATH=bench/csvpaq python3 - <<'PY'
+          import hashlib, pathlib
+          import csv_graph_transform_v8 as C
+          p=pathlib.Path('/tmp/data.csv')
+          d=p.read_bytes()
+          r=C.pack(d)
+          if r is None: raise SystemExit('AXIOM CSV transform rejected corpus')
+          u=C.unpack(r)
+          if u != d: raise SystemExit('AXIOM CSV semantic roundtrip failed')
+          pathlib.Path('/tmp/csv.rep').write_bytes(r)
+          print('CSV_REP',len(r))
+          print('SOURCE_SHA256',hashlib.sha256(d).hexdigest())
+          print('REP_UNPACK_SHA256',hashlib.sha256(u).hexdigest())
+          PY
+      - name: Build PAQ8px v216
+        run: |
+          set -euxo pipefail
+          git clone -q --depth 1 https://github.com/hxim/paq8px.git /tmp/paq8px-src
+          cd /tmp/paq8px-src/build
+          bash build-linux-with-cmake.sh >/dev/null
+          cp paq8px /tmp/paq8px
+          /tmp/paq8px 2>&1 | head -n 3 || true
+      - name: Direct PAQ8px maximum non-LSTM
+        run: |
+          set -euxo pipefail
+          /tmp/paq8px -10B /tmp/data.csv /tmp/raw.paq >/tmp/raw_paq.log
+          mkdir -p /tmp/rawout
+          /tmp/paq8px -d /tmp/raw.paq /tmp/rawout/data.csv >/dev/null
+          cmp /tmp/data.csv /tmp/rawout/data.csv
+      - name: AXIOM coordinates plus PAQ8px maximum non-LSTM
+        run: |
+          set -euxo pipefail
+          /tmp/paq8px -10B /tmp/csv.rep /tmp/rep.paq >/tmp/rep_paq.log
+          mkdir -p /tmp/repout
+          /tmp/paq8px -d /tmp/rep.paq /tmp/repout/csv.rep >/dev/null
+          PYTHONPATH=bench/csvpaq python3 - <<'PY'
+          import pathlib,hashlib
+          import csv_graph_transform_v8 as C
+          rep=pathlib.Path('/tmp/repout/csv.rep').read_bytes()
+          out=C.unpack(rep)
+          src=pathlib.Path('/tmp/data.csv').read_bytes()
+          if out != src: raise SystemExit('AXIOM+PAQ end-to-end mismatch')
+          pathlib.Path('/tmp/axiom_paq_roundtrip.csv').write_bytes(out)
+          print('ROUNDTRIP_SHA256',hashlib.sha256(out).hexdigest())
+          PY
+          cmp /tmp/data.csv /tmp/axiom_paq_roundtrip.csv
+      - name: Record exact comparison
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          python3 - <<'PY' | tee results/csv_paq.txt
+          import os,hashlib
+          src='/tmp/data.csv'; rep='/tmp/csv.rep'; raw='/tmp/raw.paq'; sem='/tmp/rep.paq'
+          s=os.path.getsize(src); r=os.path.getsize(rep); a=os.path.getsize(raw); b=os.path.getsize(sem)
+          print('source_sha256='+hashlib.sha256(open(src,'rb').read()).hexdigest())
+          print('original='+str(s))
+          print('semantic_rep='+str(r))
+          print('direct_paq10B='+str(a))
+          print('axiom_semantic_paq10B_payload='+str(b))
+          print('axiom_container_conservative='+str(b+96))
+          print('axiom_smaller_pct_vs_direct_paq='+format((a-(b+96))*100/a,'.4f'))
+          print('exact_roundtrip=true')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-csv-paq-results
+          path: |
+            results/csv_paq.txt
+            /tmp/source.sha256
+          retention-days: 7
