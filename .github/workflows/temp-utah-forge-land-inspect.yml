@@ -1,53 +1,126 @@
-name: Temporary Utah FORGE land inspect
+name: Temporary land seismic benchmark
 
 on:
-  push:
-    branches: [temp-utah-forge-land-inspect]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  inspect:
+  brady-land-das:
     runs-on: ubuntu-latest
     steps:
-      - name: Download official Utah FORGE processed land seismic
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install matched baselines
+        run: pip install --quiet numpy zfpy pysz zstandard
+      - name: Download genuine land DAS vibroseis SEG-Y
         shell: bash
         run: |
           set -euo pipefail
-          curl -L --fail --retry 5 --retry-delay 3 \
-            -o forge.zip \
-            'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
-          ls -lh forge.zip
-      - name: Inspect SEG-Y members without extracting archive
+          curl -L --fail --retry 5 --retry-delay 2 -o land1.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140048.sgy'
+          curl -L --fail --retry 5 --retry-delay 2 -o land2.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+          ls -lh land*.sgy
+      - name: Benchmark PULSE v0.2 grammar vs ZFP and SZ3 at identical normalized error
         shell: bash
         run: |
-          python - <<'PY'
-          import zipfile, json, os
-          z=zipfile.ZipFile('forge.zip')
-          members=[]
-          for i in z.infolist():
-              name=i.filename
-              if name.lower().endswith(('.sgy','.segy','.seg')):
-                  try:
-                      with z.open(i) as f: p=f.read(3600)
-                      cand=[]
-                      for en,bo in [('big','big'),('little','little')]:
-                          if len(p)>=3226:
-                              dt=int.from_bytes(p[3216:3218],bo)
-                              ns=int.from_bytes(p[3220:3222],bo)
-                              fmt=int.from_bytes(p[3224:3226],bo)
-                              if 0<dt<10000000 and 0<ns<10000000 and fmt in range(1,17):
-                                  cand.append({'endian':en,'dt_us':dt,'ns':ns,'fmt':fmt})
-                      members.append({'name':name,'uncompressed_bytes':i.file_size,'compressed_bytes':i.compress_size,'segy_candidates':cand})
-                  except Exception as e:
-                      members.append({'name':name,'uncompressed_bytes':i.file_size,'error':str(e)})
-          out={'archive_bytes':os.path.getsize('forge.zip'),'segy_count':len(members),'members':members}
-          open('forge_inspect.json','w').write(json.dumps(out,indent=2))
-          print(json.dumps({'archive_bytes':out['archive_bytes'],'segy_count':out['segy_count'],'first_members':members[:30]},indent=2))
+          cat > bench.py <<'PY'
+          import os, json, math, lzma, zlib, time
+          import numpy as np
+          import zfpy, zstandard as zstd
+          from pysz import sz, szConfig, szErrorBoundMode
+
+          BPS={1:4,2:4,3:2,5:4,6:8,7:3,8:1,9:8,10:4,11:2,12:8,15:3,16:1}
+          def ibm_to_float(raw):
+              u=raw.astype(np.uint32); sign=np.where((u>>31)!=0,-1.0,1.0)
+              exp=((u>>24)&0x7f).astype(np.int32)-64
+              frac=(u&0x00ffffff).astype(np.float64)/16777216.0
+              x=(sign*frac*np.power(16.0,exp)).astype(np.float32); x[u==0]=0; return x
+          def load(path):
+              size=os.path.getsize(path); prefix=open(path,'rb').read(3600); cand=[]
+              for bo,npbo in [('big','>'),('little','<')]:
+                  dt=int.from_bytes(prefix[3216:3218],bo); ns=int.from_bytes(prefix[3220:3222],bo); fmt=int.from_bytes(prefix[3224:3226],bo)
+                  if ns>0 and dt>0 and fmt in BPS:
+                      stride=240+ns*BPS[fmt]
+                      if size>=3600 and (size-3600)%stride==0: cand.append((bo,npbo,dt,ns,fmt,(size-3600)//stride,stride))
+              if len(cand)!=1: raise RuntimeError(('layout',cand))
+              bo,npbo,dt,ns,fmt,ntr,stride=cand[0]; mm=np.memmap(path,np.uint8,'r')
+              H=np.empty((ntr,240),np.uint8)
+              for i in range(ntr): H[i]=mm[3600+i*stride:3600+i*stride+240]
+              if fmt in (1,5,2,3,8):
+                  if fmt==1:
+                      raw=np.empty((ntr,ns),dtype='>u4')
+                      for i in range(ntr):
+                          off=3600+i*stride+240; raw[i]=np.frombuffer(mm[off:off+ns*4],dtype='>u4',count=ns)
+                      X=ibm_to_float(raw)
+                  elif fmt==5:
+                      X=np.ndarray((ntr,ns),dtype=np.dtype(npbo+'f4'),buffer=mm,offset=3840,strides=(stride,4)).astype(np.float32,copy=True)
+                  else:
+                      dtp={2:'i4',3:'i2',8:'i1'}[fmt]; b=BPS[fmt]
+                      X=np.empty((ntr,ns),np.float32)
+                      for i in range(ntr):
+                          off=3600+i*stride+240; X[i]=np.frombuffer(mm[off:off+ns*b],dtype=np.dtype(npbo+dtp),count=ns).astype(np.float32)
+              else: raise RuntimeError(('unsupported format',fmt))
+              return prefix,H,X,{'file_bytes':size,'dt_us':dt,'ns':ns,'fmt':fmt,'ntr':ntr,'stride':stride,'endian':bo}
+
+          ZC=zstd.ZstdCompressor(level=19)
+          def zc(b): return ZC.compress(b)
+          def header_cost(prefix,H):
+              prev=np.vstack([np.zeros((1,240),np.int16),H[:-1].astype(np.int16)])
+              D=((H.astype(np.int16)-prev)&255).astype(np.uint8)
+              return len(zc(prefix))+len(zc(np.ascontiguousarray(D.T).tobytes()))
+          def pulse_cost(X,eps,M):
+              ntr,ns=X.shape; idx=np.arange(0,ns,M,dtype=np.int32)
+              if idx[-1]!=ns-1: idx=np.r_[idx,ns-1]
+              Ai=np.rint(X[:,idx]/eps).astype(np.int32)
+              if Ai.min()<-32768 or Ai.max()>32767: return None
+              A=Ai.astype(np.int16); Ad=A.astype(np.float32)*np.float32(eps)
+              P=np.empty((ntr,ns),np.float32)
+              for j in range(len(idx)-1):
+                  a,b=int(idx[j]),int(idx[j+1]); L=b-a; u=np.arange(L,dtype=np.float32)/np.float32(L)
+                  P[:,a:b]=Ad[:,j,None]*(1-u)[None,:]+Ad[:,j+1,None]*u[None,:]
+              P[:,-1]=Ad[:,-1]
+              C=np.rint((X-P)/(2*eps)).astype(np.int16)
+              K=np.empty_like(C); K[:,0]=C[:,0]; K[:,1:]=C[:,1:]-C[:,:-1]
+              R=P+C.astype(np.float32)*np.float32(2*eps); maxerr=float(np.max(np.abs(X-R)))
+              # anchor time deltas -> trace/time bitplanes (nshot=1 land-DAS geometry)
+              D=A.astype(np.int32); D[:,1:]-=A[:,:-1].astype(np.int32)
+              zz=((D<<1)^(D>>31)).astype(np.uint16); anchor=0; N=zz.size
+              for bit in range(16):
+                  p=np.packbits(((zz>>bit)&1).astype(np.uint8).reshape(-1)).tobytes(); anchor+=len(zc(p))
+              mask=K!=0
+              mp=np.packbits(np.ascontiguousarray(mask.T).reshape(-1)).tobytes()
+              mblob=lzma.compress(mp,preset=lzma.PRESET_EXTREME|9)
+              vals=K[K!=0]
+              if vals.size and vals.min()>=-128 and vals.max()<=127: vr=vals.astype(np.int8).tobytes()
+              else: vr=vals.astype(np.int16).tobytes()
+              vblob=lzma.compress(vr,preset=lzma.PRESET_EXTREME|9)
+              return {'M':M,'bytes':anchor+len(mblob)+len(vblob),'anchor_bytes':anchor,'topology_bytes':len(mblob),'value_bytes':len(vblob),'events':int(vals.size),'event_fraction':float(vals.size/X.size),'maxerr':maxerr}
+
+          out=[]
+          for fn in ['land1.sgy','land2.sgy']:
+              prefix,H,X,meta=load(fn); std=float(X.std()); rms=float(np.sqrt(np.mean(X.astype(np.float64)**2))); peak=float(np.max(np.abs(X))); raw=X.nbytes; hc=header_cost(prefix,H)
+              ds={'file':fn,'meta':meta,'std':std,'rms':rms,'peak_abs':peak,'sample_bytes':raw,'header_encoded_bytes':hc,'tests':[]}
+              for rel in [0.025,0.05,0.10]:
+                  eps=rel*std
+                  candidates=[]
+                  for M in [8,12,16,24,32,40,52,64,80,104,128,160,208]:
+                      q=pulse_cost(X,eps,M)
+                      if q is not None and q['maxerr']<=eps*(1+3e-6)+1e-6: candidates.append(q)
+                  best=min(candidates,key=lambda q:q['bytes'])
+                  t=time.time(); zb=zfpy.compress_numpy(X,tolerance=eps); zct=time.time()-t; Z=zfpy.decompress_numpy(zb); zerr=float(np.max(np.abs(X-Z)))
+                  cfg=szConfig(); cfg.errorBoundMode=szErrorBoundMode.ABS; cfg.absErrorBound=eps
+                  t=time.time(); sb,sratio=sz.compress(X,cfg); sct=time.time()-t; S,_=sz.decompress(sb,np.float32,X.shape); serr=float(np.max(np.abs(X-S)))
+                  full_pulse=best['bytes']+hc+512
+                  ds['tests'].append({'rel_std':rel,'epsilon':eps,'pulse':{**best,'sample_ratio':raw/best['bytes'],'full_file_ratio':meta['file_bytes']/full_pulse},'zfp':{'bytes':len(zb),'ratio':raw/len(zb),'maxerr':zerr,'compress_s':zct},'sz3':{'bytes':int(sb.size),'ratio':raw/int(sb.size),'maxerr':serr,'compress_s':sct},'pulse_vs_best_baseline':(raw/best['bytes'])/max(raw/len(zb),raw/int(sb.size))})
+              out.append(ds)
+          open('brady_land_matched.json','w').write(json.dumps(out,indent=2)); print(json.dumps(out,indent=2))
           PY
+          python bench.py
       - uses: actions/upload-artifact@v4
         with:
-          name: utah-forge-land-inspect
-          path: forge_inspect.json
+          name: brady-land-matched-results
+          path: brady_land_matched.json
           retention-days: 1
