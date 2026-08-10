@@ -1,0 +1,26 @@
+name: AXIOM v0.2 beast benchmark
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  beast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq zstd brotli ffmpeg xz-utils git curl
+          python3 -m pip install -q numpy
+      - name: Run beast benchmark
+        run: |
+          python3 beast/beast_bench.py | tee beast/run.log
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: axiom-v02-beast-results
+          path: |
+            beast/out/beast_results.json
+            beast/run.log
+          retention-days: 7
