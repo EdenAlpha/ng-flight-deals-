@@ -1,0 +1,88 @@
+{
+  "version": "AXIOM Beast v0.8",
+  "container_magic": "AXB7",
+  "lossless": true,
+  "ai_in_codec": false,
+  "verified_complete_archives": [
+    {
+      "corpus": "NYTimes county CSV 250k rows",
+      "source": "data.csv",
+      "original": 9875837,
+      "archive": "csv.v8.axb",
+      "archive_bytes": 132510,
+      "ratio_x": 74.529,
+      "mode": "csv-law-coordinate",
+      "opponent": "xz -9e",
+      "opponent_bytes": 439560,
+      "smaller_percent": 69.85,
+      "source_sha256": "fafd1e2c9b6f52c1acd2c919e7d5e052960f04aba400e3c091bb215419123d74"
+    },
+    {
+      "corpus": "GitHub event JSON",
+      "source": "data.json",
+      "original": 26141343,
+      "archive": "json.v8.axb",
+      "archive_bytes": 1331926,
+      "ratio_x": 19.6267,
+      "mode": "json-causal-graph",
+      "opponent": "PPMd",
+      "opponent_bytes": 1937485,
+      "smaller_percent": 31.25,
+      "source_sha256": "4fc1e52c4e609febd05d75a24c84bc6957fa4d2cfb0d5fbebbac650bdc7ed8c0"
+    },
+    {
+      "corpus": "raw Android app TAR",
+      "source": "android_app_raw.tar",
+      "original": 696320,
+      "archive": "android.v8.axb",
+      "archive_bytes": 172428,
+      "ratio_x": 4.0383,
+      "mode": "tar-png-law-graph",
+      "opponent": "Brotli-11",
+      "opponent_bytes": 250233,
+      "smaller_percent": 31.09,
+      "source_sha256": "73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75"
+    },
+    {
+      "corpus": "raw 512x512 RGB24 image",
+      "source": "image_rgb24.raw",
+      "original": 786432,
+      "archive": "image.v8.axb",
+      "archive_bytes": 139521,
+      "ratio_x": 5.6367,
+      "mode": "rgb-codec-ancestry",
+      "opponent": "lossless JPEG XL",
+      "opponent_bytes": 235553,
+      "smaller_percent": 40.77,
+      "source_sha256": "85ac66a38d9a4f8d2541e5261131cb411918d26b136327ead6598bb8974491ed"
+    }
+  ],
+  "search_engine": {
+    "csv_structural_search_seconds": 10.13,
+    "csv_note": "sampled MDL pruning reproduces the same 132465-byte transformed payload as exhaustive search"
+  },
+  "frontiers": [
+    {
+      "corpus": "plain prose",
+      "status": "loss",
+      "axiom_best_approx": 194672,
+      "opponent": "PPMd",
+      "opponent_bytes": 174465
+    },
+    {
+      "corpus": "raw YUV video 320x180x96 YUV420",
+      "status": "loss",
+      "opponent": "FFV1",
+      "opponent_bytes": 418062,
+      "opponent_exact_roundtrip": true,
+      "note": "naive H.264 ancestry + exact residual best tested total ~660KB"
+    },
+    {
+      "corpus": "ELF/x86 bash",
+      "status": "loss",
+      "direct_xz": 523712,
+      "bcj_xz": 491036,
+      "note": "single-digit-percent gain only; below Beast threshold"
+    }
+  ]
+}
