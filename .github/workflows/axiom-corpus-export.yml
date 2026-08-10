@@ -8,13 +8,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Install media tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - name: Build real corpus
         run: |
           set -e
           mkdir -p data
           curl -L --retry 3 -sS https://www.gutenberg.org/files/1342/1342-0.txt -o data/prose.txt
           curl -L --retry 3 -sS https://raw.githubusercontent.com/json-iterator/test-data/master/large-file.json -o data/data.json
-          curl -L --retry 3 -sS https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv | head -n 250001 > data/data.csv
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv -o /tmp/us-counties.csv
+          head -n 250001 /tmp/us-counties.csv > data/data.csv
           git clone -q --depth 1 https://github.com/madler/zlib.git data/zlib-src
           rm -rf data/zlib-src/.git
           tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf data/source_tree.tar -C data/zlib-src .
