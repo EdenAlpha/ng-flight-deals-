@@ -1,0 +1,74 @@
+name: Recursive spatial skeleton pyramid Brady
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  pyramid:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Encode coarse-to-fine spatial pyramid
+        shell: bash
+        run: |
+          cat > p.py <<'PY'
+          import os,json,subprocess,math,numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=np.square(T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;lo=4096;nch=257;X=A[lo:lo+nch].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-9','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0;return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          def stream_bytes(C):
+            K=C.copy();K[:,1:]-=C[:,:-1];m=K!=0;opts={'dt':z(si(K)),'sparse':z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(K[m])) if m.any() else 0)};best=min(opts,key=opts.get);return opts[best],best,float(m.mean()),opts
+          @njit(cache=True)
+          def legal_states(Xrow,P,eps,step,persist):
+            n=Xrow.size;C=np.empty(n,np.int32);last=0
+            for t in range(n):
+              lo=math.ceil((Xrow[t]-P[t]-eps)/step-1e-7);hi=math.floor((Xrow[t]-P[t]+eps)/step+1e-7)
+              if lo>hi:
+                c=int(np.rint((Xrow[t]-P[t])/step))
+              elif persist:
+                c=last
+                if c<lo:c=lo
+                elif c>hi:c=hi
+              else:
+                c=int(np.rint((Xrow[t]-P[t])/step))
+                if c<lo:c=lo
+                elif c>hi:c=hi
+              C[t]=c;last=c
+            return C
+          rows=[]
+          for alpha,persist in [(2.,False),(1.75,True),(1.5,True),(1.25,True),(1.,True)]:
+            step=alpha*eps;Y=np.zeros_like(X);total=0;levels=[]
+            # roots at endpoints
+            Pz=np.zeros(ns,np.float32);rootC=np.stack([legal_states(X[0],Pz,eps,step,persist),legal_states(X[-1],Pz,eps,step,persist)])
+            Y[0]=rootC[0].astype(np.float32)*step;Y[-1]=rootC[1].astype(np.float32)*step;rb,rkind,ref,ropts=stream_bytes(rootC);total+=rb;levels.append({'spacing':256,'ntraces':2,'bytes':rb,'event_fraction':ref,'coding':rkind})
+            spacing=128
+            while spacing>=1:
+              mids=np.arange(spacing,nch-1,2*spacing,dtype=np.int32);Cs=[]
+              for m in mids:
+                P=.5*(Y[m-spacing]+Y[m+spacing]);c=legal_states(X[m],P,eps,step,persist);Y[m]=P+c.astype(np.float32)*step;Cs.append(c)
+              C=np.stack(Cs) if Cs else np.zeros((0,ns),np.int32);b,kind,ef,opts=stream_bytes(C) if len(Cs) else (0,'none',0,{})
+              total+=b;levels.append({'spacing':spacing,'ntraces':len(mids),'bytes':b,'event_fraction':ef,'coding':kind});spacing//=2
+            me=float(np.max(np.abs(X-Y)));row={'alpha':alpha,'persist':persist,'bytes':total+64,'ratio':raw/(total+64),'maxerr':me,'levels':levels};rows.append(row);print('PYRAMID',json.dumps(row),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);Q,_=sz.decompress(bb,np.float32,X.shape);sz3={'bytes':int(bb.size),'ratio':raw/int(bb.size),'maxerr':float(np.max(np.abs(X-Q)))}
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':[nch,ns],'offset':lo,'global_std':std,'eps':eps,'rows':rows,'sz3':sz3};print('BEST',json.dumps(rows[0],indent=2),flush=True);print('SZ3',sz3,flush=True);open('spatial_pyramid.json','w').write(json.dumps(out,indent=2))
+          PY
+          python p.py
+      - uses: actions/upload-artifact@v4
+        with: {name: spatial-pyramid, path: spatial_pyramid.json, retention-days: 2}
