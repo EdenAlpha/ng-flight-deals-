@@ -60,7 +60,7 @@ jobs:
                   u1=t-a;u2=t-b;u3=t-c;u12=t-a-b;u13=t-a-c;u23=t-b-c;u123=t-a-b-c
                   u1=0 if u1<0 else n-1 if u1>=n else u1;u2=0 if u2<0 else n-1 if u2>=n else u2;u3=0 if u3<0 else n-1 if u3>=n else u3;u12=0 if u12<0 else n-1 if u12>=n else u12;u13=0 if u13<0 else n-1 if u13>=n else u13;u23=0 if u23<0 else n-1 if u23>=n else u23;u123=0 if u123<0 else n-1 if u123>=n else u123
                   p=Q[i-1,u1]+Q[i-1,u2]+Q[i-1,u3]-Q[i-2,u12]-Q[i-2,u13]-Q[i-2,u23]+Q[i-3,u123]
-                lo=math.ceil((X[i,t]-eps)/step-1e-7);hi=math.floor((X[i,t]+eps)/step-1e-7);q=p
+                lo=math.ceil((X[i,t]-eps)/step-1e-7);hi=math.floor((X[i,t]+eps)/step+1e-7);q=p
                 if q<lo:q=lo
                 elif q>hi:q=hi
                 Q[i,t]=q;H[i,t]=q-p
