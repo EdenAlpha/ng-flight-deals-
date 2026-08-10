@@ -1,4 +1,4 @@
-name: Temporary Brady fast exact spatial lifting
+name: Temporary Brady spectral carrier probe
 
 on:
   pull_request:
@@ -8,47 +8,51 @@ permissions:
   contents: read
 
 jobs:
-  lifting-fast:
+  spectral:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install --quiet numpy pysz zstandard
       - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
-      - name: Fast exact lifting diagnostic
+      - name: Benchmark low-frequency complex carrier plus certified corrections
         shell: bash
         run: |
-          cat > fast.py <<'PY'
+          cat > spec.py <<'PY'
           import os,json,numpy as np,zstandard as zstd
           from pysz import sz,szConfig,szErrorBoundMode
-          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True)
-          valid=np.zeros(n,bool)
-          for k in range(n):
-            o=3600+k*st;th=bytes(mm[o:o+240]);valid[k]=(int.from_bytes(th[80:84],'big',signed=True)!=0 or int.from_bytes(th[84:88],'big',signed=True)!=0)
-          ids=np.where(valid)[0];lo=int(ids[0]);hi=min(lo+768,int(ids[-1])+1);Y=X[lo:hi];std=float(Y.std());eps=.1*std;step=2*eps;Q=np.rint(Y/step).astype(np.int32);maxerr=float(np.max(np.abs(Y.astype(np.float64)-Q.astype(np.float64)*step)));Z=zstd.ZstdCompressor(level=3);zc=lambda b:Z.compress(b)
-          def enc(A):
-            A=A.astype(np.int32,copy=False);mn,mx=int(A.min()),int(A.max());opts={}
-            for tag,B in [('raw',A),('dt',np.c_[A[:,0],np.diff(A,axis=1)])]:
-              if B.min()>=-128 and B.max()<=127:
-                opts[tag+'_i8C']=len(zc(np.ascontiguousarray(B.astype(np.int8)).tobytes()));opts[tag+'_i8T']=len(zc(np.ascontiguousarray(B.T.astype(np.int8)).tobytes()))
-              opts[tag+'_i16C']=len(zc(np.ascontiguousarray(B.astype(np.int16)).tobytes()));opts[tag+'_i16T']=len(zc(np.ascontiguousarray(B.T.astype(np.int16)).tobytes()))
-            best=min(opts,key=opts.get);return {'bytes':int(opts[best]),'mode':best,'zero':float(np.mean(A==0)),'min':mn,'max':mx}
-          cur=Q;bands=[]
-          while cur.shape[0]>1:
-            ev=cur[::2];od=cur[1::2];pred=np.empty_like(od)
-            pred[:]=ev[:od.shape[0]]
-            m=min(od.shape[0],ev.shape[0]-1)
-            if m>0:pred[:m]=(ev[:m]+ev[1:m+1])//2
-            d=od-pred;bands.append(enc(d));cur=ev
-          root=enc(cur);total=sum(x['bytes'] for x in bands)+root['bytes']+64*len(bands)
-          # direct quantized 2D Lorenzo
-          L=np.empty_like(Q);L[0]=Q[0];L[1:,0]=Q[1:,0]-Q[:-1,0];L[1:,1:]=Q[1:,1:]-Q[1:,:-1]-Q[:-1,1:]+Q[:-1,:-1];lor=enc(L)
-          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;sb,_=sz.compress(Y,cfg);S,_=sz.decompress(sb,np.float32,Y.shape)
-          out={'shape':list(Y.shape),'std':std,'eps':eps,'maxerr_quantized':maxerr,'sz3_ratio':Y.nbytes/int(sb.size),'sz3_bytes':int(sb.size),'sz3_maxerr':float(np.max(np.abs(Y-S))),'lorenzo_quantized_ratio':Y.nbytes/lor['bytes'],'lorenzo':lor,'lifting_ratio':Y.nbytes/total,'lifting_bytes':int(total),'levels':len(bands),'bands':bands,'root':root};print(json.dumps(out,indent=2));open('fast.json','w').write(json.dumps(out,indent=2))
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');dt=int.from_bytes(h[3216:3218],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True);global_std=float(X.std());eps=.1*global_std;fs=1e6/dt
+          Z=zstd.ZstdCompressor(level=3);zc=lambda b:Z.compress(b)
+          def enc_int(A):
+            A=A.astype(np.int32,copy=False);opts={}
+            for tag,B in [('raw',A)]:
+              for tr,V in [('C',B),('T',B.T)]:
+                V=np.ascontiguousarray(V)
+                if V.min()>=-128 and V.max()<=127:opts[f'{tag}_i8{tr}']=len(zc(V.astype(np.int8).tobytes()))
+                if V.min()>=-32768 and V.max()<=32767:opts[f'{tag}_i16{tr}']=len(zc(V.astype(np.int16).tobytes()))
+            if A.shape[0]>1 and A.shape[1]>1:
+              L=np.empty_like(A);L[0]=A[0];L[1:,0]=A[1:,0]-A[:-1,0];L[1:,1:]=A[1:,1:]-A[1:,:-1]-A[:-1,1:]+A[:-1,:-1]
+              for tr,V in [('C',L),('T',L.T)]:
+                V=np.ascontiguousarray(V)
+                if V.min()>=-128 and V.max()<=127:opts[f'lor_i8{tr}']=len(zc(V.astype(np.int8).tobytes()))
+                if V.min()>=-32768 and V.max()<=32767:opts[f'lor_i16{tr}']=len(zc(V.astype(np.int16).tobytes()))
+            k=min(opts,key=opts.get);return int(opts[k]),k
+          def residual_cost(Y,P):
+            C=np.rint((Y-P)/(2*eps)).astype(np.int16);K=np.empty_like(C);K[:,0]=C[:,0];K[:,1:]=C[:,1:]-C[:,:-1];R=P+C.astype(np.float32)*(2*eps);m=K!=0;v=K[m];mb=len(zc(np.packbits(m.T.reshape(-1)).tobytes()));vb=len(zc((v.astype(np.int8) if v.size and v.min()>=-128 and v.max()<=127 else v.astype(np.int16)).tobytes()));return mb+vb,float(v.size/K.size),float(np.max(np.abs(Y-R))),mb,vb
+          blocks=[]
+          for lo in [512,4096,7680]:
+            hi=min(lo+384,n);Y=X[lo:hi];F=np.fft.rfft(Y,axis=1);freq=np.fft.rfftfreq(ns,d=dt/1e6);pow=np.mean(np.abs(F[::8])**2,axis=0);tot=float(pow.sum());energy={str(c):float(pow[freq<=c].sum()/tot) for c in [20,30,40,60,100,200]};cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;sb,_=sz.compress(Y,cfg);best=None;trials=[]
+            for cutoff in [20,30,40,60,100]:
+              ids=np.where(freq<=cutoff)[0];G=F[:,ids]/ns
+              for qmul in [0.125,0.25,0.5,1.0,2.0]:
+                q=eps*qmul;Qr=np.rint(G.real/q).astype(np.int32);Qi=np.rint(G.imag/q).astype(np.int32);br,mr=enc_int(Qr);bi,mi=enc_int(Qi);Fq=np.zeros_like(F);Fq[:,ids]=(Qr.astype(np.float64)+1j*Qi.astype(np.float64))*q*ns;P=np.fft.irfft(Fq,n=ns,axis=1).astype(np.float32);rb,ef,me,mb,vb=residual_cost(Y,P);total=br+bi+rb+128;row={'cutoff':cutoff,'qmul':qmul,'carrier_bytes':br+bi,'carrier_modes':[mr,mi],'residual_bytes':rb,'topology_bytes':mb,'value_bytes':vb,'event_fraction':ef,'total_bytes':total,'ratio':Y.nbytes/total,'maxerr':me};trials.append(row)
+                if best is None or total<best['total_bytes']:best=row
+            blocks.append({'block':[lo,hi],'block_std':float(Y.std()),'global_std':global_std,'epsilon':eps,'spectral_energy':energy,'sz3_ratio':Y.nbytes/int(sb.size),'sz3_bytes':int(sb.size),'best_spectral':best,'trials':trials})
+          out={'global_std':global_std,'epsilon':eps,'fs':fs,'blocks':blocks};print(json.dumps(out,indent=2));open('spectral.json','w').write(json.dumps(out,indent=2))
           PY
-          python fast.py
+          python spec.py
       - uses: actions/upload-artifact@v4
         with:
-          name: brady-fast-lifting
-          path: fast.json
+          name: brady-spectral-results
+          path: spectral.json
           retention-days: 1
