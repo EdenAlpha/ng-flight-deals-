@@ -1,0 +1,90 @@
+name: TPWQ minimum-TV fast Brady pilot
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  tv:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Globally choose legal states to minimize TV
+        shell: bash
+        run: |
+          cat > tv.py <<'PY'
+          import os,json,subprocess,math,numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=np.square(T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;lo=4096;nch=128;t0=6000;nt=8000;X=A[lo:lo+nch,t0:t0+nt].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0
+            return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          @njit(cache=True)
+          def bounds(X,eps,step):
+            m,n=X.shape;L=np.empty((m,n),np.int32);U=np.empty((m,n),np.int32)
+            for i in range(m):
+              for t in range(n):
+                L[i,t]=math.ceil((X[i,t]-eps)/step-1e-7);U[i,t]=math.floor((X[i,t]+eps)/step+1e-7)
+            return L,U
+          @njit(cache=True)
+          def init_spatial(L,U):
+            m,n=L.shape;Q=np.empty((m,n),np.int32)
+            for t in range(n):
+              q=0
+              for i in range(m):
+                if q<L[i,t]:q=L[i,t]
+                elif q>U[i,t]:q=U[i,t]
+                Q[i,t]=q
+            return Q
+          @njit(cache=True)
+          def tvopt(Q,L,U,sweeps,wt):
+            m,n=Q.shape
+            for sw in range(sweeps):
+              for direction in range(2):
+                ir=range(m) if direction==0 else range(m-1,-1,-1);tr0=range(n) if direction==0 else range(n-1,-1,-1)
+                for i in ir:
+                  for t in tr0:
+                    lo=L[i,t];hi=U[i,t]
+                    if lo==hi:Q[i,t]=lo;continue
+                    # weighted L1 median objective evaluated over tiny legal set
+                    bc=1e18;best=Q[i,t]
+                    for v in range(lo,hi+1):
+                      c=0
+                      if i>0:c+=abs(v-Q[i-1,t])
+                      if i+1<m:c+=abs(v-Q[i+1,t])
+                      if t>0:c+=wt*abs(v-Q[i,t-1])
+                      if t+1<n:c+=wt*abs(v-Q[i,t+1])
+                      if c<bc:bc=c;best=v
+                    Q[i,t]=best
+            return Q
+          def encode(Q):
+            opts={'raw':z(si(Q))};dx=Q.copy();dx[1:]-=Q[:-1];dtq=Q.copy();dtq[:,1:]-=Q[:,:-1];lor=Q.copy();lor[1:,1:]=Q[1:,1:]-Q[:-1,1:]-Q[1:,:-1]+Q[:-1,:-1];opts['dx']=z(si(dx));opts['dt']=z(si(dtq));opts['lorenzo']=z(si(lor))
+            for name,Z in [('dx',dx),('dt',dtq),('lor',lor)]:
+              m=Z!=0;opts['sparse_'+name]=z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(Z[m])) if m.any() else 0)
+            best=min(opts,key=opts.get);return opts[best]+32,best,opts
+          rows=[]
+          for alpha in [1.75,1.5,1.25,1.,.75,.5]:
+            step=alpha*eps;L,U=bounds(X,eps,step);Q=init_spatial(L,U);b,k,o=encode(Q);rows.append({'alpha':alpha,'kind':'spatial_init','ratio':raw/b,'bytes':b,'coding':k,'maxerr':float(np.max(np.abs(X-Q.astype(np.float32)*step)))})
+            for wt in [1,2,4]:
+              T=Q.copy();T=tvopt(T,L,U,3,wt);b,k,o=encode(T);row={'alpha':alpha,'kind':'global_tv','wt':wt,'ratio':raw/b,'bytes':b,'coding':k,'maxerr':float(np.max(np.abs(X-T.astype(np.float32)*step)))};rows.append(row);print('ROW',json.dumps(row),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,np.float32,X.shape);sz3={'ratio':raw/int(bb.size),'bytes':int(bb.size),'maxerr':float(np.max(np.abs(X-R)))}
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':[nch,nt],'t0':t0,'global_std':std,'eps':eps,'top':rows[:20],'sz3':sz3};print('BEST',json.dumps(rows[:10],indent=2),flush=True);print('SZ3',sz3,flush=True);open('tv.json','w').write(json.dumps(out,indent=2))
+          PY
+          python tv.py
+      - uses: actions/upload-artifact@v4
+        with: {name: tpwq-tv, path: tv.json, retention-days: 2}
