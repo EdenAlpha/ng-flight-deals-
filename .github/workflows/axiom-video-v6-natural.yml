@@ -1,0 +1,59 @@
+name: AXIOM sparse-video v6 natural footage
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg xz-utils python3-numpy python3-brotli git
+      - name: Restore v6 source and benchmark natural footage
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,zlib,pathlib
+          p=pathlib.Path('axiom_beast/video_sparse_v6.zlib.b64')
+          pathlib.Path('video_sparse_v6.py').write_bytes(zlib.decompress(base64.b64decode(p.read_bytes())))
+          PY
+          python3 -m py_compile video_sparse_v6.py
+          git clone -q --depth 1 https://github.com/chthomos/video-media-samples.git media
+          ffmpeg -loglevel error -y -ss 0 -t 4 -i media/big-buck-bunny-480p-30sec.mp4 -vf scale=320:180 -r 24 -pix_fmt yuv420p -f rawvideo natural.yuv
+          python3 - <<'PY' | tee v6_results.txt
+          import os,lzma,hashlib,video_sparse_v6 as V
+          raw=open('natural.yuv','rb').read(); w=320;h=180;fs=w*h*3//2
+          assert len(raw)%fs==0
+          nf=len(raw)//fs
+          rep=V.pack(raw,w,h,nf)
+          dec=V.unpack(rep)
+          assert dec==raw
+          payload=lzma.compress(rep,preset=9|lzma.PRESET_EXTREME)
+          arc=b'AXV6N'+payload
+          open('natural.axv6','wb').write(arc)
+          rep2=lzma.decompress(arc[5:]); dec2=V.unpack(rep2)
+          open('natural.v6.dec.yuv','wb').write(dec2)
+          assert dec2==raw
+          print('raw',len(raw));print('frames',nf);print('representation',len(rep));print('axiom_v6_archive',len(arc))
+          print('sha256',hashlib.sha256(raw).hexdigest())
+          PY
+          cmp natural.yuv natural.v6.dec.yuv
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i natural.yuv -c:v ffv1 -level 3 -coder 1 -context 1 ffv1.mkv
+          python3 - <<'PY' | tee -a v6_results.txt
+          import os
+          ax=os.path.getsize('natural.axv6');ff=os.path.getsize('ffv1.mkv');raw=os.path.getsize('natural.yuv')
+          print('ffv1',ff);print('axiom_vs_ffv1_pct',round((ff-ax)*100/ff,2));print('ratio_x',round(raw/ax,4))
+          PY
+          sha256sum natural.yuv natural.v6.dec.yuv | tee v6_sha256.txt
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: axiom-video-v6-natural
+          path: |
+            natural.axv6
+            v6_results.txt
+            v6_sha256.txt
+          retention-days: 7
