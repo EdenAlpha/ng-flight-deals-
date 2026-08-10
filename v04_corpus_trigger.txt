@@ -1,1 +1,1 @@
-export AXIOM v0.4 fixed prose and image corpus — retrigger
+trigger AXIOM v0.4 JXL generative-basis sweep
