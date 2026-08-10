@@ -1,0 +1,78 @@
+name: Characteristic boundary Brady probe
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  characteristic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Run characteristic codec
+        shell: bash
+        run: |
+          cat > c.py <<'PY'
+          import os,json,subprocess,math,numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            Q=A[a:min(a+256,ntr)].astype(np.float64);s1+=Q.sum();s2+=np.square(Q).sum();cnt+=Q.size
+          mean=s1/cnt;std=float(np.sqrt(max(0.,s2/cnt-mean*mean)));eps=.1*std;lo=4096;nch=128;X=A[lo:lo+nch].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-9','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0;return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          def packcorr(K):
+            dense=z(si(K));m=K!=0;mb=z(np.packbits(m.reshape(-1),bitorder='little'));v=K[m];vb=z(si(v)) if v.size else 0;return min(dense,mb+vb),float(m.mean()),{'dense':dense,'mask':mb,'vals':vb}
+          @njit(cache=True)
+          def encode(X,eps,B,Smax,polarity):
+            m,n=X.shape;Y=np.empty_like(X);C=np.empty((m,n),np.int32);nb=(n+B-1)//B;sh=np.zeros((m,nb),np.int16);sg=np.ones((m,nb),np.int8);step=2.0*eps
+            # boundary trace
+            for t in range(n):
+              c=int(np.rint(X[0,t]/step));C[0,t]=c;Y[0,t]=c*step
+            for i in range(1,m):
+              for b in range(nb):
+                a=b*B;e=min(n,a+B);bestcost=1e30;bests=0;bestsign=1
+                for ss in range(-Smax,Smax+1):
+                  nsign=2 if polarity else 1
+                  for iz in range(nsign):
+                    sign=1 if iz==0 else -1;last=0;cost=0.0
+                    for t in range(a,e):
+                      q=t+ss
+                      if q<0:q=0
+                      elif q>=n:q=n-1
+                      p=sign*Y[i-1,q];c=int(np.rint((X[i,t]-p)/step))
+                      if t==a or c!=last:cost+=1.0
+                      cost+=0.015*abs(c);last=c
+                    if cost<bestcost:bestcost=cost;bests=ss;bestsign=sign
+                sh[i,b]=bests;sg[i,b]=bestsign
+                for t in range(a,e):
+                  q=t+bests
+                  if q<0:q=0
+                  elif q>=n:q=n-1
+                  p=bestsign*Y[i-1,q];c=int(np.rint((X[i,t]-p)/step));C[i,t]=c;Y[i,t]=p+c*step
+            K=np.empty_like(C)
+            for i in range(m):
+              K[i,0]=C[i,0]
+              for t in range(1,n):K[i,t]=C[i,t]-C[i,t-1]
+            return Y,K,sh,sg
+          rows=[]
+          for B,Smax,pol in [(128,8,False),(256,16,False),(512,32,False),(256,16,True)]:
+            Y,K,sh,sg=encode(X,eps,B,Smax,pol);kb,ef,parts=packcorr(K);sb=z(sh.astype(np.int8) if Smax<=127 else sh);gb=z(sg) if pol else 0;tot=kb+sb+gb+64;row={'block':B,'smax':Smax,'polarity':pol,'ratio':raw/tot,'bytes':tot,'corr_bytes':kb,'shift_bytes':sb,'sign_bytes':gb,'transition_fraction':ef,'maxerr':float(np.max(np.abs(X-Y))),'parts':parts};rows.append(row);print('CHAR',json.dumps(row),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);Q,_=sz.decompress(bb,np.float32,X.shape);sz3={'ratio':raw/int(bb.size),'bytes':int(bb.size),'maxerr':float(np.max(np.abs(X-Q)))}
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':[nch,ns],'offset':lo,'global_std':std,'eps':eps,'rows':rows,'sz3':sz3};print('BEST',rows[0],flush=True);print('SZ3',sz3,flush=True);open('characteristic.json','w').write(json.dumps(out,indent=2))
+          PY
+          python c.py
+      - uses: actions/upload-artifact@v4
+        with: {name: characteristic-boundary, path: characteristic.json, retention-days: 2}
