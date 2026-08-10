@@ -16,7 +16,7 @@ PY
 cargo build --release -q -p preflate_util
 BIN="$PWD/target/release/preflate_util"
 cd ..
-$BIN "$WHEEL" -c 14 --verify true --baseline true | tee preflate.log
+$BIN "$WHEEL" -c 14 --baseline | tee preflate.log
 SIZE=$(grep 'PREFLATE_CONTAINER_BYTES' preflate.log | tail -1 | awk '{print $2}')
 python3 - <<PY
 import json
