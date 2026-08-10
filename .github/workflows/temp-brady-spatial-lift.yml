@@ -1,0 +1,75 @@
+name: Temporary Brady spatial anti-derivative probe
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy pysz zstandard
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Probe raw and integrated DAS coordinates
+        shell: bash
+        run: |
+          cat > probe.py <<'PY'
+          import os,json,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');dt=int.from_bytes(h[3216:3218],'big');fmt=int.from_bytes(h[3224:3226],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True)
+          # find longest contiguous run with nonzero receiver coordinates
+          valid=np.zeros(n,bool)
+          for k in range(n):
+            o=3600+k*st; th=bytes(mm[o:o+240]); gx=int.from_bytes(th[80:84],'big',signed=True);gy=int.from_bytes(th[84:88],'big',signed=True);valid[k]=(gx!=0 or gy!=0)
+          runs=[];a=None
+          for i,v in enumerate(np.r_[valid,False]):
+            if v and a is None:a=i
+            elif not v and a is not None:runs.append((a,i));a=None
+          a,b=max(runs,key=lambda q:q[1]-q[0]); # representative central block limited for exploratory compression
+          lo=a;hi=min(b,a+1536);Y=X[lo:hi]
+          std=float(Y.std());eps=.1*std
+          # native adjacent-channel correlations, time-decimated only
+          A=Y[:,::20].astype(np.float64); adj=[]
+          for i in range(A.shape[0]-1):
+            u=A[i];v=A[i+1];su=u.std();sv=v.std();
+            if su>0 and sv>0:adj.append(float(np.corrcoef(u,v)[0,1]))
+          # per-adjacent-pair best integer shift +/-8 on a sparse set of pairs
+          shifts=[]; gains=[]; corrs=[]
+          for i in range(0,Y.shape[0]-1,16):
+            u=Y[i,::4].astype(np.float64);v=Y[i+1,::4].astype(np.float64);best=None
+            for d in range(-8,9):
+              if d<0:aa=u[-d:];bb=v[:d]
+              elif d>0:aa=u[:-d];bb=v[d:]
+              else:aa=u;bb=v
+              den=np.dot(aa,aa);g=float(np.dot(aa,bb)/den) if den else 0.;m=float(np.mean((bb-g*aa)**2));
+              if best is None or m<best[0]:best=(m,d,g,float(np.corrcoef(aa,bb)[0,1]) if aa.std()>0 and bb.std()>0 else 0.)
+            shifts.append(best[1]);gains.append(best[2]);corrs.append(best[3])
+          # spatial anti-derivative coordinate in float64; local reference removed by subtracting channel mean at every time
+          U=np.cumsum(Y.astype(np.float64),axis=0);U-=U.mean(axis=0,keepdims=True)
+          UA=U[:,::20]; uadj=[float(np.corrcoef(UA[i],UA[i+1])[0,1]) for i in range(UA.shape[0]-1) if UA[i].std()>0 and UA[i+1].std()>0]
+          # SZ3 direct Y vs integrated U. Compress U at eps/2 and reconstruct Y by spatial difference; first sample needs reference residual.
+          def szc(A,tol):
+            cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(tol);blob,_=sz.compress(np.ascontiguousarray(A),cfg);D,_=sz.decompress(blob,A.dtype,A.shape);return int(blob.size),D
+          yb,Yd=szc(Y,eps)
+          # Because mean removal destroys one spatial integration constant per time sample, store Y[0] separately under eps/2 using SZ3, and integrate differences from that anchor.
+          # Use prefix V where V[0]=0 and V[k]=sum_{j=1..k} Y[j]; then Y[k]=V[k]-V[k-1] for k>0; Y0 stored separately.
+          V=np.zeros_like(Y,dtype=np.float64);V[1:]=np.cumsum(Y[1:].astype(np.float64),axis=0)
+          vb,Vd=szc(V,eps/2)
+          r0b,R0d=szc(Y[:1],eps)
+          Yr=np.empty_like(Y,dtype=np.float64);Yr[0]=R0d[0];Yr[1:]=Vd[1:]-Vd[:-1]
+          ierr=float(np.max(np.abs(Y.astype(np.float64)-Yr)))
+          # time smoothness of raw vs integrated coordinates
+          tc_raw=float(np.corrcoef(Y[:,::20][:,:-1].ravel(),Y[:,::20][:,1:].ravel())[0,1]);tc_int=float(np.corrcoef(U[:,::20][:,:-1].ravel(),U[:,::20][:,1:].ravel())[0,1])
+          out={'full_ntr':n,'ns':ns,'longest_valid_run':[a,b,b-a],'probe_block':[lo,hi,hi-lo],'std':std,'eps_10pct':eps,'adjacent_corr':{'median':float(np.median(adj)),'mean':float(np.mean(adj)),'p10':float(np.percentile(adj,10)),'p90':float(np.percentile(adj,90))},'best_shift_sparse':{'median_shift':float(np.median(shifts)),'shift_hist':{str(k):int(shifts.count(k)) for k in sorted(set(shifts))},'median_gain':float(np.median(gains)),'median_corr_after_shift':float(np.median(corrs))},'integrated_adjacent_corr':{'median':float(np.median(uadj)),'mean':float(np.mean(uadj))},'time_corr_decimated':{'raw':tc_raw,'integrated':tc_int},'sz3_direct':{'bytes':yb,'ratio_vs_float32':Y.nbytes/yb},'sz3_spatial_integral':{'latent_bytes':vb,'first_trace_bytes':r0b,'total_bytes':vb+r0b,'ratio_vs_original_float32':Y.nbytes/(vb+r0b),'reconstructed_maxerr':ierr}};print(json.dumps(out,indent=2));open('spatial_probe.json','w').write(json.dumps(out,indent=2))
+          PY
+          python probe.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brady-spatial-probe
+          path: spatial_probe.json
+          retention-days: 1
