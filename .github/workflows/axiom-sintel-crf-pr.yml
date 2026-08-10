@@ -1,0 +1,40 @@
+name: AXIOM isolated Sintel rate-residual
+on:
+  pull_request:
+    branches: [axiom-sintel-crf-base]
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build real Sintel corpus and coder
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg g++ curl
+          curl -L --retry 3 -sS https://media.w3.org/2010/05/sintel/trailer.mp4 -o sintel.mp4
+          ffmpeg -loglevel error -y -ss 0 -t 4 -i sintel.mp4 -vf scale=320:180 -r 24 -frames:v 96 -f rawvideo -pix_fmt yuv420p sintel.yuv
+          g++ -O3 -std=c++17 axiom_video_residual_v2.cpp -o axiom_vres
+          sha256sum sintel.yuv > sweep_results.txt
+          stat -c 'RAW %s' sintel.yuv >> sweep_results.txt
+      - name: Search exact archive minimum
+        run: |
+          set -euo pipefail
+          for q in 1 2 3 4 5 6 7 8 10 12; do
+            ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i sintel.yuv -frames:v 96 -c:v libaom-av1 -crf $q -b:v 0 -cpu-used 4 -row-mt 1 -f ivf b$q.ivf
+            ffmpeg -loglevel error -y -i b$q.ivf -f rawvideo -pix_fmt yuv420p b$q.yuv
+            ./axiom_vres e sintel.yuv b$q.yuv r$q.axr 320 180 96 2>stats$q.txt
+            ./axiom_vres d r$q.axr b$q.yuv check$q.yuv 320 180 96
+            cmp sintel.yuv check$q.yuv
+            B=$(stat -c%s b$q.ivf); R=$(stat -c%s r$q.axr); echo "CRF $q BASIS $B RESIDUAL $R TOTAL $((B+R+62)) $(cat stats$q.txt)" >> sweep_results.txt
+          done
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i sintel.yuv -frames:v 96 -c:v ffv1 -level 3 -coder 1 -context 0 -g 1 ffv1.mkv
+          ffmpeg -loglevel error -y -i ffv1.mkv -f rawvideo -pix_fmt yuv420p ffv1.yuv
+          cmp sintel.yuv ffv1.yuv
+          echo "FFV1 $(stat -c%s ffv1.mkv)" >> sweep_results.txt
+          cat sweep_results.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-sintel-rate-residual
+          path: sweep_results.txt
+          retention-days: 7
