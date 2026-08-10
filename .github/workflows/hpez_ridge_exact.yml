@@ -34,15 +34,15 @@ jobs:
           X=A[4096:4224,6000:14192].astype('<f4',copy=True)
           X.tofile('block.bin');open('meta.json','w').write(json.dumps({'shape':list(X.shape),'eps':eps,'std':std,'raw':X.nbytes}));print('BLOCK',X.shape,'eps',eps,'raw',X.nbytes)
           PY
-      - name: Run HPEZ q4 both dimension orientations and SZ3
+      - name: Run HPEZ q4 both native-2D orientations and SZ3
         shell: bash
         run: |
           EPS=$(python -c "import json;print(json.load(open('meta.json'))['eps'])")
           BIN=$PWD/hpez-install/bin/hpez
-          $BIN -f -i block.bin -z hpez_timefast.bin -3 8192 128 1 -M ABS "$EPS" -q 4
-          $BIN -f -z hpez_timefast.bin -o hpez_timefast.out -3 8192 128 1
-          $BIN -f -i block.bin -z hpez_spacefast.bin -3 128 8192 1 -M ABS "$EPS" -q 4
-          $BIN -f -z hpez_spacefast.bin -o hpez_spacefast.out -3 128 8192 1
+          $BIN -f -i block.bin -z hpez_timefast.bin -2 8192 128 -M ABS "$EPS" -q 4
+          $BIN -f -z hpez_timefast.bin -o hpez_timefast.out -2 8192 128
+          $BIN -f -i block.bin -z hpez_spacefast.bin -2 128 8192 -M ABS "$EPS" -q 4
+          $BIN -f -z hpez_spacefast.bin -o hpez_spacefast.out -2 128 8192
           python - <<'PY'
           import json,os,numpy as np
           from pysz import sz,szConfig,szErrorBoundMode
