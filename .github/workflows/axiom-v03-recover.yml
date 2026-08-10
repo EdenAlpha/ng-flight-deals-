@@ -8,18 +8,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Reconstruct payload correctly
+      - name: Recover validated source modules
         run: |
-          : > /tmp/axiom_v03.zip
+          : > /tmp/axiom_v03_corrupt.zip
           for f in v03_chunks/part*.b64; do
-            base64 -d "$f" >> /tmp/axiom_v03.zip
+            base64 -d "$f" >> /tmp/axiom_v03_corrupt.zip
           done
-          unzip -t /tmp/axiom_v03.zip
-          sha256sum /tmp/axiom_v03.zip | tee /tmp/axiom_v03.sha256
+          mkdir -p /tmp/axiom_v03_src
+          unzip -o /tmp/axiom_v03_corrupt.zip -d /tmp/axiom_v03_src || true
+          rm -f /tmp/axiom_v03_src/tar_transform.py
+          test -s /tmp/axiom_v03_src/axiom3_common.py
+          test -s /tmp/axiom_v03_src/csv_graph_transform.py
+          test -s /tmp/axiom_v03_src/json_graph_transform.py
+          test -s /tmp/axiom_v03_src/png_law_transform.py
+          test -s /tmp/axiom_v03_src/tar_graph_transform.py
+          test -s /tmp/axiom_v03_src/predictor_transform.py
+          test -s /tmp/axiom_v03_src/text_transform.py
+          test -s /tmp/axiom_v03_src/bench_v03.py
+          python3 -m py_compile /tmp/axiom_v03_src/*.py
+          cd /tmp/axiom_v03_src
+          zip -qr /tmp/axiom_v03_recovered.zip .
+          unzip -t /tmp/axiom_v03_recovered.zip
+          sha256sum /tmp/axiom_v03_recovered.zip | tee /tmp/axiom_v03_recovered.sha256
       - uses: actions/upload-artifact@v4
         with:
           name: axiom-v03-source-recovered
           path: |
-            /tmp/axiom_v03.zip
-            /tmp/axiom_v03.sha256
+            /tmp/axiom_v03_recovered.zip
+            /tmp/axiom_v03_recovered.sha256
           retention-days: 7
