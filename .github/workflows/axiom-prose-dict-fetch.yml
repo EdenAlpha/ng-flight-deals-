@@ -1,19 +1,37 @@
-name: AXIOM prose dictionary fetch
+name: AXIOM prose structural PPMd benchmark
 on:
   pull_request:
     branches: [main]
 jobs:
-  fetch:
+  bench:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - run: |
+      - name: Install PPMd opponent
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+      - name: Build exact prose transform and compare PPMd
+        run: |
+          set -euxo pipefail
           curl -L --retry 3 -sS https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/en/en_50k.txt -o en_50k.txt
-          sha256sum en_50k.txt > en_50k.sha256
+          curl -L --retry 3 -sS https://www.gutenberg.org/files/1342/1342-0.txt -o prose.txt
+          python3 axiom_beast/prose_static_transform.py c prose.txt prose.pst en_50k.txt
+          python3 axiom_beast/prose_static_transform.py d prose.pst prose.roundtrip.txt en_50k.txt
+          cmp prose.txt prose.roundtrip.txt
+          7z a -bd -y -t7z -m0=PPMd -mmem=256m -mo=16 prose_raw_ppmd.7z prose.txt >/dev/null
+          7z a -bd -y -t7z -m0=PPMd -mmem=256m -mo=16 prose_struct_ppmd.7z prose.pst >/dev/null
+          python3 - <<'PY' | tee prose_ppmd_results.txt
+          import os
+          raw=os.path.getsize('prose.txt'); rep=os.path.getsize('prose.pst'); base=os.path.getsize('prose_raw_ppmd.7z'); ax=os.path.getsize('prose_struct_ppmd.7z')
+          print('raw',raw);print('struct_rep',rep);print('raw_ppmd',base);print('struct_ppmd',ax);print('struct_vs_raw_ppmd_pct',round((base-ax)*100/base,2))
+          PY
+          sha256sum prose.txt prose.roundtrip.txt > prose_sha256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: axiom-prose-dictionary
+          name: axiom-prose-ppmd-results
           path: |
-            en_50k.txt
-            en_50k.sha256
+            prose_ppmd_results.txt
+            prose_sha256.txt
           retention-days: 7
