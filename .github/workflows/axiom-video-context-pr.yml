@@ -1,0 +1,23 @@
+name: AXIOM context-stream video benchmark
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg xz-utils zstd brotli git
+          python3 -m pip install -q numpy
+      - name: Run context-stream benchmark
+        run: python3 video_context_stream_probe.py
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: axiom-video-context-results
+          path: video_context_stream_results.json
+          retention-days: 7
