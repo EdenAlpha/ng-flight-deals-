@@ -17,8 +17,9 @@ jobs:
       - name: Unpack AXIOM v0.3
         run: |
           mkdir -p axiom_v03/data
-          base64 -d axiom_v03_payload.b64 > /tmp/axiom_v03.zip
+          cat v03_chunks/part*.b64 | base64 -d > /tmp/axiom_v03.zip
           unzip -q -o /tmp/axiom_v03.zip -d axiom_v03
+          unzip -t /tmp/axiom_v03.zip
       - name: Build real corpus
         run: |
           set -e
