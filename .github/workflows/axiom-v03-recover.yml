@@ -1,0 +1,25 @@
+name: AXIOM v0.3 source recovery
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  recover:
+    if: github.head_ref == 'axiom-v02-beast-20260810'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct payload correctly
+        run: |
+          : > /tmp/axiom_v03.zip
+          for f in v03_chunks/part*.b64; do
+            base64 -d "$f" >> /tmp/axiom_v03.zip
+          done
+          unzip -t /tmp/axiom_v03.zip
+          sha256sum /tmp/axiom_v03.zip | tee /tmp/axiom_v03.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-v03-source-recovered
+          path: |
+            /tmp/axiom_v03.zip
+            /tmp/axiom_v03.sha256
+          retention-days: 7
