@@ -1,0 +1,29 @@
+name: Temporary seismic data transfer
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-field-segy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download public marine reflection SEG-Y
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 5 --retry-delay 2 \
+            -o F1_shots.sgy \
+            'https://zenodo.org/records/18407436/files/F1_shots.sgy?download=1'
+          ls -lh F1_shots.sgy
+          echo 'b706ed4c9b8179660c02b9d8df5f1e86  F1_shots.sgy' | md5sum -c -
+      - name: Upload field SEG-Y
+        uses: actions/upload-artifact@v4
+        with:
+          name: F1-field-segy
+          path: F1_shots.sgy
+          compression-level: 0
+          retention-days: 1
