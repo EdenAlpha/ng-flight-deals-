@@ -47,19 +47,22 @@ def infer_yuv420(data):
  fc.sort();best=None
  ratios=(16/9,4/3,3/2,5/4,1.0,9/16,3/4)
  for te,nf,fs,yp in fc[:8]:
+  # score row stride on luma only; favor conventional aspect ratios only as a weak tie-breaker.
   y=np.frombuffer(data[:min(nf,3)*fs],dtype=np.uint8)
+  # pull only the Y part of first frames into one band
   ys=[]
   for t in range(min(nf,3)):
-   s=t*fs;ys.append(a[ss:ss+yp])
+   s=t*fs;ys.append(a[s:s+yp])
   yy=np.concatenate(ys)
   for h,w in _factors(yp):
    if w<64 or h<64 or w>4096 or h>4096 or (w&1) or (h&1):continue
    re=_sample_entropy_diff(yy,w,16384)
-   ratio=w/h;ap=min(abs(math.log(max(ratio,1e-9)/r)i for r in ratios)
+   ratio=w/h;ap=min(abs(math.log(max(ratio,1e-9)/r)) for r in ratios)
    score=te+0.70*re+0.06*ap
    if best is None or score<best[0]:best=(score,w,h,nf,fs,te,re)
  if best is None:return None
- score,v,h,nf,fs,te,re=best
+ score,w,h,nf,fs,te,re=best
+ # Natural video should have useful same-position temporal correlation.
  if te>7.75:return None
  return {'w':w,'h':h,'frames':nf,'frame_size':fs,'temporal_entropy':te,'row_entropy':re,'score':score}
 
@@ -113,7 +116,7 @@ def _encode_y(frames,bs=16,rad=16):
      dx,dy=_motion_block(prev,cur,y0,x0,bs,rad);mb=pad[y0+rad+dy:y1+rad+dy,x0+rad+dx:x1+rad+dx]
      cand += [prev[y0:y1,x0:x1],xx[y0:y1,x0:x1],yy[y0:y1,x0:x1],mb]
     rr=[_zzmod(((cb.astype(np.int16)-q.astype(np.int16))&255).astype(np.uint8)) for q in cand];k=int(np.argmin([_entropy(q) for q in rr]));modes.append(k);dxs.append(dx+rad);dys.append(dy+rad);res[t,y0:y1,x0:x1]=rr[k]
-  return res,bytes(modes),bytes(dxs),bytes(dys)
+ return res,bytes(modes),bytes(dxs),bytes(dys)
 def _decode_plane(res,modes,dxs,dys,bs,rad,scale=1):
  nf,h,w=res.shape;out=np.empty_like(res);mi=0
  for t in range(nf):
@@ -131,12 +134,13 @@ def _decode_plane(res,modes,dxs,dys,bs,rad,scale=1):
       elif k==3:
        pu=int(prev[y-1,x]) if y else 0;pred=(int(prev[y,x])+u-pu)&255
       elif k==4:pred=int(pad[y+prad+dy,x+prad+dx])
-      else:raise ValueError(k)
-      z=int(res[t,y,x]);e=z//2 if z%2==0 else -((z+1)//2);fr[y,x]=(pred+e)&255
+      else:raise ValueError('mode')
+      z=int(res[t,y,x]);e=z//2 if not z&1 else -((z+1)//2);fr[y,x]=(pred+e)&255
   out[t]=fr
  return out
 def _shift(a,dx,dy):
- h,w=a.shape;xs=np.clip(np.arange(w)-dx,0,w-1);ys=np.clip(np.arange(h)-dy,0,h-1);return a[np.ix_(ys,xs)]
+ h,w=a.shape;xs=np.clip(np.arange(w)-dx,0,w-1);ys=np.clip(np.arange(h)-dy,0,h-1)
+ return a[np.ix_(ys,xs)]
 def _find_global_shift(prev,cur,rad=8):
  a=prev[::4,::4].astype(np.int16);b=cur[::4,::4].astype(np.int16);best=(10**30,0,0)
  for dy in range(-rad,rad+1):
@@ -158,32 +162,31 @@ def _encode_global_plane(frames,motions,bs=8,scale=2):
    for x0 in range(0,w,bs):
     y1=min(h,y0+bs);x1=min(w,x0+bs);k=int(np.argmin([_entropy(q[y0:y1,x0:x1]) for q in rr]));modes.append(k);res[t,y0:y1,x0:x1]=rr[k][y0:y1,x0:x1]
  return res,bytes(modes)
-
 def _decode_global_plane(res,modes,motions,bs=8,scale=2):
  nf,h,w=res.shape;out=np.empty_like(res);mi=0
  for t in range(nf):
   fr=np.zeros((h,w),dtype=np.uint8);prev=out[t-1] if t else None;dx=dy=0
-  if t:dx=int(round(motions[t][0]/scale));dy=int(round(motions[t][1]/scale));mp=_shift(prev,dx,dy)
+  if t:dd=motions[t];dx=int(round(dd[0]/scale));dy=int(round(dd[1]/scale));mp=_shift(prev,dx,dy)
   else:mp=None
   for y0 in range(0,h,bs):
    for x0 in range(0,w,bs):
     y1=min(h,y0+bs);x1=min(w,x0+bs);k=modes[mi];mi+=1
     for y in range(y0,y1):
-    for x in range(x0,x1):
-     l=int(fr[y,x-1]) if x else 0;u=int(fr[y-1,x]) if y else 0;ul=int(fr[y-1,x-1]) if x and y else 0;p=l+u-ul;pa=abs(p-l);pb=abs(p-u);pc=abs(p-ul);sp=l if pa<=pb and pa<=pc else u if pb<=pc else ul
-     if k==0:pred=sp
-     elif k==1:pred=int(prev[y,x])
-     elif k==2:
-      pl=int(prev[y,x-1]) if x else 0;pred=(int(prev[y,x])+l-pl)&255
-     elif k==3:
-      pu=int(prev[y-1,x]) if y else 0;pred=(int(prev[y,x])+u-pu)&255
-     elif k==4:pred=int(mp[y,x])
-     else:raise ValueError(+)
-     z=int(res[t,y,x]);e=z//2 if z%2==0 else -((z+1)//2);fr[y,x]=(pred+e)&255
+     for x in range(x0,x1):
+      l=int(fr[y,x-1]) if x else 0;u=int(fr[y-1,x]) if y else 0;ul=int(fr[y-1,x-1]) if x and y else 0;p=l+u-ul;pa=abs(p-l);pb=abs(p-u);pc=abs(p-ul);sp=l if pa<=pb and pa<=pc else u if pb<=pc else ul
+      if k==0:pred=sp
+      elif k==1:pred=int(prev[y,x])
+      elif k==2:
+       pl=int(prev[y,x-1]) if x else 0;pred=(int(prev[y,x])+l-pl)&255
+      elif k==3:
+       pu=int(prev[y-1,x]) if y else 0;pred=(int(prev[y,x])+u-pu)&255
+      elif k==4:pred=int(mp[y,x])
+      else:raise ValueError('unknown global mode')
+      z=int(res[t,y,x]);e=z//2 if not z&1 else -((z+1)//2);fr[y,x]=(pred+e)&255
   out[t]=fr
  return out
 
-# ============= AXIOM v0.10 causal-context override =============
+# ============== AXIOM v0.10 causal-context override ==============
 # Later definitions intentionally replace the v0.7 pack/unpack above.
 import zlib as _zlib
 import lzma as _lzma
