@@ -1,0 +1,54 @@
+name: Brady geometry and spatial DOF diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  geom:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Inspect trace geometry and physical spatial rank
+        shell: bash
+        run: |
+          cat > g.py <<'PY'
+          import os,json,numpy as np
+          from scipy.spatial import cKDTree
+          f='land.sgy';size=os.path.getsize(f);H=open(f,'rb').read(3600);cand=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(H[3216:3218],bo);ns=int.from_bytes(H[3220:3222],bo);fmt=int.from_bytes(H[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cand.append((bo,nb,dt,ns,(size-3600)//st,st))
+          bo,nb,dt,ns,ntr,st=cand[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          # Trace header fields, SEG-Y rev1 conventional receiver/group coordinates: scalar bytes 71-72, source X/Y 73-80, group X/Y 81-88.
+          def i16(off):return int.from_bytes(mm[3600+off:3600+off+2],bo,signed=True)
+          def trace_i32(i,off):
+            b=3600+i*st+off;return int.from_bytes(mm[b:b+4],bo,signed=True)
+          rows=[];XY=[]
+          for i in range(ntr):
+            base=3600+i*st;sc=int.from_bytes(mm[base+70:base+72],bo,signed=True);gx=int.from_bytes(mm[base+80:base+84],bo,signed=True);gy=int.from_bytes(mm[base+84:base+88],bo,signed=True);sx=int.from_bytes(mm[base+72:base+76],bo,signed=True);sy=int.from_bytes(mm[base+76:base+80],bo,signed=True)
+            fac=(1.0/abs(sc) if sc<0 else float(sc) if sc>0 else 1.0);XY.append((gx*fac,gy*fac));
+            if i<12 or i in [127,128,255,256,1023,2047,4095,4096,4351,ntr-1]:rows.append({'i':i,'scalar':sc,'gx':gx,'gy':gy,'gx_scaled':gx*fac,'gy_scaled':gy*fac,'sx':sx,'sy':sy})
+          XY=np.asarray(XY,float);unique=int(np.unique(XY,axis=0).shape[0]);span=(XY.max(0)-XY.min(0)).tolist();out={'ntr':ntr,'ns':ns,'dt_us':dt,'header_samples':rows,'coord_unique':unique,'coord_span':span}
+          # Compare cable-neighbor vs Euclidean-nearest-neighbor correlation on active 20s-ish middle window.
+          lo=4096;n=512;X=A[lo:lo+n].astype(np.float32,copy=True);coords=XY[lo:lo+n];tsel=slice(3000,23000);Z=X[:,tsel].astype(np.float64);Z-=Z.mean(1,keepdims=True);norm=np.sqrt(np.sum(Z*Z,axis=1))+1e-30
+          cable=np.sum(Z[:-1]*Z[1:],axis=1)/(norm[:-1]*norm[1:]);out['cable_adj_corr']={'median':float(np.median(cable)),'mean':float(np.mean(cable)),'p90':float(np.quantile(cable,.9))}
+          if np.unique(coords,axis=0).shape[0]>4:
+            tree=cKDTree(coords);dist,ix=tree.query(coords,k=min(8,n));pairs=[];nn=[]
+            for i in range(n):
+              j=int(ix[i,1]);nn.append(np.dot(Z[i],Z[j])/(norm[i]*norm[j]));pairs.append((i,j,float(dist[i,1])))
+            out['physical_nn_corr']={'median':float(np.median(nn)),'mean':float(np.mean(nn)),'p90':float(np.quantile(nn,.9)),'median_dist':float(np.median([p[2] for p in pairs]))}
+          # SVD spatial effective rank on short time windows, raw order; and spatial DCT-like FFT concentration diagnostic.
+          sv=[];spec=[]
+          for a in [3000,6000,9000,12000,15000,18000,21000]:
+            W=X[:,a:a+512].astype(np.float64);W-=W.mean(axis=1,keepdims=True);s=np.linalg.svd(W,compute_uv=False);e=s*s;cs=np.cumsum(e)/e.sum();r99=int(np.searchsorted(cs,.99)+1);r999=int(np.searchsorted(cs,.999)+1);sv.append({'t0':a,'r99':r99,'r999':r999,'rmax':len(s)})
+            F=np.fft.rfft(W,axis=0);E=np.mean(np.abs(F)**2,axis=1);ord=np.argsort(E)[::-1];c=np.cumsum(E[ord])/E.sum();spec.append({'t0':a,'modes99':int(np.searchsorted(c,.99)+1),'modes999':int(np.searchsorted(c,.999)+1),'total_modes':len(E)})
+          out['spatial_svd']=sv;out['spatial_fft_energy']=spec
+          print(json.dumps(out,indent=2),flush=True);open('geometry_spectrum.json','w').write(json.dumps(out,indent=2))
+          PY
+          python g.py
+      - uses: actions/upload-artifact@v4
+        with: {name: brady-geometry-spectrum, path: geometry_spectrum.json, retention-days: 2}
