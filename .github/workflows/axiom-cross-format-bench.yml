@@ -2,6 +2,8 @@ name: AXIOM cross-format benchmark
 on:
   push:
     branches: [axiom-benchmark-20260810]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 jobs:
   bench:
@@ -9,8 +11,6 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: axiom-benchmark-20260810
       - name: Install benchmark tools
         run: |
           sudo apt-get update -qq
