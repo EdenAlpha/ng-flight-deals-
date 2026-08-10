@@ -1,4 +1,4 @@
-name: Temporary Brady refined spectral carrier
+name: Temporary Brady key-channel quotient carrier
 
 on:
   pull_request:
@@ -8,62 +8,53 @@ permissions:
   contents: read
 
 jobs:
-  refined:
+  keycarrier:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install --quiet numpy pysz zstandard
       - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
-      - name: Fine spectral precision plus adaptive correction geometry
+      - name: Sparse spatial key channels plus certified correction field
         shell: bash
         run: |
-          cat > r.py <<'PY'
+          cat > k.py <<'PY'
           import os,json,numpy as np,zstandard as zstd
           from pysz import sz,szConfig,szErrorBoundMode
-          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');dt=int.from_bytes(h[3216:3218],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True);gstd=float(X.std());eps=.1*gstd;Z=zstd.ZstdCompressor(level=3);zc=lambda b:Z.compress(b)
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True);gstd=float(X.std());eps=.1*gstd;Z=zstd.ZstdCompressor(level=3);zc=lambda b:Z.compress(b)
           def compact(A):
             A=A.astype(np.int32,copy=False);opts={}
-            for tag,B in [('raw',A)]:
-              for order,V in [('C',B),('T',B.T)]:
-                V=np.ascontiguousarray(V);mn,mx=int(V.min()),int(V.max())
-                if mn>=-128 and mx<=127:opts[tag+'_i8'+order]=len(zc(V.astype(np.int8).tobytes()))
-                if mn>=-32768 and mx<=32767:opts[tag+'_i16'+order]=len(zc(V.astype(np.int16).tobytes()))
-            # sparse topology+values option
             for order,V in [('C',A),('T',A.T)]:
-              m=V!=0;vals=V[m];mb=len(zc(np.packbits(np.ascontiguousarray(m).reshape(-1)).tobytes()))
-              if vals.size:
-                vv=vals.astype(np.int8) if vals.min()>=-128 and vals.max()<=127 else vals.astype(np.int16)
-                vb=len(zc(vv.tobytes()))
-              else:vb=0
-              opts['sparse_'+order]=mb+vb
+              V=np.ascontiguousarray(V);mn,mx=int(V.min()),int(V.max())
+              if mn>=-128 and mx<=127:opts['i8'+order]=len(zc(V.astype(np.int8).tobytes()))
+              if mn>=-32768 and mx<=32767:opts['i16'+order]=len(zc(V.astype(np.int16).tobytes()))
+              m=V!=0;vv=V[m];mb=len(zc(np.packbits(m.reshape(-1)).tobytes()));vb=0 if vv.size==0 else len(zc((vv.astype(np.int8) if vv.min()>=-128 and vv.max()<=127 else vv.astype(np.int16)).tobytes()));opts['sparse'+order]=mb+vb
             k=min(opts,key=opts.get);return int(opts[k]),k
           def field_code(A):
-            A=A.astype(np.int32,copy=False);variants={'state':A}
-            T=np.empty_like(A);T[:,0]=A[:,0];T[:,1:]=A[:,1:]-A[:,:-1];variants['dt']=T
-            S=np.empty_like(A);S[0]=A[0];S[1:]=A[1:]-A[:-1];variants['ds']=S
-            L=np.empty_like(A);L[0]=T[0];L[1:,0]=A[1:,0]-A[:-1,0];L[1:,1:]=A[1:,1:]-A[1:,:-1]-A[:-1,1:]+A[:-1,:-1];variants['lorenzo']=L
-            best=None
-            for name,V in variants.items():
-              b,m=compact(V);row=(b,name,m,float(np.mean(V==0)))
-              if best is None or b<best[0]:best=row
+            A=A.astype(np.int32,copy=False);T=np.empty_like(A);T[:,0]=A[:,0];T[:,1:]=A[:,1:]-A[:,:-1];S=np.empty_like(A);S[0]=A[0];S[1:]=A[1:]-A[:-1];L=np.empty_like(A);L[0]=T[0];L[1:,0]=A[1:,0]-A[:-1,0];L[1:,1:]=A[1:,1:]-A[1:,:-1]-A[:-1,1:]+A[:-1,:-1];best=None
+            for name,V in [('state',A),('dt',T),('ds',S),('lorenzo',L)]:
+              b,m=compact(V);q=(b,name,m,float(np.mean(V==0)))
+              if best is None or b<best[0]:best=q
             return {'bytes':best[0],'transform':best[1],'mode':best[2],'zero_fraction':best[3]}
+          def szround(A,tol):
+            cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(tol);blob,_=sz.compress(np.ascontiguousarray(A),cfg);D,_=sz.decompress(blob,np.float32,A.shape);return int(blob.size),D
           out=[]
-          freq=np.fft.rfftfreq(ns,d=dt/1e6)
           for lo in [4096,7680]:
-            Y=X[lo:lo+384];F=np.fft.rfft(Y,axis=1);cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;sb,_=sz.compress(Y,cfg);best=None;tr=[]
-            for cutoff in [20,30,40,60]:
-              ids=np.where(freq<=cutoff)[0];G=F[:,ids]/ns
-              for qm in [0.002,0.005,0.01,0.02,0.05,0.1]:
-                q=eps*qm;Qr=np.rint(G.real/q).astype(np.int32);Qi=np.rint(G.imag/q).astype(np.int32);cr=field_code(Qr);ci=field_code(Qi);Fq=np.zeros_like(F);Fq[:,ids]=(Qr.astype(np.float64)+1j*Qi.astype(np.float64))*q*ns;P=np.fft.irfft(Fq,n=ns,axis=1).astype(np.float32);C=np.rint((Y-P)/(2*eps)).astype(np.int32);cc=field_code(C);R=P+C.astype(np.float32)*(2*eps);total=cr['bytes']+ci['bytes']+cc['bytes']+192;row={'cutoff':cutoff,'qmul':qm,'carrier_bytes':cr['bytes']+ci['bytes'],'carrier_real':cr,'carrier_imag':ci,'correction':cc,'total_bytes':total,'ratio':Y.nbytes/total,'maxerr':float(np.max(np.abs(Y-R))),'correction_state_zero':float(np.mean(C==0))}
-                tr.append(row)
+            Y=X[lo:lo+384];db,_=szround(Y,eps);best=None;tr=[]
+            for stride in [2,3,4,6,8,12,16,24,32]:
+              ids=np.arange(0,Y.shape[0],stride,dtype=int);ids=np.r_[ids,Y.shape[0]-1] if ids[-1]!=Y.shape[0]-1 else ids
+              for km in [0.25,0.5,1.0,2.0,4.0]:
+                kb,K=szround(Y[ids],eps*km);P=np.empty_like(Y)
+                for j in range(len(ids)-1):
+                  a,b=int(ids[j]),int(ids[j+1]);L=b-a;u=np.arange(L,dtype=np.float32)/np.float32(L);P[a:b]=K[j,None,:]*(1-u)[:,None]+K[j+1,None,:]*u[:,None]
+                P[-1]=K[-1];C=np.rint((Y-P)/(2*eps)).astype(np.int32);cc=field_code(C);R=P+C.astype(np.float32)*(2*eps);total=kb+cc['bytes']+128;row={'stride':stride,'key_tol_mult':km,'key_count':int(len(ids)),'key_bytes':kb,'correction':cc,'correction_state_zero':float(np.mean(C==0)),'total_bytes':total,'ratio':Y.nbytes/total,'maxerr':float(np.max(np.abs(Y-R)))};tr.append(row)
                 if best is None or total<best['total_bytes']:best=row
-            out.append({'block':[lo,lo+384],'block_std':float(Y.std()),'epsilon':eps,'sz3_bytes':int(sb.size),'sz3_ratio':Y.nbytes/int(sb.size),'best':best,'trials':tr})
-          res={'global_std':gstd,'epsilon':eps,'blocks':out};print(json.dumps(res,indent=2));open('refined.json','w').write(json.dumps(res,indent=2))
+            out.append({'block':[lo,lo+384],'block_std':float(Y.std()),'epsilon':eps,'sz3_bytes':db,'sz3_ratio':Y.nbytes/db,'best':best,'trials':tr})
+          res={'global_std':gstd,'epsilon':eps,'blocks':out};print(json.dumps(res,indent=2));open('keys.json','w').write(json.dumps(res,indent=2))
           PY
-          python r.py
+          python k.py
       - uses: actions/upload-artifact@v4
         with:
-          name: brady-refined-spectral
-          path: refined.json
+          name: brady-keychannel-results
+          path: keys.json
           retention-days: 1
