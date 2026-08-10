@@ -1,0 +1,34 @@
+name: AXIOM corpus export
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  corpus:
+    if: github.head_ref == 'axiom-v02-beast-20260810'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Build real corpus
+        run: |
+          set -e
+          mkdir -p data
+          curl -L --retry 3 -sS https://www.gutenberg.org/files/1342/1342-0.txt -o data/prose.txt
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/json-iterator/test-data/master/large-file.json -o data/data.json
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv | head -n 250001 > data/data.csv
+          git clone -q --depth 1 https://github.com/madler/zlib.git data/zlib-src
+          rm -rf data/zlib-src/.git
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf data/source_tree.tar -C data/zlib-src .
+          git clone -q --depth 1 https://github.com/android/architecture-samples.git data/android-src
+          rm -rf data/android-src/.git
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf data/android_app_raw.tar -C data/android-src app build.gradle.kts settings.gradle.kts gradle.properties 2>/dev/null || tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf data/android_app_raw.tar -C data/android-src app
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/opencv/opencv/master/samples/data/lena.jpg -o data/lena.jpg
+          ffmpeg -loglevel error -y -i data/lena.jpg -f rawvideo -pix_fmt rgb24 data/image_rgb24.raw
+          curl -L --retry 3 -sS https://media.w3.org/2010/05/sintel/trailer.mp4 -o data/video.mp4
+          ffmpeg -loglevel error -y -ss 0 -t 4 -i data/video.mp4 -vf scale=320:180 -r 24 -f rawvideo -pix_fmt yuv420p data/video_yuv420.raw
+          rm -rf data/zlib-src data/android-src data/lena.jpg data/video.mp4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-real-corpus
+          path: data
+          retention-days: 1
+          compression-level: 6
