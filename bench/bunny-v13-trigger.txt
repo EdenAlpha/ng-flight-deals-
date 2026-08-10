@@ -1,1 +1,2 @@
-AXIOM v0.13 isolated Big Buck Bunny natural-video verification trigger.
+AXIOM v0.13 isolated Big Buck Bunny verification trigger.
+MDL sweep 2026-08-10.
