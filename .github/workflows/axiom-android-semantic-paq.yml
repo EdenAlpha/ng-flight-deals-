@@ -1,0 +1,84 @@
+name: AXIOM Android semantic + PAQ verification
+on:
+  pull_request:
+    branches: [axiom-android-paq-base]
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies and rebuild pinned corpus
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential cmake git python3-pip
+          python3 -m pip install -q pillow fonttools brotli
+          git clone -q --depth 1 https://github.com/android/architecture-samples.git /tmp/android-src
+          rm -rf /tmp/android-src/.git
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.tar -C /tmp/android-src app build.gradle.kts settings.gradle.kts gradle.properties 2>/dev/null || tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.tar -C /tmp/android-src app
+          echo '73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75  /tmp/android.tar' | sha256sum -c -
+      - name: Build exact AXIOM semantic representation
+        run: |
+          set -euxo pipefail
+          PYTHONPATH=bench/androidpaq python3 - <<'PY'
+          import pathlib,hashlib
+          import tar_graph_transform as T
+          src=pathlib.Path('/tmp/android.tar').read_bytes()
+          rep=T.pack(src)
+          if rep is None: raise SystemExit('semantic TAR transform rejected corpus')
+          out=T.unpack(rep)
+          if out != src: raise SystemExit('semantic TAR roundtrip failed')
+          pathlib.Path('/tmp/android.rep').write_bytes(rep)
+          print('ORIGINAL',len(src))
+          print('SEMANTIC_REP',len(rep))
+          print('SOURCE_SHA256',hashlib.sha256(src).hexdigest())
+          print('SEMANTIC_INVERSE_SHA256',hashlib.sha256(out).hexdigest())
+          PY
+      - name: Build PAQ8px v216
+        run: |
+          set -euxo pipefail
+          git clone -q --depth 1 https://github.com/hxim/paq8px.git /tmp/paq8px-src
+          cd /tmp/paq8px-src/build
+          bash build-linux-with-cmake.sh >/dev/null
+          cp paq8px /tmp/paq8px
+      - name: Compress semantic representation with non-LSTM PAQ -10B
+        run: |
+          set -euxo pipefail
+          /tmp/paq8px -10B /tmp/android.rep /tmp/android_semantic.paq >/tmp/semantic_paq.log
+          mkdir -p /tmp/semout
+          /tmp/paq8px -d /tmp/android_semantic.paq /tmp/semout/android.rep >/dev/null
+          PYTHONPATH=bench/androidpaq python3 - <<'PY'
+          import pathlib,hashlib
+          import tar_graph_transform as T
+          rep=pathlib.Path('/tmp/semout/android.rep').read_bytes()
+          out=T.unpack(rep)
+          src=pathlib.Path('/tmp/android.tar').read_bytes()
+          if out != src: raise SystemExit('AXIOM semantic + PAQ end-to-end mismatch')
+          pathlib.Path('/tmp/android.roundtrip.tar').write_bytes(out)
+          print('ROUNDTRIP_SHA256',hashlib.sha256(out).hexdigest())
+          PY
+          cmp /tmp/android.tar /tmp/android.roundtrip.tar
+      - name: Record result against verified direct PAQ floor
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          python3 - <<'PY' | tee results/android_semantic_paq.txt
+          import os,hashlib
+          src='/tmp/android.tar'; rep='/tmp/android.rep'; arc='/tmp/android_semantic.paq'
+          direct=199512
+          payload=os.path.getsize(arc); total=payload+96
+          print('source_sha256='+hashlib.sha256(open(src,'rb').read()).hexdigest())
+          print('original='+str(os.path.getsize(src)))
+          print('semantic_rep='+str(os.path.getsize(rep)))
+          print('semantic_paq10B_payload='+str(payload))
+          print('axiom_container_conservative='+str(total))
+          print('verified_direct_paq10B_reference='+str(direct))
+          print('axiom_smaller_pct_vs_direct_paq='+format((direct-total)*100/direct,'.4f'))
+          print('exact_roundtrip=true')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-android-semantic-paq
+          path: results/android_semantic_paq.txt
+          retention-days: 7
