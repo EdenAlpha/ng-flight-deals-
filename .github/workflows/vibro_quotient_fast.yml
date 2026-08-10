@@ -1,0 +1,117 @@
+name: Vibroseis source quotient fast probe
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz
+      - name: Download matched Brady land record and measured sweep
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+          curl -L --fail --retry 5 --retry-delay 2 -o source.sgy 'https://gdr.openei.org/files/849/8046_160325_140115.sgy'
+          ls -lh land.sgy source.sgy
+      - name: Source quotient experiment
+        shell: bash
+        run: |
+          cat > probe.py <<'PY'
+          import os,json,subprocess,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+
+          def parse_segy(path,maxtr=None):
+            size=os.path.getsize(path);h=open(path,'rb').read(3600);cand=[]
+            for bo,nb in [('big','>'),('little','<')]:
+              dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo)
+              if fmt==5 and dt>0 and ns>0:
+                st=240+4*ns
+                if (size-3600)%st==0:cand.append((bo,nb,dt,ns,(size-3600)//st,st))
+            if len(cand)!=1:raise RuntimeError((path,size,cand))
+            bo,nb,dt,ns,ntr,st=cand[0];n=ntr if maxtr is None else min(maxtr,ntr);mm=np.memmap(path,np.uint8,'r')
+            X=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))[:n].astype(np.float32,copy=True)
+            return {'bo':bo,'nb':nb,'dt_us':dt,'ns':ns,'ntr':ntr,'stride':st,'X':X}
+
+          def zbytes(a,level=9):
+            return len(subprocess.run(['zstd','-q','-f',f'-{level}','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def smallint(a):
+            mn=int(a.min()) if a.size else 0;mx=int(a.max()) if a.size else 0
+            if mn>=-128 and mx<=127:return a.astype(np.int8)
+            if mn>=-32768 and mx<=32767:return a.astype(np.int16)
+            return a.astype(np.int32)
+          def corr_size(C):
+            K=np.empty_like(C);K[:,0]=C[:,0];K[:,1:]=C[:,1:]-C[:,:-1]
+            dense=zbytes(smallint(K))
+            mask=(K!=0);mb=zbytes(np.packbits(mask.reshape(-1),bitorder='little'));v=K[mask];vb=zbytes(smallint(v)) if v.size else 0
+            return min(dense,mb+vb),float(mask.mean()),{'dense':dense,'mask':mb,'values':vb}
+
+          L=parse_segy('land.sgy',256);X=L['X'];raw=X.nbytes;rms=float(np.sqrt(np.mean(X.astype(np.float64)**2)));eps=.1*rms
+          S=parse_segy('source.sgy');SX=S['X']
+          meta={'land':{k:L[k] for k in ['dt_us','ns','ntr','stride']},'source':{k:S[k] for k in ['dt_us','ns','ntr','stride']},'shape':list(X.shape),'rms':rms,'eps':eps,'raw':raw}
+          print('META',json.dumps(meta),flush=True)
+
+          # PULSE M52 sample-stream baseline using same backend
+          M=52;idx=np.arange(0,L['ns'],M,dtype=np.int32)
+          if idx[-1]!=L['ns']-1:idx=np.r_[idx,L['ns']-1]
+          Ai=np.rint(X[:,idx]/eps).astype(np.int32);Aq=smallint(Ai);DA=Ai.copy();DA[:,1:]-=Ai[:,:-1];ab=min(zbytes(Aq),zbytes(smallint(DA)))
+          Ad=Ai.astype(np.float32)*np.float32(eps);P0=np.empty_like(X)
+          for j in range(len(idx)-1):
+            a,b=int(idx[j]),int(idx[j+1]);u=np.arange(b-a,dtype=np.float32)/np.float32(b-a);P0[:,a:b]=Ad[:,j,None]*(1-u)[None,:]+Ad[:,j+1,None]*u[None,:]
+          P0[:,-1]=Ad[:,-1];C0=np.rint((X-P0)/(2*eps)).astype(np.int32);cb0,ef0,cd0=corr_size(C0);R0=P0+C0.astype(np.float32)*(2*eps)
+          pulse={'bytes':ab+cb0,'ratio':raw/(ab+cb0),'anchor_bytes':ab,'corr_bytes':cb0,'event_fraction':ef0,'maxerr':float(np.max(np.abs(X-R0)))}
+
+          # SZ3 same absolute error
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);sb,_=sz.compress(np.ascontiguousarray(X),cfg);SY,_=sz.decompress(sb,np.float32,X.shape)
+          sz3={'bytes':int(sb.size),'ratio':raw/int(sb.size),'maxerr':float(np.max(np.abs(X-SY)))}
+
+          # Resample each measured source trace onto DAS sample interval, then test source-start offset.
+          dtL=L['dt_us']*1e-6;dtS=S['dt_us']*1e-6;ns=L['ns'];nfft=1
+          while nfft < ns + min(ns, int(round(S['ns']*dtS/dtL))):nfft*=2
+          Xf=np.fft.rfft(X,n=nfft,axis=1)
+          rows=[]
+          source_info=[]
+          for si in range(SX.shape[0]):
+            src=SX[si].astype(np.float64);told=np.arange(src.size)*dtS;tnew=np.arange(0,told[-1]+.5*dtL,dtL);src=np.interp(tnew,told,src).astype(np.float32)
+            src-=np.mean(src);sr=float(np.sqrt(np.mean(src.astype(np.float64)**2)))
+            if sr==0:continue
+            src/=sr;source_info.append({'trace':si,'resampled_ns':int(src.size),'rms_before_norm':sr,'zstd_bytes':zbytes(src)})
+            for off_s in [0.,1.,2.,3.,4.,5.]:
+              off=int(round(off_s/dtL));seg=src[off:]
+              if seg.size<1000:continue
+              svec=np.zeros(nfft,np.float32);take=min(seg.size,ns);svec[:take]=seg[:take]
+              Sf=np.fft.rfft(svec)
+              power=np.abs(Sf)**2;pmax=float(power.max())
+              for lam in [1e-1,3e-2,1e-2,3e-3]:
+                Hf=Xf*np.conj(Sf)[None,:]/(power[None,:]+lam*pmax+1e-30)
+                h=np.fft.irfft(Hf,n=nfft,axis=1)[:,:ns].astype(np.float32)
+                for kk in [4,8,16,32,64,128]:
+                  ind=np.argpartition(np.abs(h),-kk,axis=1)[:,-kk:]
+                  vals=np.take_along_axis(h,ind,axis=1)
+                  hs=np.zeros_like(h);np.put_along_axis(hs,ind,vals,axis=1)
+                  Pf=np.fft.rfft(hs,n=nfft,axis=1)*Sf[None,:]
+                  P=np.fft.irfft(Pf,n=nfft,axis=1)[:,:ns].astype(np.float32)
+                  C=np.rint((X-P)/(2*eps)).astype(np.int32);cb,ef,parts=corr_size(C);R=P+C.astype(np.float32)*(2*eps)
+                  # model: source once + per-trace sorted delay deltas + float32 amplitudes, all zstd-coded
+                  order=np.argsort(ind,axis=1);ii=np.take_along_axis(ind,order,axis=1).astype(np.int32);vv=np.take_along_axis(vals,order,axis=1).astype(np.float32);di=ii.copy();di[:,1:]-=ii[:,:-1]
+                  model=zbytes(smallint(di))+zbytes(vv)+zbytes(src)
+                  total=model+cb
+                  row={'source_trace':si,'offset_s':off_s,'lambda':lam,'k':kk,'model_bytes':model,'corr_bytes':cb,'bytes':total,'ratio':raw/total,'event_fraction':ef,'maxerr':float(np.max(np.abs(X-R)))}
+                  rows.append(row)
+                  print('ROW',json.dumps(row),flush=True)
+          rows.sort(key=lambda r:r['ratio'],reverse=True)
+          out={'meta':meta,'source_info':source_info,'pulse':pulse,'sz3':sz3,'top':rows[:25]}
+          print('PULSE',pulse,flush=True);print('SZ3',sz3,flush=True);print('BEST',json.dumps(rows[:10],indent=2),flush=True)
+          open('vibro_quotient.json','w').write(json.dumps(out,indent=2))
+          PY
+          python probe.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vibro-quotient-fast
+          path: vibro_quotient.json
+          retention-days: 2
