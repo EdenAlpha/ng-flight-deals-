@@ -1,0 +1,57 @@
+name: AXIOM semantic PAQ composition
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential cmake zlib1g-dev curl xz-utils
+      - name: Fetch AXIOM semantic transform and build PAQ8px v216
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/EdenAlpha/ng-flight-deals-/axiom-v02-beast/axiom_beast/csv_graph_transform_v8.py -o csv_graph_transform_v8.py
+          curl -fsSL https://raw.githubusercontent.com/EdenAlpha/ng-flight-deals-/axiom-v02-beast/axiom_beast/axiom3_common.py -o axiom3_common.py
+          git clone -q --depth 1 https://github.com/hxim/paq8px.git paq8px-src
+          (cd paq8px-src/build && bash build-linux-with-cmake.sh >/dev/null)
+          cp paq8px-src/build/paq8px ./paq8px
+      - name: Build exact AXIOM CSV coordinates and benchmark PAQ
+        run: |
+          set -euo pipefail
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv -o full.csv
+          head -n 250001 full.csv > data.csv
+          python3 - <<'PY'
+          import csv_graph_transform_v8 as C,hashlib
+          d=open('data.csv','rb').read(); r=C.pack(d); assert r is not None; assert C.unpack(r)==d
+          open('semantic.rep','wb').write(r)
+          print('source',len(d),'semantic_rep',len(r),'sha256',hashlib.sha256(d).hexdigest())
+          PY
+          ./paq8px -8 semantic.rep semantic.paq8 > paq8.log
+          mkdir o8
+          ./paq8px -d semantic.paq8 o8/semantic.rep >/dev/null
+          cmp semantic.rep o8/semantic.rep
+          ./paq8px -10B semantic.rep semantic.paq10B > paq10.log
+          mkdir o10
+          ./paq8px -d semantic.paq10B o10/semantic.rep >/dev/null
+          cmp semantic.rep o10/semantic.rep
+          python3 - <<'PY' | tee results.txt
+          import os,hashlib,csv_graph_transform_v8 as C
+          original=open('data.csv','rb').read()
+          for fn in ('semantic.paq8','semantic.paq10B'):
+              print(fn,os.path.getsize(fn),'total_with_axiom_header',os.path.getsize(fn)+44,'vs_direct_paq8_pct',round((139514-(os.path.getsize(fn)+44))*100/139514,2))
+          sem=open('o10/semantic.rep','rb').read();dec=C.unpack(sem);assert dec==original
+          print('exact',True,'source_sha256',hashlib.sha256(original).hexdigest())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-semantic-paq-results
+          path: |
+            results.txt
+            paq8.log
+            paq10.log
+          retention-days: 7
