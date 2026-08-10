@@ -1,0 +1,46 @@
+name: AXIOM v0.3 adversarial benchmark
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  bench:
+    if: github.head_ref == 'axiom-v02-beast-20260810'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install strong opponents
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full ffmpeg xz-utils brotli zstd libjxl-tools git curl unzip
+          python3 -m pip install -q numpy brotli
+      - name: Unpack AXIOM v0.3
+        run: |
+          mkdir -p axiom_v03/data
+          base64 -d axiom_v03_payload.b64 > /tmp/axiom_v03.zip
+          unzip -q -o /tmp/axiom_v03.zip -d axiom_v03
+      - name: Build real corpus
+        run: |
+          set -e
+          cd axiom_v03
+          curl -L --retry 3 -sS https://www.gutenberg.org/files/1342/1342-0.txt -o data/prose.txt
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/json-iterator/test-data/master/large-file.json -o data/data.json
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv -o /tmp/us-counties.csv
+          head -n 250001 /tmp/us-counties.csv > data/data.csv
+          git clone -q --depth 1 https://github.com/android/architecture-samples.git data/android-src
+          rm -rf data/android-src/.git
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf data/android_app_raw.tar -C data/android-src app build.gradle.kts settings.gradle.kts gradle.properties 2>/dev/null || tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf data/android_app_raw.tar -C data/android-src app
+          rm -rf data/android-src
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/opencv/opencv/master/samples/data/lena.jpg -o data/lena.jpg
+          ffmpeg -loglevel error -y -i data/lena.jpg -f rawvideo -pix_fmt rgb24 data/image_rgb24.raw
+      - name: Run adversarial benchmark
+        run: |
+          cd axiom_v03
+          python3 bench_v03.py | tee run_v03.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-v03-adversarial-results
+          path: |
+            axiom_v03/outv03/results.csv
+            axiom_v03/run_v03.log
+          retention-days: 7
