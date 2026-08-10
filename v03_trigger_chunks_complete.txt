@@ -1,1 +1,1 @@
-trigger AXIOM v0.3 after all payload chunks completed
+trigger AXIOM v0.3 after corrected per-chunk binary decoding
