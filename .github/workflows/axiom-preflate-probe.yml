@@ -1,0 +1,26 @@
+name: AXIOM preflate probe
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  probe:
+    if: github.head_ref == 'axiom-v02-beast-20260810'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Prepare sources
+        run: |
+          git clone -q --depth 1 https://github.com/microsoft/preflate-rs.git preflate-rs
+          git clone -q --depth 1 https://github.com/madler/zlib.git zlib
+          rustc --version
+      - name: Build Preflate CLI
+        run: cd preflate-rs && cargo build --release -p preflate_util
+      - name: Probe large zlib PDF
+        run: |
+          stat -c 'PDF_BYTES=%s' zlib/doc/crc-doc.1.0.pdf
+          ./preflate-rs/target/release/preflate_util --baseline true --verify true -c 14 zlib/doc/crc-doc.1.0.pdf | tee preflate_probe.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-preflate-probe
+          path: preflate_probe.log
+          retention-days: 7
