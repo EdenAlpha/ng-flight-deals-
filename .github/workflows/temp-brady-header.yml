@@ -1,0 +1,49 @@
+name: Temporary Brady SEG-Y header probe
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  header-probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140048.sgy'
+      - name: Read trace geometry fields
+        shell: bash
+        run: |
+          cat > hp.py <<'PY'
+          import os,json,struct,numpy as np
+          f='land.sgy';size=os.path.getsize(f);p=open(f,'rb').read(3600);ns=int.from_bytes(p[3220:3222],'big');dt=int.from_bytes(p[3216:3218],'big');fmt=int.from_bytes(p[3224:3226],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r')
+          def i2(h,o):return int.from_bytes(h[o:o+2],'big',signed=True)
+          def i4(h,o):return int.from_bytes(h[o:o+4],'big',signed=True)
+          rec=[]
+          for k in range(n):
+            o=3600+k*st;h=bytes(mm[o:o+240]);sc=i2(h,70);esc=i2(h,68)
+            def scale(v,s):return v*(s if s>0 else (1/abs(s) if s<0 else 1))
+            rec.append((k,i4(h,0),i4(h,4),i4(h,8),i4(h,12),i4(h,20),i4(h,24),i4(h,36),scale(i4(h,72),sc),scale(i4(h,76),sc),scale(i4(h,80),sc),scale(i4(h,84),sc),i4(h,40),i4(h,44),sc,esc,i2(h,114),i2(h,116)))
+          A=np.array(rec,dtype=np.float64)
+          fields=['index','seq_line','seq_file','field_record','trace_in_field','cdp','trace_in_cdp','offset','sx','sy','gx','gy','recv_elev','src_elev','coord_scalar','elev_scalar','trace_ns','trace_dt']
+          summary={}
+          for j,name in enumerate(fields):
+            v=A[:,j];u=np.unique(v);summary[name]={'unique':int(u.size),'min':float(v.min()),'max':float(v.max()),'first10':v[:10].tolist(),'last10':v[-10:].tolist(),'median_abs_step':float(np.median(np.abs(np.diff(v)))) if len(v)>1 else 0.0}
+          # test whether ordering by candidate fields would change trace order
+          orders={}
+          for name in ['seq_line','seq_file','field_record','trace_in_field','cdp','trace_in_cdp','gx','gy','recv_elev']:
+            j=fields.index(name);ordr=np.argsort(A[:,j],kind='stable');orders[name]={'fraction_positions_changed':float(np.mean(ordr!=np.arange(n))),'max_index_jump':int(np.max(np.abs(np.diff(ordr)))) if n>1 else 0}
+          sample_indices=[0,1,2,3,4,10,100,379,380,381,4359,4360,4361,n-3,n-2,n-1]
+          samples=[dict(zip(fields,[float(x) for x in A[k]])) for k in sample_indices if 0<=k<n]
+          out={'file_bytes':size,'binary_ns':ns,'binary_dt':dt,'fmt':fmt,'ntr':n,'summary':summary,'orders':orders,'samples':samples};print(json.dumps(out,indent=2));open('headers.json','w').write(json.dumps(out,indent=2))
+          PY
+          python hp.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brady-header-results
+          path: headers.json
+          retention-days: 1
