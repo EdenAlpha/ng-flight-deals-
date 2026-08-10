@@ -1,0 +1,22 @@
+name: AXIOM v0.4 corpus export
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  export:
+    if: github.head_ref == 'axiom-v02-beast-20260810'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download fixed research corpus
+        run: |
+          mkdir -p corpus
+          curl -L --retry 3 -sS https://www.gutenberg.org/files/1342/1342-0.txt -o corpus/prose.txt
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/opencv/opencv/master/samples/data/lena.jpg -o corpus/lena.jpg
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          ffmpeg -loglevel error -y -i corpus/lena.jpg -f rawvideo -pix_fmt rgb24 corpus/image_rgb24.raw
+          sha256sum corpus/* > corpus/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-v04-corpus
+          path: corpus
+          retention-days: 7
