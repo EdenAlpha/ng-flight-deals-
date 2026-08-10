@@ -1,0 +1,137 @@
+name: Temporary Brady phase-space MDL probe
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy pysz zfpy zstandard
+      - name: Download genuine Brady surface-DAS land seismic
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140048.sgy'
+          ls -lh land.sgy
+      - name: Phase-space model plus strict-error residual benchmark
+        shell: bash
+        run: |
+          cat > probe.py <<'PY'
+          import os,json,time,math
+          import numpy as np
+          import zfpy,zstandard as zstd
+          from pysz import sz,szConfig,szErrorBoundMode
+
+          fn='land.sgy';size=os.path.getsize(fn);h=open(fn,'rb').read(3600);cand=[]
+          for bo,nb in [('big','>'),('little','<')]:
+              dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo)
+              if fmt==5 and ns>0 and dt>0:
+                  stride=240+4*ns
+                  if (size-3600)%stride==0:cand.append((nb,dt,ns,(size-3600)//stride,stride))
+          if len(cand)!=1: raise RuntimeError(cand)
+          nb,dt_us,ns,ntr,stride=cand[0]
+          mm=np.memmap(fn,np.uint8,'r')
+          Xall=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(stride,4))
+
+          # Real-field pilot: exact same contiguous samples for all methods.
+          nch=min(1024,ntr)
+          X=np.ascontiguousarray(Xall[:nch],dtype=np.float32)
+          raw=X.nbytes
+          rms=float(np.sqrt(np.mean(X.astype(np.float64)**2)))
+          peak=float(np.max(np.abs(X)))
+          dt=dt_us*1e-6
+          ZC=zstd.ZstdCompressor(level=9)
+          block=64
+
+          def metrics(A,B):
+              d=A.astype(np.float64)-B.astype(np.float64)
+              return {'maxerr':float(np.max(np.abs(d))),'rmse':float(np.sqrt(np.mean(d*d)))}
+
+          def sz_comp(A,eps):
+              cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps)
+              t=time.time();b,_=sz.compress(np.ascontiguousarray(A,dtype=np.float32),cfg);ct=time.time()-t
+              t=time.time();Y,_=sz.decompress(b,np.float32,A.shape);dtc=time.time()-t
+              return int(b.size),Y,ct,dtc
+
+          def phase_model(flo,fhi,r):
+              # Each straight-ish 64-channel block is represented by r dominant spatial
+              # propagation modes per temporal frequency. This is a probe, not final CSCC.
+              P=np.zeros_like(X,dtype=np.float32)
+              model_bytes=128
+              mode_count=0
+              for a in range(0,nch,block):
+                  b=min(nch,a+block); B=np.asarray(X[a:b],dtype=np.float32); m=b-a
+                  F=np.fft.rfft(B,axis=1)
+                  fr=np.fft.rfftfreq(ns,dt)
+                  ids=np.where((fr>=flo)&(fr<=fhi))[0]
+                  K=np.fft.fft(F[:,ids],axis=0)
+                  rr=min(r,m)
+                  # top r wavenumber bins independently for every temporal frequency
+                  take=np.argpartition(np.abs(K),-rr,axis=0)[-rr:,:]
+                  vals=np.take_along_axis(K,take,axis=0).astype(np.complex64)
+                  # Build exactly from serialized precision.
+                  Ks=np.zeros_like(K,dtype=np.complex64)
+                  np.put_along_axis(Ks,take,vals,axis=0)
+                  Fs=np.zeros_like(F,dtype=np.complex64)
+                  Fs[:,ids]=np.fft.ifft(Ks,axis=0).astype(np.complex64)
+                  P[a:b]=np.fft.irfft(Fs,n=ns,axis=1).astype(np.float32)
+                  # Exact byte accounting for model payload after generic entropy coding.
+                  model_bytes += len(ZC.compress(take.astype(np.uint8).tobytes()))
+                  model_bytes += len(ZC.compress(vals.tobytes()))
+                  # frequency range, block boundaries, r; amortized conservative header
+                  model_bytes += 48
+                  mode_count += vals.size
+              return P,model_bytes,mode_count
+
+          candidates=[]
+          # 5-20 Hz source sweep, but test progressively wider bands for scattered energy.
+          for flo,fhi in [(3.,25.),(3.,40.),(1.,60.)]:
+              for r in [1,2,4,8]:
+                  t=time.time();P,mb,nmode=phase_model(flo,fhi,r);build=time.time()-t
+                  candidates.append({'flo':flo,'fhi':fhi,'r':r,'P':P,'model_bytes':mb,'mode_count':nmode,'build_s':build,
+                                     'pred_nrmse_rms':float(np.sqrt(np.mean((X.astype(np.float64)-P.astype(np.float64))**2))/(rms+1e-300))})
+                  print('built',flo,fhi,r,'modelMB',mb/1e6,'nrmse',candidates[-1]['pred_nrmse_rms'],flush=True)
+
+          out={'dataset':'Brady PoroTomo surface DAS real land field record','file_bytes':size,'full_shape':[ntr,ns],
+               'pilot_shape':[nch,ns],'dt_us':dt_us,'rms':rms,'peak_abs':peak,
+               'contract':'For each alpha, epsilon = alpha * RMS of this exact pilot array. Every codec must satisfy the same pointwise max-error bound. Model bytes are included.',
+               'results':[]}
+
+          for alpha in [0.025,0.05,0.10]:
+              eps=alpha*rms
+              sb,S,sct,sdt=sz_comp(X,eps)
+              zb=zfpy.compress_numpy(X,tolerance=eps); Z=zfpy.decompress_numpy(zb)
+              row={'alpha_eps_over_rms':alpha,'eps_abs':eps,
+                   'sz3_direct':{'bytes':sb,'ratio':raw/sb,'compress_s':sct,'decompress_s':sdt,**metrics(X,S)},
+                   'zfp_direct':{'bytes':len(zb),'ratio':raw/len(zb),**metrics(X,Z)},
+                   'phase_space_candidates':[]}
+              best=None
+              for c in candidates:
+                  R=np.ascontiguousarray(X-c['P'],dtype=np.float32)
+                  rb,Rq,rct,rdt=sz_comp(R,eps)
+                  total=c['model_bytes']+rb
+                  rec=c['P']+Rq
+                  q={'flo':c['flo'],'fhi':c['fhi'],'r':c['r'],'model_bytes':c['model_bytes'],'residual_sz3_bytes':rb,
+                     'total_bytes':total,'ratio':raw/total,'mode_count':c['mode_count'],'model_build_s':c['build_s'],
+                     'pred_nrmse_rms':c['pred_nrmse_rms'],'residual_compress_s':rct,'residual_decompress_s':rdt,**metrics(X,rec)}
+                  row['phase_space_candidates'].append(q)
+                  if best is None or total<best['total_bytes']: best=q
+              row['best_phase_space']=best
+              row['gain_vs_sz3']=best['ratio']/row['sz3_direct']['ratio']
+              out['results'].append(row)
+              print('ALPHA',alpha,'SZ3',row['sz3_direct']['ratio'],'BEST',best['ratio'],'GAIN',row['gain_vs_sz3'],best,flush=True)
+
+          open('phase_space_probe.json','w').write(json.dumps(out,indent=2))
+          PY
+          python probe.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brady-phase-space-probe
+          path: phase_space_probe.json
+          retention-days: 2
