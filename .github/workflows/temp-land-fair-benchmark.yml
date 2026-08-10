@@ -1,0 +1,234 @@
+name: Temporary fair land seismic benchmark
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  bench:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python codec dependencies
+        run: |
+          pip install --quiet numpy segyio zfpy pysz zstandard daspack-dev
+
+      - name: Build HPEZ q4 baseline
+        continue-on-error: true
+        run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/hpez
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+          echo "$HOME/hpez/bin" >> "$GITHUB_PATH"
+
+      - name: Download real land datasets
+        run: |
+          set -euo pipefail
+          # Brady's Geothermal Field, Nevada: active vibroseis recorded by vertical DAS.
+          curl -L --fail --retry 5 --retry-delay 2 -o brady_vertical.sgy \
+            'https://gdr.openei.org/files/849/PoroTomo_iDAS025_160325140117.sgy'
+          ls -lh brady_vertical.sgy
+
+          # Utah FORGE: processed 3-D land reflection archive; extract one unenhanced PSDM stack.
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip \
+            'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          unzip -p forge.zip '2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy' > forge_land.segy
+          ls -lh forge_land.segy
+          rm -f forge.zip
+
+      - name: Run matched-error benchmarks and wavefront diagnostic
+        shell: bash
+        run: |
+          cat > land_bench.py <<'PY'
+          import os, json, time, subprocess, shutil, math, zlib
+          import numpy as np
+          import segyio, zfpy, zstandard as zstd
+          from pysz import sz, szConfig, szErrorBoundMode
+
+          try:
+              from daspack import DASCoder, Quantizer
+              DASPACK_OK=True
+          except Exception as e:
+              DASPACK_OK=False
+              DASPACK_ERR=repr(e)
+
+          ZC=zstd.ZstdCompressor(level=9)
+
+          def load_segy(path, prefer_cube=False):
+              if prefer_cube:
+                  try:
+                      with segyio.open(path, 'r', ignore_geometry=False) as f:
+                          X=np.asarray(segyio.tools.cube(f), dtype=np.float32)
+                          if X.ndim == 3 and np.prod(X.shape) > 0:
+                              return np.ascontiguousarray(X), {'layout':'segy_cube','ilines':len(f.ilines),'xlines':len(f.xlines),'samples':len(f.samples)}
+                  except Exception as e:
+                      cube_err=repr(e)
+                  else:
+                      cube_err=None
+              else:
+                  cube_err=None
+              with segyio.open(path, 'r', ignore_geometry=True) as f:
+                  X=np.asarray(f.trace.raw[:], dtype=np.float32)
+                  meta={'layout':'trace_matrix','traces':int(X.shape[0]),'samples':int(X.shape[1])}
+                  if cube_err: meta['cube_error']=cube_err
+                  return np.ascontiguousarray(X), meta
+
+          def metrics(X,Y):
+              d=X.astype(np.float64)-Y.astype(np.float64)
+              mse=float(np.mean(d*d))
+              rms=float(np.sqrt(np.mean(X.astype(np.float64)**2)))
+              return {
+                  'max_abs_error':float(np.max(np.abs(d))),
+                  'rmse':float(np.sqrt(mse)),
+                  'nrmse_rms':float(np.sqrt(mse)/(rms+1e-300)),
+              }
+
+          def hpez_dims(shape):
+              if len(shape)==1: return ['-1',str(shape[0])]
+              if len(shape)==2: return ['-2',str(shape[1]),str(shape[0])]
+              if len(shape)==3: return ['-3',str(shape[2]),str(shape[1]),str(shape[0])]
+              raise ValueError(shape)
+
+          def hpez_bench(X, eps, stem):
+              exe=shutil.which('hpez')
+              if not exe: return {'available':False,'error':'hpez executable not found'}
+              raw=stem+'.bin'; cmp=stem+'.hpez'; dec=stem+'.out'
+              X.tofile(raw)
+              cmd=[exe,'-f','-i',raw,'-z',cmp,*hpez_dims(X.shape),'-M','ABS',repr(float(eps)),'-q','4']
+              t=time.time()
+              cp=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+              ct=time.time()-t
+              if cp.returncode!=0 or not os.path.exists(cmp):
+                  return {'available':False,'returncode':cp.returncode,'output':cp.stdout[-4000:]}
+              dcmd=[exe,'-f','-z',cmp,'-o',dec,*hpez_dims(X.shape),'-M','ABS',repr(float(eps))]
+              t=time.time(); dp=subprocess.run(dcmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True); dt=time.time()-t
+              if dp.returncode!=0 or not os.path.exists(dec):
+                  return {'available':False,'decompress_returncode':dp.returncode,'output':dp.stdout[-4000:]}
+              Y=np.fromfile(dec,dtype=np.float32).reshape(X.shape)
+              out={'available':True,'bytes':os.path.getsize(cmp),'ratio':X.nbytes/os.path.getsize(cmp),'compress_s':ct,'decompress_s':dt,**metrics(X,Y)}
+              for p in (raw,cmp,dec):
+                  try: os.remove(p)
+                  except: pass
+              return out
+
+          def shift1d(v, lag):
+              out=np.zeros_like(v)
+              if lag==0: out[:]=v
+              elif lag>0: out[lag:]=v[:-lag]
+              else: out[:lag]=v[-lag:]
+              return out
+
+          def wavefront_chain(X, eps, maxlag=6):
+              # Field diagnostic: a fully decodable deterministic wavefront-chain codec.
+              # Each trace is predicted from the previously reconstructed neighboring trace
+              # using a stored integer delay + stored float32 gain. Only quantized innovation
+              # remains. This is intentionally NOT called full CSCC.
+              shape=X.shape
+              if X.ndim==3:
+                  chains=[X[i] for i in range(X.shape[0])]
+              elif X.ndim==2:
+                  chains=[X]
+              else:
+                  chains=[X.reshape(1,-1)]
+              step=float(eps)*1.98
+              all_q=[]; all_lags=[]; all_gains=[]; recon_chains=[]
+              t0=time.time()
+              for C in chains:
+                  C=np.asarray(C,dtype=np.float32)
+                  R=np.empty_like(C)
+                  # first trace: direct bounded quantization
+                  q0=np.rint(C[0].astype(np.float64)/step).astype(np.int64)
+                  R[0]=(q0.astype(np.float64)*step).astype(np.float32)
+                  all_q.append(q0)
+                  for i in range(1,C.shape[0]):
+                      prev=R[i-1]
+                      target=C[i]
+                      # downsample only for delay selection; full trace used for gain/residual.
+                      stride=max(1,target.size//512)
+                      td=target[::stride].astype(np.float64)
+                      bestlag=0; bestscore=-1.0
+                      for lag in range(-maxlag,maxlag+1):
+                          p=shift1d(prev,lag)[::stride].astype(np.float64)
+                          den=math.sqrt(float(np.dot(td,td))*float(np.dot(p,p)))+1e-300
+                          score=abs(float(np.dot(td,p)))/den
+                          if score>bestscore:
+                              bestscore=score; bestlag=lag
+                      p=shift1d(prev,bestlag).astype(np.float64)
+                      den=float(np.dot(p,p))+1e-300
+                      gain=np.float32(float(np.dot(target.astype(np.float64),p))/den)
+                      pred=(p*float(gain)).astype(np.float32)
+                      q=np.rint((target.astype(np.float64)-pred.astype(np.float64))/step).astype(np.int64)
+                      R[i]=(pred.astype(np.float64)+q.astype(np.float64)*step).astype(np.float32)
+                      all_q.append(q); all_lags.append(bestlag); all_gains.append(gain)
+                  recon_chains.append(R)
+              q=np.concatenate([a.ravel() for a in all_q])
+              maxq=int(np.max(np.abs(q))) if q.size else 0
+              if maxq<=127: qdtype=np.int8
+              elif maxq<=32767: qdtype=np.int16
+              elif maxq<=2147483647: qdtype=np.int32
+              else: qdtype=np.int64
+              qb=ZC.compress(q.astype(qdtype).tobytes())
+              lb=ZC.compress(np.asarray(all_lags,dtype=np.int8).tobytes()) if all_lags else b''
+              gb=ZC.compress(np.asarray(all_gains,dtype=np.float32).tobytes()) if all_gains else b''
+              header=96 + 8*len(shape)
+              total=len(qb)+len(lb)+len(gb)+header
+              if X.ndim==3: Y=np.stack(recon_chains,axis=0)
+              else: Y=recon_chains[0].reshape(shape)
+              return {'bytes':total,'ratio':X.nbytes/total,'compress_s':time.time()-t0,'innovation_dtype':np.dtype(qdtype).name,'innovation_zstd_bytes':len(qb),'delay_bytes':len(lb),'gain_bytes':len(gb),**metrics(X,Y)}
+
+          def run_dataset(name,path,prefer_cube,daspack_relevant):
+              X,layout=load_segy(path,prefer_cube)
+              xf=X.astype(np.float64)
+              rms=float(np.sqrt(np.mean(xf*xf)))
+              peak=float(np.max(np.abs(xf)))
+              vrange=float(np.max(xf)-np.min(xf))
+              out={'dataset':name,'path':path,'shape':list(X.shape),'layout':layout,'raw_float_bytes':X.nbytes,'rms':rms,'peak_abs':peak,'value_range':vrange,'results':[]}
+              # Strict max-error bound is normalized to RMS so land/marine amplitude units cannot game the comparison.
+              for alpha in [0.001,0.0025,0.005,0.01]:
+                  eps=alpha*rms
+                  row={'alpha_eps_over_rms':alpha,'eps_abs':eps,'eps_over_peak':eps/(peak+1e-300),'eps_over_range':eps/(vrange+1e-300)}
+
+                  t=time.time(); zb=zfpy.compress_numpy(X,tolerance=eps); zct=time.time()-t
+                  t=time.time(); Z=zfpy.decompress_numpy(zb); zdt=time.time()-t
+                  row['zfp']={'bytes':len(zb),'ratio':X.nbytes/len(zb),'compress_s':zct,'decompress_s':zdt,**metrics(X,Z)}
+
+                  cfg=szConfig(); cfg.errorBoundMode=szErrorBoundMode.ABS; cfg.absErrorBound=eps
+                  t=time.time(); sb,sratio=sz.compress(X,cfg); sct=time.time()-t
+                  t=time.time(); S,_=sz.decompress(sb,np.float32,X.shape); sdt=time.time()-t
+                  row['sz3']={'bytes':int(sb.size),'ratio':X.nbytes/int(sb.size),'compress_s':sct,'decompress_s':sdt,**metrics(X,S)}
+
+                  if daspack_relevant and X.ndim==2 and DASPACK_OK:
+                      coder=DASCoder(threads=4)
+                      t=time.time(); db=coder.encode(X,Quantizer.Uniform(step=2.0*eps)); dct=time.time()-t
+                      t=time.time(); D=coder.decode(db); ddt=time.time()-t
+                      row['daspack']={'bytes':len(db),'ratio':X.nbytes/len(db),'compress_s':dct,'decompress_s':ddt,**metrics(X,D)}
+                  elif daspack_relevant:
+                      row['daspack']={'available':False,'error':globals().get('DASPACK_ERR','not applicable')}
+
+                  row['hpez_q4']=hpez_bench(X,eps,f'{name}_{alpha}')
+                  row['wavefront_chain_v0']=wavefront_chain(X,eps)
+                  out['results'].append(row)
+                  print(name, alpha, json.dumps({k:(v.get('ratio') if isinstance(v,dict) else v) for k,v in row.items() if k in ('zfp','sz3','daspack','hpez_q4','wavefront_chain_v0')}), flush=True)
+              return out
+
+          results=[]
+          results.append(run_dataset('brady_land_das_vibroseis','brady_vertical.sgy',False,True))
+          results.append(run_dataset('utah_forge_land_3d_psdm_stack','forge_land.segy',True,False))
+          open('land_fair_benchmark.json','w').write(json.dumps({'contract':'strict max abs error epsilon = alpha * dataset RMS; same epsilon for every codec','results':results},indent=2))
+          print(json.dumps({'done':True,'datasets':[{'dataset':r['dataset'],'shape':r['shape'],'rms':r['rms']} for r in results]},indent=2))
+          PY
+          python land_bench.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: land-fair-benchmark
+          path: land_fair_benchmark.json
+          retention-days: 2
