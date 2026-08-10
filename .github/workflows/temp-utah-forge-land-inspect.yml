@@ -1,8 +1,8 @@
 name: Temporary Utah FORGE land inspect
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [temp-utah-forge-land-inspect]
 
 permissions:
   contents: read
@@ -23,12 +23,12 @@ jobs:
         shell: bash
         run: |
           python - <<'PY'
-          import zipfile, json, struct, os
+          import zipfile, json, os
           z=zipfile.ZipFile('forge.zip')
           members=[]
           for i in z.infolist():
               name=i.filename
-              if name.lower().endswith(('.sgy','.segy','.seg','.segy')):
+              if name.lower().endswith(('.sgy','.segy','.seg')):
                   try:
                       with z.open(i) as f: p=f.read(3600)
                       cand=[]
