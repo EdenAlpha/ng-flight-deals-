@@ -1,0 +1,61 @@
+name: AXIOM raw audio frontier
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install codecs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg flac python3-numpy
+      - name: Benchmark exact ancestry against FLAC
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audio_lab
+          curl -L --retry 3 -sS https://media.w3.org/wai/accessibility-intro/intro.mp4 -o audio_lab/source.mp4
+          SR=$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of csv=p=0 audio_lab/source.mp4 | head -1)
+          CH=$(ffprobe -v error -select_streams a:0 -show_entries stream=channels -of csv=p=0 audio_lab/source.mp4 | head -1)
+          ffmpeg -loglevel error -y -i audio_lab/source.mp4 -map 0:a:0 -t 12 -f s16le -acodec pcm_s16le audio_lab/orig.raw
+          flac -f --silent --force-raw-format --endian=little --sign=signed --channels="$CH" --bps=16 --sample-rate="$SR" --best audio_lab/orig.raw -o audio_lab/baseline.flac
+          printf 'sample_rate=%s\nchannels=%s\nraw=%s\nflac=%s\n' "$SR" "$CH" "$(stat -c%s audio_lab/orig.raw)" "$(stat -c%s audio_lab/baseline.flac)" | tee audio_lab/results.txt
+          cat > audio_lab/residual.py <<'PY'
+          import numpy as np,sys,os,subprocess
+          orig=np.fromfile(sys.argv[1],dtype='<i2').astype(np.int32)
+          bas=np.fromfile(sys.argv[2],dtype='<i2').astype(np.int32)
+          if len(orig)!=len(bas):
+              print('SKIP length',len(orig),len(bas));sys.exit(3)
+          d=orig-bas
+          print('residual minmax',int(d.min()),int(d.max()),'zero',float(np.mean(d==0)))
+          if d.min() < -32768 or d.max() > 32767:
+              print('SKIP range');sys.exit(4)
+          d.astype('<i2').tofile(sys.argv[3])
+          PY
+          for codec in opus aac; do
+            for br in 24 32 48 64 80 96 128; do
+              ext=ogg; enc='libopus'; [ "$codec" = aac ] && ext=m4a && enc=aac
+              basis="audio_lab/${codec}_${br}.${ext}"
+              if ! ffmpeg -loglevel error -y -f s16le -ar "$SR" -ac "$CH" -i audio_lab/orig.raw -c:a "$enc" -b:a "${br}k" "$basis"; then continue; fi
+              ffmpeg -loglevel error -y -i "$basis" -f s16le -acodec pcm_s16le -ar "$SR" -ac "$CH" audio_lab/basis.raw
+              if ! python3 audio_lab/residual.py audio_lab/orig.raw audio_lab/basis.raw audio_lab/res.raw > audio_lab/tmp.txt; then continue; fi
+              flac -f --silent --force-raw-format --endian=little --sign=signed --channels="$CH" --bps=16 --sample-rate="$SR" --best audio_lab/res.raw -o audio_lab/res.flac
+              python3 - "$basis" "$codec" "$br" <<'PY'
+          import numpy as np,sys,os
+          o=np.fromfile('audio_lab/orig.raw',dtype='<i2').astype(np.int32)
+          b=np.fromfile('audio_lab/basis.raw',dtype='<i2').astype(np.int32)
+          r=np.fromfile('audio_lab/res.raw',dtype='<i2').astype(np.int32)
+          assert np.array_equal((b+r).astype(np.int16),o.astype(np.int16))
+          basis=sys.argv[1]; total=os.path.getsize(basis)+os.path.getsize('audio_lab/res.flac')+32
+          print(f'{sys.argv[2]}_{sys.argv[3]} basis={os.path.getsize(basis)} residual_flac={os.path.getsize("audio_lab/res.flac")} total={total} exact=true')
+          PY
+            done
+          done | tee -a audio_lab/results.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-audio-frontier
+          path: audio_lab/results.txt
+          retention-days: 7
