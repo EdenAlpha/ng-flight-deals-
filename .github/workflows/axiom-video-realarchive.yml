@@ -1,4 +1,4 @@
-name: AXIOM real video archive
+name: AXIOM real natural-video archive
 on:
   pull_request:
     branches: [main]
@@ -11,11 +11,12 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg brotli zstd xz-utils python3-numpy
-      - name: Build and verify real AXIOM video archive
+          sudo apt-get install -y -qq ffmpeg brotli zstd xz-utils python3-numpy git
+      - name: Build and verify natural-video AXIOM archive
         run: |
           set -euxo pipefail
-          ffmpeg -loglevel error -y -f lavfi -i 'testsrc2=size=320x180:rate=24' -t 4 -pix_fmt yuv420p -f rawvideo video.raw
+          git clone -q --depth 1 https://github.com/chthomos/video-media-samples.git media
+          ffmpeg -loglevel error -y -ss 0 -t 4 -i media/big-buck-bunny-480p-30sec.mp4 -vf scale=320:180 -r 24 -pix_fmt yuv420p -f rawvideo video.raw
           python3 video_context_archive.py c video.raw video.axv
           python3 video_context_archive.py d video.axv video.dec.raw
           cmp video.raw video.dec.raw
@@ -24,12 +25,12 @@ jobs:
           python3 - <<'PY' | tee video_real_results.txt
           import os
           raw=os.path.getsize('video.raw'); ax=os.path.getsize('video.axv'); ff=os.path.getsize('ffv1.mkv')
-          print('raw',raw);print('axiom_real_archive',ax);print('ffv1',ff);print('axiom_vs_ffv1_pct',round((ff-ax)*100/ff,2));print('ratio_x',round(raw/ax,4))
+          print('corpus natural Big Buck Bunny 4s 320x180x24 yuv420p');print('raw',raw);print('axiom_real_archive',ax);print('ffv1',ff);print('axiom_vs_ffv1_pct',round((ff-ax)*100/ff,2));print('ratio_x',round(raw/ax,4))
           PY
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: axiom-real-video-archive
+          name: axiom-real-natural-video-archive
           path: |
             video.axv
             video_real_results.txt
