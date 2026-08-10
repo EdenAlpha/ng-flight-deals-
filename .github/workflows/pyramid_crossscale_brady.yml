@@ -1,0 +1,82 @@
+name: Cross-scale pyramid support coding Brady
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  crossscale:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Build identical TP spatial pyramid and recode support jointly
+        shell: bash
+        run: |
+          cat > x.py <<'PY'
+          import os,json,subprocess,math,numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=np.square(T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;lo=4096;nch=257;X=A[lo:lo+nch].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q,lev=19):return len(subprocess.run(['zstd','-q','-f',f'-{lev}','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0
+            return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          @njit(cache=True)
+          def legal(Xr,P,eps,step):
+            n=Xr.size;C=np.empty(n,np.int32);last=0
+            for t in range(n):
+              lo=math.ceil((Xr[t]-P[t]-eps)/step-1e-7);hi=math.floor((Xr[t]-P[t]+eps)/step+1e-7);c=last
+              if lo>hi:c=int(np.rint((Xr[t]-P[t])/step))
+              else:
+                if c<lo:c=lo
+                elif c>hi:c=hi
+              C[t]=c;last=c
+            return C
+          alpha=1.5;step=alpha*eps;Y=np.zeros_like(X);Cfull=np.zeros((nch,ns),np.int32);level=np.full(nch,-1,np.int16)
+          pz=np.zeros(ns,np.float32)
+          for i in [0,nch-1]:
+            c=legal(X[i],pz,eps,step);Cfull[i]=c;Y[i]=c.astype(np.float32)*step;level[i]=8
+          spacing=128;lev=7
+          while spacing>=1:
+            mids=np.arange(spacing,nch-1,2*spacing,dtype=np.int32)
+            for m in mids:
+              P=.5*(Y[m-spacing]+Y[m+spacing]);c=legal(X[m],P,eps,step);Cfull[m]=c;Y[m]=P+c.astype(np.float32)*step;level[m]=lev
+            spacing//=2;lev-=1
+          maxerr=float(np.max(np.abs(X-Y)))
+          # Exact coefficient-transition field. Decoder gets level map implicitly from dyadic position.
+          K=Cfull.copy();K[:,1:]-=Cfull[:,:-1]
+          opts={}
+          opts['C_phys']=z(si(Cfull));opts['K_phys']=z(si(K));opts['K_time_major']=z(si(K.T))
+          dx=Cfull.copy();dx[1:]-=Cfull[:-1];opts['C_dx']=z(si(dx));lor=Cfull.copy();lor[1:,1:]=Cfull[1:,1:]-Cfull[:-1,1:]-Cfull[1:,:-1]+Cfull[:-1,:-1];opts['C_lorenzo']=z(si(lor))
+          # sparse topology/value layouts
+          for name,Q in [('K_phys',K),('K_time',K.T)]:
+            m=Q!=0;mask=np.packbits(m.reshape(-1),bitorder='little');v=Q[m];opts['sparse_'+name]=z(mask)+(z(si(v)) if v.size else 0)
+          # dyadic level ordering, then physical order inside each scale
+          order=np.argsort(-level,kind='stable');Kd=K[order];Cd=Cfull[order];opts['K_dyadic']=z(si(Kd));opts['C_dyadic']=z(si(Cd));
+          for name,Q in [('K_dyadic',Kd),('K_dyadic_time',Kd.T)]:
+            m=Q!=0;opts['sparse_'+name]=z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(Q[m])) if m.any() else 0)
+          # separate-level reference, but include 2D/time-major alternatives within each level
+          sep=0;level_parts=[]
+          for lv in sorted(set(level.tolist()),reverse=True):
+            q=K[level==lv];oo={'trace':z(si(q)),'time':z(si(q.T))};m=q!=0;oo['sparse_trace']=z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(q[m])) if m.any() else 0);qt=q.T;mt=qt!=0;oo['sparse_time']=z(np.packbits(mt.reshape(-1),bitorder='little'))+(z(si(qt[mt])) if mt.any() else 0);best=min(oo,key=oo.get);sep+=oo[best];level_parts.append({'level':int(lv),'ntraces':int(q.shape[0]),'best':best,'bytes':oo[best],'options':oo})
+          opts['separate_best']=sep
+          best=min(opts,key=opts.get);bestbytes=opts[best]+64
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,np.float32,X.shape);sz3={'bytes':int(bb.size),'ratio':raw/int(bb.size),'maxerr':float(np.max(np.abs(X-R)))}
+          out={'shape':[nch,ns],'global_std':std,'eps':eps,'alpha':alpha,'maxerr':maxerr,'coefficient_nonzero_fraction':float(np.count_nonzero(K))/K.size,'options':opts,'best':best,'best_bytes':bestbytes,'ratio':raw/bestbytes,'levels':level_parts,'sz3':sz3};print(json.dumps(out,indent=2),flush=True);open('crossscale.json','w').write(json.dumps(out,indent=2))
+          PY
+          python x.py
+      - uses: actions/upload-artifact@v4
+        with: {name: pyramid-crossscale, path: crossscale.json, retention-days: 2}
