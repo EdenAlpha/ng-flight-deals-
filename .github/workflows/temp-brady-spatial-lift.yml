@@ -1,4 +1,4 @@
-name: Temporary Brady spectral carrier probe
+name: Temporary Brady refined spectral carrier
 
 on:
   pull_request:
@@ -8,51 +8,62 @@ permissions:
   contents: read
 
 jobs:
-  spectral:
+  refined:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install --quiet numpy pysz zstandard
       - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
-      - name: Benchmark low-frequency complex carrier plus certified corrections
+      - name: Fine spectral precision plus adaptive correction geometry
         shell: bash
         run: |
-          cat > spec.py <<'PY'
+          cat > r.py <<'PY'
           import os,json,numpy as np,zstandard as zstd
           from pysz import sz,szConfig,szErrorBoundMode
-          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');dt=int.from_bytes(h[3216:3218],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True);global_std=float(X.std());eps=.1*global_std;fs=1e6/dt
-          Z=zstd.ZstdCompressor(level=3);zc=lambda b:Z.compress(b)
-          def enc_int(A):
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');dt=int.from_bytes(h[3216:3218],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True);gstd=float(X.std());eps=.1*gstd;Z=zstd.ZstdCompressor(level=3);zc=lambda b:Z.compress(b)
+          def compact(A):
             A=A.astype(np.int32,copy=False);opts={}
             for tag,B in [('raw',A)]:
-              for tr,V in [('C',B),('T',B.T)]:
-                V=np.ascontiguousarray(V)
-                if V.min()>=-128 and V.max()<=127:opts[f'{tag}_i8{tr}']=len(zc(V.astype(np.int8).tobytes()))
-                if V.min()>=-32768 and V.max()<=32767:opts[f'{tag}_i16{tr}']=len(zc(V.astype(np.int16).tobytes()))
-            if A.shape[0]>1 and A.shape[1]>1:
-              L=np.empty_like(A);L[0]=A[0];L[1:,0]=A[1:,0]-A[:-1,0];L[1:,1:]=A[1:,1:]-A[1:,:-1]-A[:-1,1:]+A[:-1,:-1]
-              for tr,V in [('C',L),('T',L.T)]:
-                V=np.ascontiguousarray(V)
-                if V.min()>=-128 and V.max()<=127:opts[f'lor_i8{tr}']=len(zc(V.astype(np.int8).tobytes()))
-                if V.min()>=-32768 and V.max()<=32767:opts[f'lor_i16{tr}']=len(zc(V.astype(np.int16).tobytes()))
+              for order,V in [('C',B),('T',B.T)]:
+                V=np.ascontiguousarray(V);mn,mx=int(V.min()),int(V.max())
+                if mn>=-128 and mx<=127:opts[tag+'_i8'+order]=len(zc(V.astype(np.int8).tobytes()))
+                if mn>=-32768 and mx<=32767:opts[tag+'_i16'+order]=len(zc(V.astype(np.int16).tobytes()))
+            # sparse topology+values option
+            for order,V in [('C',A),('T',A.T)]:
+              m=V!=0;vals=V[m];mb=len(zc(np.packbits(np.ascontiguousarray(m).reshape(-1)).tobytes()))
+              if vals.size:
+                vv=vals.astype(np.int8) if vals.min()>=-128 and vals.max()<=127 else vals.astype(np.int16)
+                vb=len(zc(vv.tobytes()))
+              else:vb=0
+              opts['sparse_'+order]=mb+vb
             k=min(opts,key=opts.get);return int(opts[k]),k
-          def residual_cost(Y,P):
-            C=np.rint((Y-P)/(2*eps)).astype(np.int16);K=np.empty_like(C);K[:,0]=C[:,0];K[:,1:]=C[:,1:]-C[:,:-1];R=P+C.astype(np.float32)*(2*eps);m=K!=0;v=K[m];mb=len(zc(np.packbits(m.T.reshape(-1)).tobytes()));vb=len(zc((v.astype(np.int8) if v.size and v.min()>=-128 and v.max()<=127 else v.astype(np.int16)).tobytes()));return mb+vb,float(v.size/K.size),float(np.max(np.abs(Y-R))),mb,vb
-          blocks=[]
-          for lo in [512,4096,7680]:
-            hi=min(lo+384,n);Y=X[lo:hi];F=np.fft.rfft(Y,axis=1);freq=np.fft.rfftfreq(ns,d=dt/1e6);pow=np.mean(np.abs(F[::8])**2,axis=0);tot=float(pow.sum());energy={str(c):float(pow[freq<=c].sum()/tot) for c in [20,30,40,60,100,200]};cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;sb,_=sz.compress(Y,cfg);best=None;trials=[]
-            for cutoff in [20,30,40,60,100]:
+          def field_code(A):
+            A=A.astype(np.int32,copy=False);variants={'state':A}
+            T=np.empty_like(A);T[:,0]=A[:,0];T[:,1:]=A[:,1:]-A[:,:-1];variants['dt']=T
+            S=np.empty_like(A);S[0]=A[0];S[1:]=A[1:]-A[:-1];variants['ds']=S
+            L=np.empty_like(A);L[0]=T[0];L[1:,0]=A[1:,0]-A[:-1,0];L[1:,1:]=A[1:,1:]-A[1:,:-1]-A[:-1,1:]+A[:-1,:-1];variants['lorenzo']=L
+            best=None
+            for name,V in variants.items():
+              b,m=compact(V);row=(b,name,m,float(np.mean(V==0)))
+              if best is None or b<best[0]:best=row
+            return {'bytes':best[0],'transform':best[1],'mode':best[2],'zero_fraction':best[3]}
+          out=[]
+          freq=np.fft.rfftfreq(ns,d=dt/1e6)
+          for lo in [4096,7680]:
+            Y=X[lo:lo+384];F=np.fft.rfft(Y,axis=1);cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;sb,_=sz.compress(Y,cfg);best=None;tr=[]
+            for cutoff in [20,30,40,60]:
               ids=np.where(freq<=cutoff)[0];G=F[:,ids]/ns
-              for qmul in [0.125,0.25,0.5,1.0,2.0]:
-                q=eps*qmul;Qr=np.rint(G.real/q).astype(np.int32);Qi=np.rint(G.imag/q).astype(np.int32);br,mr=enc_int(Qr);bi,mi=enc_int(Qi);Fq=np.zeros_like(F);Fq[:,ids]=(Qr.astype(np.float64)+1j*Qi.astype(np.float64))*q*ns;P=np.fft.irfft(Fq,n=ns,axis=1).astype(np.float32);rb,ef,me,mb,vb=residual_cost(Y,P);total=br+bi+rb+128;row={'cutoff':cutoff,'qmul':qmul,'carrier_bytes':br+bi,'carrier_modes':[mr,mi],'residual_bytes':rb,'topology_bytes':mb,'value_bytes':vb,'event_fraction':ef,'total_bytes':total,'ratio':Y.nbytes/total,'maxerr':me};trials.append(row)
+              for qm in [0.002,0.005,0.01,0.02,0.05,0.1]:
+                q=eps*qm;Qr=np.rint(G.real/q).astype(np.int32);Qi=np.rint(G.imag/q).astype(np.int32);cr=field_code(Qr);ci=field_code(Qi);Fq=np.zeros_like(F);Fq[:,ids]=(Qr.astype(np.float64)+1j*Qi.astype(np.float64))*q*ns;P=np.fft.irfft(Fq,n=ns,axis=1).astype(np.float32);C=np.rint((Y-P)/(2*eps)).astype(np.int32);cc=field_code(C);R=P+C.astype(np.float32)*(2*eps);total=cr['bytes']+ci['bytes']+cc['bytes']+192;row={'cutoff':cutoff,'qmul':qm,'carrier_bytes':cr['bytes']+ci['bytes'],'carrier_real':cr,'carrier_imag':ci,'correction':cc,'total_bytes':total,'ratio':Y.nbytes/total,'maxerr':float(np.max(np.abs(Y-R))),'correction_state_zero':float(np.mean(C==0))}
+                tr.append(row)
                 if best is None or total<best['total_bytes']:best=row
-            blocks.append({'block':[lo,hi],'block_std':float(Y.std()),'global_std':global_std,'epsilon':eps,'spectral_energy':energy,'sz3_ratio':Y.nbytes/int(sb.size),'sz3_bytes':int(sb.size),'best_spectral':best,'trials':trials})
-          out={'global_std':global_std,'epsilon':eps,'fs':fs,'blocks':blocks};print(json.dumps(out,indent=2));open('spectral.json','w').write(json.dumps(out,indent=2))
+            out.append({'block':[lo,lo+384],'block_std':float(Y.std()),'epsilon':eps,'sz3_bytes':int(sb.size),'sz3_ratio':Y.nbytes/int(sb.size),'best':best,'trials':tr})
+          res={'global_std':gstd,'epsilon':eps,'blocks':out};print(json.dumps(res,indent=2));open('refined.json','w').write(json.dumps(res,indent=2))
           PY
-          python spec.py
+          python r.py
       - uses: actions/upload-artifact@v4
         with:
-          name: brady-spectral-results
-          path: spectral.json
+          name: brady-refined-spectral
+          path: refined.json
           retention-days: 1
