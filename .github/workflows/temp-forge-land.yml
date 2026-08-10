@@ -1,0 +1,46 @@
+name: Temporary Utah FORGE conventional land inspect
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Download official Utah FORGE reflection archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 5 --retry-delay 3 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          ls -lh forge.zip
+      - name: List and inspect SEG-Y members
+        shell: bash
+        run: |
+          python - <<'PY'
+          import zipfile,json,os
+          z=zipfile.ZipFile('forge.zip');rows=[]
+          for i in z.infolist():
+            if i.filename.lower().endswith(('.sgy','.segy','.seg')):
+              row={'name':i.filename,'bytes':i.file_size,'zip_bytes':i.compress_size}
+              try:
+                with z.open(i) as f:p=f.read(3600)
+                cand=[]
+                for bo in ['big','little']:
+                  dt=int.from_bytes(p[3216:3218],bo);ns=int.from_bytes(p[3220:3222],bo);fmt=int.from_bytes(p[3224:3226],bo)
+                  if 0<dt<10000000 and 0<ns<10000000 and 1<=fmt<=16:cand.append({'endian':bo,'dt_us':dt,'ns':ns,'fmt':fmt})
+                row['layout']=cand
+              except Exception as e:row['error']=str(e)
+              rows.append(row)
+          out={'archive_bytes':os.path.getsize('forge.zip'),'segy_count':len(rows),'members':rows};print(json.dumps(out,indent=2));open('forge_members.json','w').write(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-members
+          path: forge_members.json
+          retention-days: 1
