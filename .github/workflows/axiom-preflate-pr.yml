@@ -1,0 +1,21 @@
+name: AXIOM versus Preflate benchmark
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.89'
+      - name: Run exact Preflate comparison
+        run: bash preflate_benchmark.sh
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: axiom-preflate-results
+          path: preflate_results.json
+          retention-days: 7
