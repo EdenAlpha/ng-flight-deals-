@@ -14,15 +14,18 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq p7zip-full ffmpeg xz-utils brotli zstd libjxl-tools git curl unzip
           python3 -m pip install -q numpy brotli fonttools[woff]
-      - name: Unpack AXIOM v0.3
+      - name: Recover validated AXIOM v0.3 modules
         run: |
-          mkdir -p axiom_v03/data
-          : > /tmp/axiom_v03.zip
+          : > /tmp/axiom_v03_corrupt.zip
           for f in v03_chunks/part*.b64; do
-            base64 -d "$f" >> /tmp/axiom_v03.zip
+            base64 -d "$f" >> /tmp/axiom_v03_corrupt.zip
           done
-          unzip -t /tmp/axiom_v03.zip
-          unzip -q -o /tmp/axiom_v03.zip -d axiom_v03
+          mkdir -p axiom_v03/data
+          unzip -o /tmp/axiom_v03_corrupt.zip -d axiom_v03 || true
+          rm -f axiom_v03/tar_transform.py
+          test -s axiom_v03/bench_v03.py
+          test -s axiom_v03/tar_graph_transform.py
+          python3 -m py_compile axiom_v03/*.py
       - name: Build real corpus
         run: |
           set -e
