@@ -1,4 +1,4 @@
-name: AXIOM real natural-video archive
+name: AXIOM Beast v0.11 natural-video integration
 on:
   pull_request:
     branches: [main]
@@ -11,28 +11,32 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg brotli zstd xz-utils python3-numpy git
-      - name: Build and verify natural-video AXIOM archive
+          sudo apt-get install -y -qq ffmpeg brotli zstd xz-utils python3-numpy python3-opencv python3-numba git
+      - name: Verify full Beast natural-video path
         run: |
           set -euxo pipefail
           git clone -q --depth 1 https://github.com/chthomos/video-media-samples.git media
-          ffmpeg -loglevel error -y -ss 0 -t 4 -i media/big-buck-bunny-480p-30sec.mp4 -vf scale=320:180 -r 24 -pix_fmt yuv420p -f rawvideo video.raw
-          python3 video_context_archive.py c video.raw video.axv
-          python3 video_context_archive.py d video.axv video.dec.raw
-          cmp video.raw video.dec.raw
-          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i video.raw -c:v ffv1 -level 3 -coder 1 -context 1 ffv1.mkv
-          sha256sum video.raw video.dec.raw | tee video_sha256.txt
-          python3 - <<'PY' | tee video_real_results.txt
+          ffmpeg -loglevel error -y -ss 0 -t 4 -i media/big-buck-bunny-480p-30sec.mp4 -vf scale=320:180 -r 24 -pix_fmt yuv420p -f rawvideo natural.yuv
+          python3 axiom_beast/axiom_beast.py c natural.yuv natural.axb --effort max | tee axiom_compress.txt
+          python3 axiom_beast/axiom_beast.py d natural.axb natural.dec.yuv | tee axiom_decompress.txt
+          cmp natural.yuv natural.dec.yuv
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i natural.yuv -c:v ffv1 -level 3 -coder 1 -context 1 ffv1.mkv
+          sha256sum natural.yuv natural.dec.yuv | tee video_sha256.txt
+          python3 - <<'PY' | tee video_integrated_results.txt
           import os
-          raw=os.path.getsize('video.raw'); ax=os.path.getsize('video.axv'); ff=os.path.getsize('ffv1.mkv')
-          print('corpus natural Big Buck Bunny 4s 320x180x24 yuv420p');print('raw',raw);print('axiom_real_archive',ax);print('ffv1',ff);print('axiom_vs_ffv1_pct',round((ff-ax)*100/ff,2));print('ratio_x',round(raw/ax,4))
+          raw=os.path.getsize('natural.yuv'); ax=os.path.getsize('natural.axb'); ff=os.path.getsize('ffv1.mkv')
+          print('corpus natural Big Buck Bunny 4s 320x180x24 yuv420p')
+          print('raw',raw);print('axiom_beast_v011',ax);print('ffv1',ff)
+          print('axiom_vs_ffv1_pct',round((ff-ax)*100/ff,2));print('ratio_x',round(raw/ax,4))
           PY
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: axiom-real-natural-video-archive
+          name: axiom-beast-v011-natural-video
           path: |
-            video.axv
-            video_real_results.txt
+            natural.axb
+            video_integrated_results.txt
             video_sha256.txt
+            axiom_compress.txt
+            axiom_decompress.txt
           retention-days: 7
