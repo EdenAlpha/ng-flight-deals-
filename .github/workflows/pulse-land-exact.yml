@@ -1,0 +1,181 @@
+name: Exact PULSE real-land benchmark
+
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+
+permissions:
+  contents: read
+
+jobs:
+  pulse-land:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install codecs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq zstd
+          pip install --quiet numpy zfpy pysz zstandard daspack-dev
+
+      - name: Build HPEZ q4
+        continue-on-error: true
+        run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/hpez
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+          find hpez-src/build $HOME/hpez -type f -name hpez -o -name qoz | head -20
+          echo "$HOME/hpez/bin" >> "$GITHUB_PATH"
+
+      - name: Download real Brady land DAS SEG-Y
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140048.sgy'
+          ls -lh land.sgy
+
+      - name: Run exact PULSE carrier-correction rule and matched baselines
+        shell: bash
+        run: |
+          cat > bench.py <<'PY'
+          import os,json,math,subprocess,shutil,time,zlib,tempfile
+          import numpy as np
+          import zfpy,zstandard as zstd
+          from pysz import sz,szConfig,szErrorBoundMode
+          try:
+              from daspack import DASCoder, Quantizer
+              DAS_OK=True
+          except Exception as e:
+              DAS_OK=False; DAS_ERR=repr(e)
+
+          fn='land.sgy'; size=os.path.getsize(fn); prefix=open(fn,'rb').read(3600)
+          cand=[]
+          for bo,nb in [('big','>'),('little','<')]:
+              dt=int.from_bytes(prefix[3216:3218],bo); ns=int.from_bytes(prefix[3220:3222],bo); fmt=int.from_bytes(prefix[3224:3226],bo)
+              if fmt==5 and dt>0 and ns>0:
+                  stride=240+4*ns
+                  if (size-3600)%stride==0: cand.append((bo,nb,dt,ns,(size-3600)//stride,stride))
+          if len(cand)!=1: raise RuntimeError(cand)
+          bo,nb,dt_us,ns,ntr,stride=cand[0]
+          nch=min(1024,ntr)
+          mm=np.memmap(fn,np.uint8,'r')
+          H=np.empty((nch,240),np.uint8)
+          for i in range(nch): H[i]=mm[3600+i*stride:3600+i*stride+240]
+          X=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(stride,4))[:nch].astype(np.float32,copy=True)
+          raw_samples=X.nbytes; pilot_full=3600+nch*stride
+          rms=float(np.sqrt(np.mean(X.astype(np.float64)**2))); peak=float(np.max(np.abs(X)))
+
+          def zc(data,level=19):
+              cp=subprocess.run(['zstd','-q','-f',f'-{level}','-c'],input=data,stdout=subprocess.PIPE,check=True)
+              return cp.stdout
+          def zc9(data): return zstd.ZstdCompressor(level=9).compress(data)
+          pblob=zc(prefix,19)
+          prev=np.vstack([np.zeros((1,240),dtype=np.int16),H[:-1].astype(np.int16)])
+          HD=((H.astype(np.int16)-prev)&255).astype(np.uint8)
+          hblob=zc(np.ascontiguousarray(HD.T).tobytes(),19)
+          container_meta=98
+
+          def pulse_arrays(eps,M):
+              idx=np.arange(0,ns,M,dtype=np.int32)
+              if idx[-1]!=ns-1: idx=np.r_[idx,ns-1]
+              Ai=np.rint(X[:,idx]/eps).astype(np.int32)
+              adt=np.int16 if Ai.min()>=-32768 and Ai.max()<=32767 else np.int32
+              A=Ai.astype(adt)
+              Ad=A.astype(np.float32)*np.float32(eps)
+              P=np.empty_like(X)
+              for j in range(len(idx)-1):
+                  a,b=int(idx[j]),int(idx[j+1]); L=b-a
+                  u=np.arange(L,dtype=np.float32)/np.float32(L)
+                  P[:,a:b]=Ad[:,j,None]*(1-u)[None,:]+Ad[:,j+1,None]*u[None,:]
+              P[:,-1]=Ad[:,-1]
+              Ci=np.rint((X-P)/(2.0*eps)).astype(np.int32)
+              cdt=np.int16 if Ci.min()>=-32768 and Ci.max()<=32767 else np.int32
+              C=Ci.astype(cdt); K=np.empty_like(C); K[:,0]=C[:,0]; K[:,1:]=C[:,1:]-C[:,:-1]
+              DA=A.copy(); DA[:,1:]=A[:,1:]-A[:,:-1]
+              R=P+C.astype(np.float32)*np.float32(2.0*eps)
+              me=float(np.max(np.abs(X-R))); rmse=float(np.sqrt(np.mean((X.astype(np.float64)-R.astype(np.float64))**2)))
+              return A,DA,K,me,rmse
+
+          def pulse_size(eps,M,exact=True):
+              A,DA,K,me,rmse=pulse_arrays(eps,M)
+              comp=zc if exact else (lambda d,l=9:zc9(d))
+              ar=comp(np.ascontiguousarray(A).tobytes(),19) if exact else comp(np.ascontiguousarray(A).tobytes())
+              ad=comp(np.ascontiguousarray(DA).tobytes(),19) if exact else comp(np.ascontiguousarray(DA).tobytes())
+              ab=min(len(ar),len(ad))
+              kb=len(comp(np.ascontiguousarray(K).tobytes(),19) if exact else comp(np.ascontiguousarray(K).tobytes()))
+              full=container_meta+len(pblob)+len(hblob)+ab+kb
+              return {'M':M,'anchor_bytes':ab,'correction_bytes':kb,'sample_stream_bytes':ab+kb,'full_bytes':full,
+                      'sample_ratio':raw_samples/(ab+kb),'full_ratio':pilot_full/full,'maxerr':me,'rmse':rmse}
+
+          def sz3(eps):
+              cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps)
+              t=time.time();b,_=sz.compress(np.ascontiguousarray(X),cfg);ct=time.time()-t
+              Y,_=sz.decompress(b,np.float32,X.shape)
+              d=X.astype(np.float64)-Y.astype(np.float64)
+              return {'bytes':int(b.size),'ratio':raw_samples/int(b.size),'compress_s':ct,'maxerr':float(np.max(np.abs(d))),'rmse':float(np.sqrt(np.mean(d*d)))}
+
+          def zfp(eps):
+              b=zfpy.compress_numpy(X,tolerance=float(eps));Y=zfpy.decompress_numpy(b);d=X.astype(np.float64)-Y.astype(np.float64)
+              return {'bytes':len(b),'ratio':raw_samples/len(b),'maxerr':float(np.max(np.abs(d))),'rmse':float(np.sqrt(np.mean(d*d)))}
+
+          def daspack(eps):
+              if not DAS_OK:return {'available':False,'error':DAS_ERR}
+              try:
+                  Xd=X.astype(np.float64)
+                  coder=DASCoder(threads=4);t=time.time();b=coder.encode(Xd,Quantizer.Uniform(step=2.0*eps));ct=time.time()-t
+                  Y=coder.decode(b);d=Xd-Y.astype(np.float64)
+                  return {'available':True,'bytes':len(b),'ratio_vs_float32_input':raw_samples/len(b),'compress_s':ct,'maxerr':float(np.max(np.abs(d))),'rmse':float(np.sqrt(np.mean(d*d)))}
+              except Exception as e:return {'available':False,'error':repr(e)}
+
+          def hpez(eps,tag):
+              exe=shutil.which('hpez')
+              if not exe:
+                  candidates=[]
+                  for root in [os.path.expanduser('~/hpez/bin'),'hpez-src/build/test']:
+                      for nm in ['hpez','qoz']:
+                          p=os.path.join(root,nm)
+                          if os.path.isfile(p) and os.access(p,os.X_OK):candidates.append(p)
+                  exe=candidates[0] if candidates else None
+              if not exe:return {'available':False,'error':'no executable found'}
+              rf=f'{tag}.bin'; cf=f'{tag}.hpez'; of=f'{tag}.out'; X.tofile(rf)
+              c=[exe,'-f','-i',rf,'-z',cf,'-2',str(ns),str(nch),'-M','ABS',repr(float(eps)),'-q','4']
+              t=time.time();cp=subprocess.run(c,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True);ct=time.time()-t
+              if cp.returncode!=0 or not os.path.exists(cf):return {'available':False,'error':'compress failed','output':cp.stdout[-2000:]}
+              d=[exe,'-f','-z',cf,'-o',of,'-2',str(ns),str(nch),'-M','ABS',repr(float(eps))]
+              dp=subprocess.run(d,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+              if dp.returncode!=0 or not os.path.exists(of):return {'available':False,'error':'decompress failed','output':dp.stdout[-2000:]}
+              Y=np.fromfile(of,np.float32).reshape(X.shape);dif=X.astype(np.float64)-Y.astype(np.float64);bs=os.path.getsize(cf)
+              return {'available':True,'bytes':bs,'ratio':raw_samples/bs,'compress_s':ct,'maxerr':float(np.max(np.abs(dif))),'rmse':float(np.sqrt(np.mean(dif*dif)))}
+
+          out={'dataset':'Brady PoroTomo surface DAS real land field record','pilot_shape':[nch,ns],'rms':rms,'peak_abs':peak,
+               'pilot_full_segy_bytes':pilot_full,'raw_sample_bytes':raw_samples,
+               'contract':'epsilon=alpha*RMS of identical float32 pilot; strict max absolute error verified; PULSE includes prefix/header/container bytes',
+               'results':[]}
+          Ms=[12,20,32,40,52,64,80,96,128,160,192,256]
+          for alpha in [0.025,0.05,0.10]:
+              eps=alpha*rms
+              coarse=[]
+              for M in Ms:
+                  q=pulse_size(eps,M,exact=False); coarse.append(q)
+              coarse.sort(key=lambda q:q['full_bytes'])
+              candM=sorted(set([52]+[q['M'] for q in coarse[:3]]))
+              exact=[pulse_size(eps,M,exact=True) for M in candM];exact.sort(key=lambda q:q['full_bytes'])
+              row={'alpha_eps_over_rms':alpha,'eps_abs':eps,'pulse_fixed_M52':next(q for q in exact if q['M']==52),
+                   'pulse_mdl_best':exact[0],'coarse_best_Ms':[q['M'] for q in coarse[:5]],
+                   'sz3':sz3(eps),'zfp':zfp(eps),'daspack':daspack(eps),'hpez_q4':hpez(eps,f'hpez_{alpha}')}
+              out['results'].append(row)
+              print('RESULT',alpha,'PULSE52',row['pulse_fixed_M52']['full_ratio'],'PULSEbest',row['pulse_mdl_best']['full_ratio'],'M',row['pulse_mdl_best']['M'],
+                    'SZ3',row['sz3']['ratio'],'HPEZ',row['hpez_q4'].get('ratio'),'DASPack',row['daspack'].get('ratio_vs_float32_input'),flush=True)
+          open('pulse_land_exact.json','w').write(json.dumps(out,indent=2))
+          print(json.dumps(out,indent=2))
+          PY
+          python bench.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exact-pulse-land-benchmark
+          path: pulse_land_exact.json
+          retention-days: 2
