@@ -1,0 +1,93 @@
+name: Multi-slope wave polynomial Brady benchmark
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  wavepoly:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Search 1/2/3 characteristic-factor annihilators
+        shell: bash
+        run: |
+          cat > w.py <<'PY'
+          import os,json,subprocess,math,itertools,numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and ns>0 and (size-3600)%st==0:cc.append((nb,ns,(size-3600)//st,st))
+          nb,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=(T*T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;X=A[4096:4224,6000:14000].astype(np.float32,copy=True);raw=X.nbytes;n=X.shape[1]
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0
+            return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          def shift(a,s):
+            idx=np.clip(np.arange(n)-s,0,n-1);return a[:,idx]
+          def score(H):return float(np.count_nonzero(H))*5.0+float(np.abs(H).sum())
+          @njit(cache=True)
+          def encode(X,eps,alpha,slopes):
+            m,n=X.shape;K=len(slopes);step=alpha*eps;Q=np.empty((m,n),np.int32);H=np.zeros((m,n),np.int32)
+            for i in range(K):
+              last=0
+              for t in range(n):
+                lo=math.ceil((X[i,t]-eps)/step-1e-7);hi=math.floor((X[i,t]+eps)/step+1e-7);q=last
+                if q<lo:q=lo
+                elif q>hi:q=hi
+                Q[i,t]=q;last=q
+            for i in range(K,m):
+              for t in range(n):
+                if K==1:
+                  u=t-slopes[0];u=0 if u<0 else n-1 if u>=n else u;p=Q[i-1,u]
+                elif K==2:
+                  a,b=slopes[0],slopes[1];u1=t-a;u2=t-b;u12=t-a-b
+                  u1=0 if u1<0 else n-1 if u1>=n else u1;u2=0 if u2<0 else n-1 if u2>=n else u2;u12=0 if u12<0 else n-1 if u12>=n else u12
+                  p=Q[i-1,u1]+Q[i-1,u2]-Q[i-2,u12]
+                else:
+                  a,b,c=slopes[0],slopes[1],slopes[2]
+                  u1=t-a;u2=t-b;u3=t-c;u12=t-a-b;u13=t-a-c;u23=t-b-c;u123=t-a-b-c
+                  u1=0 if u1<0 else n-1 if u1>=n else u1;u2=0 if u2<0 else n-1 if u2>=n else u2;u3=0 if u3<0 else n-1 if u3>=n else u3;u12=0 if u12<0 else n-1 if u12>=n else u12;u13=0 if u13<0 else n-1 if u13>=n else u13;u23=0 if u23<0 else n-1 if u23>=n else u23;u123=0 if u123<0 else n-1 if u123>=n else u123
+                  p=Q[i-1,u1]+Q[i-1,u2]+Q[i-1,u3]-Q[i-2,u12]-Q[i-2,u13]-Q[i-2,u23]+Q[i-3,u123]
+                lo=math.ceil((X[i,t]-eps)/step-1e-7);hi=math.floor((X[i,t]+eps)/step+1e-7);q=p
+                if q<lo:q=lo
+                elif q>hi:q=hi
+                Q[i,t]=q;H[i,t]=q-p
+            return Q,H
+          def bytes_for(Q,H,K):
+            bd=0
+            for i in range(K):bd+=z(si(np.diff(Q[i],prepend=Q[i,0])))+z(np.asarray([Q[i,0]],np.int32))
+            Z=H[K:];m=Z!=0;opts=[z(si(Z)),z(si(Z.T)),z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(Z[m])) if m.any() else 0)];hb=min(opts);return bd+hb+16+K,bd,hb,float(m.mean())
+          rows=[]
+          for alpha in [1.9,1.75,1.5,1.25]:
+            step=alpha*eps;Q0=np.rint(X/step).astype(np.int32);sing=[]
+            for s in range(-12,13):sing.append((score(Q0[1:]-shift(Q0[:-1],s)),s))
+            topS=[s for _,s in sorted(sing)[:8]]
+            pairs=[]
+            for a,b in itertools.combinations_with_replacement(topS,2):
+              H=Q0[2:]-shift(Q0[1:-1],a)-shift(Q0[1:-1],b)+shift(Q0[:-2],a+b);pairs.append((score(H),a,b))
+            topP=sorted(pairs)[:8]
+            triples=[];seed=topS[:5]
+            for a,b,c in itertools.combinations_with_replacement(seed,3):
+              H=Q0[3:]-shift(Q0[2:-1],a)-shift(Q0[2:-1],b)-shift(Q0[2:-1],c)+shift(Q0[1:-2],a+b)+shift(Q0[1:-2],a+c)+shift(Q0[1:-2],b+c)-shift(Q0[:-3],a+b+c);triples.append((score(H),a,b,c))
+            topT=sorted(triples)[:8]
+            candidates=[(s,) for s in topS[:4]]+[(a,b) for _,a,b in topP[:5]]+[(a,b,c) for _,a,b,c in topT[:5]]
+            for sl in candidates:
+              Q,H=encode(X,eps,alpha,sl);tot,bd,hb,nz=bytes_for(Q,H,len(sl));me=float(np.max(np.abs(X-Q.astype(np.float32)*step)));row={'alpha':alpha,'K':len(sl),'slopes':list(sl),'bytes':tot,'ratio':raw/tot,'boundary':bd,'syndrome':hb,'nonzero':nz,'maxerr':me};rows.append(row);print('WP',json.dumps(row),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,np.float32,X.shape);sz3={'bytes':int(bb.size),'ratio':raw/int(bb.size),'maxerr':float(np.max(np.abs(X-R)))}
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':list(X.shape),'eps':eps,'std':std,'top':rows[:30],'sz3':sz3};print('BEST',json.dumps(rows[:15],indent=2),flush=True);print('SZ3',sz3,flush=True);open('wavepoly.json','w').write(json.dumps(out,indent=2))
+          PY
+          python w.py
+      - uses: actions/upload-artifact@v4
+        with: {name: wave-polynomial, path: wavepoly.json, retention-days: 2}
