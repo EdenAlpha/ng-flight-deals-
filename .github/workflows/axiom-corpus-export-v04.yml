@@ -9,12 +9,16 @@ jobs:
     steps:
       - name: Download fixed research corpus
         run: |
+          set -euo pipefail
           mkdir -p corpus
           curl -L --retry 3 -sS https://www.gutenberg.org/files/1342/1342-0.txt -o corpus/prose.txt
           curl -L --retry 3 -sS https://raw.githubusercontent.com/opencv/opencv/master/samples/data/lena.jpg -o corpus/lena.jpg
-          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg git
           ffmpeg -loglevel error -y -i corpus/lena.jpg -f rawvideo -pix_fmt rgb24 corpus/image_rgb24.raw
-          sha256sum corpus/* > corpus/SHA256SUMS
+          git clone -q --depth 1 https://github.com/android/architecture-samples.git /tmp/android-src
+          rm -rf /tmp/android-src/.git
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf corpus/android_app_raw.tar -C /tmp/android-src app build.gradle.kts settings.gradle.kts gradle.properties 2>/dev/null || tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf corpus/android_app_raw.tar -C /tmp/android-src app
+          sha256sum corpus/prose.txt corpus/lena.jpg corpus/image_rgb24.raw corpus/android_app_raw.tar > corpus/SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
           name: axiom-v04-corpus
