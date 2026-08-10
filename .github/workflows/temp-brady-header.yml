@@ -1,4 +1,4 @@
-name: Temporary Brady SEG-Y header probe
+name: Temporary Brady signal-record benchmark
 
 on:
   pull_request:
@@ -8,42 +8,41 @@ permissions:
   contents: read
 
 jobs:
-  header-probe:
+  signal-record:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install --quiet numpy
-      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140048.sgy'
-      - name: Read trace geometry fields
+      - run: pip install --quiet numpy zfpy pysz zstandard
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Matched 10pct-std benchmark
         shell: bash
         run: |
-          cat > hp.py <<'PY'
-          import os,json,struct,numpy as np
-          f='land.sgy';size=os.path.getsize(f);p=open(f,'rb').read(3600);ns=int.from_bytes(p[3220:3222],'big');dt=int.from_bytes(p[3216:3218],'big');fmt=int.from_bytes(p[3224:3226],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r')
-          def i2(h,o):return int.from_bytes(h[o:o+2],'big',signed=True)
-          def i4(h,o):return int.from_bytes(h[o:o+4],'big',signed=True)
-          rec=[]
-          for k in range(n):
-            o=3600+k*st;h=bytes(mm[o:o+240]);sc=i2(h,70);esc=i2(h,68)
-            def scale(v,s):return v*(s if s>0 else (1/abs(s) if s<0 else 1))
-            rec.append((k,i4(h,0),i4(h,4),i4(h,8),i4(h,12),i4(h,20),i4(h,24),i4(h,36),scale(i4(h,72),sc),scale(i4(h,76),sc),scale(i4(h,80),sc),scale(i4(h,84),sc),i4(h,40),i4(h,44),sc,esc,i2(h,114),i2(h,116)))
-          A=np.array(rec,dtype=np.float64)
-          fields=['index','seq_line','seq_file','field_record','trace_in_field','cdp','trace_in_cdp','offset','sx','sy','gx','gy','recv_elev','src_elev','coord_scalar','elev_scalar','trace_ns','trace_dt']
-          summary={}
-          for j,name in enumerate(fields):
-            v=A[:,j];u=np.unique(v);summary[name]={'unique':int(u.size),'min':float(v.min()),'max':float(v.max()),'first10':v[:10].tolist(),'last10':v[-10:].tolist(),'median_abs_step':float(np.median(np.abs(np.diff(v)))) if len(v)>1 else 0.0}
-          # test whether ordering by candidate fields would change trace order
-          orders={}
-          for name in ['seq_line','seq_file','field_record','trace_in_field','cdp','trace_in_cdp','gx','gy','recv_elev']:
-            j=fields.index(name);ordr=np.argsort(A[:,j],kind='stable');orders[name]={'fraction_positions_changed':float(np.mean(ordr!=np.arange(n))),'max_index_jump':int(np.max(np.abs(np.diff(ordr)))) if n>1 else 0}
-          sample_indices=[0,1,2,3,4,10,100,379,380,381,4359,4360,4361,n-3,n-2,n-1]
-          samples=[dict(zip(fields,[float(x) for x in A[k]])) for k in sample_indices if 0<=k<n]
-          out={'file_bytes':size,'binary_ns':ns,'binary_dt':dt,'fmt':fmt,'ntr':n,'summary':summary,'orders':orders,'samples':samples};print(json.dumps(out,indent=2));open('headers.json','w').write(json.dumps(out,indent=2))
+          cat > b.py <<'PY'
+          import os,json,numpy as np,zfpy,zstandard as zstd
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);C=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            ns=int.from_bytes(h[3220:3222],bo);dt=int.from_bytes(h[3216:3218],bo);fmt=int.from_bytes(h[3224:3226],bo)
+            if fmt==5 and ns>0:
+              st=240+4*ns
+              if (size-3600)%st==0:C.append((nb,ns,dt,(size-3600)//st,st))
+          nb,ns,dt,ntr,st=C[0];mm=np.memmap(f,np.uint8,'r');X=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True);std=float(X.std());eps=.1*std;M=52;raw=X.nbytes
+          idx=np.arange(0,ns,M,dtype=np.int32);idx=np.r_[idx,ns-1] if idx[-1]!=ns-1 else idx;Ai=np.rint(X[:,idx]/eps).astype(np.int16);Ad=Ai.astype(np.float32)*eps;P=np.empty_like(X)
+          for j in range(len(idx)-1):
+            a,b=int(idx[j]),int(idx[j+1]);L=b-a;u=np.arange(L,dtype=np.float32)/L;P[:,a:b]=Ad[:,j,None]*(1-u)[None,:]+Ad[:,j+1,None]*u[None,:]
+          P[:,-1]=Ad[:,-1];S=np.rint((X-P)/(2*eps)).astype(np.int16);K=np.empty_like(S);K[:,0]=S[:,0];K[:,1:]=S[:,1:]-S[:,:-1];R=P+S.astype(np.float32)*(2*eps);zc=zstd.ZstdCompressor(level=3).compress
+          D=Ai.astype(np.int32);D[:,1:]-=Ai[:,:-1].astype(np.int32);zz=((D<<1)^(D>>31)).astype(np.uint16);ab=sum(len(zc(np.packbits(((zz>>bit)&1).astype(np.uint8).reshape(-1)).tobytes())) for bit in range(16));mask=K!=0;mb=len(zc(np.packbits(mask.T.reshape(-1)).tobytes()));v=K[mask];vb=len(zc((v.astype(np.int8) if v.size and v.min()>=-128 and v.max()<=127 else v.astype(np.int16)).tobytes()));pb=ab+mb+vb
+          zb=zfpy.compress_numpy(X,tolerance=eps);Z=zfpy.decompress_numpy(zb);cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;sb,_=sz.compress(X,cfg);Q,_=sz.decompress(sb,np.float32,X.shape)
+          # local signal statistics by 5-second windows
+          win=[]
+          for a in range(0,ns,5000):
+            q=X[:,a:min(a+5000,ns)];win.append({'t0_s':a*dt/1e6,'t1_s':min(a+5000,ns)*dt/1e6,'std':float(q.std()),'rms':float(np.sqrt(np.mean(q.astype(np.float64)**2)))})
+          out={'file_bytes':size,'ntr':ntr,'ns':ns,'dt_us':dt,'std':std,'eps':eps,'windows':win,'pulse_ratio_M52_fastbackend':raw/pb,'pulse_bytes':pb,'pulse_maxerr':float(np.max(np.abs(X-R))),'event_fraction':float(v.size/X.size),'anchor_bytes':ab,'topology_bytes':mb,'value_bytes':vb,'zfp_ratio':raw/len(zb),'zfp_maxerr':float(np.max(np.abs(X-Z))),'sz3_ratio':raw/int(sb.size),'sz3_maxerr':float(np.max(np.abs(X-Q))),'pulse_vs_sz3':(raw/pb)/(raw/int(sb.size))};print(json.dumps(out,indent=2));open('signal.json','w').write(json.dumps(out,indent=2))
           PY
-          python hp.py
+          python b.py
       - uses: actions/upload-artifact@v4
         with:
-          name: brady-header-results
-          path: headers.json
+          name: brady-signal-results
+          path: signal.json
           retention-days: 1
