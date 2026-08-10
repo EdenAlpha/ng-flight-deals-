@@ -1,0 +1,31 @@
+name: AXIOM v0.15 Bunny lattice check
+on:
+  pull_request:
+    branches: [axiom-bunny-v13-base]
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exact v0.15 check
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg g++ curl
+          curl -L --retry 3 -sS https://media.w3.org/2010/05/bunny/trailer.mp4 -o bunny.mp4
+          ffmpeg -loglevel error -y -ss 0 -t 4 -i bunny.mp4 -vf scale=320:180 -r 24 -frames:v 96 -f rawvideo -pix_fmt yuv420p bunny.yuv
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/EdenAlpha/ng-flight-deals-/axiom-v02-beast/bench/axiom_video_residual_v15.cpp -o residual.cpp
+          g++ -O3 -std=c++17 residual.cpp -o residual
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i bunny.yuv -frames:v 96 -c:v libaom-av1 -crf 5 -b:v 0 -cpu-used 2 -row-mt 1 -f ivf basis.ivf
+          ffmpeg -loglevel error -y -i basis.ivf -frames:v 96 -f rawvideo -pix_fmt yuv420p basis.yuv
+          ./residual e bunny.yuv basis.yuv residual.axr 320 180 96
+          ./residual d residual.axr basis.yuv recon.yuv 320 180 96
+          cmp bunny.yuv recon.yuv
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i bunny.yuv -frames:v 96 -c:v libaom-av1 -crf 0 -b:v 0 -cpu-used 4 av1_lossless.mkv
+          ffmpeg -loglevel error -y -i av1_lossless.mkv -f rawvideo -pix_fmt yuv420p av1.yuv && cmp bunny.yuv av1.yuv
+          { sha256sum bunny.yuv recon.yuv; stat -c 'BASIS %s' basis.ivf; stat -c 'RESIDUAL %s' residual.axr; echo "AXIOM $(( $(stat -c%s basis.ivf)+$(stat -c%s residual.axr)+80 ))"; stat -c 'AV1_LOSSLESS %s' av1_lossless.mkv; } | tee v15.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-v15-bunny-lattice
+          path: v15.txt
+          retention-days: 7
