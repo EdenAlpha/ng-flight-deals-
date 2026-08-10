@@ -1,0 +1,20 @@
+name: AXIOM PPMd text benchmark
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full curl
+      - name: Run text benchmark
+        run: python3 text_ppmd_probe.py
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: axiom-text-ppmd-results
+          path: text_ppmd_results.json
+          retention-days: 7
