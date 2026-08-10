@@ -1,0 +1,62 @@
+name: Critical spatial sampling control Brady
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  critical:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy scipy pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Test bandlimited/cubic reconstruction from sparse channels
+        shell: bash
+        run: |
+          cat > c.py <<'PY'
+          import os,json,subprocess,numpy as np
+          from scipy.signal import resample_poly
+          from scipy.interpolate import CubicSpline,PchipInterpolator
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=np.square(T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;lo=4096;nch=256;X=A[lo:lo+nch].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0
+            return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          def szc(Q,e):
+            cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(e);b,_=sz.compress(np.ascontiguousarray(Q.astype(np.float32)),cfg);R,_=sz.decompress(b,np.float32,Q.shape);return int(b.size),R
+          def corr(P):
+            C=np.rint((X-P)/(2*eps)).astype(np.int32);K=C.copy();K[:,1:]-=C[:,:-1];opts={'dt':z(si(K))};m=K!=0;opts['sparse']=z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(K[m])) if m.any() else 0);S=C.copy();S[1:]-=C[:-1];opts['dx']=z(si(S));L=C.copy();L[1:,1:]=C[1:,1:]-C[:-1,1:]-C[1:,:-1]+C[:-1,:-1];opts['lorenzo']=z(si(L));best=min(opts,key=opts.get);R=P+C.astype(np.float32)*(2*eps);return opts[best],best,float(np.count_nonzero(K))/K.size,float(np.max(np.abs(X-R)))
+          b0,R0=szc(X,eps);rows=[];xall=np.arange(nch,dtype=np.float64)
+          for S in [2,4,8,16]:
+            ix=np.arange(0,nch,S,dtype=int);anchors=X[ix]
+            for ae in [eps/2,eps,2*eps,4*eps]:
+              ab,Ar=szc(anchors,ae)
+              # three deterministic reconstruction kernels; model knows S/kernel/anchor codec params.
+              preds={}
+              rp=resample_poly(Ar,S,1,axis=0,padtype='line')[:nch];preds['polyphase']=rp.astype(np.float32)
+              cs=CubicSpline(ix.astype(float),Ar,axis=0,bc_type='natural',extrapolate=True);preds['cubic']=cs(xall).astype(np.float32)
+              pc=PchipInterpolator(ix.astype(float),Ar,axis=0,extrapolate=True);preds['pchip']=pc(xall).astype(np.float32)
+              # linear control
+              lin=np.empty_like(X)
+              for t in range(X.shape[1]):lin[:,t]=np.interp(xall,ix,Ar[:,t],left=Ar[0,t],right=Ar[-1,t])
+              preds['linear']=lin
+              for kind,P in preds.items():
+                cb,ck,ef,me=corr(P);tot=ab+cb+64;row={'S':S,'anchor_eps_over_eps':ae/eps,'kernel':kind,'anchor_bytes':ab,'corr_bytes':cb,'corr_coding':ck,'bytes':tot,'ratio':raw/tot,'transition_fraction':ef,'maxerr':me};rows.append(row);print('ROW',json.dumps(row),flush=True)
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':[nch,ns],'offset':lo,'global_std':std,'eps':eps,'top':rows[:30],'sz3':{'bytes':b0,'ratio':raw/b0,'maxerr':float(np.max(np.abs(X-R0)))}};print('BEST',json.dumps(rows[:12],indent=2),flush=True);print('SZ3',out['sz3'],flush=True);open('critical.json','w').write(json.dumps(out,indent=2))
+          PY
+          python c.py
+      - uses: actions/upload-artifact@v4
+        with: {name: critical-spatial, path: critical.json, retention-days: 2}
