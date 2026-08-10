@@ -1,0 +1,84 @@
+name: Fast propagation-aligned TPAC pilot
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  fast:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Fast slope search then legal-state encode
+        shell: bash
+        run: |
+          cat > f.py <<'PY'
+          import os,json,subprocess,math,numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and ns>0 and (size-3600)%st==0:cc.append((nb,ns,(size-3600)//st,st))
+          nb,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=(T*T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;X=A[4096:4224,6000:14000].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0
+            return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          @njit(cache=True)
+          def enc(X,eps,alpha,smap,B):
+            m,n=X.shape;step=alpha*eps;Q=np.empty((m,n),np.int32);H=np.zeros((m,n),np.int32);last=0
+            for t in range(n):
+              lo=math.ceil((X[0,t]-eps)/step-1e-7);hi=math.floor((X[0,t]+eps)/step+1e-7);q=last
+              if q<lo:q=lo
+              elif q>hi:q=hi
+              Q[0,t]=q;last=q
+            for i in range(1,m):
+              for t in range(n):
+                s=int(smap[t//B]);u=t-s
+                if u<0:u=0
+                elif u>=n:u=n-1
+                um=max(0,u-1)
+                p=Q[i-1,u] if t==0 else Q[i,t-1]+Q[i-1,u]-Q[i-1,um]
+                lo=math.ceil((X[i,t]-eps)/step-1e-7);hi=math.floor((X[i,t]+eps)/step+1e-7);q=p
+                if q<lo:q=lo
+                elif q>hi:q=hi
+                Q[i,t]=q;H[i,t]=q-p
+            return Q,H
+          def hbytes(Q,H,S):
+            bd=z(si(np.diff(Q[0],prepend=Q[0,0])))+z(np.asarray([Q[0,0]],np.int32));Z=H[1:];m=Z!=0;opts=[z(si(Z)),z(si(Z.T)),z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(Z[m])) if m.any() else 0)];return bd+min(opts)+z(S.astype(np.int8))+16,float(m.mean())
+          rows=[]
+          for alpha in [1.9,1.75,1.5,1.25]:
+            step=alpha*eps;Q0=np.rint(X/step).astype(np.int32)
+            # approximate slope scores on ordinary lattice; use cheapest L1+zero score
+            scores=[]
+            for s in range(-16,17):
+              u=np.clip(np.arange(X.shape[1])-s,0,X.shape[1]-1);um=np.maximum(0,u-1);P=Q0[:-1][:,u]-Q0[:-1][:,um]+Q0[1:,:][:,np.maximum(0,np.arange(X.shape[1])-1)];H0=Q0[1:]-P;score=float(np.count_nonzero(H0))*4+float(np.abs(H0).sum());scores.append((score,s))
+            bests=[s for _,s in sorted(scores)[:5]]
+            for s in bests:
+              S=np.asarray([s],np.int16);Q,H=enc(X,eps,alpha,S,X.shape[1]);b,nz=hbytes(Q,H,S);rows.append({'kind':'global','alpha':alpha,'shift':s,'bytes':b,'ratio':raw/b,'nonzero':nz,'maxerr':float(np.max(np.abs(X-Q.astype(np.float32)*step)))})
+            # tile map chosen from Q0 cheaply
+            for B in [1024,512,256]:
+              nb=(X.shape[1]+B-1)//B;S=np.zeros(nb,np.int16)
+              for k in range(nb):
+                a=k*B;e=min(X.shape[1],a+B);best=(1e99,0)
+                for s in range(-12,13):
+                  tt=np.arange(a,e);u=np.clip(tt-s,0,X.shape[1]-1);um=np.maximum(0,u-1);tm=np.maximum(0,tt-1);P=Q0[:-1][:,u]-Q0[:-1][:,um]+Q0[1:][:,tm];HH=Q0[1:][:,tt]-P;sc=float(np.count_nonzero(HH))*4+float(np.abs(HH).sum())
+                  if sc<best[0]:best=(sc,s)
+                S[k]=best[1]
+              Q,H=enc(X,eps,alpha,S,B);b,nz=hbytes(Q,H,S);rows.append({'kind':'tiled','alpha':alpha,'tile':B,'shift_unique':sorted(set(int(v) for v in S)),'bytes':b,'ratio':raw/b,'nonzero':nz,'maxerr':float(np.max(np.abs(X-Q.astype(np.float32)*step)))})
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,np.float32,X.shape);sz3={'bytes':int(bb.size),'ratio':raw/int(bb.size),'maxerr':float(np.max(np.abs(X-R)))}
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':list(X.shape),'eps':eps,'std':std,'top':rows[:30],'sz3':sz3};print('BEST',json.dumps(rows[:15],indent=2),flush=True);print('SZ3',sz3,flush=True);open('fast_tpac.json','w').write(json.dumps(out,indent=2))
+          PY
+          python f.py
+      - uses: actions/upload-artifact@v4
+        with: {name: fast-tpac, path: fast_tpac.json, retention-days: 2}
