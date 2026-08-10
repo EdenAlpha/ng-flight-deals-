@@ -1,0 +1,208 @@
+name: Isolated real-land seismic benchmark
+
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+
+permissions:
+  contents: read
+
+jobs:
+  land:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install strict-error baselines
+        run: |
+          pip install --quiet numpy zfpy pysz zstandard daspack-dev
+
+      - name: Build HPEZ q4
+        continue-on-error: true
+        run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/hpez
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+          echo "$HOME/hpez/bin" >> "$GITHUB_PATH"
+
+      - name: Download Brady PoroTomo surface DAS field record
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140048.sgy'
+          ls -lh land.sgy
+
+      - name: Run isolated fair benchmark
+        shell: bash
+        run: |
+          cat > bench.py <<'PY'
+          import os,json,time,math,subprocess,shutil,tempfile
+          import numpy as np
+          import zfpy,zstandard as zstd
+          from pysz import sz,szConfig,szErrorBoundMode
+
+          try:
+              from daspack import DASCoder, Quantizer
+              DASPACK_OK=True
+          except Exception as e:
+              DASPACK_OK=False; DASPACK_ERR=repr(e)
+
+          fn='land.sgy';size=os.path.getsize(fn);h=open(fn,'rb').read(3600);cand=[]
+          for bo,nb in [('big','>'),('little','<')]:
+              dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo)
+              if fmt==5 and ns>0 and dt>0:
+                  stride=240+4*ns
+                  if (size-3600)%stride==0:cand.append((nb,dt,ns,(size-3600)//stride,stride))
+          if len(cand)!=1: raise RuntimeError(cand)
+          nb,dt_us,ns,ntr,stride=cand[0]
+          mm=np.memmap(fn,np.uint8,'r')
+          Xall=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(stride,4))
+          dt=dt_us*1e-6
+          ZC=zstd.ZstdCompressor(level=9)
+
+          def corr(a,b):
+              a=np.asarray(a,dtype=np.float64);b=np.asarray(b,dtype=np.float64);a-=a.mean();b-=b.mean()
+              return float(np.dot(a,b)/(math.sqrt(float(np.dot(a,a))*float(np.dot(b,b)))+1e-300))
+
+          # -------- Corrected geometry/coherence diagnostic --------
+          diag={'channel_spacings':{}}
+          for s in [1,2,4,8,16,32]:
+              ids=np.unique(np.linspace(0,ntr-s-1,min(256,ntr-s),dtype=np.int64))
+              c0=[];cb=[];lags=[];rr=[]
+              for i in ids:
+                  a=np.asarray(Xall[i],dtype=np.float32); b=np.asarray(Xall[i+s],dtype=np.float32)
+                  c0.append(corr(a[::5],b[::5]))
+                  best=(-1.,0,0.)
+                  for lag in range(-12,13):
+                      if lag<0: aa=a[-lag:];bb=b[:lag]
+                      elif lag>0: aa=a[:-lag];bb=b[lag:]
+                      else: aa=a;bb=b
+                      cc=corr(aa[::5],bb[::5])
+                      if abs(cc)>best[0]:best=(abs(cc),lag,cc)
+                  lag=best[1]; cb.append(best[2]);lags.append(lag)
+                  if lag<0: aa=a[-lag:].astype(np.float64);bb=b[:lag].astype(np.float64)
+                  elif lag>0: aa=a[:-lag].astype(np.float64);bb=b[lag:].astype(np.float64)
+                  else: aa=a.astype(np.float64);bb=b.astype(np.float64)
+                  gain=float(np.dot(bb,aa))/(float(np.dot(aa,aa))+1e-300)
+                  res=bb-gain*aa
+                  rr.append(float(np.sqrt(np.mean(res*res))/(np.sqrt(np.mean(bb*bb))+1e-300)))
+              diag['channel_spacings'][str(s)]={
+                  'zero_lag_corr_median':float(np.median(c0)),
+                  'zero_lag_corr_p10':float(np.quantile(c0,.1)),
+                  'zero_lag_corr_p90':float(np.quantile(c0,.9)),
+                  'best_lag_corr_median':float(np.median(cb)),
+                  'best_lag_samples_median':float(np.median(lags)),
+                  'delay_gain_residual_rms_ratio_median':float(np.median(rr))}
+          tids=np.unique(np.linspace(0,ntr-1,min(256,ntr),dtype=np.int64));tc=[]
+          for i in tids:
+              a=np.asarray(Xall[i,:-1:4],dtype=np.float32);b=np.asarray(Xall[i,1::4],dtype=np.float32);tc.append(corr(a,b))
+          diag['time_t_to_tplus1_corr_median']=float(np.median(tc))
+
+          # -------- Exact same pilot array for every codec --------
+          nch=min(1024,ntr)
+          X=np.ascontiguousarray(Xall[:nch],dtype=np.float32)
+          raw=X.nbytes
+          xd=X.astype(np.float64);rms=float(np.sqrt(np.mean(xd*xd)));peak=float(np.max(np.abs(xd)))
+
+          def metrics(A,B):
+              d=A.astype(np.float64)-B.astype(np.float64)
+              return {'maxerr':float(np.max(np.abs(d))),'rmse':float(np.sqrt(np.mean(d*d)))}
+
+          def sz_comp(A,eps):
+              cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps)
+              t=time.time();b,_=sz.compress(np.ascontiguousarray(A,dtype=np.float32),cfg);ct=time.time()-t
+              t=time.time();Y,_=sz.decompress(b,np.float32,A.shape);dct=time.time()-t
+              return int(b.size),Y,ct,dct
+
+          def hpez_dims(shape): return ['-2',str(shape[1]),str(shape[0])]
+          def hpez_comp(A,eps,tag):
+              exe=shutil.which('hpez')
+              if not exe:return {'available':False,'error':'hpez executable unavailable'}
+              rawf=f'{tag}.bin';cmpf=f'{tag}.hpez';outf=f'{tag}.out';A.tofile(rawf)
+              cmd=[exe,'-f','-i',rawf,'-z',cmpf,*hpez_dims(A.shape),'-M','ABS',repr(float(eps)),'-q','4']
+              t=time.time();cp=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True);ct=time.time()-t
+              if cp.returncode!=0 or not os.path.exists(cmpf):
+                  return {'available':False,'returncode':cp.returncode,'output':cp.stdout[-2000:]}
+              dcmd=[exe,'-f','-z',cmpf,'-o',outf,*hpez_dims(A.shape),'-M','ABS',repr(float(eps))]
+              t=time.time();dp=subprocess.run(dcmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True);dct=time.time()-t
+              if dp.returncode!=0 or not os.path.exists(outf):return {'available':False,'decompress_returncode':dp.returncode,'output':dp.stdout[-2000:]}
+              Y=np.fromfile(outf,np.float32).reshape(A.shape); b=os.path.getsize(cmpf)
+              ans={'available':True,'bytes':b,'ratio':A.nbytes/b,'compress_s':ct,'decompress_s':dct,**metrics(A,Y)}
+              for p in (rawf,cmpf,outf):
+                  try:os.remove(p)
+                  except:pass
+              return ans
+
+          # Common-mode model: deterministic, independent of epsilon, stored explicitly.
+          mean_trace=np.mean(X.astype(np.float64),axis=0).astype(np.float32)
+          mean_payload=len(ZC.compress(mean_trace.tobytes()))+64
+          Pmean=np.broadcast_to(mean_trace,X.shape).copy()
+
+          # Segment mean models (64-channel groups), useful for coherent interrogator/segment modes.
+          Pseg=np.empty_like(X); seg_payload=64
+          for a in range(0,nch,64):
+              b=min(nch,a+64);m=np.mean(X[a:b].astype(np.float64),axis=0).astype(np.float32)
+              Pseg[a:b]=m;seg_payload += len(ZC.compress(m.tobytes()))+16
+
+          # Frequency-wavenumber sparse propagation models.
+          def phase_model(flo,fhi,r):
+              P=np.zeros_like(X,dtype=np.float32); model_bytes=128; mode_count=0; block=64
+              fr=np.fft.rfftfreq(ns,dt);ids=np.where((fr>=flo)&(fr<=fhi))[0]
+              for a in range(0,nch,block):
+                  b=min(nch,a+block);B=X[a:b];m=b-a
+                  F=np.fft.rfft(B,axis=1);K=np.fft.fft(F[:,ids],axis=0);rr=min(r,m)
+                  take=np.argpartition(np.abs(K),-rr,axis=0)[-rr:,:]
+                  vals=np.take_along_axis(K,take,axis=0).astype(np.complex64)
+                  Ks=np.zeros_like(K,dtype=np.complex64);np.put_along_axis(Ks,take,vals,axis=0)
+                  Fs=np.zeros_like(F,dtype=np.complex64);Fs[:,ids]=np.fft.ifft(Ks,axis=0).astype(np.complex64)
+                  P[a:b]=np.fft.irfft(Fs,n=ns,axis=1).astype(np.float32)
+                  model_bytes += len(ZC.compress(take.astype(np.uint8).tobytes()))+len(ZC.compress(vals.tobytes()))+48
+                  mode_count += vals.size
+              return P,model_bytes,mode_count
+
+          models=[('zero',np.zeros_like(X),0,0),('global_mean',Pmean,mean_payload,0),('segment_mean64',Pseg,seg_payload,0)]
+          for flo,fhi in [(3.,25.),(3.,40.),(1.,60.)]:
+              for r in [1,2,4,8]:
+                  t=time.time();P,mb,nm=phase_model(flo,fhi,r)
+                  models.append((f'fk_{flo:g}_{fhi:g}_r{r}',P,mb,nm))
+                  print('model',models[-1][0],'MB',mb/1e6,'predNRMSE',float(np.sqrt(np.mean((X.astype(np.float64)-P.astype(np.float64))**2))/(rms+1e-300)),'build_s',time.time()-t,flush=True)
+
+          out={'dataset':'Brady PoroTomo surface DAS real land field record','file_bytes':size,'full_shape':[ntr,ns],'pilot_shape':[nch,ns],
+               'dt_us':dt_us,'rms':rms,'peak_abs':peak,'raw_float_bytes':raw,'diagnostic':diag,
+               'contract':'epsilon = alpha * RMS of this exact pilot array; same pointwise maximum-error tolerance for all codecs; all model payload bytes included.',
+               'results':[]}
+
+          for alpha in [0.025,0.05,0.10]:
+              eps=alpha*rms;row={'alpha_eps_over_rms':alpha,'eps_abs':eps}
+              sb,S,sct,sdt=sz_comp(X,eps);row['sz3_direct']={'bytes':sb,'ratio':raw/sb,'compress_s':sct,'decompress_s':sdt,**metrics(X,S)}
+              zb=zfpy.compress_numpy(X,tolerance=eps);Z=zfpy.decompress_numpy(zb);row['zfp_direct']={'bytes':len(zb),'ratio':raw/len(zb),**metrics(X,Z)}
+              row['hpez_q4']=hpez_comp(X,eps,f'hpez_{alpha}')
+              if DASPACK_OK:
+                  try:
+                      coder=DASCoder(threads=4);t=time.time();db=coder.encode(X,Quantizer.Uniform(step=2.0*eps));ct=time.time()-t;t=time.time();D=coder.decode(db);dct=time.time()-t
+                      row['daspack']={'available':True,'bytes':len(db),'ratio':raw/len(db),'compress_s':ct,'decompress_s':dct,**metrics(X,D)}
+                  except Exception as e: row['daspack']={'available':False,'error':repr(e)}
+              else: row['daspack']={'available':False,'error':DASPACK_ERR}
+
+              hy=[]
+              for name,P,mb,nm in models:
+                  R=np.ascontiguousarray(X-P,dtype=np.float32);rb,Rq,rct,rdt=sz_comp(R,eps);total=mb+rb;Y=P+Rq
+                  hy.append({'model':name,'model_bytes':mb,'residual_sz3_bytes':rb,'total_bytes':total,'ratio':raw/total,'mode_count':nm,
+                             'pred_nrmse_rms':float(np.sqrt(np.mean(R.astype(np.float64)**2))/(rms+1e-300)),**metrics(X,Y)})
+              hy.sort(key=lambda q:q['total_bytes']);row['hybrid_best']=hy[0];row['hybrid_top5']=hy[:5]
+              row['hybrid_gain_vs_direct_sz3']=hy[0]['ratio']/row['sz3_direct']['ratio']
+              out['results'].append(row)
+              print('RESULT',alpha,'SZ3',row['sz3_direct']['ratio'],'HPEZ',row['hpez_q4'].get('ratio'),'DASPACK',row['daspack'].get('ratio'),'HYBRID',hy[0]['ratio'],hy[0]['model'],'gain',row['hybrid_gain_vs_direct_sz3'],flush=True)
+
+          open('isolated_land_benchmark.json','w').write(json.dumps(out,indent=2))
+          print(json.dumps({'done':True,'full_shape':[ntr,ns],'pilot_shape':[nch,ns],'diagnostic':diag,'summary':[{'alpha':r['alpha_eps_over_rms'],'sz3':r['sz3_direct']['ratio'],'hpez':r['hpez_q4'].get('ratio'),'daspack':r['daspack'].get('ratio'),'hybrid':r['hybrid_best']['ratio'],'hybrid_model':r['hybrid_best']['model'],'gain':r['hybrid_gain_vs_direct_sz3']} for r in out['results']]},indent=2))
+          PY
+          python bench.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: isolated-land-benchmark
+          path: isolated_land_benchmark.json
+          retention-days: 2
