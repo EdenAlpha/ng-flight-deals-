@@ -10,6 +10,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - run: pip install --quiet numpy
       - run: |
           curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
           python - <<'PY'
@@ -32,11 +33,9 @@ jobs:
           R={'ntr':int(ntr),'stride':st,'scalar_unique':np.unique(sc).tolist(),'fields':{}}
           for k,a in out.items():
             u=np.unique(a);changes=np.flatnonzero(a[1:]!=a[:-1])+1;run=np.diff(np.r_[0,changes,ntr]);R['fields'][k]={'unique':int(u.size),'min':int(u.min()),'max':int(u.max()),'first20':a[:20].tolist(),'median_run':float(np.median(run)),'run_unique':np.unique(run)[:20].tolist()}
-          # coordinate pairs with scalar applied
           fac=np.where(sc<0,1/np.maximum(1,np.abs(sc)),np.where(sc>0,sc,1)).astype(float)
           for pair in [('gx','gy'),('sx','sy'),('cdpx','cdpy')]:
             P=np.c_[out[pair[0]]*fac,out[pair[1]]*fac];u=np.unique(P,axis=0);R['fields']['_'.join(pair)]={'unique_pairs':int(u.shape[0]),'span':(u.max(0)-u.min(0)).tolist(),'first10':P[:10].tolist()}
-          # factor candidates that exactly match trace count
           R['factor_pairs']=[[d,ntr//d] for d in range(2,int(ntr**.5)+1) if ntr%d==0]
           print(json.dumps(R,indent=2));open('forge_geom.json','w').write(json.dumps(R,indent=2))
           PY
