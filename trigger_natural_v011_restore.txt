@@ -1,0 +1,1 @@
+retrigger natural-video integration with recovered complete video source
