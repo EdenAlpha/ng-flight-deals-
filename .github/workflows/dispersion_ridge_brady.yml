@@ -1,0 +1,54 @@
+name: Dispersion ridge Brady compression probe
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  ridge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Encode local f-k dispersion ridges plus certified correction
+        shell: bash
+        run: |
+          cat > r.py <<'PY'
+          import os,json,subprocess,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=(T*T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;lo=4096;nch=128;t0=6000;nt=8192;X=A[lo:lo+nch,t0:t0+nt].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0
+            return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          def corr(P):
+            C=np.rint((X-P)/(2*eps)).astype(np.int32);K=C.copy();K[:,1:]-=C[:,:-1];opts={'dt':z(si(K))};m=K!=0;opts['sparse_dt']=z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(K[m])) if m.any() else 0);S=C.copy();S[1:]-=C[:-1];opts['dx']=z(si(S));L=C.copy();L[1:,1:]=C[1:,1:]-C[:-1,1:]-C[1:,:-1]+C[:-1,:-1];opts['lorenzo']=z(si(L));best=min(opts,key=opts.get);R=P+C.astype(np.float32)*(2*eps);return opts[best],best,float(np.count_nonzero(K))/K.size,float(np.max(np.abs(X-R))),opts
+          B=512;nbk=nt//B;rows=[]
+          # Each block: temporal rFFT, spatial FFT. Store only F energetic temporal bins and K strongest wavenumbers per bin.
+          for Fkeep in [8,12,16,24,32,48]:
+            for Kkeep in [1,2,4,8]:
+              P=np.zeros_like(X);mods=[];find=[];kind=[]
+              for b in range(nbk):
+                W=X[:,b*B:(b+1)*B];T=np.fft.rfft(W,axis=1);C=np.fft.fft(T,axis=0);E=np.sum(np.abs(C)**2,axis=0);fi=np.argsort(E)[-Fkeep:];fi=np.sort(fi);find.append(fi.astype(np.uint16));Cq=np.zeros_like(C)
+                for fidx in fi:
+                  ki=np.argsort(np.abs(C[:,fidx]))[-Kkeep:];ki=np.sort(ki);vals=C[ki,fidx];kind.append(ki.astype(np.uint8));mods.append(np.stack([vals.real,vals.imag],axis=-1).astype(np.float16));Cq[ki,fidx]=mods[-1][...,0].astype(np.float32)+1j*mods[-1][...,1].astype(np.float32)
+                Tq=np.fft.ifft(Cq,axis=0);P[:,b*B:(b+1)*B]=np.fft.irfft(Tq,n=B,axis=1).real.astype(np.float32)
+              fiarr=np.concatenate(find) if find else np.zeros(0,np.uint16);kiarr=np.concatenate(kind) if kind else np.zeros(0,np.uint8);varr=np.concatenate(mods,axis=0) if mods else np.zeros((0,2),np.float16);model=z(fiarr)+z(kiarr)+z(varr)+64;cb,ck,ef,me,opts=corr(P);tot=model+cb;row={'F':Fkeep,'K':Kkeep,'model_bytes':model,'corr_bytes':cb,'corr_coding':ck,'bytes':tot,'ratio':raw/tot,'transition_fraction':ef,'maxerr':me};rows.append(row);print('RIDGE',json.dumps(row),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,np.float32,X.shape);sz3={'bytes':int(bb.size),'ratio':raw/int(bb.size),'maxerr':float(np.max(np.abs(X-R)))}
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':list(X.shape),'block':B,'eps':eps,'std':std,'top':rows[:30],'sz3':sz3};print('BEST',json.dumps(rows[:12],indent=2),flush=True);print('SZ3',sz3,flush=True);open('ridge.json','w').write(json.dumps(out,indent=2))
+          PY
+          python r.py
+      - uses: actions/upload-artifact@v4
+        with: {name: dispersion-ridge, path: ridge.json, retention-days: 2}
