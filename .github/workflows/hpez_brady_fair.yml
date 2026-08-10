@@ -1,0 +1,51 @@
+name: HPEZ Brady matched baseline
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  hpez:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Build official HPEZ
+        run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+      - name: Download Brady and extract identical active block
+        run: |
+          pip install --quiet numpy pysz
+          curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+          python - <<'PY'
+          import os,json,numpy as np
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and ns>0 and (size-3600)%st==0:cc.append((nb,ns,(size-3600)//st,st))
+          nb,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=(T*T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;X=A[4096:4352,3000:23000].astype('<f4',copy=True);X.tofile('block.bin');open('meta.json','w').write(json.dumps({'shape':list(X.shape),'std':std,'eps':eps,'raw':X.nbytes}));print('BLOCK',X.shape,'eps',eps,'raw',X.nbytes)
+          PY
+      - name: Run HPEZ q4 and SZ3, verify hard errors
+        shell: bash
+        run: |
+          EPS=$(python -c "import json;print(json.load(open('meta.json'))['eps'])")
+          BIN=$PWD/hpez-install/bin/hpez
+          $BIN -f -i block.bin -z block.hpez -3 20000 256 1 -M ABS "$EPS" -q 4
+          $BIN -f -z block.hpez -o block.hpez.out -3 20000 256 1
+          python - <<'PY'
+          import json,os,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          m=json.load(open('meta.json'));shape=tuple(m['shape']);eps=m['eps'];X=np.fromfile('block.bin','<f4').reshape(shape);Y=np.fromfile('block.hpez.out','<f4').reshape(shape);raw=X.nbytes
+          hpez={'bytes':os.path.getsize('block.hpez'),'ratio':raw/os.path.getsize('block.hpez'),'maxerr':float(np.max(np.abs(X-Y)))}
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);b,_=sz.compress(np.ascontiguousarray(X),cfg);Z,_=sz.decompress(b,np.float32,shape);sz3={'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Z)))}
+          out={'shape':list(shape),'eps':eps,'raw':raw,'HPEZ_q4':hpez,'SZ3':sz3};print(json.dumps(out,indent=2));open('hpez_brady.json','w').write(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with: {name: hpez-brady, path: hpez_brady.json, retention-days: 2}
