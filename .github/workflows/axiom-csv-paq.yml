@@ -13,7 +13,8 @@ jobs:
           set -euxo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq build-essential cmake git curl xz-utils
-          curl -L --retry 3 -sS https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv | head -n 250001 > /tmp/data.csv
+          curl -L --retry 3 -sS https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv -o /tmp/all.csv
+          head -n 250001 /tmp/all.csv > /tmp/data.csv
           sha256sum /tmp/data.csv | tee /tmp/source.sha256
           stat -c 'ORIGINAL %s' /tmp/data.csv
       - name: Build exact AXIOM semantic coordinates
