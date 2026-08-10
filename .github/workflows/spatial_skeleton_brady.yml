@@ -1,0 +1,65 @@
+name: Spatial skeleton Brady codec probe
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  skeleton:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Test sparse spatial and 2D skeletons
+        shell: bash
+        run: |
+          cat > s.py <<'PY'
+          import os,json,subprocess,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=np.square(T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;lo=4096;nch=256;X=A[lo:lo+nch].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-9','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0;return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          def acode(Q):
+            opts={'raw':z(si(Q))};D=Q.copy();D[...,1:]-=Q[...,:-1];opts['dt']=z(si(D))
+            if Q.ndim==2 and Q.shape[0]>1:
+              S=Q.copy();S[1:]-=Q[:-1];opts['dx']=z(si(S));L=Q.copy();L[1:,1:]=Q[1:,1:]-Q[:-1,1:]-Q[1:,:-1]+Q[:-1,:-1];opts['lorenzo']=z(si(L))
+            return min(opts.values()),opts
+          def corr(P):
+            C=np.rint((X-P)/(2*eps)).astype(np.int32);K=C.copy();K[:,1:]-=C[:,:-1];opts={'dt':z(si(K))};m=K!=0;opts['sparse_dt']=z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(K[m])) if m.any() else 0);S=C.copy();S[1:]-=C[:-1];opts['dx']=z(si(S));L=C.copy();L[1:,1:]=C[1:,1:]-C[:-1,1:]-C[1:,:-1]+C[:-1,:-1];opts['lorenzo']=z(si(L));best=min(opts,key=opts.get);R=P+C.astype(np.float32)*(2*eps);return opts[best],best,float(np.count_nonzero(K))/K.size,float(np.max(np.abs(X-R))),opts
+          rows=[]
+          # Full-time spatial skeleton: quantized anchor traces, linear interpolation across channels.
+          for S in [2,4,8,16,32,64]:
+            ix=np.arange(0,nch,S,dtype=int);ix=np.r_[ix,nch-1] if ix[-1]!=nch-1 else ix;Q=np.rint(X[ix]/eps).astype(np.int32);ab,aopts=acode(Q);V=Q.astype(np.float32)*eps;P=np.empty_like(X)
+            for j in range(len(ix)-1):
+              a,b=ix[j],ix[j+1];u=np.arange(b-a,dtype=np.float32)/(b-a);P[a:b]=V[j,None,:]*(1-u[:,None])+V[j+1,None,:]*u[:,None]
+            P[-1]=V[-1];cb,ck,ef,me,copts=corr(P);tot=ab+cb+64;row={'kind':'spatial','S':S,'anchors':len(ix),'anchor_bytes':ab,'corr_bytes':cb,'corr_coding':ck,'bytes':tot,'ratio':raw/tot,'transition_fraction':ef,'maxerr':me};rows.append(row);print('ROW',json.dumps(row),flush=True)
+          # Coarse 2D lattice: quantized nodes and bilinear reconstruction.
+          for S,M in [(2,16),(2,32),(4,16),(4,32),(4,64),(8,16),(8,32),(8,64),(16,32),(16,64)]:
+            ix=np.arange(0,nch,S,dtype=int);ix=np.r_[ix,nch-1] if ix[-1]!=nch-1 else ix;it=np.arange(0,ns,M,dtype=int);it=np.r_[it,ns-1] if it[-1]!=ns-1 else it;Q=np.rint(X[np.ix_(ix,it)]/eps).astype(np.int32);ab,aopts=acode(Q);V=Q.astype(np.float32)*eps
+            # time interpolation on each anchor channel
+            T=np.empty((len(ix),ns),np.float32)
+            for j in range(len(it)-1):
+              a,b=it[j],it[j+1];u=np.arange(b-a,dtype=np.float32)/(b-a);T[:,a:b]=V[:,j,None]*(1-u)[None,:]+V[:,j+1,None]*u[None,:]
+            T[:,-1]=V[:,-1];P=np.empty_like(X)
+            for j in range(len(ix)-1):
+              a,b=ix[j],ix[j+1];u=np.arange(b-a,dtype=np.float32)/(b-a);P[a:b]=T[j,None,:]*(1-u[:,None])+T[j+1,None,:]*u[:,None]
+            P[-1]=T[-1];cb,ck,ef,me,copts=corr(P);tot=ab+cb+64;row={'kind':'2d','S':S,'M':M,'nodes':int(Q.size),'anchor_bytes':ab,'corr_bytes':cb,'corr_coding':ck,'bytes':tot,'ratio':raw/tot,'transition_fraction':ef,'maxerr':me};rows.append(row);print('ROW',json.dumps(row),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);Y,_=sz.decompress(bb,np.float32,X.shape);sz3={'bytes':int(bb.size),'ratio':raw/int(bb.size),'maxerr':float(np.max(np.abs(X-Y)))}
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':[nch,ns],'offset':lo,'global_std':std,'eps':eps,'top':rows[:20],'sz3':sz3};print('BEST',json.dumps(rows[:10],indent=2),flush=True);print('SZ3',sz3,flush=True);open('spatial_skeleton.json','w').write(json.dumps(out,indent=2))
+          PY
+          python s.py
+      - uses: actions/upload-artifact@v4
+        with: {name: spatial-skeleton, path: spatial_skeleton.json, retention-days: 2}
