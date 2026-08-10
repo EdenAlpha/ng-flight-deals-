@@ -1,0 +1,118 @@
+name: Global minimum-syndrome TPWQ Brady
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  syndrome:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Choose legal reconstruction states to minimize exact 2D syndrome
+        shell: bash
+        run: |
+          cat > m.py <<'PY'
+          import os,json,subprocess,math,time,numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=np.square(T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;lo=4096;nch=256;t0=3000;nt=20000;X=A[lo:lo+nch,t0:t0+nt].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q,lev=19):return len(subprocess.run(['zstd','-q','-f',f'-{lev}','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0
+            return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          @njit(cache=True)
+          def bounds(X,eps,step):
+            m,n=X.shape;L=np.empty((m,n),np.int32);U=np.empty((m,n),np.int32)
+            for i in range(m):
+              for t in range(n):
+                L[i,t]=math.ceil((X[i,t]-eps)/step-1e-7);U[i,t]=math.floor((X[i,t]+eps)/step+1e-7)
+            return L,U
+          @njit(cache=True)
+          def greedy(L,U):
+            m,n=L.shape;Q=np.empty((m,n),np.int32)
+            # first point then 1D persistent boundaries
+            q=0
+            for t in range(n):
+              if q<L[0,t]:q=L[0,t]
+              elif q>U[0,t]:q=U[0,t]
+              Q[0,t]=q
+            q=Q[0,0]
+            for i in range(1,m):
+              if q<L[i,0]:q=L[i,0]
+              elif q>U[i,0]:q=U[i,0]
+              Q[i,0]=q
+            for i in range(1,m):
+              for t in range(1,n):
+                p=Q[i-1,t]+Q[i,t-1]-Q[i-1,t-1]
+                if p<L[i,t]:p=L[i,t]
+                elif p>U[i,t]:p=U[i,t]
+                Q[i,t]=p
+            return Q
+          @njit(cache=True)
+          def hval(Q,i,t):
+            return Q[i,t]-Q[i-1,t]-Q[i,t-1]+Q[i-1,t-1]
+          @njit(cache=True)
+          def localcost(Q,i,t,v,wzero):
+            m,n=Q.shape;old=Q[i,t];Q[i,t]=v;c=0
+            if i>0 and t>0:
+              h=hval(Q,i,t);c+=abs(h)+wzero*(h!=0)
+            if i+1<m and t>0:
+              h=hval(Q,i+1,t);c+=abs(h)+wzero*(h!=0)
+            if i>0 and t+1<n:
+              h=hval(Q,i,t+1);c+=abs(h)+wzero*(h!=0)
+            if i+1<m and t+1<n:
+              h=hval(Q,i+1,t+1);c+=abs(h)+wzero*(h!=0)
+            Q[i,t]=old;return c
+          @njit(cache=True)
+          def optimize(Q,L,U,sweeps,wzero):
+            m,n=Q.shape
+            for sw in range(sweeps):
+              # forward then reverse; include boundaries except (0,0), their storage is small but affects syndrome
+              for direction in range(2):
+                ir=range(m) if direction==0 else range(m-1,-1,-1)
+                for i in ir:
+                  tr=range(n) if direction==0 else range(n-1,-1,-1)
+                  for t in tr:
+                    lo=L[i,t];hi=U[i,t]
+                    if lo==hi:Q[i,t]=lo;continue
+                    cur=Q[i,t];best=cur;bc=localcost(Q,i,t,cur,wzero)
+                    for v in range(lo,hi+1):
+                      if v==cur:continue
+                      c=localcost(Q,i,t,v,wzero)
+                      if c<bc:
+                        bc=c;best=v
+                    Q[i,t]=best
+            return Q
+          def encode(Q):
+            H=Q[1:,1:]-Q[:-1,1:]-Q[1:,:-1]+Q[:-1,:-1]
+            # exact decoder: first row+first column+H recursively reconstruct Q
+            btop=z(si(np.diff(Q[0],prepend=Q[0,0])));bleft=z(si(np.diff(Q[:,0],prepend=Q[0,0])));corner=z(np.asarray([Q[0,0]],np.int32));boundary=btop+bleft+corner
+            opts={'H_trace':z(si(H)),'H_time':z(si(H.T))}
+            for name,Z in [('trace',H),('time',H.T)]:
+              m=Z!=0;opts['sparse_'+name]=z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(Z[m])) if m.any() else 0)
+            best=min(opts,key=opts.get);return boundary+opts[best]+64,boundary,opts[best],best,float(np.count_nonzero(H))/H.size,float(np.mean(np.abs(H))),opts
+          rows=[]
+          for alpha in [1.75,1.5,1.25,1.0,.75,.5]:
+            step=alpha*eps;L,U=bounds(X,eps,step);Q0=greedy(L,U);b=encode(Q0);rec=Q0.astype(np.float32)*step;rows.append({'alpha':alpha,'kind':'greedy','bytes':b[0],'ratio':raw/b[0],'boundary':b[1],'syndrome':b[2],'coding':b[3],'nonzero':b[4],'mean_abs_h':b[5],'maxerr':float(np.max(np.abs(X-rec)))})
+            for wz in [2,8,32]:
+              Q=Q0.copy();ts=time.time();Q=optimize(Q,L,U,2,wz);b=encode(Q);rec=Q.astype(np.float32)*step;rows.append({'alpha':alpha,'kind':'global_cd','wzero':wz,'sweeps':2,'bytes':b[0],'ratio':raw/b[0],'boundary':b[1],'syndrome':b[2],'coding':b[3],'nonzero':b[4],'mean_abs_h':b[5],'maxerr':float(np.max(np.abs(X-rec))),'sec':time.time()-ts});print('ROW',json.dumps(rows[-1]),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,np.float32,X.shape);sz3={'bytes':int(bb.size),'ratio':raw/int(bb.size),'maxerr':float(np.max(np.abs(X-R)))}
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':[nch,nt],'offset_channel':lo,'t0':t0,'global_std':std,'eps':eps,'top':rows[:30],'sz3':sz3};print('BEST',json.dumps(rows[:12],indent=2),flush=True);print('SZ3',sz3,flush=True);open('minimum_syndrome.json','w').write(json.dumps(out,indent=2))
+          PY
+          python m.py
+      - uses: actions/upload-artifact@v4
+        with: {name: minimum-syndrome, path: minimum_syndrome.json, retention-days: 2}
