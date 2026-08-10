@@ -1,0 +1,55 @@
+name: Tolerance projected rank Brady probe
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  rankprobe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Probe rank inside the hard error tube
+        shell: bash
+        run: |
+          cat > r.py <<'PY'
+          import os,json,subprocess,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=np.square(T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;lo=4096;nch=256
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-9','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0;return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          def certify(X,P):
+            C=np.rint((X-P)/(2*eps)).astype(np.int32);K=C.copy();K[:,1:]-=C[:,:-1];m=K!=0;opts=[z(si(K)),z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(K[m])) if m.any() else 0)];cb=min(opts);R=P+C.astype(np.float32)*(2*eps);return cb,float(m.mean()),float(np.max(np.abs(X-R)))
+          rows=[]
+          for t0 in [3000,6000,9000,12000,15000,18000,21000]:
+            X=A[lo:lo+nch,t0:t0+512].astype(np.float32,copy=True);raw=X.nbytes
+            cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);szr=raw/int(bb.size)
+            # Ordinary SVD once.
+            U,s,Vh=np.linalg.svd(X.astype(np.float64),full_matrices=False)
+            for rank in [1,2,4,8,16,32,64]:
+              Af=(U[:,:rank]*s[:rank]).astype(np.float16);Bf=Vh[:rank].astype(np.float16);model=z(Af)+z(Bf)+32;P=(Af.astype(np.float32)@Bf.astype(np.float32)).astype(np.float32);cb,ef,me=certify(X,P);tot=model+cb;rows.append({'kind':'svd','t0':t0,'rank':rank,'model':model,'corr':cb,'ratio':raw/tot,'event':ef,'maxerr':me,'sz3_ratio':szr})
+            # Alternating projection: rank-r manifold <-> per-sample tolerance box; store final rank projection + certified residual.
+            for rank in [1,2,4,8,16]:
+              Y=X.astype(np.float64).copy();L=None
+              for it in range(8):
+                u,ss,v=np.linalg.svd(Y,full_matrices=False);L=(u[:,:rank]*ss[:rank])@v[:rank];Y=np.minimum(np.maximum(L,X-eps),X+eps)
+              u,ss,v=np.linalg.svd(Y,full_matrices=False);Af=(u[:,:rank]*ss[:rank]).astype(np.float16);Bf=v[:rank].astype(np.float16);model=z(Af)+z(Bf)+32;P=(Af.astype(np.float32)@Bf.astype(np.float32)).astype(np.float32);cb,ef,me=certify(X,P);viol=float(np.mean(np.abs(P-X)>eps));tot=model+cb;rows.append({'kind':'tp_rank','t0':t0,'rank':rank,'model':model,'corr':cb,'ratio':raw/tot,'event':ef,'precorrection_violation_fraction':viol,'maxerr':me,'sz3_ratio':szr});print('TP',json.dumps(rows[-1]),flush=True)
+          rows.sort(key=lambda q:q['ratio'],reverse=True);out={'eps':eps,'global_std':std,'shape':[nch,512],'top':rows[:30]};print('BEST',json.dumps(rows[:15],indent=2),flush=True);open('tolerance_rank.json','w').write(json.dumps(out,indent=2))
+          PY
+          python r.py
+      - uses: actions/upload-artifact@v4
+        with: {name: tolerance-rank, path: tolerance_rank.json, retention-days: 2}
