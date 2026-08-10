@@ -1,0 +1,104 @@
+name: AXIOM raw payload control benchmark
+on:
+  pull_request:
+    branches: [axiom-payload-control-base]
+
+jobs:
+  bench:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq git zstd xz-utils brotli p7zip-full python3-pip
+          python3 -m pip install -q pillow fonttools brotli
+      - name: Build exact pinned APK and unpack payload
+        run: |
+          set -euxo pipefail
+          git clone -q https://github.com/android/architecture-samples.git /tmp/android-src
+          cd /tmp/android-src
+          git checkout -q ee66e1526b84c026615df032c705842b7d2a521f
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon >/dev/null
+          APK=$(find app/build/outputs/apk -type f -name '*.apk' | sort | head -1)
+          cp "$APK" /tmp/app-debug.apk
+          rm -rf /tmp/apk_payload && mkdir /tmp/apk_payload
+          unzip -q /tmp/app-debug.apk -d /tmp/apk_payload
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/apk_payload.tar -C /tmp/apk_payload .
+          sha256sum /tmp/app-debug.apk /tmp/apk_payload.tar
+      - name: Build exact AXIOM semantic representation
+        run: |
+          set -euxo pipefail
+          git clone -q --depth 1 --branch axiom-v02-beast https://github.com/EdenAlpha/ng-flight-deals-.git /tmp/axiom-research
+          PYTHONPATH=/tmp/axiom-research/axiom_beast python3 - <<'PY'
+          import pathlib, hashlib
+          import tar_graph_transform as T
+          src=pathlib.Path('/tmp/apk_payload.tar').read_bytes()
+          rep=T.pack(src)
+          if rep is None:
+              raise SystemExit('semantic TAR transform rejected payload')
+          out=T.unpack(rep)
+          if out != src:
+              raise SystemExit('semantic transform roundtrip failed')
+          pathlib.Path('/tmp/apk_payload.rep').write_bytes(rep)
+          print('RAW_PAYLOAD',len(src))
+          print('SEMANTIC_REP',len(rep))
+          print('RAW_SHA256',hashlib.sha256(src).hexdigest())
+          print('INVERSE_SHA256',hashlib.sha256(out).hexdigest())
+          PY
+      - name: Compress raw payload and AXIOM representation with same backends
+        run: |
+          set -euxo pipefail
+          zstd -22 --ultra -q -f /tmp/apk_payload.tar -o /tmp/raw.zst
+          zstd -22 --ultra -q -f /tmp/apk_payload.rep -o /tmp/sem.zst
+          xz -9e -c /tmp/apk_payload.tar > /tmp/raw.xz
+          xz -9e -c /tmp/apk_payload.rep > /tmp/sem.xz
+          brotli -q 11 -c /tmp/apk_payload.tar > /tmp/raw.br
+          brotli -q 11 -c /tmp/apk_payload.rep > /tmp/sem.br
+          7z a -bd -y -t7z -mx=9 -m0=lzma2 /tmp/raw.7z /tmp/apk_payload.tar >/dev/null
+          7z a -bd -y -t7z -mx=9 -m0=lzma2 /tmp/sem.7z /tmp/apk_payload.rep >/dev/null
+      - name: Verify semantic XZ path end to end and record results
+        run: |
+          set -euxo pipefail
+          xz -dc /tmp/sem.xz > /tmp/rep.restored
+          PYTHONPATH=/tmp/axiom-research/axiom_beast python3 - <<'PY'
+          import pathlib, os, hashlib
+          import tar_graph_transform as T
+          src=pathlib.Path('/tmp/apk_payload.tar').read_bytes()
+          rep=pathlib.Path('/tmp/rep.restored').read_bytes()
+          out=T.unpack(rep)
+          assert out==src
+          def sz(p): return os.path.getsize(p)
+          rows={
+            'payload_raw':sz('/tmp/apk_payload.tar'),
+            'semantic_rep':sz('/tmp/apk_payload.rep'),
+            'raw_zstd22':sz('/tmp/raw.zst'), 'axiom_zstd22':sz('/tmp/sem.zst')+96,
+            'raw_xz9e':sz('/tmp/raw.xz'), 'axiom_xz9e':sz('/tmp/sem.xz')+96,
+            'raw_brotli11':sz('/tmp/raw.br'), 'axiom_brotli11':sz('/tmp/sem.br')+96,
+            'raw_7z_lzma2':sz('/tmp/raw.7z'), 'axiom_7z_lzma2':sz('/tmp/sem.7z')+96,
+          }
+          def gain(a,b): return (a-b)*100.0/a
+          lines=[]
+          for k,v in rows.items(): lines.append(f'{k}={v}')
+          for name in ['zstd22','xz9e','brotli11','7z_lzma2']:
+            a=rows['raw_'+name]; b=rows['axiom_'+name]
+            lines.append(f'axiom_gain_vs_same_{name}_pct={gain(a,b):.4f}')
+          lines += [
+            'exact_semantic_roundtrip=true',
+            'payload_sha256='+hashlib.sha256(src).hexdigest(),
+            'restored_sha256='+hashlib.sha256(out).hexdigest(),
+          ]
+          pathlib.Path('payload_control.txt').write_text('\n'.join(lines)+'\n')
+          print('\n'.join(lines))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-payload-control-results
+          path: payload_control.txt
+          retention-days: 7
