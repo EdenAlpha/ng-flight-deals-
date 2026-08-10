@@ -1,0 +1,48 @@
+name: AXIOM Sintel video benchmark
+on:
+  push:
+    branches: [axiom-v02-beast]
+permissions:
+  contents: write
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: axiom-v02-beast}
+      - name: Build corpus and coder
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg g++ curl
+          curl -L --retry 3 -sS https://media.w3.org/2010/05/sintel/trailer.mp4 -o sintel.mp4
+          ffmpeg -loglevel error -y -ss 0 -t 4 -i sintel.mp4 -vf scale=320:180 -r 24 -frames:v 96 -f rawvideo -pix_fmt yuv420p sintel.yuv
+          g++ -O3 -std=c++17 axiom_video_residual_v2.cpp -o axiom_vres
+          sha256sum sintel.yuv | tee input_sha.txt
+          stat -c 'RAW %s' sintel.yuv
+      - name: AXIOM video law
+        run: |
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i sintel.yuv -frames:v 96 -c:v libaom-av1 -crf 7 -b:v 0 -cpu-used 2 -row-mt 1 -f ivf basis.ivf
+          ffmpeg -loglevel error -y -i basis.ivf -f rawvideo -pix_fmt yuv420p basis.yuv
+          ./axiom_vres e sintel.yuv basis.yuv residual.axr 320 180 96 2>axiom_stats.txt
+          ./axiom_vres d residual.axr basis.yuv axiom_recon.yuv 320 180 96
+          cmp sintel.yuv axiom_recon.yuv
+          B=$(stat -c%s basis.ivf); R=$(stat -c%s residual.axr); echo "AXIOM_BASIS $B"; echo "AXIOM_RESIDUAL $R"; echo "AXIOM_TOTAL_WITH_64B_HEADER $((B+R+64))"
+      - name: Specialist lossless matrix
+        run: |
+          set +e
+          : > specialists.txt
+          exact_test(){ name="$1"; file="$2"; shift 2; ffmpeg -loglevel error -y -i "$file" -f rawvideo -pix_fmt yuv420p _d.yuv; if cmp -s sintel.yuv _d.yuv; then echo "$name $(stat -c%s "$file") EXACT" | tee -a specialists.txt; else echo "$name NOT_EXACT" | tee -a specialists.txt; fi; }
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i sintel.yuv -frames:v 96 -c:v ffv1 -level 3 -coder 1 -context 1 -g 1 ffv1_c1ctx1.mkv; exact_test FFV1_C1_CTX1 ffv1_c1ctx1.mkv
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i sintel.yuv -frames:v 96 -c:v ffv1 -level 3 -coder 1 -context 0 -g 1 ffv1_c1ctx0.mkv; exact_test FFV1_C1_CTX0 ffv1_c1ctx0.mkv
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i sintel.yuv -frames:v 96 -c:v libx264 -preset veryslow -qp 0 x264_lossless.mkv; exact_test X264_LOSSLESS x264_lossless.mkv
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i sintel.yuv -frames:v 96 -c:v libx265 -preset slow -x265-params lossless=1:log-level=error x265_lossless.mkv; exact_test X265_LOSSLESS x265_lossless.mkv
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i sintel.yuv -frames:v 96 -c:v libvpx-vp9 -lossless 1 -deadline best -cpu-used 0 vp9_lossless.webm; exact_test VP9_LOSSLESS vp9_lossless.webm
+          { cat input_sha.txt; echo "BASIS $(stat -c%s basis.ivf)"; echo "RESIDUAL $(stat -c%s residual.axr)"; echo "AXIOM_TOTAL $(( $(stat -c%s basis.ivf) + $(stat -c%s residual.axr) + 64 ))"; cat axiom_stats.txt; cat specialists.txt; } | tee axiom_sintel_results.txt
+      - name: Persist result
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add axiom_sintel_results.txt
+          git commit -m 'Record AXIOM Sintel result [skip ci]' || exit 0
+          git push

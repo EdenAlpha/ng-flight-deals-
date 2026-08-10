@@ -1,0 +1,1 @@
+Retry full AXIOM Beast v0.11 natural-video integration after Pillow dependency fix.

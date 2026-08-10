@@ -1,0 +1,45 @@
+name: AXIOM Sintel residual lab export
+on:
+  push:
+    branches: [axiom-sintel-crf-lab]
+permissions:
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: axiom-sintel-crf-lab}
+      - name: Build exact real Sintel pair
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg g++ curl
+          curl -L --retry 3 -sS https://media.w3.org/2010/05/sintel/trailer.mp4 -o sintel.mp4
+          ffmpeg -loglevel error -y -ss 0 -t 4 -i sintel.mp4 -vf scale=320:180 -r 24 -frames:v 96 -f rawvideo -pix_fmt yuv420p sintel.yuv
+          g++ -O3 -std=c++17 axiom_video_residual_v2.cpp -o axiom_vres
+          ffmpeg -loglevel error -y -f rawvideo -pix_fmt yuv420p -s 320x180 -r 24 -i sintel.yuv -frames:v 96 -c:v libaom-av1 -crf 7 -b:v 0 -cpu-used 2 -row-mt 1 -f ivf basis.ivf
+          ffmpeg -loglevel error -y -i basis.ivf -f rawvideo -pix_fmt yuv420p basis.yuv
+          ./axiom_vres e sintel.yuv basis.yuv residual.axr 320 180 96 2>stats.txt
+          ./axiom_vres d residual.axr basis.yuv check.yuv 320 180 96
+          cmp sintel.yuv check.yuv
+          { sha256sum sintel.yuv basis.yuv; stat -c 'RAW %s' sintel.yuv; stat -c 'BASIS_IVF %s' basis.ivf; stat -c 'RESIDUAL %s' residual.axr; cat stats.txt; } > export_results.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-sintel-residual-lab
+          path: |
+            sintel.yuv
+            basis.yuv
+            basis.ivf
+            residual.axr
+            export_results.txt
+          compression-level: 6
+          retention-days: 7
+      - name: Publish reusable run id
+        run: |
+          printf '%s\n' '${{ github.run_id }}' > sintel_export_run_id.txt
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add sintel_export_run_id.txt
+          git commit -m 'Record Sintel export run id [skip ci]' || exit 0
+          git push

@@ -1,0 +1,1 @@
+Trigger full AXIOM Beast v0.11 natural-video integration after verified-source video module repair.
