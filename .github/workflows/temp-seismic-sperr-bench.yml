@@ -1,0 +1,54 @@
+name: Temporary seismic SPERR matched benchmark
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: pip install --quiet numpy h5py hdf5plugin
+      - name: Download field lines
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o F1_shots.sgy 'https://zenodo.org/records/18407436/files/F1_shots.sgy?download=1'
+          curl -L --fail --retry 5 --retry-delay 2 -o Tie_shots.sgy 'https://zenodo.org/records/18407436/files/Tie_shots.sgy?download=1'
+          echo 'b706ed4c9b8179660c02b9d8df5f1e86  F1_shots.sgy' | md5sum -c -
+          echo '3ad8937d783a3090dbb73de918282692  Tie_shots.sgy' | md5sum -c -
+      - name: SPERR pointwise error benchmark
+        run: |
+          cat > sperr.py <<'PY'
+          import os,json,time,numpy as np,h5py,hdf5plugin
+          def load(fn,shots):
+            ns=2000;stride=240+ns*4;size=os.path.getsize(fn);ntr=(size-3600)//stride
+            mm=np.memmap(fn,dtype=np.uint8,mode='r')
+            return np.ndarray((ntr,ns),dtype='<f4',buffer=mm,offset=3600+240,strides=(stride,4)).copy().reshape(shots,48,ns)
+          out=[]
+          for name,fn,shots in [('F1','F1_shots.sgy',246),('Tie','Tie_shots.sgy',247)]:
+            X=load(fn,shots); raw=X.nbytes
+            for eps in [0.5,1.0,2.0]:
+              hf=f'{name}_{eps}.h5'
+              t=time.time()
+              with h5py.File(hf,'w') as f:
+                f.create_dataset('data',data=X,chunks=X.shape,**hdf5plugin.Sperr(absolute=eps))
+              ct=time.time()-t; n=os.path.getsize(hf)
+              t=time.time()
+              with h5py.File(hf,'r') as f: Y=f['data'][()]
+              dt=time.time()-t
+              err=float(np.max(np.abs(X-Y)))
+              out.append({'dataset':name,'eps':eps,'raw_bytes':raw,'hdf5_file_bytes':n,'ratio_including_hdf5':raw/n,'maxerr':err,'compress_s':ct,'decompress_s':dt})
+              os.remove(hf)
+            del X
+          open('sperr_results.json','w').write(json.dumps(out,indent=2));print(json.dumps(out,indent=2))
+          PY
+          python sperr.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: seismic-sperr-results
+          path: sperr_results.json
+          retention-days: 1
