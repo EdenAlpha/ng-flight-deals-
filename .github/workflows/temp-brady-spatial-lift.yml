@@ -1,4 +1,4 @@
-name: Temporary Brady exact spatial lifting codec
+name: Temporary Brady fast exact spatial lifting
 
 on:
   pull_request:
@@ -8,74 +8,47 @@ permissions:
   contents: read
 
 jobs:
-  lifting:
+  lifting-fast:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install --quiet numpy pysz zstandard
       - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
-      - name: Benchmark exact quantized spatial lifting on valid fiber block
+      - name: Fast exact lifting diagnostic
         shell: bash
         run: |
-          cat > lift.py <<'PY'
+          cat > fast.py <<'PY'
           import os,json,numpy as np,zstandard as zstd
           from pysz import sz,szConfig,szErrorBoundMode
-          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');dt=int.from_bytes(h[3216:3218],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True)
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True)
           valid=np.zeros(n,bool)
           for k in range(n):
             o=3600+k*st;th=bytes(mm[o:o+240]);valid[k]=(int.from_bytes(th[80:84],'big',signed=True)!=0 or int.from_bytes(th[84:88],'big',signed=True)!=0)
-          runs=[];a=None
-          for i,v in enumerate(np.r_[valid,False]):
-            if v and a is None:a=i
-            elif not v and a is not None:runs.append((a,i));a=None
-          a,b=max(runs,key=lambda q:q[1]-q[0]);lo=a;hi=min(b,a+1536);Y=X[lo:hi];std=float(Y.std());eps=.1*std;step=2*eps;Q=np.rint(Y/step).astype(np.int32);R=Q.astype(np.float64)*step;maxerr=float(np.max(np.abs(Y.astype(np.float64)-R)))
-          Z=zstd.ZstdCompressor(level=19);zc=lambda x:Z.compress(x)
-          def zig(A):
-            A=A.astype(np.int32,copy=False);return ((A<<1)^(A>>31)).astype(np.uint32)
-          def bitplanes(A, order='C'):
-            U=zig(A);mx=int(U.max()) if U.size else 0;bits=max(1,mx.bit_length());tot=0
-            if order=='T' and U.ndim==2:U=np.ascontiguousarray(U.T)
-            else:U=np.ascontiguousarray(U)
-            flat=U.reshape(-1)
-            for bit in range(bits):tot+=len(zc(np.packbits(((flat>>bit)&1).astype(np.uint8)).tobytes()))
-            return tot,bits
-          def variants(A):
-            A=A.astype(np.int32,copy=False);out={}
-            for name,B in [('raw',A)]:
-              for order in ['C','T']:out[f'{name}_{order}']=bitplanes(B,order)[0]
-            if A.shape[1]>1:
-              D=np.empty_like(A);D[:,0]=A[:,0];D[:,1:]=A[:,1:]-A[:,:-1]
-              for order in ['C','T']:out[f'dt_{order}']=bitplanes(D,order)[0]
-            if A.shape[0]>1:
-              Ds=np.empty_like(A);Ds[0]=A[0];Ds[1:]=A[1:]-A[:-1]
-              for order in ['C','T']:out[f'ds_{order}']=bitplanes(Ds,order)[0]
-              L=np.empty_like(A);L[0]=A[0];L[1:,0]=A[1:,0]-A[:-1,0];L[1:,1:]=A[1:,1:]-A[1:,:-1]-A[:-1,1:]+A[:-1,:-1]
-              for order in ['C','T']:out[f'lorenzo_{order}']=bitplanes(L,order)[0]
-            # direct compact signed bytes if possible
-            mn,mx=int(A.min()),int(A.max())
-            if mn>=-128 and mx<=127:
-              out['i8_C']=len(zc(np.ascontiguousarray(A.astype(np.int8)).tobytes()));out['i8_T']=len(zc(np.ascontiguousarray(A.T.astype(np.int8)).tobytes()))
-            out['i16_C']=len(zc(np.ascontiguousarray(A.astype(np.int16)).tobytes()));out['i16_T']=len(zc(np.ascontiguousarray(A.T.astype(np.int16)).tobytes()))
-            best=min(out,key=out.get);return {'best_mode':best,'best_bytes':int(out[best]),'all':{k:int(v) for k,v in out.items()},'min':mn,'max':mx,'zero_fraction':float(np.mean(A==0))}
-          # Exact interpolating lifting: odd sample = mean(left even,right even)+detail; recurse on evens.
+          ids=np.where(valid)[0];lo=int(ids[0]);hi=min(lo+768,int(ids[-1])+1);Y=X[lo:hi];std=float(Y.std());eps=.1*std;step=2*eps;Q=np.rint(Y/step).astype(np.int32);maxerr=float(np.max(np.abs(Y.astype(np.float64)-Q.astype(np.float64)*step)));Z=zstd.ZstdCompressor(level=3);zc=lambda b:Z.compress(b)
+          def enc(A):
+            A=A.astype(np.int32,copy=False);mn,mx=int(A.min()),int(A.max());opts={}
+            for tag,B in [('raw',A),('dt',np.c_[A[:,0],np.diff(A,axis=1)])]:
+              if B.min()>=-128 and B.max()<=127:
+                opts[tag+'_i8C']=len(zc(np.ascontiguousarray(B.astype(np.int8)).tobytes()));opts[tag+'_i8T']=len(zc(np.ascontiguousarray(B.T.astype(np.int8)).tobytes()))
+              opts[tag+'_i16C']=len(zc(np.ascontiguousarray(B.astype(np.int16)).tobytes()));opts[tag+'_i16T']=len(zc(np.ascontiguousarray(B.T.astype(np.int16)).tobytes()))
+            best=min(opts,key=opts.get);return {'bytes':int(opts[best]),'mode':best,'zero':float(np.mean(A==0)),'min':mn,'max':mx}
           cur=Q;bands=[]
           while cur.shape[0]>1:
             ev=cur[::2];od=cur[1::2];pred=np.empty_like(od)
-            for j in range(od.shape[0]):
-              left=ev[j]
-              if j+1<ev.shape[0]:pred[j]=(left+ev[j+1])//2
-              else:pred[j]=left
-            detail=od-pred;bands.append(variants(detail));cur=ev
-          root=variants(cur);lift_bytes=sum(x['best_bytes'] for x in bands)+root['best_bytes']+64*len(bands)
-          # direct quantized integer transforms for comparison
-          direct=variants(Q);D2=np.empty_like(Q);D2[0]=Q[0];D2[1:,0]=Q[1:,0]-Q[:-1,0];D2[1:,1:]=Q[1:,1:]-Q[1:,:-1]-Q[:-1,1:]+Q[:-1,:-1];lor=variants(D2)
+            pred[:]=ev[:od.shape[0]]
+            m=min(od.shape[0],ev.shape[0]-1)
+            if m>0:pred[:m]=(ev[:m]+ev[1:m+1])//2
+            d=od-pred;bands.append(enc(d));cur=ev
+          root=enc(cur);total=sum(x['bytes'] for x in bands)+root['bytes']+64*len(bands)
+          # direct quantized 2D Lorenzo
+          L=np.empty_like(Q);L[0]=Q[0];L[1:,0]=Q[1:,0]-Q[:-1,0];L[1:,1:]=Q[1:,1:]-Q[1:,:-1]-Q[:-1,1:]+Q[:-1,:-1];lor=enc(L)
           cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;sb,_=sz.compress(Y,cfg);S,_=sz.decompress(sb,np.float32,Y.shape)
-          out={'block':[lo,hi],'shape':list(Y.shape),'std':std,'epsilon':eps,'quantized_maxerr':maxerr,'sz3':{'bytes':int(sb.size),'ratio':Y.nbytes/int(sb.size),'maxerr':float(np.max(np.abs(Y-S)))},'direct_quantized':{'bytes':direct['best_bytes'],'ratio':Y.nbytes/direct['best_bytes'],'mode':direct['best_mode']},'direct_lorenzo_quantized':{'bytes':lor['best_bytes'],'ratio':Y.nbytes/lor['best_bytes'],'mode':lor['best_mode']},'lifting':{'bytes':int(lift_bytes),'ratio':Y.nbytes/lift_bytes,'levels':len(bands),'root':root,'bands':[{'level':i+1,**x} for i,x in enumerate(bands)]}};print(json.dumps(out,indent=2));open('lifting.json','w').write(json.dumps(out,indent=2))
+          out={'shape':list(Y.shape),'std':std,'eps':eps,'maxerr_quantized':maxerr,'sz3_ratio':Y.nbytes/int(sb.size),'sz3_bytes':int(sb.size),'sz3_maxerr':float(np.max(np.abs(Y-S))),'lorenzo_quantized_ratio':Y.nbytes/lor['bytes'],'lorenzo':lor,'lifting_ratio':Y.nbytes/total,'lifting_bytes':int(total),'levels':len(bands),'bands':bands,'root':root};print(json.dumps(out,indent=2));open('fast.json','w').write(json.dumps(out,indent=2))
           PY
-          python lift.py
+          python fast.py
       - uses: actions/upload-artifact@v4
         with:
-          name: brady-lifting-results
-          path: lifting.json
+          name: brady-fast-lifting
+          path: fast.json
           retention-days: 1
