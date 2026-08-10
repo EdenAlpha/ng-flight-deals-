@@ -1,0 +1,9 @@
+corpus_sha256=73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75
+original=696320
+axiom=157322
+android.tar.xz 251276
+android.br 250233
+android.zst 259651
+android_lzma2.7z 250626
+android_ppmd.7z 259286
+android.zpaq 241108
