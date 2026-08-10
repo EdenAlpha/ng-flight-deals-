@@ -11,9 +11,11 @@ jobs:
       - name: Install codecs
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg libjxl-tools p7zip-full xz-utils brotli curl
+          sudo apt-get install -y -qq ffmpeg libjxl-tools p7zip-full xz-utils brotli curl python3-pip
+          python3 -m pip install -q --break-system-packages numpy
       - name: Build exact target
         run: |
+          set -euo pipefail
           mkdir -p work/out
           curl -L --retry 3 -sS https://raw.githubusercontent.com/opencv/opencv/master/samples/data/lena.jpg -o work/source.jpg
           ffmpeg -loglevel error -y -i work/source.jpg -f rawvideo -pix_fmt rgb24 work/target.raw
@@ -21,6 +23,7 @@ jobs:
           cjxl work/target.png work/lossless.jxl -d 0 -e 9 >/dev/null 2>&1
       - name: Sweep lossy bases plus exact residual
         run: |
+          set -euo pipefail
           cat > work/sweep.py <<'PY'
           import subprocess,os,csv,numpy as np
           T=np.fromfile('work/target.raw',dtype=np.uint8).reshape(512,512,3)
@@ -39,17 +42,15 @@ jobs:
               best=None
               for layout,blob in candidates.items():
                   fn=f'work/res_{d}_{layout}.bin'; open(fn,'wb').write(blob)
-                  subprocess.run(['xz','-9e','-k','-f',fn],check=True)
-                  xz=os.path.getsize(fn+'.xz')
-                  subprocess.run(['brotli','-q','11','-f',fn,'-o',fn+'.br'],check=True)
-                  br=os.path.getsize(fn+'.br')
-                  seven=fn+'.7z'; subprocess.run(['7z','a','-bd','-y','-t7z','-m0=PPMd','-mx=9',seven,fn],stdout=subprocess.DEVNULL,check=True)
-                  pp=os.path.getsize(seven)
+                  subprocess.run(['xz','-9e','-k','-f',fn],check=True); xz=os.path.getsize(fn+'.xz')
+                  subprocess.run(['brotli','-q','11','-f',fn,'-o',fn+'.br'],check=True); br=os.path.getsize(fn+'.br')
+                  seven=fn+'.7z'; subprocess.run(['7z','a','-bd','-y','-t7z','-m0=PPMd','-mx=9',seven,fn],stdout=subprocess.DEVNULL,check=True); pp=os.path.getsize(seven)
                   for codec,sz in [('xz',xz),('br',br),('ppmd',pp)]:
                       item=(sz,layout,codec)
                       if best is None or item<best: best=item
               bsz=os.path.getsize(base); total=bsz+best[0]+64
               exact=bool(np.array_equal(((P.astype(np.int16)+S)&255).astype(np.uint8),T))
+              if not exact: raise RuntimeError(f'roundtrip failure at d={d}')
               mae=float(np.abs(T.astype(np.int16)-P.astype(np.int16)).mean())
               row=[d,bsz,best[0],best[1],best[2],total,lossless,(1-total/lossless)*100,mae,exact]
               rows.append(row); print(row,flush=True)
@@ -57,7 +58,9 @@ jobs:
               w=csv.writer(f);w.writerow(['distance','basis','residual','layout','codec','axiom_total','jxl_lossless','win_pct','mae','exact']);w.writerows(rows)
           PY
           python3 work/sweep.py | tee work/out/run.log
+          test -s work/out/jxl_basis.csv
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: axiom-v04-jxl-basis
           path: work/out
