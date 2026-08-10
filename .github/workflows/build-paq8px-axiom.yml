@@ -1,0 +1,28 @@
+name: Build pinned PAQ8px for AXIOM integration
+on:
+  pull_request:
+    branches: [axiom-paq-bin-base]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build PAQ8px v216
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential cmake git
+          git clone -q --depth 1 https://github.com/hxim/paq8px.git /tmp/paq8px-src
+          cd /tmp/paq8px-src/build
+          bash build-linux-with-cmake.sh >/dev/null
+          ./paq8px 2>&1 | head -n 2 || true
+          cp paq8px "$GITHUB_WORKSPACE/paq8px-linux-x64"
+          chmod +x "$GITHUB_WORKSPACE/paq8px-linux-x64"
+          sha256sum "$GITHUB_WORKSPACE/paq8px-linux-x64" > "$GITHUB_WORKSPACE/paq8px.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-paq8px-v216-linux-x64
+          path: |
+            paq8px-linux-x64
+            paq8px.sha256
+          retention-days: 7
