@@ -1,0 +1,55 @@
+name: AXIOM exact non-AI best benchmark
+on:
+  push:
+    branches: [axiom-v02-beast]
+jobs:
+  bench:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: axiom-v02-beast
+      - name: Install strong non-AI compressors
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full brotli zstd xz-utils git zpaq
+      - name: Rebuild and pin exact Android corpus
+        run: |
+          set -euxo pipefail
+          rm -rf /tmp/android-src
+          git clone -q --depth 1 https://github.com/android/architecture-samples.git /tmp/android-src
+          rm -rf /tmp/android-src/.git
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.tar -C /tmp/android-src app build.gradle.kts settings.gradle.kts gradle.properties 2>/dev/null || tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.tar -C /tmp/android-src app
+          echo '73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75  /tmp/android.tar' | sha256sum -c -
+      - name: Benchmark opponents
+        run: |
+          set -euxo pipefail
+          cp /tmp/android.tar /tmp/android.source
+          xz -9e -k -f /tmp/android.tar
+          brotli -q 11 -f /tmp/android.source -o /tmp/android.br
+          zstd -22 --ultra -q -f /tmp/android.source -o /tmp/android.zst
+          7z a -bd -y -t7z -m0=lzma2 -mx=9 -md=256m -mfb=273 -ms=on /tmp/android_lzma2.7z /tmp/android.source >/dev/null
+          7z a -bd -y -t7z -m0=PPMd -mmem=512m -mo=16 /tmp/android_ppmd.7z /tmp/android.source >/dev/null
+          zpaq a /tmp/android.zpaq /tmp/android.source -method 5 >/tmp/zpaq.log 2>&1
+          mkdir -p benchmark_results
+          python3 - <<'PY' > benchmark_results/android_best_nonai.txt
+          import os
+          print('corpus_sha256=73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75')
+          print('original=696320')
+          print('axiom=157322')
+          for p in ['/tmp/android.tar.xz','/tmp/android.br','/tmp/android.zst','/tmp/android_lzma2.7z','/tmp/android_ppmd.7z','/tmp/android.zpaq']:
+              print(os.path.basename(p), os.path.getsize(p))
+          PY
+          cat benchmark_results/android_best_nonai.txt
+          cat /tmp/zpaq.log
+      - name: Commit benchmark result
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add benchmark_results/android_best_nonai.txt
+          git commit -m 'Record AXIOM exact non-AI benchmark result'
+          git push origin HEAD:axiom-v02-beast
