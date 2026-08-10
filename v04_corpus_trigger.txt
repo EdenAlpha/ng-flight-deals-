@@ -1,1 +1,1 @@
-retrigger AXIOM v0.4 JXL generative-basis sweep fail-closed
+trigger AXIOM v0.4 Android corpus export and corrected JXL sweep
