@@ -1,0 +1,1 @@
+trigger exact AXIOM sparse-video v6 natural-footage benchmark
