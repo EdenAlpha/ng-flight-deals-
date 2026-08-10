@@ -1,0 +1,31 @@
+name: PAQ8px non-LSTM 10B isolated
+on:
+  pull_request:
+    branches: [axiom-paq10b-arm-base]
+jobs:
+  paq10b:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq build-essential cmake git
+      - name: Exact corpus and PAQ8px 10B
+        run: |
+          set -euxo pipefail
+          git clone -q --depth 1 https://github.com/android/architecture-samples.git /tmp/android-src
+          rm -rf /tmp/android-src/.git
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.source -C /tmp/android-src app build.gradle.kts settings.gradle.kts gradle.properties 2>/dev/null || tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.source -C /tmp/android-src app
+          echo '73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75  /tmp/android.source' | sha256sum -c -
+          git clone -q --depth 1 https://github.com/hxim/paq8px.git /tmp/paq
+          cd /tmp/paq/build && bash build-linux-with-cmake.sh >/dev/null
+          ./paq8px -10B /tmp/android.source /tmp/android.paq10B >/tmp/paq.log
+          mkdir -p /tmp/out && ./paq8px -d /tmp/android.paq10B /tmp/out/android.source >/dev/null
+          cmp /tmp/android.source /tmp/out/android.source
+          cd "$GITHUB_WORKSPACE" && mkdir -p results
+          printf 'corpus_sha256=73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75\noriginal=696320\naxiom=157322\nPAQ8px-v216-nonLSTM--10B=%s\n' "$(stat -c %s /tmp/android.paq10B)" > results/paq10b.txt
+          cat results/paq10b.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paq10b-result
+          path: results/paq10b.txt
+          retention-days: 7
