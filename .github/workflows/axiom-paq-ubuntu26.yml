@@ -1,0 +1,39 @@
+name: AXIOM PAQ8px x64 Ubuntu26 check
+on:
+  pull_request:
+    branches: [axiom-nonai-best-base]
+jobs:
+  paq:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential cmake git
+      - name: Build exact pinned corpus and PAQ8px
+        run: |
+          set -euxo pipefail
+          git clone -q --depth 1 https://github.com/android/architecture-samples.git /tmp/android-src
+          rm -rf /tmp/android-src/.git
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.source -C /tmp/android-src app build.gradle.kts settings.gradle.kts gradle.properties 2>/dev/null || tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.source -C /tmp/android-src app
+          echo '73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75  /tmp/android.source' | sha256sum -c -
+          git clone -q --depth 1 https://github.com/hxim/paq8px.git /tmp/paq8px-src
+          cd /tmp/paq8px-src/build
+          bash build-linux-with-cmake.sh >/dev/null
+          BIN="$PWD/paq8px"
+          "$BIN" -10 /tmp/android.source /tmp/android.paq10 >/tmp/paq10.log
+          "$BIN" -10B /tmp/android.source /tmp/android.paq10B >/tmp/paq10B.log
+          mkdir -p /tmp/out
+          "$BIN" -d /tmp/android.paq10B /tmp/out/android.source >/dev/null
+          cmp /tmp/android.source /tmp/out/android.source
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p results
+          printf 'corpus_sha256=73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75\noriginal=696320\naxiom=157322\nPAQ8px-v216-nonLSTM--10=%s\nPAQ8px-v216-nonLSTM--10B=%s\n' "$(stat -c %s /tmp/android.paq10)" "$(stat -c %s /tmp/android.paq10B)" > results/paq10.txt
+          cat results/paq10.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-paq10-x64
+          path: results/paq10.txt
+          retention-days: 7
