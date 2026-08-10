@@ -1,1 +1,1 @@
-trigger AXIOM v0.4 JXL generative-basis sweep
+retrigger AXIOM v0.4 JXL generative-basis sweep fail-closed
