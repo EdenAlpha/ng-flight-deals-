@@ -13,13 +13,16 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq p7zip-full ffmpeg xz-utils brotli zstd libjxl-tools git curl unzip
-          python3 -m pip install -q numpy brotli
+          python3 -m pip install -q numpy brotli fonttools[woff]
       - name: Unpack AXIOM v0.3
         run: |
           mkdir -p axiom_v03/data
-          cat v03_chunks/part*.b64 | base64 -d > /tmp/axiom_v03.zip
-          unzip -q -o /tmp/axiom_v03.zip -d axiom_v03
+          : > /tmp/axiom_v03.zip
+          for f in v03_chunks/part*.b64; do
+            base64 -d "$f" >> /tmp/axiom_v03.zip
+          done
           unzip -t /tmp/axiom_v03.zip
+          unzip -q -o /tmp/axiom_v03.zip -d axiom_v03
       - name: Build real corpus
         run: |
           set -e
@@ -39,6 +42,7 @@ jobs:
           cd axiom_v03
           python3 bench_v03.py | tee run_v03.log
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: axiom-v03-adversarial-results
           path: |
