@@ -1,0 +1,66 @@
+name: Temporary nearstack codec benchmark
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: pip install --quiet numpy zfpy pysz
+      - name: Download independent SEG-Y
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o nearstack.sgy 'https://github.com/aadm/geophysical_notes/raw/refs/heads/master/3d_nearstack.sgy'
+          ls -lh nearstack.sgy
+      - name: Benchmark ZFP and SZ3
+        shell: bash
+        run: |
+          cat > bench.py <<'PY'
+          import os,json,time,numpy as np,zfpy
+          from pysz import sz,szConfig,szErrorBoundMode
+          fn='nearstack.sgy'
+          with open(fn,'rb') as f: hdr=f.read(3600)
+          ns=int.from_bytes(hdr[3220:3222],'big',signed=False); fmt=int.from_bytes(hdr[3224:3226],'big',signed=False)
+          stride=240+ns*4; ntr=(os.path.getsize(fn)-3600)//stride
+          mm=np.memmap(fn,dtype=np.uint8,mode='r')
+          raw=np.empty((ntr,ns),dtype='>u4')
+          for i in range(ntr):
+              off=3600+i*stride+240
+              raw[i]=np.frombuffer(mm[off:off+ns*4],dtype='>u4',count=ns)
+          if fmt==1:
+              u=raw.astype(np.uint32)
+              sign=np.where((u>>31)!=0,-1.0,1.0)
+              exp=((u>>24)&0x7f).astype(np.int32)-64
+              frac=(u&0x00ffffff).astype(np.float64)/16777216.0
+              X=(sign*frac*np.power(16.0,exp)).astype(np.float32)
+              X[u==0]=0.0
+          elif fmt==5:
+              X=raw.view('>f4').astype(np.float32)
+          else: raise RuntimeError(fmt)
+          shape=(101,251,ns)
+          X=X.reshape(shape); rb=X.nbytes
+          out={'shape':list(shape),'format':fmt,'std':float(X.std()),'raw_bytes':rb,'results':[]}
+          for eps in [38.0,76.0,152.0]:
+              t=time.time();zb=zfpy.compress_numpy(X,tolerance=eps);ct=time.time()-t
+              t=time.time();Z=zfpy.decompress_numpy(zb);dt=time.time()-t
+              cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps
+              t=time.time();sb,sratio=sz.compress(X,cfg);st=time.time()-t
+              t=time.time();S,_=sz.decompress(sb,np.float32,X.shape);sd=time.time()-t
+              out['results'].append({'eps':eps,'zfp_bytes':len(zb),'zfp_ratio':rb/len(zb),'zfp_maxerr':float(np.max(np.abs(X-Z))),'zfp_compress_s':ct,'zfp_decompress_s':dt,'sz3_bytes':int(sb.size),'sz3_ratio':rb/int(sb.size),'sz3_maxerr':float(np.max(np.abs(X-S))),'sz3_compress_s':st,'sz3_decompress_s':sd})
+          open('nearstack_codec_results.json','w').write(json.dumps(out,indent=2));print(json.dumps(out,indent=2))
+          PY
+          python bench.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nearstack-codec-results
+          path: nearstack_codec_results.json
+          retention-days: 1
