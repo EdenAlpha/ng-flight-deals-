@@ -1,0 +1,31 @@
+name: AXIOM ZPAQ ARM cross-check
+on:
+  pull_request:
+    branches: [axiom-nonai-best-base]
+jobs:
+  zpaq:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ZPAQ
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq zpaq git
+      - name: Rebuild exact pinned Android corpus and compress
+        run: |
+          set -euxo pipefail
+          git clone -q --depth 1 https://github.com/android/architecture-samples.git /tmp/android-src
+          rm -rf /tmp/android-src/.git
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.tar -C /tmp/android-src app build.gradle.kts settings.gradle.kts gradle.properties 2>/dev/null || tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.tar -C /tmp/android-src app
+          echo '73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75  /tmp/android.tar' | sha256sum -c -
+          zpaq a /tmp/android.zpaq /tmp/android.tar -method 5 >/tmp/zpaq.log 2>&1
+          mkdir -p results
+          printf 'corpus_sha256=73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75\noriginal=696320\naxiom=157322\nZPAQ-method5=%s\n' "$(stat -c %s /tmp/android.zpaq)" > results/zpaq_arm.txt
+          cat results/zpaq_arm.txt
+          cat /tmp/zpaq.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-zpaq-arm-crosscheck
+          path: results/zpaq_arm.txt
+          retention-days: 7
