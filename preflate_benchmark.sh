@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 python3 -m pip download -q --no-deps pygments==2.19.1 -d wheel
-WHEEL=$(echo wheel/*.whl)
+WHEEL=$(realpath $(echo wheel/*.whl))
 ORIG=$(stat -c%s "$WHEEL")
 git clone -q --depth 1 https://github.com/microsoft/preflate-rs.git preflate
 cd preflate
@@ -14,7 +14,7 @@ assert needle in s
 open(p,'w').write(s.replace(needle,repl,1))
 PY
 cargo build --release -q -p preflate_util
-BIN=target/release/preflate_util
+BIN="$PWD/target/release/preflate_util"
 cd ..
 $BIN "$WHEEL" -c 14 --verify true --baseline true | tee preflate.log
 SIZE=$(grep 'PREFLATE_CONTAINER_BYTES' preflate.log | tail -1 | awk '{print $2}')
