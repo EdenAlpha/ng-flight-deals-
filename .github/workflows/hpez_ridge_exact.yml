@@ -1,0 +1,59 @@
+name: Exact-block HPEZ comparator for ridge
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  hpez:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Build official HPEZ
+        run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+      - name: Extract exact 128x8192 Brady ridge block
+        run: |
+          pip install --quiet numpy pysz
+          curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+          python - <<'PY'
+          import os,json,numpy as np
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and ns>0 and (size-3600)%st==0:cc.append((nb,ns,(size-3600)//st,st))
+          nb,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=(T*T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std
+          X=A[4096:4224,6000:14192].astype('<f4',copy=True)
+          X.tofile('block.bin');open('meta.json','w').write(json.dumps({'shape':list(X.shape),'eps':eps,'std':std,'raw':X.nbytes}));print('BLOCK',X.shape,'eps',eps,'raw',X.nbytes)
+          PY
+      - name: Run HPEZ q4 both dimension orientations and SZ3
+        shell: bash
+        run: |
+          EPS=$(python -c "import json;print(json.load(open('meta.json'))['eps'])")
+          BIN=$PWD/hpez-install/bin/hpez
+          $BIN -f -i block.bin -z hpez_timefast.bin -3 8192 128 1 -M ABS "$EPS" -q 4
+          $BIN -f -z hpez_timefast.bin -o hpez_timefast.out -3 8192 128 1
+          $BIN -f -i block.bin -z hpez_spacefast.bin -3 128 8192 1 -M ABS "$EPS" -q 4
+          $BIN -f -z hpez_spacefast.bin -o hpez_spacefast.out -3 128 8192 1
+          python - <<'PY'
+          import json,os,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          m=json.load(open('meta.json'));shape=tuple(m['shape']);eps=float(m['eps']);X=np.fromfile('block.bin','<f4').reshape(shape);raw=X.nbytes
+          out={'shape':list(shape),'eps':eps,'raw':raw,'HPEZ_q4':{}}
+          for key in ['timefast','spacefast']:
+            cb=f'hpez_{key}.bin';ob=f'hpez_{key}.out';Y=np.fromfile(ob,'<f4').reshape(shape)
+            out['HPEZ_q4'][key]={'bytes':os.path.getsize(cb),'ratio':raw/os.path.getsize(cb),'maxerr':float(np.max(np.abs(X-Y)))}
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(np.ascontiguousarray(X),cfg);Z,_=sz.decompress(b,np.float32,shape)
+          out['SZ3']={'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Z)))}
+          print(json.dumps(out,indent=2));open('hpez_ridge_exact.json','w').write(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with: {name: hpez-ridge-exact, path: hpez_ridge_exact.json, retention-days: 2}
