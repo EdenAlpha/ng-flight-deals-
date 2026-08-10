@@ -5,7 +5,7 @@ on:
 jobs:
   bench:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - name: Install benchmark tools
@@ -36,10 +36,12 @@ jobs:
           cd /tmp/paq8px-src/build
           bash build-linux-with-cmake.sh >/dev/null
           BIN="$PWD/paq8px"
-          "$BIN" -8 /tmp/android.source /tmp/android.paq8px >/tmp/paq.log
-          "$BIN" -8B /tmp/android.source /tmp/androidB.paq8px >/tmp/paqB.log
+          "$BIN" -8 /tmp/android.source /tmp/android.paq8px8 >/tmp/paq8.log
+          "$BIN" -8B /tmp/android.source /tmp/android.paq8px8B >/tmp/paq8B.log
+          "$BIN" -10 /tmp/android.source /tmp/android.paq8px10 >/tmp/paq10.log
+          "$BIN" -10B /tmp/android.source /tmp/android.paq8px10B >/tmp/paq10B.log
           mkdir -p /tmp/paqout
-          "$BIN" -d /tmp/android.paq8px /tmp/paqout/android.source >/dev/null
+          "$BIN" -d /tmp/android.paq8px10B /tmp/paqout/android.source >/dev/null
           cmp /tmp/android.source /tmp/paqout/android.source
       - name: Record results
         run: |
@@ -54,8 +56,10 @@ jobs:
             '7z-LZMA2-max':os.path.getsize('/tmp/android_lzma2.7z'),
             '7z-PPMd-max':os.path.getsize('/tmp/android_ppmd.7z'),
             'ZPAQ-method5':os.path.getsize('/tmp/android.zpaq'),
-            'PAQ8px-v216-nonLSTM--8':os.path.getsize('/tmp/android.paq8px'),
-            'PAQ8px-v216-nonLSTM--8B':os.path.getsize('/tmp/androidB.paq8px'),
+            'PAQ8px-v216-nonLSTM--8':os.path.getsize('/tmp/android.paq8px8'),
+            'PAQ8px-v216-nonLSTM--8B':os.path.getsize('/tmp/android.paq8px8B'),
+            'PAQ8px-v216-nonLSTM--10':os.path.getsize('/tmp/android.paq8px10'),
+            'PAQ8px-v216-nonLSTM--10B':os.path.getsize('/tmp/android.paq8px10B'),
           }
           best=min(vals,key=vals.get)
           print('corpus_sha256=73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75')
