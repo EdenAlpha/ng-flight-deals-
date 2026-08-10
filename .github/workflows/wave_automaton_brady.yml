@@ -1,0 +1,62 @@
+name: Discrete wave automaton Brady probe
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  wave:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Run wave automaton
+        shell: bash
+        run: |
+          cat > w.py <<'PY'
+          import os,json,subprocess,numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          if len(cc)!=1:raise RuntimeError(cc)
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=np.square(T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(max(0.,s2/cnt-mu*mu)));eps=.1*std;lo=4096;nch=256;X=A[lo:lo+nch].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-9','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0;return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          def pack(Q):
+            opts={};opts['rawq']=z(si(Q));D=Q.copy();D[:,1:]-=Q[:,:-1];opts['dt']=z(si(D));S=Q.copy();S[1:]-=Q[:-1];opts['dx']=z(si(S));L=Q.copy();L[1:,1:]=Q[1:,1:]-Q[:-1,1:]-Q[1:,:-1]+Q[:-1,:-1];opts['lorenzo']=z(si(L));m=Q!=0;mb=z(np.packbits(m.reshape(-1),bitorder='little'));v=Q[m];opts['sparse']=mb+(z(si(v)) if v.size else 0);name=min(opts,key=opts.get);return opts[name],name,opts,float(m.mean())
+          @njit(cache=True)
+          def run(X,eps,lam,gamma):
+            m,n=X.shape;Y=np.empty_like(X);Q=np.empty((m,n),np.int32);step=2.0*eps
+            for i in range(m):
+              q=int(np.rint(X[i,0]/step));Q[i,0]=q;Y[i,0]=q*step
+              q=int(np.rint(X[i,1]/step));Q[i,1]=q;Y[i,1]=q*step
+            for t in range(2,n):
+              for i in range(m):
+                if i==0:lap=Y[1,t-1]-Y[0,t-1]
+                elif i==m-1:lap=Y[m-2,t-1]-Y[m-1,t-1]
+                else:lap=Y[i-1,t-1]-2.0*Y[i,t-1]+Y[i+1,t-1]
+                vel=Y[i,t-1]-Y[i,t-2];p=2.0*Y[i,t-1]-Y[i,t-2]+lam*lap-gamma*vel
+                q=int(np.rint((X[i,t]-p)/step));Q[i,t]=q;Y[i,t]=p+q*step
+            return Y,Q
+          rows=[]
+          for lam in [0.,.0025,.01,.0225,.04,.0625,.09,.16,.25,.36,.49,.64,.81,1.0,1.5,2.0]:
+            for gamma in [0.,.02,.1]:
+              Y,Q=run(X,eps,lam,gamma);qb,kind,opts,zf=pack(Q);tot=qb+32;row={'lambda':lam,'gamma':gamma,'bytes':tot,'ratio':raw/tot,'q_zero_fraction':1-zf,'coding':kind,'maxerr':float(np.max(np.abs(X-Y))),'coding_options':opts};rows.append(row);print('WAVE',json.dumps(row),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);Y,_=sz.decompress(bb,np.float32,X.shape);sz3={'bytes':int(bb.size),'ratio':raw/int(bb.size),'maxerr':float(np.max(np.abs(X-Y)))}
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':[nch,ns],'offset':lo,'global_std':std,'eps':eps,'rows':rows[:20],'sz3':sz3};print('BEST',json.dumps(rows[:10],indent=2),flush=True);print('SZ3',sz3,flush=True);open('wave_automaton.json','w').write(json.dumps(out,indent=2))
+          PY
+          python w.py
+      - uses: actions/upload-artifact@v4
+        with: {name: wave-automaton, path: wave_automaton.json, retention-days: 2}
