@@ -13,7 +13,7 @@ jobs:
       - name: Build official HPEZ
         run: |
           git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
-          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install -DCMAKE_CXX_FLAGS="-include cstdint -include array"
           cmake --build hpez-src/build -j2
           cmake --install hpez-src/build
       - name: Extract exact 128x8192 Brady ridge block
