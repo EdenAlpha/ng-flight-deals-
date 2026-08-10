@@ -1,0 +1,53 @@
+name: Temporary Utah FORGE land inspect
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download official Utah FORGE processed land seismic
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 5 --retry-delay 3 \
+            -o forge.zip \
+            'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          ls -lh forge.zip
+      - name: Inspect SEG-Y members without extracting archive
+        shell: bash
+        run: |
+          python - <<'PY'
+          import zipfile, json, struct, os
+          z=zipfile.ZipFile('forge.zip')
+          members=[]
+          for i in z.infolist():
+              name=i.filename
+              if name.lower().endswith(('.sgy','.segy','.seg','.segy')):
+                  try:
+                      with z.open(i) as f: p=f.read(3600)
+                      cand=[]
+                      for en,bo in [('big','big'),('little','little')]:
+                          if len(p)>=3226:
+                              dt=int.from_bytes(p[3216:3218],bo)
+                              ns=int.from_bytes(p[3220:3222],bo)
+                              fmt=int.from_bytes(p[3224:3226],bo)
+                              if 0<dt<10000000 and 0<ns<10000000 and fmt in range(1,17):
+                                  cand.append({'endian':en,'dt_us':dt,'ns':ns,'fmt':fmt})
+                      members.append({'name':name,'uncompressed_bytes':i.file_size,'compressed_bytes':i.compress_size,'segy_candidates':cand})
+                  except Exception as e:
+                      members.append({'name':name,'uncompressed_bytes':i.file_size,'error':str(e)})
+          out={'archive_bytes':os.path.getsize('forge.zip'),'segy_count':len(members),'members':members}
+          open('forge_inspect.json','w').write(json.dumps(out,indent=2))
+          print(json.dumps({'archive_bytes':out['archive_bytes'],'segy_count':out['segy_count'],'first_members':members[:30]},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: utah-forge-land-inspect
+          path: forge_inspect.json
+          retention-days: 1
