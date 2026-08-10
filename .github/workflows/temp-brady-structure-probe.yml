@@ -13,61 +13,96 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install --quiet numpy zstandard
+      - run: pip install --quiet numpy segyio
       - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140048.sgy'
-      - name: Probe spatial/time-shift structure
+      - name: Probe true-neighbor spatial and temporal structure
         shell: bash
         run: |
           cat > p.py <<'PY'
-          import os,json,numpy as np,zstandard as zstd
-          f='land.sgy';sz=os.path.getsize(f);h=open(f,'rb').read(3600);C=[]
+          import os,json,math,numpy as np
+          f='land.sgy'; size=os.path.getsize(f); h=open(f,'rb').read(3600); C=[]
           for bo,nb in [('big','>'),('little','<')]:
             ns=int.from_bytes(h[3220:3222],bo);dt=int.from_bytes(h[3216:3218],bo);fmt=int.from_bytes(h[3224:3226],bo)
             if fmt==5 and ns>0:
               st=240+4*ns
-              if (sz-3600)%st==0:C.append((nb,ns,dt,(sz-3600)//st,st))
-          nb,ns,dt,ntr,st=C[0];mm=np.memmap(f,np.uint8,'r');X=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True);std=float(X.std());eps=.1*std
-          # correlation on decimated traces/times
-          A=X[::32,::10].astype(np.float64);a=A[:-1].ravel();b=A[1:].ravel();corr=float(np.corrcoef(a,b)[0,1]); timecorr=float(np.corrcoef(A[:,:-1].ravel(),A[:,1:].ravel())[0,1])
-          # global adjacent-channel best integer time shift
-          pairs=X[::32]
-          sh=[]
-          for d in range(-12,13):
-            if d<0:u=pairs[:-1,-d:];v=pairs[1:,:d]
-            elif d>0:u=pairs[:-1,:-d];v=pairs[1:,d:]
-            else:u=pairs[:-1];v=pairs[1:]
-            # normalized MSE proxy
-            sh.append((d,float(np.mean((u[:,::20]-v[:,::20]).astype(np.float64)**2))))
-          best=min(sh,key=lambda q:q[1])
-          # current correction state, computed in channel blocks to stay memory safe
-          M=52;idx=np.arange(0,ns,M,dtype=np.int32);idx=np.r_[idx,ns-1] if idx[-1]!=ns-1 else idx;Ai=np.rint(X[:,idx]/eps).astype(np.int16);Ad=Ai.astype(np.float32)*eps;S=np.empty((ntr,ns),np.int16)
-          for j in range(len(idx)-1):
-            a0,b0=int(idx[j]),int(idx[j+1]);L=b0-a0;u=np.arange(L,dtype=np.float32)/L;P=Ad[:,j,None]*(1-u)[None,:]+Ad[:,j+1,None]*u[None,:];S[:,a0:b0]=np.rint((X[:,a0:b0]-P)/(2*eps)).astype(np.int16)
-          S[:,-1]=np.rint((X[:,-1]-Ad[:,-1])/(2*eps)).astype(np.int16)
-          zc=zstd.ZstdCompressor(level=3).compress
-          def sparse(E):
-            m=E!=0;v=E[m];mb=len(zc(np.packbits(m.T.reshape(-1)).tobytes()));vb=len(zc((v.astype(np.int8) if v.size and v.min()>=-128 and v.max()<=127 else v.astype(np.int16)).tobytes()));return {'fraction':float(v.size/E.size),'mask_bytes':mb,'value_bytes':vb,'total':mb+vb}
-          # temporal transition
-          Et=np.empty_like(S);Et[:,0]=S[:,0];Et[:,1:]=S[:,1:]-S[:,:-1]
-          # channel transition
-          Ec=np.empty_like(S);Ec[0]=S[0];Ec[1:]=S[1:]-S[:-1]
-          # 2D Lorenzo
-          El=np.empty_like(S);El[0]=Et[0];El[1:,0]=S[1:,0]-S[:-1,0];El[1:,1:]=S[1:,1:]-S[1:,:-1]-S[:-1,1:]+S[:-1,:-1]
-          # shifted channel transitions for integer d
-          shifted={}
-          for d in [-4,-2,-1,0,1,2,4]:
-            E=np.empty_like(S);E[0]=S[0]
-            if d<0:
-              k=-d;E[1:,:k]=S[1:,:k];E[1:,k:]=S[1:,k:]-S[:-1,:-k]
-            elif d>0:
-              E[1:,-d:]=S[1:,-d:];E[1:,:-d]=S[1:,:-d]-S[:-1,d:]
-            else:E[1:]=S[1:]-S[:-1]
-            shifted[str(d)]=sparse(E)
-          out={'ntr':ntr,'ns':ns,'std':std,'eps':eps,'adjacent_channel_corr_decimated':corr,'time_corr_decimated':timecorr,'best_raw_adjacent_shift':best,'raw_shift_mse':sh,'current_time_transition':sparse(Et),'channel_transition':sparse(Ec),'lorenzo2d':sparse(El),'shifted_channel':shifted};print(json.dumps(out,indent=2));open('probe.json','w').write(json.dumps(out,indent=2))
+              if (size-3600)%st==0:C.append((nb,ns,dt,(size-3600)//st,st))
+          if len(C)!=1: raise RuntimeError(C)
+          nb,ns,dt,ntr,st=C[0]
+          mm=np.memmap(f,np.uint8,'r')
+          X=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+
+          # Use actual neighboring traces. Cap pair count, but do NOT skip within a pair.
+          def corr(a,b):
+            a=a.astype(np.float64);b=b.astype(np.float64);a-=a.mean();b-=b.mean()
+            return float(np.dot(a,b)/(math.sqrt(float(np.dot(a,a))*float(np.dot(b,b)))+1e-300))
+          tstep=5
+          spacings={}
+          for s in [1,2,4,8,16,32]:
+            ids=np.unique(np.linspace(0,ntr-s-1,min(512,ntr-s),dtype=np.int64))
+            c0=[]; cbest=[]; lags=[]; rr=[]
+            for i in ids:
+              a=np.asarray(X[i,::tstep],dtype=np.float32)
+              bfull=np.asarray(X[i+s],dtype=np.float32)
+              b=np.asarray(bfull[::tstep],dtype=np.float32)
+              c0.append(corr(a,b))
+              # integer lag is in original 1 ms samples; evaluate true local propagation lag.
+              best=(-1e9,0,None)
+              afull=np.asarray(X[i],dtype=np.float32)
+              for lag in range(-12,13):
+                if lag<0: aa=afull[-lag:]; bb=bfull[:lag]
+                elif lag>0: aa=afull[:-lag]; bb=bfull[lag:]
+                else: aa=afull;bb=bfull
+                aa=aa[::tstep];bb=bb[::tstep]
+                cc=corr(aa,bb)
+                if abs(cc)>best[0]: best=(abs(cc),lag,cc)
+              cbest.append(best[2]);lags.append(best[1])
+              # best-lag + gain predictor residual RMS / target RMS
+              lag=best[1]
+              if lag<0: aa=afull[-lag:].astype(np.float64);bb=bfull[:lag].astype(np.float64)
+              elif lag>0: aa=afull[:-lag].astype(np.float64);bb=bfull[lag:].astype(np.float64)
+              else: aa=afull.astype(np.float64);bb=bfull.astype(np.float64)
+              den=float(np.dot(aa,aa))+1e-300;g=float(np.dot(bb,aa))/den
+              res=bb-g*aa
+              rr.append(float(np.sqrt(np.mean(res*res))/(np.sqrt(np.mean(bb*bb))+1e-300)))
+            spacings[str(s)]={
+              'corr_zero_lag_median':float(np.median(c0)),
+              'corr_zero_lag_p10':float(np.quantile(c0,.1)),
+              'corr_zero_lag_p90':float(np.quantile(c0,.9)),
+              'corr_best_lag_median':float(np.median(cbest)),
+              'best_lag_samples_median':float(np.median(lags)),
+              'best_lag_samples_p10':float(np.quantile(lags,.1)),
+              'best_lag_samples_p90':float(np.quantile(lags,.9)),
+              'delay_gain_residual_rms_ratio_median':float(np.median(rr)),
+              'delay_gain_residual_rms_ratio_p10':float(np.quantile(rr,.1)),
+              'delay_gain_residual_rms_ratio_p90':float(np.quantile(rr,.9)),
+            }
+
+          # Actual t and t+1 correlation (1 ms), not every tenth sample.
+          ch=np.unique(np.linspace(0,ntr-1,min(256,ntr),dtype=np.int64))
+          tc=[]
+          for i in ch:
+            a=np.asarray(X[i,:-1:4],dtype=np.float32); b=np.asarray(X[i,1::4],dtype=np.float32); tc.append(corr(a,b))
+
+          # Local 3-channel spatial interpolation: center trace predicted by average of its true neighbors.
+          ids=np.unique(np.linspace(1,ntr-2,min(512,ntr-2),dtype=np.int64)); local=[]
+          for i in ids:
+            y=np.asarray(X[i,::tstep],dtype=np.float64)
+            p=.5*(np.asarray(X[i-1,::tstep],dtype=np.float64)+np.asarray(X[i+1,::tstep],dtype=np.float64))
+            local.append(float(np.sqrt(np.mean((y-p)**2))/(np.sqrt(np.mean(y*y))+1e-300)))
+
+          out={'file_bytes':size,'ntr':ntr,'ns':ns,'dt_us':dt,
+               'temporal_adjacent_1sample_corr_median':float(np.median(tc)),
+               'temporal_adjacent_1sample_corr_p10':float(np.quantile(tc,.1)),
+               'temporal_adjacent_1sample_corr_p90':float(np.quantile(tc,.9)),
+               'local_3channel_interpolation_residual_rms_ratio_median':float(np.median(local)),
+               'local_3channel_interpolation_residual_rms_ratio_p10':float(np.quantile(local,.1)),
+               'local_3channel_interpolation_residual_rms_ratio_p90':float(np.quantile(local,.9)),
+               'channel_spacings':spacings}
+          print(json.dumps(out,indent=2));open('probe.json','w').write(json.dumps(out,indent=2))
           PY
           python p.py
       - uses: actions/upload-artifact@v4
         with:
-          name: brady-structure-probe
+          name: brady-structure-probe-corrected
           path: probe.json
-          retention-days: 1
+          retention-days: 2
