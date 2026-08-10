@@ -1,0 +1,44 @@
+name: Utah FORGE geometry diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  geom:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          name='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          z=zipfile.ZipFile('forge.zip');z.extract(name,'.')
+          PY
+      - name: Inspect all standard geometry words
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os,struct,json,numpy as np
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';size=os.path.getsize(p);ns=1001;st=240+4*ns;ntr=(size-3600)//st
+          fields={'fldr':8,'tracf':12,'cdp':20,'cdpt':24,'sx':72,'sy':76,'gx':80,'gy':84,'cdpx':180,'cdpy':184,'iline':188,'xline':192}
+          out={k:np.empty(ntr,np.int32) for k in fields};sc=np.empty(ntr,np.int16)
+          with open(p,'rb') as f:
+            for i in range(ntr):
+              f.seek(3600+i*st);h=f.read(240);sc[i]=struct.unpack('>h',h[70:72])[0]
+              for k,o in fields.items():out[k][i]=struct.unpack('>i',h[o:o+4])[0]
+          R={'ntr':int(ntr),'stride':st,'scalar_unique':np.unique(sc).tolist(),'fields':{}}
+          for k,a in out.items():
+            u=np.unique(a);changes=np.flatnonzero(a[1:]!=a[:-1])+1;run=np.diff(np.r_[0,changes,ntr]);R['fields'][k]={'unique':int(u.size),'min':int(u.min()),'max':int(u.max()),'first20':a[:20].tolist(),'median_run':float(np.median(run)),'run_unique':np.unique(run)[:20].tolist()}
+          # coordinate pairs with scalar applied
+          fac=np.where(sc<0,1/np.maximum(1,np.abs(sc)),np.where(sc>0,sc,1)).astype(float)
+          for pair in [('gx','gy'),('sx','sy'),('cdpx','cdpy')]:
+            P=np.c_[out[pair[0]]*fac,out[pair[1]]*fac];u=np.unique(P,axis=0);R['fields']['_'.join(pair)]={'unique_pairs':int(u.shape[0]),'span':(u.max(0)-u.min(0)).tolist(),'first10':P[:10].tolist()}
+          # factor candidates that exactly match trace count
+          R['factor_pairs']=[[d,ntr//d] for d in range(2,int(ntr**.5)+1) if ntr%d==0]
+          print(json.dumps(R,indent=2));open('forge_geom.json','w').write(json.dumps(R,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with: {name: forge-geometry, path: forge_geom.json, retention-days: 2}
