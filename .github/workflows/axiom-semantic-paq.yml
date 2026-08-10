@@ -1,0 +1,89 @@
+name: AXIOM semantic-coordinate backend composition
+on:
+  pull_request:
+    branches: [axiom-semantic-paq-base]
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install exact transform and backend dependencies
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential cmake git zpaq brotli python3-pip
+          python3 -m pip install --break-system-packages pillow fonttools brotli
+      - name: Build exact Android corpus and AXIOM semantic representation
+        run: |
+          set -euxo pipefail
+          git clone -q --depth 1 https://github.com/android/architecture-samples.git /tmp/android-src
+          rm -rf /tmp/android-src/.git
+          tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.tar -C /tmp/android-src app build.gradle.kts settings.gradle.kts gradle.properties 2>/dev/null || tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 -cf /tmp/android.tar -C /tmp/android-src app
+          echo '73529d3651eb4d3942f2175ca36d89a95dcbf0e43ec4f95ee5206a7ba7446a75  /tmp/android.tar' | sha256sum -c -
+          PYTHONPATH="$PWD/paqrep" python3 - <<'PY'
+          from pathlib import Path
+          import tar_graph_transform as T
+          src=Path('/tmp/android.tar').read_bytes()
+          rep=T.pack(src)
+          assert rep is not None
+          assert T.unpack(rep)==src
+          Path('/tmp/rep.bin').write_bytes(rep)
+          print('SEMANTIC_REP',len(rep))
+          PY
+      - name: Benchmark current Brotli and ZPAQ on AXIOM coordinates
+        run: |
+          set -euxo pipefail
+          brotli -q 11 -c /tmp/rep.bin > /tmp/rep.br
+          brotli -d -c /tmp/rep.br > /tmp/rep.br.dec
+          cmp /tmp/rep.bin /tmp/rep.br.dec
+          zpaq a /tmp/rep.zpaq /tmp/rep.bin -method 5 >/tmp/zpaq.log 2>&1
+      - name: Build PAQ8px and benchmark AXIOM coordinates
+        run: |
+          set -euxo pipefail
+          git clone -q --depth 1 https://github.com/hxim/paq8px.git /tmp/paq8px-src
+          cd /tmp/paq8px-src/build
+          bash build-linux-with-cmake.sh >/dev/null
+          BIN="$PWD/paq8px"
+          "$BIN" -8B /tmp/rep.bin /tmp/rep8B.paq8px >/tmp/paq8B.log
+          "$BIN" -10B /tmp/rep.bin /tmp/rep10B.paq8px >/tmp/paq10B.log
+          mkdir -p /tmp/paqout
+          "$BIN" -d /tmp/rep10B.paq8px /tmp/paqout/rep.bin >/dev/null
+          cmp /tmp/rep.bin /tmp/paqout/rep.bin
+          cd "$GITHUB_WORKSPACE"
+          PYTHONPATH="$PWD/paqrep" python3 - <<'PY'
+          from pathlib import Path
+          import tar_graph_transform as T
+          rep=Path('/tmp/paqout/rep.bin').read_bytes()
+          out=T.unpack(rep)
+          src=Path('/tmp/android.tar').read_bytes()
+          assert out==src
+          Path('/tmp/reconstructed.tar').write_bytes(out)
+          PY
+          cmp /tmp/android.tar /tmp/reconstructed.tar
+      - name: Record exact composition result
+        run: |
+          mkdir -p results
+          python3 - <<'PY' | tee results/semantic_backend.txt
+          import os,hashlib
+          vals={
+            'semantic_rep':os.path.getsize('/tmp/rep.bin'),
+            'brotli11_on_rep':os.path.getsize('/tmp/rep.br'),
+            'zpaq5_on_rep':os.path.getsize('/tmp/rep.zpaq'),
+            'paq8px_8B_on_rep':os.path.getsize('/tmp/rep8B.paq8px'),
+            'paq8px_10B_on_rep':os.path.getsize('/tmp/rep10B.paq8px'),
+          }
+          print('source_sha256='+hashlib.sha256(open('/tmp/android.tar','rb').read()).hexdigest())
+          for k,v in vals.items(): print(f'{k}={v}')
+          best=min((v,k) for k,v in vals.items() if k!='semantic_rep')
+          print('best_backend='+best[1])
+          print('best_backend_bytes='+str(best[0]))
+          print('conservative_axiom_total='+str(best[0]+44))
+          print('previous_axiom_total=157322')
+          print('direct_paq8px_best=199512')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axiom-semantic-backend-results
+          path: results/semantic_backend.txt
+          retention-days: 7
