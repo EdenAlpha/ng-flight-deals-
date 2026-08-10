@@ -1,4 +1,4 @@
-name: Temporary Brady spatial anti-derivative probe
+name: Temporary Brady exact spatial lifting codec
 
 on:
   pull_request:
@@ -8,68 +8,74 @@ permissions:
   contents: read
 
 jobs:
-  probe:
+  lifting:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install --quiet numpy pysz zstandard
       - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
-      - name: Probe raw and integrated DAS coordinates
+      - name: Benchmark exact quantized spatial lifting on valid fiber block
         shell: bash
         run: |
-          cat > probe.py <<'PY'
-          import os,json,numpy as np
+          cat > lift.py <<'PY'
+          import os,json,numpy as np,zstandard as zstd
           from pysz import sz,szConfig,szErrorBoundMode
-          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');dt=int.from_bytes(h[3216:3218],'big');fmt=int.from_bytes(h[3224:3226],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True)
-          # find longest contiguous run with nonzero receiver coordinates
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');dt=int.from_bytes(h[3216:3218],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True)
           valid=np.zeros(n,bool)
           for k in range(n):
-            o=3600+k*st; th=bytes(mm[o:o+240]); gx=int.from_bytes(th[80:84],'big',signed=True);gy=int.from_bytes(th[84:88],'big',signed=True);valid[k]=(gx!=0 or gy!=0)
+            o=3600+k*st;th=bytes(mm[o:o+240]);valid[k]=(int.from_bytes(th[80:84],'big',signed=True)!=0 or int.from_bytes(th[84:88],'big',signed=True)!=0)
           runs=[];a=None
           for i,v in enumerate(np.r_[valid,False]):
             if v and a is None:a=i
             elif not v and a is not None:runs.append((a,i));a=None
-          a,b=max(runs,key=lambda q:q[1]-q[0]); # representative central block limited for exploratory compression
-          lo=a;hi=min(b,a+1536);Y=X[lo:hi]
-          std=float(Y.std());eps=.1*std
-          # native adjacent-channel correlations, time-decimated only
-          A=Y[:,::20].astype(np.float64); adj=[]
-          for i in range(A.shape[0]-1):
-            u=A[i];v=A[i+1];su=u.std();sv=v.std();
-            if su>0 and sv>0:adj.append(float(np.corrcoef(u,v)[0,1]))
-          # per-adjacent-pair best integer shift +/-8 on a sparse set of pairs
-          shifts=[]; gains=[]; corrs=[]
-          for i in range(0,Y.shape[0]-1,16):
-            u=Y[i,::4].astype(np.float64);v=Y[i+1,::4].astype(np.float64);best=None
-            for d in range(-8,9):
-              if d<0:aa=u[-d:];bb=v[:d]
-              elif d>0:aa=u[:-d];bb=v[d:]
-              else:aa=u;bb=v
-              den=np.dot(aa,aa);g=float(np.dot(aa,bb)/den) if den else 0.;m=float(np.mean((bb-g*aa)**2));
-              if best is None or m<best[0]:best=(m,d,g,float(np.corrcoef(aa,bb)[0,1]) if aa.std()>0 and bb.std()>0 else 0.)
-            shifts.append(best[1]);gains.append(best[2]);corrs.append(best[3])
-          # spatial anti-derivative coordinate in float64; local reference removed by subtracting channel mean at every time
-          U=np.cumsum(Y.astype(np.float64),axis=0);U-=U.mean(axis=0,keepdims=True)
-          UA=U[:,::20]; uadj=[float(np.corrcoef(UA[i],UA[i+1])[0,1]) for i in range(UA.shape[0]-1) if UA[i].std()>0 and UA[i+1].std()>0]
-          # SZ3 direct Y vs integrated U. Compress U at eps/2 and reconstruct Y by spatial difference; first sample needs reference residual.
-          def szc(A,tol):
-            cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(tol);blob,_=sz.compress(np.ascontiguousarray(A),cfg);D,_=sz.decompress(blob,A.dtype,A.shape);return int(blob.size),D
-          yb,Yd=szc(Y,eps)
-          # Because mean removal destroys one spatial integration constant per time sample, store Y[0] separately under eps/2 using SZ3, and integrate differences from that anchor.
-          # Use prefix V where V[0]=0 and V[k]=sum_{j=1..k} Y[j]; then Y[k]=V[k]-V[k-1] for k>0; Y0 stored separately.
-          V=np.zeros_like(Y,dtype=np.float64);V[1:]=np.cumsum(Y[1:].astype(np.float64),axis=0)
-          vb,Vd=szc(V,eps/2)
-          r0b,R0d=szc(Y[:1],eps)
-          Yr=np.empty_like(Y,dtype=np.float64);Yr[0]=R0d[0];Yr[1:]=Vd[1:]-Vd[:-1]
-          ierr=float(np.max(np.abs(Y.astype(np.float64)-Yr)))
-          # time smoothness of raw vs integrated coordinates
-          tc_raw=float(np.corrcoef(Y[:,::20][:,:-1].ravel(),Y[:,::20][:,1:].ravel())[0,1]);tc_int=float(np.corrcoef(U[:,::20][:,:-1].ravel(),U[:,::20][:,1:].ravel())[0,1])
-          out={'full_ntr':n,'ns':ns,'longest_valid_run':[a,b,b-a],'probe_block':[lo,hi,hi-lo],'std':std,'eps_10pct':eps,'adjacent_corr':{'median':float(np.median(adj)),'mean':float(np.mean(adj)),'p10':float(np.percentile(adj,10)),'p90':float(np.percentile(adj,90))},'best_shift_sparse':{'median_shift':float(np.median(shifts)),'shift_hist':{str(k):int(shifts.count(k)) for k in sorted(set(shifts))},'median_gain':float(np.median(gains)),'median_corr_after_shift':float(np.median(corrs))},'integrated_adjacent_corr':{'median':float(np.median(uadj)),'mean':float(np.mean(uadj))},'time_corr_decimated':{'raw':tc_raw,'integrated':tc_int},'sz3_direct':{'bytes':yb,'ratio_vs_float32':Y.nbytes/yb},'sz3_spatial_integral':{'latent_bytes':vb,'first_trace_bytes':r0b,'total_bytes':vb+r0b,'ratio_vs_original_float32':Y.nbytes/(vb+r0b),'reconstructed_maxerr':ierr}};print(json.dumps(out,indent=2));open('spatial_probe.json','w').write(json.dumps(out,indent=2))
+          a,b=max(runs,key=lambda q:q[1]-q[0]);lo=a;hi=min(b,a+1536);Y=X[lo:hi];std=float(Y.std());eps=.1*std;step=2*eps;Q=np.rint(Y/step).astype(np.int32);R=Q.astype(np.float64)*step;maxerr=float(np.max(np.abs(Y.astype(np.float64)-R)))
+          Z=zstd.ZstdCompressor(level=19);zc=lambda x:Z.compress(x)
+          def zig(A):
+            A=A.astype(np.int32,copy=False);return ((A<<1)^(A>>31)).astype(np.uint32)
+          def bitplanes(A, order='C'):
+            U=zig(A);mx=int(U.max()) if U.size else 0;bits=max(1,mx.bit_length());tot=0
+            if order=='T' and U.ndim==2:U=np.ascontiguousarray(U.T)
+            else:U=np.ascontiguousarray(U)
+            flat=U.reshape(-1)
+            for bit in range(bits):tot+=len(zc(np.packbits(((flat>>bit)&1).astype(np.uint8)).tobytes()))
+            return tot,bits
+          def variants(A):
+            A=A.astype(np.int32,copy=False);out={}
+            for name,B in [('raw',A)]:
+              for order in ['C','T']:out[f'{name}_{order}']=bitplanes(B,order)[0]
+            if A.shape[1]>1:
+              D=np.empty_like(A);D[:,0]=A[:,0];D[:,1:]=A[:,1:]-A[:,:-1]
+              for order in ['C','T']:out[f'dt_{order}']=bitplanes(D,order)[0]
+            if A.shape[0]>1:
+              Ds=np.empty_like(A);Ds[0]=A[0];Ds[1:]=A[1:]-A[:-1]
+              for order in ['C','T']:out[f'ds_{order}']=bitplanes(Ds,order)[0]
+              L=np.empty_like(A);L[0]=A[0];L[1:,0]=A[1:,0]-A[:-1,0];L[1:,1:]=A[1:,1:]-A[1:,:-1]-A[:-1,1:]+A[:-1,:-1]
+              for order in ['C','T']:out[f'lorenzo_{order}']=bitplanes(L,order)[0]
+            # direct compact signed bytes if possible
+            mn,mx=int(A.min()),int(A.max())
+            if mn>=-128 and mx<=127:
+              out['i8_C']=len(zc(np.ascontiguousarray(A.astype(np.int8)).tobytes()));out['i8_T']=len(zc(np.ascontiguousarray(A.T.astype(np.int8)).tobytes()))
+            out['i16_C']=len(zc(np.ascontiguousarray(A.astype(np.int16)).tobytes()));out['i16_T']=len(zc(np.ascontiguousarray(A.T.astype(np.int16)).tobytes()))
+            best=min(out,key=out.get);return {'best_mode':best,'best_bytes':int(out[best]),'all':{k:int(v) for k,v in out.items()},'min':mn,'max':mx,'zero_fraction':float(np.mean(A==0))}
+          # Exact interpolating lifting: odd sample = mean(left even,right even)+detail; recurse on evens.
+          cur=Q;bands=[]
+          while cur.shape[0]>1:
+            ev=cur[::2];od=cur[1::2];pred=np.empty_like(od)
+            for j in range(od.shape[0]):
+              left=ev[j]
+              if j+1<ev.shape[0]:pred[j]=(left+ev[j+1])//2
+              else:pred[j]=left
+            detail=od-pred;bands.append(variants(detail));cur=ev
+          root=variants(cur);lift_bytes=sum(x['best_bytes'] for x in bands)+root['best_bytes']+64*len(bands)
+          # direct quantized integer transforms for comparison
+          direct=variants(Q);D2=np.empty_like(Q);D2[0]=Q[0];D2[1:,0]=Q[1:,0]-Q[:-1,0];D2[1:,1:]=Q[1:,1:]-Q[1:,:-1]-Q[:-1,1:]+Q[:-1,:-1];lor=variants(D2)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;sb,_=sz.compress(Y,cfg);S,_=sz.decompress(sb,np.float32,Y.shape)
+          out={'block':[lo,hi],'shape':list(Y.shape),'std':std,'epsilon':eps,'quantized_maxerr':maxerr,'sz3':{'bytes':int(sb.size),'ratio':Y.nbytes/int(sb.size),'maxerr':float(np.max(np.abs(Y-S)))},'direct_quantized':{'bytes':direct['best_bytes'],'ratio':Y.nbytes/direct['best_bytes'],'mode':direct['best_mode']},'direct_lorenzo_quantized':{'bytes':lor['best_bytes'],'ratio':Y.nbytes/lor['best_bytes'],'mode':lor['best_mode']},'lifting':{'bytes':int(lift_bytes),'ratio':Y.nbytes/lift_bytes,'levels':len(bands),'root':root,'bands':[{'level':i+1,**x} for i,x in enumerate(bands)]}};print(json.dumps(out,indent=2));open('lifting.json','w').write(json.dumps(out,indent=2))
           PY
-          python probe.py
+          python lift.py
       - uses: actions/upload-artifact@v4
         with:
-          name: brady-spatial-probe
-          path: spatial_probe.json
+          name: brady-lifting-results
+          path: lifting.json
           retention-days: 1
