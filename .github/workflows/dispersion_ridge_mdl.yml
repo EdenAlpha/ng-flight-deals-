@@ -1,0 +1,79 @@
+name: MDL optimized dispersion ridge Brady
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  mdl:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Sweep tile geometry, ridge budget and coefficient precision
+        shell: bash
+        run: |
+          cat > m.py <<'PY'
+          import os,json,subprocess,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=(T*T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;X=A[4096:4224,6000:14192].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0
+            return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          def corr(P):
+            C=np.rint((X-P)/(2*eps)).astype(np.int32);K=C.copy();K[:,1:]-=C[:,:-1];m=K!=0;opts={'dt':z(si(K)),'sparse_dt':z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(K[m])) if m.any() else 0)};S=C.copy();S[1:]-=C[:-1];opts['dx']=z(si(S));L=C.copy();L[1:,1:]=C[1:,1:]-C[:-1,1:]-C[1:,:-1]+C[:-1,:-1];opts['lorenzo']=z(si(L));best=min(opts,key=opts.get);R=P+C.astype(np.float32)*(2*eps);return opts[best],best,float(m.mean()),float(np.max(np.abs(X-R)))
+          rows=[]
+          for B in [256,512,1024,2048]:
+            if X.shape[1]%B:continue
+            nbk=X.shape[1]//B;spec=[]
+            for b in range(nbk):
+              W=X[:,b*B:(b+1)*B];C=np.fft.fft(np.fft.rfft(W,axis=1),axis=0);E=np.sum(np.abs(C)**2,axis=0);spec.append((C,E))
+            for Fkeep in [4,6,8,10,12]:
+              for Kkeep in [4,6,8,12,16]:
+                for qmode in ['f16','i8']:
+                  P=np.zeros_like(X);fis=[];kis=[];vals=[];scales=[]
+                  for b,(C,E) in enumerate(spec):
+                    fi=np.sort(np.argsort(E)[-Fkeep:]);Cq=np.zeros_like(C);fis.append(fi.astype(np.uint16));block_vals=[];block_k=[]
+                    for ff in fi:
+                      ki=np.sort(np.argsort(np.abs(C[:,ff]))[-Kkeep:]);v=C[ki,ff];block_k.append(ki.astype(np.uint8));block_vals.append(v)
+                    bv=np.concatenate(block_vals);bk=np.concatenate(block_k);kis.append(bk)
+                    if qmode=='f16':
+                      qq=np.stack([bv.real,bv.imag],axis=-1).astype(np.float16);vals.append(qq);vq=qq[...,0].astype(np.float32)+1j*qq[...,1].astype(np.float32)
+                    else:
+                      comps=np.stack([bv.real,bv.imag],axis=-1);scale=max(float(np.max(np.abs(comps)))/127.0,1e-30);qq=np.clip(np.rint(comps/scale),-127,127).astype(np.int8);vals.append(qq);scales.append(np.float16(scale));vq=(qq[...,0].astype(np.float32)+1j*qq[...,1].astype(np.float32))*np.float32(scale)
+                    p=0
+                    for ff in fi:
+                      kk=bk[p:p+Kkeep];Cq[kk,ff]=vq[p:p+Kkeep];p+=Kkeep
+                    P[:,b*B:(b+1)*B]=np.fft.irfft(np.fft.ifft(Cq,axis=0),n=B,axis=1).real.astype(np.float32)
+                  model=z(np.concatenate(fis))+z(np.concatenate(kis))+z(np.concatenate(vals,axis=0))+(z(np.asarray(scales,np.float16)) if scales else 0)+64;cb,ck,ef,me=corr(P);tot=model+cb;row={'kind':'ridge','B':B,'F':Fkeep,'K':Kkeep,'q':qmode,'model':model,'corr':cb,'bytes':tot,'ratio':raw/tot,'event':ef,'maxerr':me};rows.append(row);print('R',json.dumps(row),flush=True)
+            # Global top-N coefficient control; MDL may prefer nonuniform allocation over frequencies.
+            for N in [32,64,96,128,192,256]:
+              for qmode in ['f16','i8']:
+                P=np.zeros_like(X);inds=[];vals=[];scales=[]
+                for b,(C,E) in enumerate(spec):
+                  flat=C.reshape(-1);ii=np.argpartition(np.abs(flat),-N)[-N:];ii=np.sort(ii);v=flat[ii]
+                  if qmode=='f16':
+                    qq=np.stack([v.real,v.imag],axis=-1).astype(np.float16);vq=qq[...,0].astype(np.float32)+1j*qq[...,1].astype(np.float32);vals.append(qq)
+                  else:
+                    comp=np.stack([v.real,v.imag],axis=-1);scale=max(float(np.max(np.abs(comp)))/127.0,1e-30);qq=np.clip(np.rint(comp/scale),-127,127).astype(np.int8);vq=(qq[...,0].astype(np.float32)+1j*qq[...,1].astype(np.float32))*np.float32(scale);vals.append(qq);scales.append(np.float16(scale))
+                  Cq=np.zeros_like(C).reshape(-1);Cq[ii]=vq;Cq=Cq.reshape(C.shape);P[:,b*B:(b+1)*B]=np.fft.irfft(np.fft.ifft(Cq,axis=0),n=B,axis=1).real.astype(np.float32);inds.append(ii.astype(np.uint32))
+                model=z(np.concatenate(inds))+z(np.concatenate(vals,axis=0))+(z(np.asarray(scales,np.float16)) if scales else 0)+64;cb,ck,ef,me=corr(P);tot=model+cb;row={'kind':'topN','B':B,'N':N,'q':qmode,'model':model,'corr':cb,'bytes':tot,'ratio':raw/tot,'event':ef,'maxerr':me};rows.append(row);print('N',json.dumps(row),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,np.float32,X.shape);sz3={'bytes':int(bb.size),'ratio':raw/int(bb.size),'maxerr':float(np.max(np.abs(X-R)))}
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':list(X.shape),'eps':eps,'std':std,'top':rows[:50],'sz3':sz3};print('BEST',json.dumps(rows[:20],indent=2),flush=True);print('SZ3',sz3,flush=True);open('ridge_mdl.json','w').write(json.dumps(out,indent=2))
+          PY
+          python m.py
+      - uses: actions/upload-artifact@v4
+        with: {name: ridge-mdl, path: ridge_mdl.json, retention-days: 2}
