@@ -1,0 +1,102 @@
+name: Propagation-aligned TPAC Brady benchmark
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  tpac:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Search wavefront-aligned annihilators
+        shell: bash
+        run: |
+          cat > a.py <<'PY'
+          import os,json,subprocess,math,time,numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);cc=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:cc.append((nb,dt,ns,(size-3600)//st,st))
+          nb,dt,ns,ntr,st=cc[0];mm=np.memmap(f,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            T=A[a:min(a+256,ntr)].astype(np.float64);s1+=T.sum();s2+=np.square(T).sum();cnt+=T.size
+          mu=s1/cnt;std=float(np.sqrt(s2/cnt-mu*mu));eps=.1*std;lo=4096;nch=256;t0=3000;nt=20000;X=A[lo:lo+nch,t0:t0+nt].astype(np.float32,copy=True);raw=X.nbytes
+          def z(q,lev=19):return len(subprocess.run(['zstd','-q','-f',f'-{lev}','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0
+            return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          @njit(cache=True)
+          def bounds(X,eps,step):
+            m,n=X.shape;L=np.empty((m,n),np.int32);U=np.empty((m,n),np.int32)
+            for i in range(m):
+              for t in range(n):
+                L[i,t]=math.ceil((X[i,t]-eps)/step-1e-7);U[i,t]=math.floor((X[i,t]+eps)/step+1e-7)
+            return L,U
+          @njit(cache=True)
+          def choose_tiles(Q0,B,Smax):
+            m,n=Q0.shape;nb=(n+B-1)//B;S=np.zeros(nb,np.int16)
+            for b in range(nb):
+              a=b*B;e=min(n,a+B);best=1e30;bs=0
+              for s in range(-Smax,Smax+1):
+                cost=0.0
+                for i in range(1,m):
+                  for t in range(a,e):
+                    q=t-s
+                    if q<0:q=0
+                    elif q>=n:q=n-1
+                    qm=q-1
+                    if qm<0:qm=0
+                    p=Q0[i,t-1] if t>0 else Q0[i-1,q]
+                    if t>0:p+=Q0[i-1,q]-Q0[i-1,qm]
+                    hh=Q0[i,t]-p;cost+=(hh!=0)*4+abs(hh)
+                if cost<best:best=cost;bs=s
+              S[b]=bs
+            return S
+          @njit(cache=True)
+          def encode(L,U,S,B):
+            m,n=L.shape;Q=np.empty((m,n),np.int32);H=np.zeros((m,n),np.int32)
+            # first channel persistent legal state; exact boundary
+            q=0
+            for t in range(n):
+              if q<L[0,t]:q=L[0,t]
+              elif q>U[0,t]:q=U[0,t]
+              Q[0,t]=q
+            for i in range(1,m):
+              for t in range(n):
+                s=int(S[t//B]);qq=t-s
+                if qq<0:qq=0
+                elif qq>=n:qq=n-1
+                qm=qq-1
+                if qm<0:qm=0
+                if t==0:p=Q[i-1,qq]
+                else:p=Q[i,t-1]+Q[i-1,qq]-Q[i-1,qm]
+                q=p
+                if q<L[i,t]:q=L[i,t]
+                elif q>U[i,t]:q=U[i,t]
+                Q[i,t]=q;H[i,t]=q-p
+            return Q,H
+          def packed(Q,H,S):
+            bd=np.diff(Q[0],prepend=Q[0,0]);boundary=z(si(bd))+z(np.asarray([Q[0,0]],np.int32));Z=H[1:];opts={'dense':z(si(Z)),'time':z(si(Z.T))}
+            for name,T in [('trace',Z),('time',Z.T)]:
+              m=T!=0;opts['sparse_'+name]=z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(T[m])) if m.any() else 0)
+            hb=min(opts.values());model=z(S.astype(np.int8))+16;return boundary+hb+model,boundary,hb,model,float(np.count_nonzero(Z))/Z.size,opts
+          rows=[]
+          for alpha in [1.9,1.75,1.5,1.25,1.0]:
+            step=alpha*eps;L,U=bounds(X,eps,step);Q0=np.rint(X/step).astype(np.int32)
+            for B in [nt,2048,1024,512,256]:
+              S=choose_tiles(Q0,B,16);Q,H=encode(L,U,S,B);tot,bd,hb,model,nz,opts=packed(Q,H,S);me=float(np.max(np.abs(X-Q.astype(np.float32)*step)));row={'alpha':alpha,'tile':B,'shifts':S.tolist() if len(S)<=12 else None,'shift_unique':sorted(set(int(x) for x in S)),'bytes':tot,'ratio':raw/tot,'boundary':bd,'syndrome':hb,'model':model,'nonzero':nz,'maxerr':me};rows.append(row);print('TPAC',json.dumps(row),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,np.float32,X.shape);sz3={'bytes':int(bb.size),'ratio':raw/int(bb.size),'maxerr':float(np.max(np.abs(X-R)))}
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':[nch,nt],'offset_channel':lo,'t0':t0,'eps':eps,'global_std':std,'top':rows[:30],'sz3':sz3};print('BEST',json.dumps(rows[:12],indent=2),flush=True);print('SZ3',sz3,flush=True);open('tpac.json','w').write(json.dumps(out,indent=2))
+          PY
+          python a.py
+      - uses: actions/upload-artifact@v4
+        with: {name: tpac-directional, path: tpac.json, retention-days: 2}
