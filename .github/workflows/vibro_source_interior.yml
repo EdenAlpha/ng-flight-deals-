@@ -1,0 +1,69 @@
+name: Measured-source Brady interior benchmark
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  sourcefit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+          curl -L --fail --retry 5 --retry-delay 2 -o source.sgy 'https://gdr.openei.org/files/849/8046_160325_140115.sgy'
+      - name: Fit measured source shifts on representative interior channels
+        shell: bash
+        run: |
+          cat > s.py <<'PY'
+          import os,json,subprocess,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          def parse(path):
+            size=os.path.getsize(path);h=open(path,'rb').read(3600);c=[]
+            for bo,nb in [('big','>'),('little','<')]:
+              dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+              if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:c.append((nb,dt,ns,(size-3600)//st,st))
+            if len(c)!=1:raise RuntimeError((path,c));
+            nb,dt,ns,ntr,st=c[0];mm=np.memmap(path,np.uint8,'r');A=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4));return nb,dt,ns,ntr,st,mm,A
+          nb,dt,ns,ntr,st,mm,A=parse('land.sgy')
+          # global RMS/std, same absolute tolerance used for all interior methods
+          s1=s2=0.;cnt=0
+          for a in range(0,ntr,256):
+            Q=A[a:min(a+256,ntr)].astype(np.float64);s1+=Q.sum();s2+=np.square(Q).sum();cnt+=Q.size
+          mean=s1/cnt;std=float(np.sqrt(max(0.,s2/cnt-mean*mean)));eps=.1*std;lo=4096;nch=256;X=A[lo:lo+nch].astype(np.float32,copy=True);raw=X.nbytes
+          snb,sdt,sns,sntr,sst,smm,SA=parse('source.sgy')
+          def z(q):return len(subprocess.run(['zstd','-q','-f','-9','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0;return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          def cert(P):
+            C=np.rint((X-P)/(2*eps)).astype(np.int32);K=np.empty_like(C);K[:,0]=C[:,0];K[:,1:]=C[:,1:]-C[:,:-1];dense=z(si(K));m=K!=0;mb=z(np.packbits(m.reshape(-1),bitorder='little'));v=K[m];vb=z(si(v)) if v.size else 0;cb=min(dense,mb+vb);R=P+C.astype(np.float32)*(2*eps);return cb,float(m.mean()),float(np.max(np.abs(X-R)))
+          # PULSE reference M52
+          M=52;idx=np.arange(0,ns,M,dtype=np.int32);idx=np.r_[idx,ns-1] if idx[-1]!=ns-1 else idx;Ai=np.rint(X[:,idx]/eps).astype(np.int32);D=Ai.copy();D[:,1:]-=Ai[:,:-1];ab=min(z(si(Ai)),z(si(D)));Ad=Ai.astype(np.float32)*eps;P0=np.empty_like(X)
+          for j in range(len(idx)-1):
+            aa,b=int(idx[j]),int(idx[j+1]);u=np.arange(b-aa,dtype=np.float32)/(b-aa);P0[:,aa:b]=Ad[:,j,None]*(1-u)[None,:]+Ad[:,j+1,None]*u[None,:]
+          P0[:,-1]=Ad[:,-1];cb,ef,me=cert(P0);pulse={'ratio':raw/(ab+cb),'bytes':ab+cb,'event':ef,'maxerr':me}
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);YY,_=sz.decompress(bb,np.float32,X.shape);sz3={'ratio':raw/int(bb.size),'bytes':int(bb.size),'maxerr':float(np.max(np.abs(X-YY)))}
+          # measured source dictionary; time shift is represented by sparse h, so no arbitrary alignment parameter
+          dtL=dt*1e-6;dtS=sdt*1e-6;nfft=1
+          target=ns+int(np.ceil(sns*dtS/dtL));
+          while nfft<target:nfft*=2
+          Xf=np.fft.rfft(X,n=nfft,axis=1);rows=[];srcmeta=[]
+          for qi in range(sntr):
+            src=SA[qi].astype(np.float64);old=np.arange(src.size)*dtS;new=np.arange(0,old[-1]+.5*dtL,dtL);src=np.interp(new,old,src);src-=src.mean();rr=float(np.sqrt(np.mean(src*src)))
+            if rr==0:continue
+            src=(src/rr).astype(np.float32);sv=np.zeros(nfft,np.float32);sv[:min(src.size,nfft)]=src[:nfft];Sf=np.fft.rfft(sv);pow=np.abs(Sf)**2;pmax=float(pow.max());srcb=z(src);srcmeta.append({'trace':qi,'dt_us':sdt,'ns':sns,'resamp':int(src.size),'source_bytes':srcb})
+            for lam in [.1,.03,.01,.003,.001]:
+              Hf=Xf*np.conj(Sf)[None,:]/(pow[None,:]+lam*pmax+1e-30);ht=np.fft.irfft(Hf,n=nfft,axis=1)[:,:ns].astype(np.float32)
+              for kk in [1,2,4,8,16,32,64,128,256]:
+                ind=np.argpartition(np.abs(ht),-kk,axis=1)[:,-kk:];val=np.take_along_axis(ht,ind,axis=1);hs=np.zeros_like(ht);np.put_along_axis(hs,ind,val,axis=1);P=np.fft.irfft(np.fft.rfft(hs,n=nfft,axis=1)*Sf[None,:],n=nfft,axis=1)[:,:ns].astype(np.float32);cb,ef,me=cert(P)
+                order=np.argsort(ind,axis=1);ii=np.take_along_axis(ind,order,axis=1).astype(np.int32);vv=np.take_along_axis(val,order,axis=1).astype(np.float32);# differences in delay both within traces and across channels get exposed to zstd
+                di=ii.copy();di[:,1:]-=ii[:,:-1];model=z(si(di))+z(vv)+srcb+64;tot=model+cb;row={'source_trace':qi,'lambda':lam,'k':kk,'ratio':raw/tot,'bytes':tot,'model':model,'corr':cb,'event':ef,'maxerr':me};rows.append(row);print('ROW',json.dumps(row),flush=True)
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'land_shape':[nch,ns],'land_offset':lo,'global_std':std,'eps':eps,'source_shape':[sntr,sns],'source_dt_us':sdt,'source_meta':srcmeta,'pulse':pulse,'sz3':sz3,'top':rows[:30]};print('PULSE',pulse,flush=True);print('SZ3',sz3,flush=True);print('BEST',json.dumps(rows[:10],indent=2),flush=True);open('source_interior.json','w').write(json.dumps(out,indent=2))
+          PY
+          python s.py
+      - uses: actions/upload-artifact@v4
+        with: {name: measured-source-interior, path: source_interior.json, retention-days: 2}
