@@ -1,0 +1,131 @@
+name: TPWQ land discovery
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions:
+  contents: read
+jobs:
+  tpwq:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - name: Download genuine Brady land DAS
+        run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140048.sgy'
+      - name: Run TPWQ discovery
+        shell: bash
+        run: |
+          cat > tpwq.py <<'PY'
+          import os,math,json,subprocess,time
+          import numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          fn='land.sgy';size=os.path.getsize(fn);h=open(fn,'rb').read(3600);cand=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo)
+            if fmt==5 and dt>0 and ns>0:
+              stride=240+4*ns
+              if (size-3600)%stride==0:cand.append((bo,nb,dt,ns,(size-3600)//stride,stride))
+          if len(cand)!=1:raise RuntimeError(cand)
+          bo,nb,dt,ns,ntr,stride=cand[0];nch=min(1024,ntr);mm=np.memmap(fn,np.uint8,'r')
+          X=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(stride,4))[:nch].astype(np.float32,copy=True)
+          raw=X.nbytes;rms=float(np.sqrt(np.mean(X.astype(np.float64)**2)));eps=.1*rms;M=52
+          print('DATA',X.shape,'rms',rms,'eps',eps,'raw',raw,flush=True)
+          def zd(A,level=19):
+            b=np.ascontiguousarray(A).tobytes();return len(subprocess.run(['zstd','-q','-f',f'-{level}','-c'],input=b,stdout=subprocess.PIPE,check=True).stdout)
+          def idtype(A):
+            mn=int(A.min());mx=int(A.max())
+            if -128<=mn and mx<=127:return A.astype(np.int8)
+            if -32768<=mn and mx<=32767:return A.astype(np.int16)
+            return A.astype(np.int32)
+          def sparse_size(K):
+            dense=zd(idtype(K));mask=np.packbits((K!=0).reshape(-1),bitorder='little');vals=K[K!=0]
+            sparse=zd(mask)+(zd(idtype(vals)) if vals.size else 0)
+            return min(dense,sparse),dense,sparse
+          idx=np.arange(0,ns,M,dtype=np.int32)
+          if idx[-1]!=ns-1:idx=np.r_[idx,ns-1]
+          Ai=np.rint(X[:,idx]/eps).astype(np.int32);DA=Ai.copy();DA[:,1:]=Ai[:,1:]-Ai[:,:-1]
+          anchor=min(zd(idtype(Ai)),zd(idtype(DA)));Ad=Ai.astype(np.float32)*np.float32(eps);P=np.empty_like(X)
+          for j in range(len(idx)-1):
+            a,b=int(idx[j]),int(idx[j+1]);L=b-a;u=np.arange(L,dtype=np.float32)/np.float32(L)
+            P[:,a:b]=Ad[:,j,None]*(1-u)[None,:]+Ad[:,j+1,None]*u[None,:]
+          P[:,-1]=Ad[:,-1]
+          C0=np.rint((X-P)/(2*eps)).astype(np.int32);K0=np.empty_like(C0);K0[:,0]=C0[:,0];K0[:,1:]=C0[:,1:]-C0[:,:-1]
+          kb0,d0,s0=sparse_size(K0);R0=P+C0.astype(np.float32)*np.float32(2*eps)
+          out={'dataset':'Brady PoroTomo raw land DAS','shape':[nch,ns],'rms':rms,'eps_abs':eps,'alpha_eps_over_rms':.1,
+               'pulse':{'anchor_bytes':anchor,'corr_bytes':kb0,'dense_bytes':d0,'sparse_bytes':s0,'sample_ratio':raw/(anchor+kb0),'event_fraction':float(np.count_nonzero(K0))/K0.size,'maxerr':float(np.max(np.abs(X-R0)))},'tpwq':[]}
+          @njit(cache=True)
+          def interval_runs(X,P,eps,alpha):
+            s=alpha*eps;m,n=X.shape;C=np.empty((m,n),np.int32)
+            for i in range(m):
+              v=X[i,0]-P[i,0];L=math.ceil((v-eps)/s-1e-8);H=math.floor((v+eps)/s+1e-8);st=0;prev=0
+              for t in range(1,n):
+                v=X[i,t]-P[i,t];lo=math.ceil((v-eps)/s-1e-8);hi=math.floor((v+eps)/s+1e-8);nL=max(L,lo);nH=min(H,hi)
+                if nL<=nH:L=nL;H=nH
+                else:
+                  state=L if hi<L else H
+                  for q in range(st,t):C[i,q]=state
+                  prev=state;st=t;L=lo;H=hi
+              state=prev
+              if state<L:state=L
+              elif state>H:state=H
+              for q in range(st,n):C[i,q]=state
+            K=np.empty_like(C)
+            for i in range(m):
+              K[i,0]=C[i,0]
+              for t in range(1,n):K[i,t]=C[i,t]-C[i,t-1]
+            return C,K
+          @njit(cache=True)
+          def tlr_temporal(X,eps,alpha):
+            s=alpha*eps;m,n=X.shape;Y=np.empty((m,n),np.int32);R=np.empty((m,n),np.int32)
+            for i in range(m):
+              prev=0
+              for t in range(n):
+                lo=math.ceil((X[i,t]-eps)/s-1e-8);hi=math.floor((X[i,t]+eps)/s+1e-8);pred=prev
+                y=lo if pred<lo else (hi if pred>hi else pred);Y[i,t]=y;R[i,t]=y-pred;prev=y
+            return Y,R
+          @njit(cache=True)
+          def tlr_spatial(X,eps,alpha,shift):
+            s=alpha*eps;m,n=X.shape;Y=np.empty((m,n),np.int32);R=np.empty((m,n),np.int32)
+            for i in range(m):
+              for t in range(n):
+                if i==0:pred=Y[i,t-1] if t else 0
+                else:
+                  q=t+shift
+                  if q<0:q=0
+                  elif q>=n:q=n-1
+                  pred=Y[i-1,q]
+                lo=math.ceil((X[i,t]-eps)/s-1e-8);hi=math.floor((X[i,t]+eps)/s+1e-8)
+                y=lo if pred<lo else (hi if pred>hi else pred);Y[i,t]=y;R[i,t]=y-pred
+            return Y,R
+          # PULSE + globally chosen legal correction states
+          for alpha in [1.75,1.5,1.25,1.0,.75,.5]:
+            t=time.time();C,K=interval_runs(X,P,eps,alpha);kb,de,sp=sparse_size(K);rec=P+C.astype(np.float32)*np.float32(alpha*eps)
+            out['tpwq'].append({'kind':'pulse_interval_global','alpha':alpha,'bytes':anchor+kb,'ratio':raw/(anchor+kb),'event_fraction':float(np.count_nonzero(K))/K.size,'dense':de,'sparse':sp,'maxerr':float(np.max(np.abs(X-rec))),'sec':time.time()-t})
+          # direct temporal tolerance lattice
+          for alpha in [2.0,1.5,1.25,1.0,.75,.5]:
+            Y,R=tlr_temporal(X,eps,alpha);rb=zd(idtype(R));rec=Y.astype(np.float32)*np.float32(alpha*eps)
+            out['tpwq'].append({'kind':'direct_temporal','alpha':alpha,'bytes':rb,'ratio':raw/rb,'zero_fraction':float(np.count_nonzero(R==0))/R.size,'maxerr':float(np.max(np.abs(X-rec)))})
+          # cross-channel projected states; neighboring channel is fully decoded so positive shifts are causal in channel order
+          for alpha in [2.0,1.5,1.25,1.0,.75]:
+            for sh in [-6,-4,-2,0,2,4,6]:
+              Y,R=tlr_spatial(X,eps,alpha,sh);rb=zd(idtype(R));rec=Y.astype(np.float32)*np.float32(alpha*eps)
+              out['tpwq'].append({'kind':'direct_spatial','alpha':alpha,'shift':sh,'bytes':rb,'ratio':raw/rb,'zero_fraction':float(np.count_nonzero(R==0))/R.size,'maxerr':float(np.max(np.abs(X-rec)))})
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);b,_=sz.compress(np.ascontiguousarray(X),cfg);Y,_=sz.decompress(b,np.float32,X.shape)
+          out['sz3']={'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Y)))}
+          out['tpwq'].sort(key=lambda q:q['ratio'],reverse=True)
+          print('TOP10',json.dumps(out['tpwq'][:10],indent=2),flush=True);print('PULSE',out['pulse'],flush=True);print('SZ3',out['sz3'],flush=True)
+          open('tpwq_land.json','w').write(json.dumps(out,indent=2))
+          PY
+          python tpwq.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tpwq-land-results
+          path: tpwq_land.json
+          retention-days: 2
