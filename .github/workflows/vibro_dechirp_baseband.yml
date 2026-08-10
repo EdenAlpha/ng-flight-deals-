@@ -1,0 +1,55 @@
+name: Vibroseis dechirped baseband compression
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  dechirp:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy scipy pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Dechirp and certify
+        shell: bash
+        run: |
+          cat > d.py <<'PY'
+          import os,json,subprocess,numpy as np
+          from scipy.signal import hilbert
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);C=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            dt=int.from_bytes(h[3216:3218],bo);ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and dt>0 and ns>0 and (size-3600)%st==0:C.append((nb,dt,ns,(size-3600)//st,st))
+          if len(C)!=1:raise RuntimeError(C)
+          nb,dt_us,ns,ntr,st=C[0];nch=128;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((ntr,ns),dtype=np.dtype(nb+'f4'),buffer=mm,offset=3840,strides=(st,4))[:nch].astype(np.float32,copy=True)
+          raw=X.nbytes;rms=float(np.sqrt(np.mean(X.astype(np.float64)**2)));eps=.1*rms;dt=dt_us*1e-6;t=np.arange(ns,dtype=np.float64)*dt
+          def z(a,level=9):return len(subprocess.run(['zstd','-q','-f',f'-{level}','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            mn=int(a.min()) if a.size else 0;mx=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if mn>=-128 and mx<=127 else a.astype(np.int16) if mn>=-32768 and mx<=32767 else a.astype(np.int32)
+          def corr(P):
+            C=np.rint((X-P)/(2*eps)).astype(np.int32);K=np.empty_like(C);K[:,0]=C[:,0];K[:,1:]=C[:,1:]-C[:,:-1];dense=z(si(K));mask=K!=0;mb=z(np.packbits(mask.reshape(-1),bitorder='little'));v=K[mask];vb=z(si(v)) if v.size else 0;cb=min(dense,mb+vb);R=P+C.astype(np.float32)*np.float32(2*eps);return cb,float(mask.mean()),float(np.max(np.abs(X-R))),{'dense':dense,'mask':mb,'values':vb}
+          # Same local PULSE reference
+          M=52;idx=np.arange(0,ns,M,dtype=np.int32);idx=np.r_[idx,ns-1] if idx[-1]!=ns-1 else idx;Ai=np.rint(X[:,idx]/eps).astype(np.int32);D=Ai.copy();D[:,1:]-=Ai[:,:-1];ab=min(z(si(Ai)),z(si(D)));Ad=Ai.astype(np.float32)*eps;P0=np.empty_like(X)
+          for j in range(len(idx)-1):
+            a,b=int(idx[j]),int(idx[j+1]);u=np.arange(b-a,dtype=np.float32)/(b-a);P0[:,a:b]=Ad[:,j,None]*(1-u)[None,:]+Ad[:,j+1,None]*u[None,:]
+          P0[:,-1]=Ad[:,-1];cb0,ef0,me0,_=corr(P0);pulse={'bytes':ab+cb0,'ratio':raw/(ab+cb0),'anchor':ab,'corr':cb0,'event_fraction':ef0,'maxerr':me0}
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);sb,_=sz.compress(np.ascontiguousarray(X),cfg);Q,_=sz.decompress(sb,np.float32,X.shape);sz3={'bytes':int(sb.size),'ratio':raw/int(sb.size),'maxerr':float(np.max(np.abs(X-Q)))}
+          A=hilbert(X,axis=1).astype(np.complex64);freq=np.fft.fftfreq(ns,dt);rows=[];f0=5.;k=(20.-5.)/20.
+          for tau0 in [-3.,0.,3.,6.]:
+            tt=t+tau0;phi=2*np.pi*(f0*tt+.5*k*tt*tt);Z=A*np.exp(-1j*phi[None,:]).astype(np.complex64);F=np.fft.fft(Z,axis=1).astype(np.complex64)
+            for fc in [2.,4.,6.,8.,12.,20.,40.]:
+              mask=np.abs(freq)<=fc;coef=F[:,mask];# store complex coefficients as two float16 planes
+              q=np.stack((coef.real,coef.imag),axis=-1).astype(np.float16);model=z(q)+64
+              cq=q.astype(np.float32);coefq=(cq[...,0]+1j*cq[...,1]).astype(np.complex64);Fq=np.zeros_like(F);Fq[:,mask]=coefq;Zq=np.fft.ifft(Fq,axis=1).astype(np.complex64);P=np.real(Zq*np.exp(1j*phi[None,:]).astype(np.complex64)).astype(np.float32)
+              cb,ef,me,parts=corr(P);total=model+cb;row={'tau0':tau0,'fc_hz':fc,'retained_bins':int(mask.sum()),'model_bytes':model,'corr_bytes':cb,'bytes':total,'ratio':raw/total,'event_fraction':ef,'maxerr':me,'parts':parts};rows.append(row);print('ROW',json.dumps(row),flush=True)
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'shape':[nch,ns],'dt_us':dt_us,'rms':rms,'eps':eps,'raw':raw,'pulse':pulse,'sz3':sz3,'top':rows[:20]};print('PULSE',pulse,flush=True);print('SZ3',sz3,flush=True);print('BEST',json.dumps(rows[:10],indent=2),flush=True);open('dechirp.json','w').write(json.dumps(out,indent=2))
+          PY
+          python d.py
+      - uses: actions/upload-artifact@v4
+        with: {name: vibro-dechirp, path: dechirp.json, retention-days: 2}
