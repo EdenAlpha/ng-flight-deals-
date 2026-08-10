@@ -1,0 +1,55 @@
+name: TPWQ land fast pilot
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  fast:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140048.sgy'
+      - run: |
+          cat > f.py <<'PY'
+          import os,math,subprocess,json,numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';h=open(f,'rb').read(3600);size=os.path.getsize(f);C=[]
+          for bo,nb in [('big','>'),('little','<')]:
+            ns=int.from_bytes(h[3220:3222],bo);fmt=int.from_bytes(h[3224:3226],bo);st=240+4*ns
+            if fmt==5 and ns>0 and (size-3600)%st==0:C.append((nb,ns,(size-3600)//st,st))
+          nb,ns,ntr,st=C[0];nch=256;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((ntr,ns),dtype=nb+'f4',buffer=mm,offset=3840,strides=(st,4))[:nch].astype(np.float32,copy=True)
+          raw=X.nbytes;rms=float(np.sqrt(np.mean(X.astype(np.float64)**2)));eps=.1*rms
+          def z(A):return len(subprocess.run(['zstd','-q','-f','-9','-c'],input=np.ascontiguousarray(A).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def dt(A):
+            mn=int(A.min());mx=int(A.max());return A.astype(np.int8) if mn>=-128 and mx<=127 else A.astype(np.int16) if mn>=-32768 and mx<=32767 else A
+          @njit(cache=True)
+          def proj(X,eps,alpha,mode,shift):
+            step=alpha*eps;m,n=X.shape;Y=np.empty((m,n),np.int32);R=np.empty((m,n),np.int32);zz=0
+            for i in range(m):
+              for t in range(n):
+                if i==0:pred=Y[i,t-1] if t else 0
+                elif mode==0:
+                  q=t+shift;q=0 if q<0 else n-1 if q>=n else q;pred=Y[i-1,q]
+                else:
+                  q=t+shift;q=0 if q<0 else n-1 if q>=n else q
+                  if t: qm=q-1;qm=0 if qm<0 else qm;pred=Y[i,t-1]+Y[i-1,q]-Y[i-1,qm]
+                  else:pred=Y[i-1,q]
+                lo=math.ceil((X[i,t]-eps)/step-1e-8);hi=math.floor((X[i,t]+eps)/step+1e-8);y=lo if pred<lo else hi if pred>hi else pred;Y[i,t]=y;R[i,t]=y-pred;zz+=R[i,t]==0
+            return Y,R,zz
+          out={'shape':[nch,ns],'rms':rms,'eps':eps,'rows':[]}
+          for a in [2.,1.5,1.25,1.]:
+            for mode in [0,1]:
+              for sh in [-2,0,2]:
+                Y,R,zz=proj(X,eps,a,mode,sh);b=z(dt(R));err=float(np.max(np.abs(X-Y.astype(np.float32)*(a*eps))));row={'alpha':a,'mode':'spatial' if mode==0 else 'shifted_increment','shift':sh,'ratio':raw/b,'zero':zz/R.size,'bytes':b,'maxerr':err};out['rows'].append(row);print('TPWQ',row,flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);b,_=sz.compress(np.ascontiguousarray(X),cfg);Y,_=sz.decompress(b,np.float32,X.shape);out['sz3']={'ratio':raw/int(b.size),'bytes':int(b.size),'maxerr':float(np.max(np.abs(X-Y)))}
+          out['rows'].sort(key=lambda r:r['ratio'],reverse=True);print('BEST',out['rows'][0],flush=True);print('SZ3',out['sz3'],flush=True);open('fast.json','w').write(json.dumps(out,indent=2))
+          PY
+          python f.py
+      - uses: actions/upload-artifact@v4
+        with: {name: tpwq-fast, path: fast.json, retention-days: 2}
