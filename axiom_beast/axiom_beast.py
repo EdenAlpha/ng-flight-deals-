@@ -9,9 +9,10 @@ import text_transform as TEXT
 import axiom2 as AX2
 import image_ancestry_transform as IMG
 import video_context_transform as VIDEO
+import elf_graph_transform as ELF
 MAGIC=b'AXB9'
 EFFORT='max'
-MODES={0:'raw',1:'csv-law-coordinate',2:'json-causal-graph',3:'tar-nested-law-graph',4:'text-band',5:'zip-generative-law',6:'rgb-codec-ancestry',7:'yuv-causal-context'}
+MODES={0:'raw',1:'csv-law-coordinate',2:'json-causal-graph',3:'tar-nested-law-graph',4:'text-band',5:'zip-generative-law',6:'rgb-codec-ancestry',7:'yuv-causal-context',8:'elf-instruction-coordinate-graph'}
 
 def vi(n):return C.vi(n)
 def uv(b,p=0):return C.uv(b,p)
@@ -68,7 +69,13 @@ def transform_candidates(d,name=''):
     is_tar = ext=='.tar' or (len(d)>=512 and d[257:262] in (b'ustar',b'ustar\x00'))
     is_json = ext=='.json' or d.lstrip()[:1] in (b'[',b'{')
     is_csv = ext=='.csv' or (not is_json and not is_tar and not is_zip and b',' in d[:4096] and b'\n' in d[:4096])
-    if is_csv:
+    is_elf = d[:4]==b'\x7fELF'
+    if is_elf:
+        try:
+            r=ELF.pack(d)
+            if r is not None: out.append((8,r,{}))
+        except Exception: pass
+    elif is_csv:
         try:
             r=CSV.pack(d)
             if r is not None and CSV.unpack(r)==d: out.append((1,r,{}))
@@ -151,12 +158,13 @@ def decompress(src,dst):
         elif mode==2:d=JSON.unpack(rep)
         elif mode==3:d=TAR.unpack(rep)
         elif mode==4:d=TEXT.unpack(rep)
+        elif mode==8:d=ELF.unpack(rep)
         else:raise ValueError('unknown AXIOM mode')
     if len(d)!=orig or hashlib.sha256(d).digest()!=digest:raise ValueError('AXIOM integrity failure')
     open(dst,'wb').write(d);return {'output':len(d),'mode':MODES[mode]}
 
 def main():
-    ap=argparse.ArgumentParser(description='AXIOM Beast v0.10 non-AI generative-law lossless compressor')
+    ap=argparse.ArgumentParser(description='AXIOM Beast v0.12 non-AI generative-law lossless compressor')
     sp=ap.add_subparsers(dest='cmd',required=True)
     a=sp.add_parser('c');a.add_argument('src');a.add_argument('dst');a.add_argument('--effort',choices=['fast','max'],default='max')
     a=sp.add_parser('d');a.add_argument('src');a.add_argument('dst')
