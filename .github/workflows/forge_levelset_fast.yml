@@ -1,0 +1,49 @@
+name: Fast FORGE nested level-set codec
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  levelset:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/l.py <<'PY'
+          import json,subprocess,numpy as np,segyio
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def pack(B,order='C'):return z(np.packbits(np.asarray(B,order=order).reshape(-1),bitorder='little'))
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);Y,_=sz.decompress(b,np.float32,X.shape);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Y)))}),flush=True)
+          rows=[]
+          for alpha in [2.0,1.95,1.75,1.5,1.25,1.0]:
+            step=alpha*eps;Q=np.rint(X/step).astype(np.int16);me=float(np.max(np.abs(X-Q.astype(np.float32)*step)))
+            if me>eps+1e-6:continue
+            mp=int(Q.max());mn=int(-Q.min());parts=[];stats=[]
+            for sign,maxk in [(1,mp),(-1,mn)]:
+              for k in range(1,maxk+1):
+                B=(Q>=k) if sign==1 else (Q<=-k)
+                # exact candidates: volume, first derivative boundaries along each axis, and 3D parity boundary.
+                cand={'raw':pack(B),'t':pack(np.logical_xor(B,np.concatenate([np.zeros(B.shape[:2]+(1,),bool),B[:,:,:-1]],axis=2))),
+                      'i':pack(np.logical_xor(B,np.concatenate([np.zeros((1,)+B.shape[1:],bool),B[:-1]],axis=0))),
+                      'j':pack(np.logical_xor(B,np.concatenate([np.zeros((B.shape[0],1,B.shape[2]),bool),B[:,:-1]],axis=1)))}
+                # second geometry: encode start state per trace + temporal crossings only
+                Tcross=np.logical_xor(B[:,:,1:],B[:,:,:-1]);traceform=pack(B[:,:,0])+pack(Tcross);cand['trace_cross']=traceform
+                best=min(cand.items(),key=lambda x:x[1]);parts.append(best[1]+1);stats.append((sign,k,best[0],best[1],float(B.mean())))
+            total=sum(parts)+32;row={'alpha':alpha,'bytes':total,'ratio':raw/total,'maxerr':me,'levels':len(parts),'qmin':int(Q.min()),'qmax':int(Q.max()),'top_stats':stats[:10]};rows.append(row);print('LEVELSET',json.dumps(row),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows,indent=2),flush=True)
+          PY
+          python /tmp/l.py
