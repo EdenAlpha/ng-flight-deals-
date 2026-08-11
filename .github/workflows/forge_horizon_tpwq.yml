@@ -1,0 +1,113 @@
+name: Utah FORGE horizon-aligned TPWQ
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  horizon:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz segyio
+      - name: Download FORGE cube
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+      - name: Run horizon-aligned legal-state benchmark
+        run: |
+          cat > h.py <<'PY'
+          import json,math,subprocess,numpy as np,segyio
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f: tr=np.asarray(f.trace.raw[:],dtype=np.float32)
+          X=np.ascontiguousarray(tr.reshape(170,213,1001));del tr
+          raw=X.nbytes;std=float(np.std(X,dtype=np.float64));eps=.1*std
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-T0','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0
+            return q.astype(np.int8) if mn>=-128 and mx<=127 else q.astype(np.int16) if mn>=-32768 and mx<=32767 else q.astype(np.int32)
+          # local dip maps from raw waveform correlation; predictor always references prior spatial rows/cols
+          def shifts(X,BI,BJ,BT,S=3):
+            ni=(X.shape[0]-1+BI-1)//BI;nj=(X.shape[1]-1+BJ-1)//BJ;nt=(X.shape[2]+BT-1)//BT
+            PI=np.zeros((ni,nj,nt),np.int8);PJ=np.zeros_like(PI)
+            for ii in range(ni):
+              i0=1+ii*BI;i1=min(X.shape[0],i0+BI)
+              for jj in range(nj):
+                j0=1+jj*BJ;j1=min(X.shape[1],j0+BJ)
+                for kk in range(nt):
+                  t0=kk*BT;t1=min(X.shape[2],t0+BT)
+                  # decimate for cheap slope choice
+                  A=X[i0:i1,j0:j1,t0:t1:2]
+                  best=(1e300,0)
+                  for s in range(-S,S+1):
+                    tt=np.arange(t0,t1,2)-s;tt=np.clip(tt,0,X.shape[2]-1)
+                    B=X[i0-1:i1-1,j0:j1][:,:,tt]
+                    e=float(np.mean((A-B)**2))
+                    if e<best[0]:best=(e,s)
+                  PI[ii,jj,kk]=best[1]
+                  best=(1e300,0)
+                  for s in range(-S,S+1):
+                    tt=np.arange(t0,t1,2)-s;tt=np.clip(tt,0,X.shape[2]-1)
+                    B=X[i0:i1,j0-1:j1-1][:,:,tt]
+                    e=float(np.mean((A-B)**2))
+                    if e<best[0]:best=(e,s)
+                  PJ[ii,jj,kk]=best[1]
+            return PI,PJ
+          @njit(cache=True)
+          def enc(X,eps,alpha,PI,PJ,BI,BJ,BT):
+            a,b,n=X.shape;step=alpha*eps;Q=np.empty((a,b,n),np.int32);H=np.zeros((a,b,n),np.int32)
+            # boundary i=0 and j=0: nearest legal lattice state
+            for i in range(a):
+              for j in range(b):
+                if i==0 or j==0:
+                  for t in range(n):
+                    lo=math.ceil((X[i,j,t]-eps)/step-1e-7);hi=math.floor((X[i,j,t]+eps)/step+1e-7);q=int(round(X[i,j,t]/step));
+                    if q<lo:q=lo
+                    elif q>hi:q=hi
+                    Q[i,j,t]=q
+            for i in range(1,a):
+              ii=(i-1)//BI
+              for j in range(1,b):
+                jj=(j-1)//BJ
+                for t in range(n):
+                  kk=t//BT;pi=int(PI[ii,jj,kk]);pj=int(PJ[ii,jj,kk]);ti=t-pi;tj=t-pj;tij=t-pi-pj
+                  if ti<0:ti=0
+                  elif ti>=n:ti=n-1
+                  if tj<0:tj=0
+                  elif tj>=n:tj=n-1
+                  if tij<0:tij=0
+                  elif tij>=n:tij=n-1
+                  p=Q[i-1,j,ti]+Q[i,j-1,tj]-Q[i-1,j-1,tij]
+                  lo=math.ceil((X[i,j,t]-eps)/step-1e-7);hi=math.floor((X[i,j,t]+eps)/step+1e-7);q=p
+                  if q<lo:q=lo
+                  elif q>hi:q=hi
+                  Q[i,j,t]=q;H[i,j,t]=q-p
+            return Q,H,step
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;sb,_=sz.compress(X,cfg);SZ,_=sz.decompress(sb,np.float32,X.shape)
+          print('SZ3',json.dumps({'bytes':int(sb.size),'ratio':raw/int(sb.size),'maxerr':float(np.max(np.abs(X-SZ)))}),flush=True)
+          rows=[]
+          for BI,BJ,BT in [(32,32,128),(16,16,128),(16,16,64),(8,8,64)]:
+            PI,PJ=shifts(X,BI,BJ,BT,3);model=z(PI)+z(PJ)+32;print('SLOPES',BI,BJ,BT,'model',model,'pi',np.unique(PI,return_counts=True),'pj',np.unique(PJ,return_counts=True),flush=True)
+            for alpha in [1.9,1.75,1.5,1.25]:
+              Q,H,step=enc(X,eps,alpha,PI,PJ,BI,BJ,BT)
+              bd=np.concatenate([Q[0].reshape(-1),Q[1:,0].reshape(-1)]); bbytes=z(si(bd))
+              Z=H[1:,1:];m=Z!=0;dense=min(z(si(Z)),z(si(np.transpose(Z,(2,0,1)))))
+              sparse=z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(Z[m])) if m.any() else 0)
+              syndrome=min(dense,sparse);total=bbytes+model+syndrome+64;me=float(np.max(np.abs(X-Q.astype(np.float32)*step)))
+              row={'BI':BI,'BJ':BJ,'BT':BT,'alpha':alpha,'bytes':total,'ratio':raw/total,'boundary':bbytes,'model':model,'syndrome':syndrome,'nonzero':float(m.mean()),'maxerr':me}
+              rows.append(row);print('HORIZON',json.dumps(row),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:12],indent=2),flush=True);open('forge_horizon.json','w').write(json.dumps(rows[:30],indent=2))
+          PY
+          python h.py
+      - uses: actions/upload-artifact@v4
+        with: {name: forge-horizon-tpwq, path: forge_horizon.json, retention-days: 2}

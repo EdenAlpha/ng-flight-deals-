@@ -1,0 +1,79 @@
+name: Utah FORGE 3D TPWQ matched benchmark
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  forge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install codecs
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd unzip
+          pip install --quiet numpy numba pysz zfpy segyio
+      - name: Download official Utah FORGE reflection archive and extract 3D PSDM
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          name='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          z=zipfile.ZipFile('forge.zip');z.extract(name,'.');print(name,z.getinfo(name).file_size)
+          PY
+      - name: Run matched 3D benchmark on recovered 170x213 grid
+        shell: bash
+        run: |
+          cat > b.py <<'PY'
+          import json,subprocess,math,time,numpy as np,segyio
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          path='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(path,'r',strict=False,ignore_geometry=True) as f:
+            tr=np.asarray(f.trace.raw[:],dtype=np.float32)
+          if tr.shape!=(36210,1001):raise RuntimeError(('unexpected trace matrix',tr.shape))
+          # Header diagnostic proved file order is 170 rows, exactly 213 traces per row.
+          X=np.ascontiguousarray(tr.reshape(170,213,1001));del tr
+          raw=X.nbytes;std=float(np.std(X,dtype=np.float64));rms=float(np.sqrt(np.mean(X.astype(np.float64)**2)));print('DATA',X.shape,'std',std,'rms',rms,'raw',raw,flush=True)
+          def z(q,level=19):return len(subprocess.run(['zstd','-q','-f',f'-{level}','-T0','-c'],input=np.ascontiguousarray(q).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(q):
+            mn=int(q.min()) if q.size else 0;mx=int(q.max()) if q.size else 0
+            if mn>=-128 and mx<=127:return q.astype(np.int8)
+            if mn>=-32768 and mx<=32767:return q.astype(np.int16)
+            return q.astype(np.int32)
+          @njit(cache=True)
+          def tpwq3(X,eps,alpha):
+            a,b,n=X.shape;step=alpha*eps;Q=np.empty((a,b,n),np.int32);H=np.empty((a,b,n),np.int32);maxe=0.0
+            for i in range(a):
+              for j in range(b):
+                for t in range(n):
+                  p=0
+                  if i>0:p+=Q[i-1,j,t]
+                  if j>0:p+=Q[i,j-1,t]
+                  if t>0:p+=Q[i,j,t-1]
+                  if i>0 and j>0:p-=Q[i-1,j-1,t]
+                  if i>0 and t>0:p-=Q[i-1,j,t-1]
+                  if j>0 and t>0:p-=Q[i,j-1,t-1]
+                  if i>0 and j>0 and t>0:p+=Q[i-1,j-1,t-1]
+                  lo=math.ceil((X[i,j,t]-eps)/step-1e-7);hi=math.floor((X[i,j,t]+eps)/step+1e-7);q=p
+                  if q<lo:q=lo
+                  elif q>hi:q=hi
+                  Q[i,j,t]=q;H[i,j,t]=q-p;e=abs(X[i,j,t]-q*step)
+                  if e>maxe:maxe=e
+            return H,maxe
+          out={'dataset':'Utah FORGE 3D ANI PSDM Stack UnEnh','shape':list(X.shape),'raw_sample_bytes':raw,'std':std,'rms':rms,'rows':[]}
+          for frac in [.05,.10]:
+            eps=frac*std
+            cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);sb,_=sz.compress(X,cfg);SY,_=sz.decompress(sb,np.float32,X.shape);base={'codec':'SZ3','frac_std':frac,'eps':eps,'bytes':int(sb.size),'ratio':raw/int(sb.size),'maxerr':float(np.max(np.abs(X-SY)))};out['rows'].append(base);print('BASE',json.dumps(base),flush=True)
+            try:
+              import zfpy
+              zb=zfpy.compress_numpy(X,tolerance=float(eps));ZY=zfpy.decompress_numpy(zb);zr={'codec':'ZFP','frac_std':frac,'eps':eps,'bytes':len(zb),'ratio':raw/len(zb),'maxerr':float(np.max(np.abs(X-ZY)))};out['rows'].append(zr);print('BASE',json.dumps(zr),flush=True)
+            except Exception as e:print('ZFP_FAIL',repr(e),flush=True)
+            for alpha in [1.75,1.5,1.25,1.0]:
+              ts=time.time();H,me=tpwq3(X,eps,alpha);dense=z(si(H),19);m=H!=0;mask=z(np.packbits(m.reshape(-1),bitorder='little'),19);vals=z(si(H[m]),19) if m.any() else 0;sparse=mask+vals;hb=min(dense,sparse);row={'codec':'TPWQ3','frac_std':frac,'eps':eps,'alpha':alpha,'bytes':hb+64,'ratio':raw/(hb+64),'dense':dense,'sparse':sparse,'syndrome_nonzero_fraction':float(m.mean()),'mean_abs_syndrome':float(np.mean(np.abs(H))),'maxerr':float(me),'sec':time.time()-ts};out['rows'].append(row);print('TPWQ',json.dumps(row),flush=True);del H,m
+          open('forge_3d.json','w').write(json.dumps(out,indent=2));print('DONE',flush=True)
+          PY
+          python b.py
+      - uses: actions/upload-artifact@v4
+        with: {name: forge-3d-tpwq, path: forge_3d.json, retention-days: 2}
