@@ -32,11 +32,12 @@ jobs:
           python research/analyze_hpez_indices.py
           python research/analyze_hpez_levels.py
           python research/analyze_hpez_coordinate_orders.py
+          python research/analyze_hpez_dyadic_classes.py
           python - <<'PY'
           import re,json,os
-          s=open('resid.log').read();sym=json.load(open('hpez_symbol_analysis.json'));lev=json.load(open('hpez_level_analysis.json'));geo=json.load(open('hpez_coordinate_order_analysis.json'))
+          s=open('resid.log').read();sym=json.load(open('hpez_symbol_analysis.json'));lev=json.load(open('hpez_level_analysis.json'));geo=json.load(open('hpez_coordinate_order_analysis.json'));dy=json.load(open('hpez_dyadic_class_analysis.json'))
           pats=[r'RESIDSTAT[^\n]+',r'HPEZIDX[^\n]+',r'HPEZPRELOSSLESS[^\n]+',r'HPEZCOORD[^\n]+']
-          out={'bytes':os.path.getsize('diagnostic.hpez'),'stats':sum([re.findall(p,s) for p in pats],[]),'symbols':sym,'levels':lev,'geometry_orders':geo}
+          out={'bytes':os.path.getsize('diagnostic.hpez'),'stats':sum([re.findall(p,s) for p in pats],[]),'symbols':sym,'levels':lev,'geometry_orders':geo,'dyadic_classes':dy}
           json.dump(out,open('hpez_residual_diagnostic.json','w'),indent=2);print(json.dumps(out,indent=2))
           PY
       - uses: actions/upload-artifact@v4
@@ -47,4 +48,5 @@ jobs:
             hpez_symbol_analysis.json
             hpez_level_analysis.json
             hpez_coordinate_order_analysis.json
+            hpez_dyadic_class_analysis.json
           retention-days: 7
