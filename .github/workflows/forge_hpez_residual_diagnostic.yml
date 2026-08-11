@@ -19,6 +19,7 @@ jobs:
           python research/patch_hpez_residual_stats.py
           python research/patch_hpez_index_stats.py
           python research/patch_hpez_dump_indices.py
+          python research/patch_hpez_level_boundaries.py
           cmake -S hpez-src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_CXX_FLAGS="-include cstdint -include array" >/dev/null
           cmake --build build -j2 >/dev/null && cmake --install build >/dev/null
       - run: |
@@ -26,12 +27,14 @@ jobs:
           install/bin/hpez -f -i data/forge_subcube_f32.bin -z diagnostic.hpez -3 512 64 64 -M ABS "$EPS" -q 4 2>resid.log
           echo "COMPRESSED_BYTES=$(stat -c%s diagnostic.hpez)"
           cat resid.log | grep -E 'RESIDSTAT|HPEZIDX|HPEZPRELOSSLESS' || true
+          echo LEVEL_ENDS; cat hpez_level_ends.txt || true
           python research/analyze_hpez_indices.py
+          python research/analyze_hpez_levels.py
           python - <<'PY'
           import re,json,os
-          s=open('resid.log').read();sym=json.load(open('hpez_symbol_analysis.json'))
+          s=open('resid.log').read();sym=json.load(open('hpez_symbol_analysis.json'));lev=json.load(open('hpez_level_analysis.json'))
           pats=[r'RESIDSTAT[^\n]+',r'HPEZIDX[^\n]+',r'HPEZPRELOSSLESS[^\n]+']
-          out={'bytes':os.path.getsize('diagnostic.hpez'),'stats':sum([re.findall(p,s) for p in pats],[]),'symbols':sym}
+          out={'bytes':os.path.getsize('diagnostic.hpez'),'stats':sum([re.findall(p,s) for p in pats],[]),'symbols':sym,'levels':lev}
           json.dump(out,open('hpez_residual_diagnostic.json','w'),indent=2);print(json.dumps(out,indent=2))
           PY
       - uses: actions/upload-artifact@v4
@@ -40,4 +43,5 @@ jobs:
           path: |
             hpez_residual_diagnostic.json
             hpez_symbol_analysis.json
+            hpez_level_analysis.json
           retention-days: 7
