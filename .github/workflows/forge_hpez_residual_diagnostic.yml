@@ -26,9 +26,17 @@ jobs:
       - run: |
           EPS=$(python -c "import json;print(json.load(open('data/forge_subcube_meta.json'))['eps_10pct_std'])")
           install/bin/hpez -f -i data/forge_subcube_f32.bin -z diagnostic.hpez -3 512 64 64 -M ABS "$EPS" -q 4 2>resid.log
+          install/bin/hpez -f -z diagnostic.hpez -o diagnostic_rec.bin -3 512 64 64 2>>resid.log
           echo "COMPRESSED_BYTES=$(stat -c%s diagnostic.hpez)"
           cat resid.log | grep -E 'RESIDSTAT|HPEZIDX|HPEZPRELOSSLESS|HPEZCOORD' || true
           echo LEVEL_ENDS; cat hpez_level_ends.txt || true
+          python - <<'PY'
+          import json,numpy as np
+          m=json.load(open('data/forge_subcube_meta.json'));eps=float(m['eps_10pct_std'])
+          x=np.fromfile('data/forge_subcube_f32.bin','<f4');r=np.fromfile('diagnostic_rec.bin','<f4');me=float(np.max(np.abs(x-r)))
+          print('RECON_CHECK',json.dumps({'maxerr':me,'eps':eps,'valid':bool(me<=eps*1.00001)}),flush=True)
+          if me>eps*1.00001: raise SystemExit('reconstruction invalid')
+          PY
           python research/analyze_hpez_indices.py
           python research/analyze_hpez_levels.py
           python research/analyze_hpez_coordinate_orders.py
