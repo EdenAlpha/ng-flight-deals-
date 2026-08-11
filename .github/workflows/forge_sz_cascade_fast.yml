@@ -1,0 +1,41 @@
+name: Fast FORGE SZ3 cascade control
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  cascade:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/c.py <<'PY'
+          import json,numpy as np,segyio
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes
+          def comp(A,e):
+            c=szConfig();c.errorBoundMode=szErrorBoundMode.ABS;c.absErrorBound=float(e);b,_=sz.compress(np.ascontiguousarray(A),c);D,_=sz.decompress(b,np.float32,A.shape);return b,D
+          b,D=comp(X,eps);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-D)))}),flush=True)
+          rows=[]
+          for beta in [1.5,2,3,4,6,8,12,16]:
+            b1,M=comp(X,beta*eps);R=np.ascontiguousarray(X-M)
+            # second stage residual hard error eps gives final hard error eps exactly.
+            b2,Rd=comp(R,eps);Y=M+Rd;tot=int(b1.size+b2.size)
+            r={'stages':2,'beta':beta,'bytes':tot,'ratio':raw/tot,'base':int(b1.size),'resid':int(b2.size),'maxerr':float(np.max(np.abs(X-Y)))};rows.append(r);print('CASCADE2',json.dumps(r),flush=True)
+            # optional 3-stage: residual first loosely at 2eps, then remaining error at eps.
+            for gamma in [1.5,2,3,4]:
+              b21,R1=comp(R,gamma*eps);R2=np.ascontiguousarray(R-R1);b22,R2d=comp(R2,eps);Y2=M+R1+R2d;tot3=int(b1.size+b21.size+b22.size)
+              q={'stages':3,'beta':beta,'gamma':gamma,'bytes':tot3,'ratio':raw/tot3,'base':int(b1.size),'mid':int(b21.size),'final':int(b22.size),'maxerr':float(np.max(np.abs(X-Y2)))};rows.append(q);print('CASCADE3',json.dumps(q),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:12],indent=2),flush=True)
+          PY
+          python /tmp/c.py
