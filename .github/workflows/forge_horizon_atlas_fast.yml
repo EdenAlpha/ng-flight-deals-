@@ -1,0 +1,81 @@
+name: Fast FORGE tracked-horizon atlas codec
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read, actions: read}
+jobs:
+  atlas:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with:
+          name: forge-subcube-cache
+          path: data
+          github-token: ${{ github.token }}
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: 31459619473
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz
+      - run: |
+          cat > /tmp/h.py <<'PY'
+          import json,subprocess,numpy as np
+          from collections import deque
+          from pysz import sz,szConfig,szErrorBoundMode
+          meta=json.load(open('data/forge_subcube_meta.json'));X=np.fromfile('data/forge_subcube_f32.bin','<f4').reshape(meta['shape']);eps=float(meta['eps_10pct_std']);raw=X.nbytes;ni,nj,nt=X.shape
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16) if lo>=-32768 and hi<=32767 else a.astype(np.int32)
+          def comp(A):
+            A=np.ascontiguousarray(A,dtype=np.float32);c=szConfig();c.errorBoundMode=szErrorBoundMode.ABS;c.absErrorBound=float(eps);b,_=sz.compress(A,c);D,_=sz.decompress(b,np.float32,A.shape);return int(b.size),D
+          def surface_bytes(A):
+            A=A.astype(np.int32);opts=[z(si(A)),z(si(np.diff(A,axis=0,prepend=A[:1]))),z(si(np.diff(A,axis=1,prepend=A[:,:1])))]
+            L=A.copy();L[1:,1:]=A[1:,1:]-A[:-1,1:]-A[1:,:-1]+A[:-1,:-1];opts.append(z(si(L)));return min(opts)
+          def seeds(K,sep):
+            x=X[ni//2,nj//2];idx=np.argsort(np.abs(x))[::-1];s=[]
+            for t in idx:
+              if t<10 or t>=nt-10:continue
+              if all(abs(int(t)-q)>=sep for q in s):s.append(int(t))
+              if len(s)>=K:break
+            return sorted(s)
+          def track(seed,R,pen):
+            T=np.full((ni,nj),-1,np.int16);ci=ni//2;cj=nj//2;sgn=1 if X[ci,cj,seed]>=0 else -1;T[ci,cj]=seed;q=deque([(ci,cj)])
+            while q:
+              i,j=q.popleft();exp=int(T[i,j])
+              for di,dj in ((1,0),(-1,0),(0,1),(0,-1)):
+                a=i+di;b=j+dj
+                if a<0 or a>=ni or b<0 or b>=nj or T[a,b]>=0:continue
+                lo=max(5,exp-R);hi=min(nt-6,exp+R);w=X[a,b,lo:hi+1]*sgn
+                # favor amplitude but penalize implausible jumps.
+                tt=np.arange(lo,hi+1);score=w-pen*eps*np.abs(tt-exp);k=int(np.argmax(score));T[a,b]=int(tt[k]);q.append((a,b))
+            return T.astype(np.int16)
+          def model_for(K,R,sep,pen,aq):
+            ss=seeds(K,sep);Ts=[];As=[];Ws=[];M=np.zeros_like(X);H=12
+            for s in ss:
+              T=track(s,R,pen);patch=[]
+              # estimate horizon-specific wavelet from normalized patches at a coarse spatial sample.
+              for i in range(0,ni,4):
+                for j in range(0,nj,4):
+                  t=int(T[i,j]);v=X[i,j,t-H:t+H+1].astype(np.float64);a=float(v[H]);
+                  if abs(a)>eps:patch.append(v/(a+1e-30))
+              if not patch:continue
+              W=np.median(np.stack(patch),axis=0);Wq=W.astype(np.float16);W=Wq.astype(np.float32);ww=float(np.dot(W,W))+1e-30;A=np.zeros((ni,nj),np.int16)
+              for i in range(ni):
+                for j in range(nj):
+                  t=int(T[i,j]);v=X[i,j,t-H:t+H+1];coef=float(np.dot(v,W)/ww);A[i,j]=np.int16(np.clip(np.rint(coef/(aq*eps)),-32768,32767))
+                  c=float(A[i,j])*(aq*eps);M[i,j,t-H:t+H+1]+=c*W
+              Ts.append(T);As.append(A);Ws.append(Wq)
+            tb=sum(surface_bytes(T) for T in Ts);ab=sum(surface_bytes(A) for A in As);wb=z(np.concatenate([W.ravel() for W in Ws]).astype(np.float16)) if Ws else 0;model=tb+ab+wb+128
+            rb,Rd=comp(np.ascontiguousarray(X-M));Y=M+Rd;total=model+rb
+            return {'Kreq':K,'Kused':len(Ts),'R':R,'sep':sep,'pen':pen,'aqeps':aq,'bytes':total,'ratio':raw/total,'model':model,'times':tb,'amps':ab,'wavelets':wb,'residual':rb,'rmse_model':float(np.sqrt(np.mean((X-M).astype(np.float64)**2))),'maxerr':float(np.max(np.abs(X-Y)))}
+          b,D=comp(X);print('BASE',json.dumps({'bytes':b,'ratio':raw/b,'maxerr':float(np.max(np.abs(X-D)))}),flush=True)
+          rows=[]
+          for cfg in [(4,6,10,0.25,.25),(8,6,8,.25,.25),(12,6,7,.25,.25),(16,6,6,.25,.25),(8,10,8,.15,.25),(12,10,7,.15,.25),(16,10,6,.15,.25),(24,10,5,.15,.25),(12,14,7,.1,.5),(20,14,5,.1,.5)]:
+            r=model_for(*cfg);rows.append(r);print('HORIZON',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:10],indent=2),flush=True)
+          PY
+          python /tmp/h.py
