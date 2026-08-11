@@ -1,0 +1,83 @@
+name: Fast FORGE reflector-atlas pilot
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  atlas:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy scipy pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/atlas.py <<'PY'
+          import json,subprocess,numpy as np,segyio
+          from scipy.signal import correlate
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes;ni,nj,nt=X.shape
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16) if lo>=-32768 and hi<=32767 else a.astype(np.int32)
+          # Shared zero-phase-ish field wavelet: average sign-normalized patches around strong events.
+          L=33;h=L//2;patch=[]
+          for i in range(0,ni,4):
+            for j in range(0,nj,4):
+              x=X[i,j];t=int(np.argmax(np.abs(x[h:-h])))+h
+              v=x[t-h:t+h+1].astype(np.float64);a=float(v[h])
+              if abs(a)>1e-12:patch.append(v*np.sign(a)/(abs(a)+1e-30))
+          W=np.median(np.stack(patch),axis=0);W/=np.sqrt(np.sum(W*W))+1e-30
+          # quantized transmitted wavelet; all models use decoder-visible float16 version.
+          W=np.asarray(W,dtype=np.float16).astype(np.float32);W/=np.sqrt(np.sum(W.astype(np.float64)**2))+1e-30
+          wb=z(np.asarray(W,dtype=np.float16))+16
+          print('WAVELET',json.dumps({'bytes':wb,'center':float(W[h]),'energy':float(np.sum(W*W))}),flush=True)
+          def encode_tensor(A):
+            # raw or exact spatial Lorenzo per event index
+            rawb=z(si(A))
+            if A.ndim!=3:return rawb
+            H=A.copy().astype(np.int32)
+            H[1:]-=A[:-1].astype(np.int32)
+            # independent candidate j-difference and 2-D Lorenzo
+            J=A.copy().astype(np.int32);J[:,1:]-=A[:,:-1].astype(np.int32)
+            Z=A.astype(np.int32).copy();Z[1:,1:]=A[1:,1:].astype(np.int32)-A[:-1,1:].astype(np.int32)-A[1:,:-1].astype(np.int32)+A[:-1,:-1].astype(np.int32)
+            return min(rawb,z(si(H)),z(si(J)),z(si(Z)))
+          def synth(K,astep):
+            times=np.zeros((ni,nj,K),np.uint16);amps=np.zeros((ni,nj,K),np.int16);M=np.zeros_like(X)
+            ww=float(np.dot(W,W))
+            for i in range(ni):
+              for j in range(nj):
+                r=X[i,j].astype(np.float32).copy();ev=[]
+                for k in range(K):
+                  c=correlate(r,W,mode='same',method='fft');c[:h]=-np.inf;c[-h:]=-np.inf
+                  t=int(np.argmax(np.abs(c)));a=float(c[t]/ww);qa=int(np.rint(a/astep));qa=max(-32768,min(32767,qa));aq=qa*astep
+                  times[i,j,k]=t;amps[i,j,k]=qa;ev.append((t,aq))
+                  a0=t-h;b0=t+h+1;r[a0:b0]-=aq*W
+                ev.sort(key=lambda q:q[0])
+                for k,(t,aq) in enumerate(ev):
+                  times[i,j,k]=t;amps[i,j,k]=int(np.rint(aq/astep));M[i,j,t-h:t+h+1]+=aq*W
+            tb=encode_tensor(times.astype(np.int32));ab=encode_tensor(amps.astype(np.int32));model=wb+tb+ab+16
+            C=np.rint((X-M)/(2*eps)).astype(np.int16);R=M+C.astype(np.float32)*(2*eps);m=C!=0
+            dense=min(z(si(C)),z(si(np.transpose(C,(2,0,1)))))
+            sparse=z(np.packbits(m.reshape(-1),bitorder='little'))+(z(si(C[m])) if m.any() else 0);cert=min(dense,sparse)
+            total=model+cert;me=float(np.max(np.abs(X-R)))
+            return {'K':K,'astep_eps':astep/eps,'bytes':total,'ratio':raw/total,'model':model,'time_bytes':tb,'amp_bytes':ab,'wavelet_bytes':wb,'cert':cert,'cert_nz':float(m.mean()),'maxerr':me,'rmse_model':float(np.sqrt(np.mean((X-M).astype(np.float64)**2)))}
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);Y,_=sz.decompress(b,np.float32,X.shape)
+          print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Y)))}),flush=True)
+          rows=[]
+          for K in [1,2,4,6,8,12]:
+            for af in [.25,.5,1.0,2.0]:
+              r=synth(K,af*eps);rows.append(r);print('ATLAS',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:10],indent=2),flush=True)
+          PY
+          python /tmp/atlas.py
