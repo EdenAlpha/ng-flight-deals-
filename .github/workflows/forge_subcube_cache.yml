@@ -1,0 +1,31 @@
+name: Build reusable FORGE subcube artifact
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  cache:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile,json,numpy as np,segyio,hashlib
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          with segyio.open(n,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));X=np.ascontiguousarray(T[53:117,74:138,244:756]);X.tofile('forge_subcube_f32.bin')
+          meta={'shape':[64,64,512],'global_std':std,'eps_10pct_std':.1*std,'bytes':X.nbytes,'sha256':hashlib.sha256(open('forge_subcube_f32.bin','rb').read()).hexdigest(),'source_member':n,'slice':'[53:117,74:138,244:756]'}
+          open('forge_subcube_meta.json','w').write(json.dumps(meta,indent=2));print(meta)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-subcube-cache
+          path: |
+            forge_subcube_f32.bin
+            forge_subcube_meta.json
+          retention-days: 30
+          compression-level: 6
