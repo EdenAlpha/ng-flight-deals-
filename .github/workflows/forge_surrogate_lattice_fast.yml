@@ -1,0 +1,22 @@
+name: Fast FORGE encoder-only lattice shaping
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read, actions: read}
+jobs:
+  lattice:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with:
+          name: forge-subcube-cache
+          path: data
+          github-token: ${{ github.token }}
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: 31459619473
+      - run: pip install --quiet numpy pysz
+      - run: python research/forge_surrogate_lattice.py
