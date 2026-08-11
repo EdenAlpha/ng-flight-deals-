@@ -1,0 +1,111 @@
+name: Fast FORGE nonlinear phase-atlas codec
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read, actions: read}
+jobs:
+  phase:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with:
+          name: forge-subcube-cache
+          path: data
+          github-token: ${{ github.token }}
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: 31459619473
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz
+      - run: |
+          cat > /tmp/p.py <<'PY'
+          import json,math,subprocess,numpy as np
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          meta=json.load(open('data/forge_subcube_meta.json'));X=np.fromfile('data/forge_subcube_f32.bin','<f4').reshape(meta['shape']);eps=float(meta['eps_10pct_std']);raw=X.nbytes;ni,nj,nt=X.shape
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def comp(A):
+            A=np.ascontiguousarray(A,dtype=np.float32);c=szConfig();c.errorBoundMode=szErrorBoundMode.ABS;c.absErrorBound=float(eps);b,_=sz.compress(A,c);D,_=sz.decompress(b,np.float32,A.shape);return int(b.size),D
+          def controls(n,S):
+            a=list(range(0,n,S))
+            if a[-1]!=n-1:a.append(n-1)
+            return np.asarray(a,np.int32)
+          def crossings(x):
+            # integer knot at the right sample of each sign change; direction +/-1.
+            s=np.where(x>=0,1,-1);idx=np.flatnonzero(s[1:]!=s[:-1])+1;dire=np.where(s[idx]>s[idx-1],1,-1)
+            return idx.astype(np.int16),dire.astype(np.int8)
+          def map_cross(refz,refd,y,R):
+            yz,yd=crossings(y);out=np.zeros(len(refz),np.int16);prev=-1;delta=0
+            for k,(zz,dd) in enumerate(zip(refz,refd)):
+              cand=yz[(yd==dd)&(yz>prev)]
+              if len(cand)==0:m=int(np.clip(int(zz)+delta,prev+1,len(y)-1))
+              else:
+                exp=int(zz)+delta;ii=int(np.argmin(np.abs(cand-exp)));m=int(cand[ii])
+                # avoid pathological event relabeling: if nearest is too far, keep a smooth extrapolated knot.
+                if abs(m-exp)>R:m=int(np.clip(exp,prev+1,len(y)-1))
+              out[k]=m;prev=m;delta=m-int(zz)
+            return out
+          def interp_surface(C,gi,gj,si,sj):
+            xj=np.arange(sj);xi=np.arange(si);tmp=np.empty((len(gi),sj),np.float32)
+            for a in range(len(gi)):tmp[a]=np.interp(xj,gj,C[a])
+            out=np.empty((si,sj),np.float32)
+            for j in range(sj):out[:,j]=np.interp(xi,gi,tmp[:,j])
+            return out
+          def synth_cfg(TS,CS,R,GQ):
+            M=np.zeros_like(X);refs=[];Ds=[];Gs=[];nknots=0
+            for i0 in range(0,ni,TS):
+              i1=min(ni,i0+TS);si=i1-i0;gi=controls(si,CS)
+              for j0 in range(0,nj,TS):
+                j1=min(nj,j0+TS);sj=j1-j0;gj=controls(sj,CS);ci=i0+si//2;cj=j0+sj//2
+                ref=X[ci,cj].astype(np.float32);refq=ref.astype(np.float16);ref=refq.astype(np.float32);rz,rd=crossings(ref)
+                # reject ultra-short/noisy lobes by merging crossings closer than 3 samples, preserving order/direction.
+                keep=[];last=-10
+                for k,z0 in enumerate(rz):
+                  if int(z0)-last>=3:keep.append(k);last=int(z0)
+                rz=rz[keep];rd=rd[keep]
+                # endpoints are fixed extra knots but are not transmitted.
+                if len(rz)<4:continue
+                refs.append(refq);nknots+=len(rz)
+                Dctl=np.zeros((len(gi),len(gj),len(rz)),np.int8);Gctl=np.zeros((len(gi),len(gj),len(rz)+1),np.int8)
+                for a,ii in enumerate(gi):
+                  for b,jj in enumerate(gj):
+                    y=X[i0+ii,j0+jj].astype(np.float32);mz=map_cross(rz,rd,y,R);dev=np.clip(mz.astype(np.int32)-rz.astype(np.int32),-127,127).astype(np.int8);Dctl[a,b]=dev
+                    rk=np.concatenate(([0],rz.astype(np.int32),[nt-1]));tk=np.concatenate(([0],mz.astype(np.int32),[nt-1]))
+                    for l in range(len(rk)-1):
+                      ra,rb=int(rk[l]),int(rk[l+1]);ta,tb=int(tk[l]),int(tk[l+1])
+                      if rb<=ra or tb<=ta:g=0.0
+                      else:
+                        tt=np.arange(ta,tb+1,dtype=np.float32);u=ra+(tt-ta)*(rb-ra)/max(1,tb-ta);rv=np.interp(u,np.arange(nt,dtype=np.float32),ref);yv=y[ta:tb+1];g=float(np.dot(yv,rv)/(np.dot(rv,rv)+1e-30))
+                      Gctl[a,b,l]=np.int8(np.clip(np.rint(g*GQ),-127,127))
+                Ds.append(Dctl);Gs.append(Gctl)
+                # interpolate each knot/gain surface spatially then synthesize piecewise phase-warped lobes.
+                DF=np.empty((si,sj,len(rz)),np.float32);GF=np.empty((si,sj,len(rz)+1),np.float32)
+                for k in range(len(rz)):DF[:,:,k]=interp_surface(Dctl[:,:,k],gi,gj,si,sj)
+                for k in range(len(rz)+1):GF[:,:,k]=interp_surface(Gctl[:,:,k],gi,gj,si,sj)/GQ
+                for ii in range(si):
+                  for jj in range(sj):
+                    mz=np.rint(rz.astype(np.float32)+DF[ii,jj]).astype(np.int32);mz=np.clip(mz,1,nt-2)
+                    # enforce strict monotonicity decoder-side.
+                    for k in range(1,len(mz)):
+                      if mz[k]<=mz[k-1]:mz[k]=min(nt-2,mz[k-1]+1)
+                    rk=np.concatenate(([0],rz.astype(np.int32),[nt-1]));tk=np.concatenate(([0],mz,[nt-1]))
+                    out=np.zeros(nt,np.float32)
+                    for l in range(len(rk)-1):
+                      ra,rb=int(rk[l]),int(rk[l+1]);ta,tb=int(tk[l]),int(tk[l+1])
+                      if tb<ta:continue
+                      tt=np.arange(ta,tb+1,dtype=np.float32);u=ra+(tt-ta)*(rb-ra)/max(1,tb-ta);out[ta:tb+1]=np.interp(u,np.arange(nt,dtype=np.float32),ref).astype(np.float32)*GF[ii,jj,l]
+                    M[i0+ii,j0+jj]=out
+            # Exact decoder-visible model streams.
+            refb=z(np.concatenate([r.ravel() for r in refs]).astype(np.float16));db=z(np.concatenate([d.ravel() for d in Ds]).astype(np.int8));gb=z(np.concatenate([g.ravel() for g in Gs]).astype(np.int8));model=refb+db+gb+128
+            rb,Rd=comp(np.ascontiguousarray(X-M));Y=M+Rd;total=model+rb
+            return {'TS':TS,'CS':CS,'R':R,'GQ':GQ,'bytes':total,'ratio':raw/total,'model':model,'refs':refb,'delays':db,'gains':gb,'residual':rb,'knots':nknots,'rmse_model':float(np.sqrt(np.mean((X-M).astype(np.float64)**2))),'maxerr':float(np.max(np.abs(X-Y)))}
+          b,D=comp(X);print('BASE',json.dumps({'bytes':b,'ratio':raw/b,'maxerr':float(np.max(np.abs(X-D)))}),flush=True)
+          rows=[]
+          for cfg in [(64,8,6,32),(64,16,8,32),(32,8,6,32),(32,8,10,32),(32,4,6,32),(16,4,6,32)]:
+            r=synth_cfg(*cfg);rows.append(r);print('PHASE',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows,indent=2),flush=True)
+          PY
+          python /tmp/p.py
