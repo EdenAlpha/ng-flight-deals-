@@ -16,6 +16,7 @@ jobs:
       - run: |
           git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
           python research/patch_hpez_residual_stats.py
+          python research/patch_hpez_index_stats.py
           cmake -S hpez-src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_CXX_FLAGS="-include cstdint -include array" >/dev/null
           cmake --build build -j2 >/dev/null && cmake --install build >/dev/null
       - run: |
@@ -23,11 +24,12 @@ jobs:
           install/bin/hpez -f -i data/forge_subcube_f32.bin -z diagnostic.hpez -3 512 64 64 -M ABS "$EPS" -q 4 2>resid.log
           BYTES=$(stat -c%s diagnostic.hpez)
           echo "COMPRESSED_BYTES=$BYTES"
-          cat resid.log | grep RESIDSTAT || true
+          cat resid.log | grep -E 'RESIDSTAT|HPEZIDX|HPEZPRELOSSLESS' || true
           python - <<'PY'
           import re,json,os
-          s=open('resid.log').read();m=re.findall(r'RESIDSTAT[^\n]+',s)
-          out={'bytes':os.path.getsize('diagnostic.hpez'),'stats':m}
+          s=open('resid.log').read()
+          pats=[r'RESIDSTAT[^\n]+',r'HPEZIDX[^\n]+',r'HPEZPRELOSSLESS[^\n]+']
+          out={'bytes':os.path.getsize('diagnostic.hpez'),'stats':sum([re.findall(p,s) for p in pats],[])}
           json.dump(out,open('hpez_residual_diagnostic.json','w'),indent=2);print(json.dumps(out,indent=2))
           PY
       - uses: actions/upload-artifact@v4
