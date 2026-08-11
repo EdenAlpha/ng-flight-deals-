@@ -1,4 +1,5 @@
 from pathlib import Path
+# Experimental hard-safe internal error-bound expansion. Gamma=1 is the mandatory control.
 p=Path('hpez-src/include/QoZ/quantizer/IntegerQuantizer.hpp')
 s=p.read_text()
 s=s.replace('namespace QoZ {', '#ifndef HPEZ_EB_EXPAND\n#define HPEZ_EB_EXPAND 1.0\n#endif\n\nnamespace QoZ {',1)
