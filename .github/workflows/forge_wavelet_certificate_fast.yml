@@ -1,0 +1,49 @@
+name: Fast FORGE multiscale certificate pilot
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  wavelet:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy PyWavelets pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/w.py <<'PY'
+          import json,subprocess,numpy as np,pywt,segyio
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16) if lo>=-32768 and hi<=32767 else a.astype(np.int32)
+          def cert(M):
+            C=np.rint((X-M)/(2*eps)).astype(np.int16);R=M+C.astype(np.float32)*(2*eps);m=C!=0;dense=min(z(si(C)),z(si(np.transpose(C,(2,0,1)))));sparse=z(np.packbits(m.ravel(),bitorder='little'))+(z(si(C[m])) if m.any() else 0)
+            return min(dense,sparse),float(m.mean()),float(np.max(np.abs(X-R)))
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);Y,_=sz.decompress(b,np.float32,X.shape);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Y)))}),flush=True)
+          rows=[]
+          for wav in ['haar','bior2.2','bior4.4','db2','db4']:
+            for level in [2,3,4]:
+              try:co=pywt.wavedecn(X,wavelet=wav,mode='periodization',level=level);arr,slices=pywt.coeffs_to_array(co)
+              except ValueError:continue
+              flat=np.abs(arr).ravel();N=flat.size
+              for frac in [.005,.01,.02,.04,.08,.16]:
+                k=max(1,int(N*frac));thr=np.partition(flat,N-k)[N-k];A=np.where(np.abs(arr)>=thr,arr,0.0)
+                for qf in [.25,.5,1.0]:
+                  qs=qf*eps;Q=np.rint(A/qs).astype(np.int16);Aq=Q.astype(np.float32)*qs;M=pywt.waverecn(pywt.array_to_coeffs(Aq,slices,output_format='wavedecn'),wavelet=wav,mode='periodization')[:X.shape[0],:X.shape[1],:X.shape[2]].astype(np.float32)
+                  model=min(z(si(Q)),z(si(np.transpose(Q,(2,0,1)))))+64;cb,nz,me=cert(M);total=model+cb;row={'wavelet':wav,'level':level,'frac':frac,'qeps':qf,'bytes':total,'ratio':raw/total,'model':model,'cert':cb,'cert_nz':nz,'maxerr':me,'coef_nz':float(np.mean(Q!=0))};rows.append(row);print('WAV',json.dumps(row),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:12],indent=2),flush=True)
+          PY
+          python /tmp/w.py
