@@ -1,0 +1,78 @@
+name: Fast FORGE spectral-screen manifold codec
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  screen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/s.py <<'PY'
+          import json,math,subprocess,numpy as np,segyio
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes;ni,nj,nt=X.shape
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16) if lo>=-32768 and hi<=32767 else a.astype(np.int32)
+          @njit(cache=True)
+          def refine(X,M,eps,alpha):
+            step=alpha*eps;E=np.zeros(X.shape,np.int16);me=0.0
+            for i in range(X.shape[0]):
+              for j in range(X.shape[1]):
+                c=0;old=0
+                for t in range(X.shape[2]):
+                  lo=math.ceil((X[i,j,t]-M[i,j,t]-eps)/step-1e-7);hi=math.floor((X[i,j,t]-M[i,j,t]+eps)/step+1e-7)
+                  if c<lo:c=lo
+                  elif c>hi:c=hi
+                  E[i,j,t]=c-old;old=c;e=abs(X[i,j,t]-(M[i,j,t]+c*step))
+                  if e>me:me=e
+            return E,me
+          def ebytes(E):
+            m=E!=0;V=E[m];Mt=np.transpose(m,(2,0,1));Et=np.transpose(E,(2,0,1));Vt=Et[Mt]
+            return min(z(si(E)),z(si(np.transpose(E,(2,0,1)))),z(np.packbits(m.ravel(),bitorder='little'))+(z(si(V)) if V.size else 0),z(np.packbits(Mt.ravel(),bitorder='little'))+(z(si(Vt)) if Vt.size else 0)),float(m.mean())
+          def grid(n,S):
+            g=list(range(0,n,S))
+            if g[-1]!=n-1:g.append(n-1)
+            return np.asarray(g,dtype=np.int32)
+          def interp2(C,gi,gj):
+            # separable linear interpolation of complex control screen
+            tmp=np.empty((len(gi),nj),np.complex64);xs=np.arange(nj)
+            for a in range(len(gi)):
+              tmp[a].real=np.interp(xs,gj,C[a].real);tmp[a].imag=np.interp(xs,gj,C[a].imag)
+            out=np.empty((ni,nj),np.complex64);ys=np.arange(ni)
+            for j in range(nj):
+              out[:,j].real=np.interp(ys,gi,tmp[:,j].real);out[:,j].imag=np.interp(ys,gi,tmp[:,j].imag)
+            return out
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);Y,_=sz.decompress(b,np.float32,X.shape);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Y)))}),flush=True)
+          FX=np.fft.rfft(X,axis=2);energy=np.sum(np.abs(FX).astype(np.float64)**2,axis=(0,1));rank=np.argsort(energy)[::-1]
+          rows=[]
+          for S in [2,4,8,16]:
+            gi=grid(ni,S);gj=grid(nj,S)
+            for NF in [8,16,32,48,64,96,128,192]:
+              idx=np.sort(rank[:NF]);Spec=np.zeros_like(FX,dtype=np.complex64);CR=[];CI=[]
+              for f in idx:
+                C=FX[np.ix_(gi,gj,[f])][:,:,0]
+                cr=np.asarray(C.real,dtype=np.float16);ci=np.asarray(C.imag,dtype=np.float16);CQ=cr.astype(np.float32)+1j*ci.astype(np.float32);CR.append(cr);CI.append(ci);Spec[:,:,f]=interp2(CQ,gi,gj)
+              M=np.fft.irfft(Spec,n=nt,axis=2).astype(np.float32);model=z(np.stack(CR))+z(np.stack(CI))+z(idx.astype(np.uint16))+32
+              for alpha in [1.95,1.75,1.5,1.25]:
+                E,me=refine(X,M,eps,alpha);eb,nz=ebytes(E);total=model+eb
+                r={'S':S,'NF':NF,'alpha':alpha,'bytes':total,'ratio':raw/total,'model':model,'refine':eb,'event_fraction':nz,'maxerr':float(me),'rmse_model':float(np.sqrt(np.mean((X-M).astype(np.float64)**2)))};rows.append(r);print('SCREEN',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:15],indent=2),flush=True)
+          PY
+          python /tmp/s.py
