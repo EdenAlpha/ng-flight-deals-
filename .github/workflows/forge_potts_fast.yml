@@ -1,0 +1,93 @@
+name: Fast FORGE tolerance-Potts region codec
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  potts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/p.py <<'PY'
+          import json,math,subprocess,numpy as np,segyio
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16) if lo>=-32768 and hi<=32767 else a.astype(np.int32)
+          @njit(cache=True)
+          def init(X,eps,step):
+            L=np.empty(X.shape,np.int16);U=np.empty(X.shape,np.int16);Q=np.empty(X.shape,np.int16)
+            for i in range(X.shape[0]):
+              for j in range(X.shape[1]):
+                for t in range(X.shape[2]):
+                  lo=math.ceil((X[i,j,t]-eps)/step-1e-7);hi=math.floor((X[i,j,t]+eps)/step+1e-7);q=int(round(X[i,j,t]/step))
+                  if q<lo:q=lo
+                  elif q>hi:q=hi
+                  L[i,j,t]=lo;U[i,j,t]=hi;Q[i,j,t]=q
+            return L,U,Q
+          @njit(cache=True)
+          def opt(Q,L,U,passes,kind,lam):
+            ni,nj,nt=Q.shape;changed=0
+            for pp in range(passes):
+              ch=0
+              for parity in range(2):
+                for i in range(ni):
+                  for j in range(nj):
+                    for t in range(nt):
+                      if ((i+j+t)&1)!=parity:continue
+                      lo=int(L[i,j,t]);hi=int(U[i,j,t]);old=int(Q[i,j,t]);best=old;bestc=1e30
+                      for q in range(lo,hi+1):
+                        c=0.0
+                        if i>0:c+=(1.0 if q!=Q[i-1,j,t] else 0.0) if kind==0 else abs(q-Q[i-1,j,t])
+                        if i+1<ni:c+=(1.0 if q!=Q[i+1,j,t] else 0.0) if kind==0 else abs(q-Q[i+1,j,t])
+                        if j>0:c+=(1.0 if q!=Q[i,j-1,t] else 0.0) if kind==0 else abs(q-Q[i,j-1,t])
+                        if j+1<nj:c+=(1.0 if q!=Q[i,j+1,t] else 0.0) if kind==0 else abs(q-Q[i,j+1,t])
+                        if t>0:c+=lam*((1.0 if q!=Q[i,j,t-1] else 0.0) if kind==0 else abs(q-Q[i,j,t-1]))
+                        if t+1<nt:c+=lam*((1.0 if q!=Q[i,j,t+1] else 0.0) if kind==0 else abs(q-Q[i,j,t+1]))
+                        if c<bestc or (c==bestc and abs(q-old)<abs(best-old)):bestc=c;best=q
+                      if best!=old:Q[i,j,t]=best;ch+=1
+              changed+=ch
+              if ch==0:break
+            return changed
+          def morton_order(shape):
+            ni,nj,nt=shape
+            # 2-D Morton in space, time-fast within each spatial cell; reflector-friendly and deterministic.
+            coords=[]
+            for i in range(ni):
+              for j in range(nj):
+                code=0
+                for b in range(6):code|=((i>>b)&1)<<(2*b);code|=((j>>b)&1)<<(2*b+1)
+                coords.append((code,i,j))
+            coords.sort();return [(i,j) for _,i,j in coords]
+          mo=morton_order(X.shape)
+          def bytesQ(Q):
+            opts=[z(si(Q)),z(si(np.transpose(Q,(2,0,1)))),z(si(np.diff(Q,axis=2,prepend=Q[:,:,:1]))),z(si(np.diff(Q,axis=0,prepend=Q[:1]))),z(si(np.diff(Q,axis=1,prepend=Q[:,:1])))]
+            seq=np.concatenate([Q[i,j] for i,j in mo]);opts.append(z(si(seq)));opts.append(z(si(np.diff(seq,prepend=seq[:1]))))
+            return min(opts),opts
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);D,_=sz.decompress(b,np.float32,X.shape);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-D)))}),flush=True)
+          rows=[]
+          for alpha in [1.95,1.5,1.0,.75,.5]:
+            step=alpha*eps;L,U,Q0=init(X,eps,step)
+            for kind in [0,1]:
+              for lam in [.5,1,2,4]:
+                Q=Q0.copy();before=bytesQ(Q)[0];ch=opt(Q,L,U,5,kind,lam);qb,opts=bytesQ(Q);me=float(np.max(np.abs(X-Q.astype(np.float32)*step)))
+                bi=float(np.mean(Q[1:]!=Q[:-1]));bj=float(np.mean(Q[:,1:]!=Q[:,:-1]));bt=float(np.mean(Q[:,:,1:]!=Q[:,:,:-1]));r={'alpha':alpha,'kind':'potts' if kind==0 else 'tv','lam_t':lam,'bytes':qb+64,'ratio':raw/(qb+64),'before':before,'changed':int(ch),'bound_i':bi,'bound_j':bj,'bound_t':bt,'maxerr':me,'qmin':int(Q.min()),'qmax':int(Q.max())};rows.append(r);print('REGION',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:12],indent=2),flush=True)
+          PY
+          python /tmp/p.py
