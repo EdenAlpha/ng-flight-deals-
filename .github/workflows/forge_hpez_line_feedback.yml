@@ -1,14 +1,14 @@
-name: FORGE HPEZ line-scoped residual feedback
+name: FORGE HPEZ hard-safe EB expansion proven runner
 on:
   pull_request:
     branches: [seismic-bench-base]
 permissions: {contents: read, actions: read}
 jobs:
-  alpha:
+  gamma:
     strategy:
       fail-fast: false
       matrix:
-        alpha: ['0.0','0.0625','0.125','0.1875','0.25','0.375','0.5','-0.0625','-0.125','-0.25']
+        gamma: ['1.0','1.05','1.1','1.2','1.25','1.35','1.5','2.0','3.0','8.0']
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -20,9 +20,8 @@ jobs:
       - run: |
           pip install --quiet numpy
           git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
-          python research/patch_hpez_line_feedback.py
-          python research/patch_hpez_3d_sync.py
-          cmake -S hpez-src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_CXX_FLAGS="-include cstdint -include array -DHPEZ_RESIDUAL_ALPHA=${{ matrix.alpha }}" >/dev/null
+          python research/patch_hpez_eb_expand.py
+          cmake -S hpez-src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_CXX_FLAGS="-include cstdint -include array -DHPEZ_EB_EXPAND=${{ matrix.gamma }}" >/dev/null
           cmake --build build -j2 >/dev/null && cmake --install build >/dev/null
       - run: |
           EPS=$(python -c "import json;print(json.load(open('data/forge_subcube_meta.json'))['eps_10pct_std'])")
@@ -30,13 +29,10 @@ jobs:
           install/bin/hpez -f -z out.hpez -o rec.bin -3 512 64 64 >/dev/null
           python - <<'PY'
           import json,os,numpy as np
-          a=float('${{ matrix.alpha }}'); m=json.load(open('data/forge_subcube_meta.json'));eps=float(m['eps_10pct_std'])
-          x=np.fromfile('data/forge_subcube_f32.bin','<f4');r=np.fromfile('rec.bin','<f4');b=os.path.getsize('out.hpez');me=float(np.max(np.abs(x-r)))
-          out={'alpha':a,'bytes':b,'ratio':x.nbytes/b,'maxerr':me,'eps':eps,'valid':bool(me<=eps*1.00001)}
-          print('LINE_RESULT',json.dumps(out),flush=True);json.dump(out,open('result.json','w'),indent=2)
+          g=float('${{ matrix.gamma }}');m=json.load(open('data/forge_subcube_meta.json'));eps=float(m['eps_10pct_std']);x=np.fromfile('data/forge_subcube_f32.bin','<f4');r=np.fromfile('rec.bin','<f4');b=os.path.getsize('out.hpez');me=float(np.max(np.abs(x-r)));out={'gamma':g,'bytes':b,'ratio':x.nbytes/b,'maxerr':me,'eps':eps,'valid':bool(me<=eps*1.00001)};print('EBEXP',json.dumps(out),flush=True);json.dump(out,open('result.json','w'),indent=2)
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: line-feedback-${{ strategy.job-index }}
+          name: eb-expand-${{ strategy.job-index }}
           path: result.json
           retention-days: 7
