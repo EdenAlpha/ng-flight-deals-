@@ -21,6 +21,7 @@ jobs:
           python research/patch_hpez_dump_indices.py
           python research/patch_hpez_level_boundaries.py
           python research/patch_hpez_dump_coords.py
+          python research/patch_hpez_dump_eb.py
           cmake -S hpez-src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_CXX_FLAGS="-include cstdint -include array" >/dev/null
           cmake --build build -j2 >/dev/null && cmake --install build >/dev/null
       - run: |
@@ -47,26 +48,19 @@ jobs:
           python research/analyze_hpez_spatial_residual_time.py
           python research/analyze_hpez_spacetime_stencil.py
           python research/analyze_hpez_timefirst_trace.py
+          python research/analyze_hpez_error_allocation.py
           python - <<'PY'
           import re,json,os
-          s=open('resid.log').read();sym=json.load(open('hpez_symbol_analysis.json'));lev=json.load(open('hpez_level_analysis.json'));geo=json.load(open('hpez_coordinate_order_analysis.json'));dy=json.load(open('hpez_dyadic_class_analysis.json'));octv=json.load(open('hpez_octree_vector_analysis.json'));ctx=json.load(open('hpez_cell_context_analysis.json'));bridge=json.load(open('hpez_temporal_bridge_analysis.json'));srt=json.load(open('hpez_spatial_residual_time_analysis.json'));st=json.load(open('hpez_spacetime_stencil_analysis.json'));tf=json.load(open('hpez_timefirst_trace_analysis.json'))
-          pats=[r'RESIDSTAT[^\n]+',r'HPEZIDX[^\n]+',r'HPEZPRELOSSLESS[^\n]+',r'HPEZCOORD[^\n]+']
-          out={'bytes':os.path.getsize('diagnostic.hpez'),'stats':sum([re.findall(p,s) for p in pats],[]),'symbols':sym,'levels':lev,'geometry_orders':geo,'dyadic_classes':dy,'octree_vectors':octv,'cell_context':ctx,'temporal_bridge':bridge,'spatial_residual_time':srt,'spacetime_stencil':st,'timefirst_trace':tf}
-          json.dump(out,open('hpez_residual_diagnostic.json','w'),indent=2);print(json.dumps(out,indent=2))
+          names=['symbol_analysis','level_analysis','coordinate_order_analysis','dyadic_class_analysis','octree_vector_analysis','cell_context_analysis','temporal_bridge_analysis','spatial_residual_time_analysis','spacetime_stencil_analysis','timefirst_trace_analysis','error_allocation_analysis']
+          keys=['symbols','levels','geometry_orders','dyadic_classes','octree_vectors','cell_context','temporal_bridge','spatial_residual_time','spacetime_stencil','timefirst_trace','error_allocation']
+          out={'bytes':os.path.getsize('diagnostic.hpez')};s=open('resid.log').read();pats=[r'RESIDSTAT[^\n]+',r'HPEZIDX[^\n]+',r'HPEZPRELOSSLESS[^\n]+',r'HPEZCOORD[^\n]+'];out['stats']=sum([re.findall(p,s) for p in pats],[])
+          for k,n in zip(keys,names):out[k]=json.load(open('hpez_'+n+'.json'))
+          json.dump(out,open('hpez_residual_diagnostic.json','w'),indent=2)
           PY
       - uses: actions/upload-artifact@v4
         with:
           name: forge-hpez-residual-diagnostic
           path: |
             hpez_residual_diagnostic.json
-            hpez_symbol_analysis.json
-            hpez_level_analysis.json
-            hpez_coordinate_order_analysis.json
-            hpez_dyadic_class_analysis.json
-            hpez_octree_vector_analysis.json
-            hpez_cell_context_analysis.json
-            hpez_temporal_bridge_analysis.json
-            hpez_spatial_residual_time_analysis.json
-            hpez_spacetime_stencil_analysis.json
-            hpez_timefirst_trace_analysis.json
+            hpez_*_analysis.json
           retention-days: 7
