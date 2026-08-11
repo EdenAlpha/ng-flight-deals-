@@ -1,20 +1,21 @@
 from pathlib import Path
 p=Path('hpez-src/include/QoZ/compressor/SZInterpolationCompressor.hpp')
 s=p.read_text()
-# Member coordinate sequence parallels quant_inds for one compression invocation.
+# Decoder-side coordinate sequence: unlike encoder traversal, decoder has no tuning trials/rollbacks.
 s=s.replace('''        std::vector<int> quant_inds;\n        std::vector<bool> mark;''','''        std::vector<int> quant_inds;\n        std::vector<size_t> quant_coords;\n        std::vector<bool> mark;''',1)
-# Reset/reserve on every compressor invocation, so tuning trials cannot contaminate a later committed pass.
-s=s.replace('''            quant_inds.reserve(num_elements);\n            size_t interp_compressed_size = 0;''','''            quant_inds.reserve(num_elements);\n            quant_coords.clear(); quant_coords.reserve(num_elements);\n            size_t interp_compressed_size = 0;''',1)
-# Direct first anchor/sample has flat index zero.
-s=s.replace('''            if(!anchor){\n                quant_inds.push_back(quantizer.quantize_and_overwrite(*data, 0));''','''            if(!anchor){\n                quant_coords.push_back(0);\n                quant_inds.push_back(quantizer.quantize_and_overwrite(*data, 0));''',1)
-# Actual quantize helper already receives exact flat sample index.
-s=s.replace('''        inline void quantize(size_t idx, T &d, T pred) {\n\n                quant_inds.push_back(quantizer.quantize_and_overwrite(d, pred));''','''        inline void quantize(size_t idx, T &d, T pred) {\n                quant_coords.push_back(idx);\n                quant_inds.push_back(quantizer.quantize_and_overwrite(d, pred));''',1)
-# Some actual paths go through mode 0 of interpolation() rather than quantize().
-s=s.replace('''            else if(mode==0){\n                 quant_inds.push_back(quantizer.quantize_and_overwrite(d, pred));''','''            else if(mode==0){\n                 quant_coords.push_back(idx);\n                 quant_inds.push_back(quantizer.quantize_and_overwrite(d, pred));''',1)
-# Dump only the full final field; sampled/tuning subcompressions are far smaller.
-needle='''            if(quant_inds.size() > 1000000){\n                FILE *qf=std::fopen("hpez_final_quant_inds.bin","wb");\n                if(qf){std::fwrite(quant_inds.data(),sizeof(int),quant_inds.size(),qf);std::fclose(qf);}\n            }'''
-repl='''            if(quant_inds.size() > 1000000){\n                FILE *qf=std::fopen("hpez_final_quant_inds.bin","wb");\n                if(qf){std::fwrite(quant_inds.data(),sizeof(int),quant_inds.size(),qf);std::fclose(qf);}\n                std::fprintf(stderr,"HPEZCOORD q=%zu coords=%zu\\n",quant_inds.size(),quant_coords.size());\n                if(quant_coords.size()==quant_inds.size()){\n                    FILE *cf=std::fopen("hpez_final_quant_coords_u64.bin","wb");\n                    if(cf){for(size_t v:quant_coords){uint64_t u=(uint64_t)v;std::fwrite(&u,sizeof(uint64_t),1,cf);}std::fclose(cf);}\n                }\n            }'''
-if needle not in s: raise SystemExit('symbol dump block not found')
-s=s.replace(needle,repl,1)
+# Start a clean coordinate trace after decompressor metadata/init is known.
+s=s.replace('''            init();   \n          \n            //QoZ::Timer timer(true);''','''            init();\n            quant_coords.clear(); quant_coords.reserve(num_elements);\n          \n            //QoZ::Timer timer(true);''',1)
+# Non-anchor first symbol.
+s=s.replace('''            if(!anchor){\n                *decData = quantizer.recover(0, quant_inds[quant_index++]);''','''            if(!anchor){\n                quant_coords.push_back(0);\n                *decData = quantizer.recover(0, quant_inds[quant_index++]);''',1)
+# Every ordinary decoder prediction already carries its exact flat sample index.
+s=s.replace('''        inline void recover(size_t idx, T &d, T pred) {\n            d = quantizer.recover(pred, quant_inds[quant_index++]);''','''        inline void recover(size_t idx, T &d, T pred) {\n            quant_coords.push_back(idx);\n            d = quantizer.recover(pred, quant_inds[quant_index++]);''',1)
+s=s.replace('''            if(mode==-1){//recover\n                d = quantizer.recover(pred, quant_inds[quant_index++]);''','''            if(mode==-1){//recover\n                quant_coords.push_back(idx);\n                d = quantizer.recover(pred, quant_inds[quant_index++]);''',1)
+# Anchor grid coordinates are consumed first during recover_grid. Add exact flat indices for N=1/2/3/4.
+s=s.replace('''                for (size_t x=0;x<global_dimensions[0];x+=maxStep){\n                    decData[x]=quantizer.recover_unpred();''','''                for (size_t x=0;x<global_dimensions[0];x+=maxStep){\n                    quant_coords.push_back(x);\n                    decData[x]=quantizer.recover_unpred();''',1)
+s=s.replace('''                    for (size_t y=0;y<global_dimensions[1];y+=maxStep){\n                        decData[x*dimension_offsets[0]+y]=quantizer.recover_unpred();''','''                    for (size_t y=0;y<global_dimensions[1];y+=maxStep){\n                        quant_coords.push_back(x*dimension_offsets[0]+y);\n                        decData[x*dimension_offsets[0]+y]=quantizer.recover_unpred();''',1)
+s=s.replace('''                        for(size_t z=0;z<global_dimensions[2];z+=anchor_strides[2]){\n                            decData[x*dimension_offsets[0]+y*dimension_offsets[1]+z]=quantizer.recover_unpred();''','''                        for(size_t z=0;z<global_dimensions[2];z+=anchor_strides[2]){\n                            quant_coords.push_back(x*dimension_offsets[0]+y*dimension_offsets[1]+z);\n                            decData[x*dimension_offsets[0]+y*dimension_offsets[1]+z]=quantizer.recover_unpred();''',1)
+s=s.replace('''                            for(size_t w=0;w<global_dimensions[3];w+=anchor_strides[3]){\n                                decData[x*dimension_offsets[0]+y*dimension_offsets[1]+z*dimension_offsets[2]+w]=quantizer.recover_unpred();''','''                            for(size_t w=0;w<global_dimensions[3];w+=anchor_strides[3]){\n                                quant_coords.push_back(x*dimension_offsets[0]+y*dimension_offsets[1]+z*dimension_offsets[2]+w);\n                                decData[x*dimension_offsets[0]+y*dimension_offsets[1]+z*dimension_offsets[2]+w]=quantizer.recover_unpred();''',1)
+# Dump after every symbol has been consumed; this is the authoritative symbol->physical mapping.
+s=s.replace('''            quantizer.postdecompress_data();\n            return decData;''','''            std::fprintf(stderr,"HPEZCOORD q=%zu coords=%zu consumed=%zu\\n",quant_inds.size(),quant_coords.size(),quant_index);\n            if(quant_coords.size()==quant_inds.size() && quant_index==quant_inds.size()){\n                FILE *cf=std::fopen("hpez_final_quant_coords_u64.bin","wb");\n                if(cf){for(size_t v:quant_coords){uint64_t u=(uint64_t)v;std::fwrite(&u,sizeof(uint64_t),1,cf);}std::fclose(cf);}\n            }\n            quantizer.postdecompress_data();\n            return decData;''',1)
 p.write_text(s)
-print('patched coordinate dump')
+print('patched decoder-authoritative coordinate dump')
