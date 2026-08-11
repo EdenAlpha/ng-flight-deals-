@@ -13,7 +13,6 @@ def project_axis(Y,delta,axis,kind,max_stride):
     strides=[];s=2
     while s<=max_stride and s<n:strides.append(s);s*=2
     for s in strides[::-1]:
-        h=s//2
         for a in range(0,n-1,s):
             b=min(n-1,a+s);m=a+(b-a)//2
             if m==a or m==b:continue
@@ -34,7 +33,7 @@ def shape(df,order,kind,max_stride,rounds):
         for axis in order:Y=project_axis(Y,delta,axis,kind,max_stride)
     return Y
 
-b,D=comp(X,eps);print('BASE',json.dumps({'bytes':b,'ratio':raw/b,'maxerr':float(np.max(np.abs(X-D)))}),flush=True)
+b,D=comp(X,eps);base={'bytes':b,'ratio':raw/b,'maxerr':float(np.max(np.abs(X-D)))};print('BASE',json.dumps(base),flush=True)
 rows=[]
 orders=[(2,),(2,0,1),(0,1,2),(2,1,0),(0,2,1)]
 for df in [.1,.2,.3,.4,.5,.6,.7,.8,.9]:
@@ -44,4 +43,5 @@ for df in [.1,.2,.3,.4,.5,.6,.7,.8,.9]:
      for rounds in [1,2]:
         Y=shape(df,order,kind,ms,rounds);bb,Z=comp(Y,eps-df*eps)
         r={'delta_frac':df,'order':order,'kind':kind,'max_stride':ms,'rounds':rounds,'bytes':bb+24,'ratio':raw/(bb+24),'morph_max':float(np.max(np.abs(X-Y))),'final_maxerr':float(np.max(np.abs(X-Z)))};rows.append(r);print('INTERP',json.dumps(r),flush=True)
-rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:25],indent=2),flush=True)
+rows.sort(key=lambda r:r['bytes']);best=rows[:25];print('BEST',json.dumps(best,indent=2),flush=True)
+open('forge_surrogate_interp_results.json','w').write(json.dumps({'base':base,'eps':eps,'raw':raw,'best':best},indent=2))
