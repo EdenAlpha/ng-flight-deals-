@@ -1,0 +1,39 @@
+name: Fast FORGE SZ3 layout fairness control
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  layout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/l.py <<'PY'
+          import itertools,json,numpy as np,segyio
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes
+          def comp(A):
+            A=np.ascontiguousarray(A);c=szConfig();c.errorBoundMode=szErrorBoundMode.ABS;c.absErrorBound=float(eps);b,_=sz.compress(A,c);D,_=sz.decompress(b,np.float32,A.shape);return int(b.size),D
+          rows=[]
+          for perm in itertools.permutations(range(3)):
+            A=np.transpose(X,perm);bb,D=comp(A);me=float(np.max(np.abs(A-D)));r={'kind':'perm','perm':perm,'shape':A.shape,'bytes':bb,'ratio':raw/bb,'maxerr':me};rows.append(r);print('LAYOUT',json.dumps(r),flush=True)
+          # exact snake permutation in j on alternating i rows, with all 6 dimension orders afterward
+          S=X.copy();S[1::2]=S[1::2,::-1]
+          for perm in itertools.permutations(range(3)):
+            A=np.transpose(S,perm);bb,D=comp(A);me=float(np.max(np.abs(A-D)));r={'kind':'snake','perm':perm,'shape':A.shape,'bytes':bb,'ratio':raw/bb,'maxerr':me};rows.append(r);print('LAYOUT',json.dumps(r),flush=True)
+          # serpentine time reversal on alternating spatial traces, also exact
+          R=S.copy();R[:,1::2]=R[:,1::2,:,::-1] if False else R[:,1::2]
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:12],indent=2),flush=True)
+          PY
+          python /tmp/l.py
