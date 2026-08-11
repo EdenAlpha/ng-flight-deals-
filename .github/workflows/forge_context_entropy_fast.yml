@@ -1,0 +1,82 @@
+name: Fast FORGE causal context entropy probe
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  context:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/c.py <<'PY'
+          import json,math,numpy as np,segyio
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes;step=2*eps
+          Q=np.rint(X/step).astype(np.int16);Y=Q.astype(np.float32)*step;print('Q',int(Q.min()),int(Q.max()),'maxerr',float(np.max(np.abs(X-Y))),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);D,_=sz.decompress(b,np.float32,X.shape);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'bits_per_sample':8*b.size/Q.size,'maxerr':float(np.max(np.abs(X-D)))}),flush=True)
+          @njit(cache=True)
+          def zig(q):return (q<<1) if q>=0 else ((-q<<1)-1)
+          @njit(cache=True)
+          def bitplane_kt(Q,mode):
+            ni,nj,nt=Q.shape
+            # zigzag max <64 here. Context = plane(6)*prefix(64)*8 neighbor-bit patterns =3072; mode adds neighbor high-prefix equality patterns.
+            c0=np.zeros(65536,np.int64);c1=np.zeros(65536,np.int64);bits=0.0
+            for i in range(ni):
+              for j in range(nj):
+                for t in range(nt):
+                  u=zig(int(Q[i,j,t]));prefix=0
+                  for pl in range(5,-1,-1):
+                    bt=(zig(int(Q[i,j,t-1]))>>pl)&1 if t>0 else 0
+                    bi=(zig(int(Q[i-1,j,t]))>>pl)&1 if i>0 else 0
+                    bj=(zig(int(Q[i,j-1,t]))>>pl)&1 if j>0 else 0
+                    nb=bt|(bi<<1)|(bj<<2)
+                    if mode==0:ctx=(pl<<9)|(prefix<<3)|nb
+                    else:
+                      # add whether higher prefix matches each causal neighbor; three bits
+                      mask=(1<<(5-pl))-1 if pl<5 else 0
+                      pt=(zig(int(Q[i,j,t-1]))>>(pl+1)) if t>0 else -1
+                      pi=(zig(int(Q[i-1,j,t]))>>(pl+1)) if i>0 else -1
+                      pj=(zig(int(Q[i,j-1,t]))>>(pl+1)) if j>0 else -1
+                      eq=(1 if pt==prefix else 0)|((1 if pi==prefix else 0)<<1)|((1 if pj==prefix else 0)<<2)
+                      ctx=(pl<<12)|(prefix<<6)|(nb<<3)|eq
+                    bit=(u>>pl)&1;n0=c0[ctx];n1=c1[ctx];tot=n0+n1
+                    p=(n1+0.5)/(tot+1.0) if bit else (n0+0.5)/(tot+1.0);bits-=math.log2(p)
+                    if bit:c1[ctx]+=1
+                    else:c0[ctx]+=1
+                    prefix=(prefix<<1)|bit
+            return bits,np.count_nonzero(c0+c1)
+          @njit(cache=True)
+          def symbol_kt(Q,kind):
+            ni,nj,nt=Q.shape;K=64;nc=262144 if kind==1 else 4096
+            C=np.zeros((nc,K),np.int32);N=np.zeros(nc,np.int32);bits=0.0
+            for i in range(ni):
+              for j in range(nj):
+                for t in range(nt):
+                  u=zig(int(Q[i,j,t]));a=zig(int(Q[i,j,t-1])) if t>0 else 0
+                  if kind==0:ctx=a
+                  else:
+                    bi=zig(int(Q[i-1,j,t])) if i>0 else 0;bj=zig(int(Q[i,j-1,t])) if j>0 else 0
+                    # coarse 6-bin clipping each to avoid context explosion
+                    aa=min(a,15);bb=min(bi,15);cc=min(bj,15);ctx=aa|(bb<<4)|(cc<<8)
+                  n=N[ctx];cs=C[ctx,u];bits-=math.log2((cs+0.5)/(n+K*0.5));C[ctx,u]+=1;N[ctx]+=1
+            return bits,np.count_nonzero(N)
+          rows=[]
+          for mode in [0,1]:
+            bits,nctx=bitplane_kt(Q,mode);r={'model':'bitplane_KT_'+str(mode),'bits':bits,'bytes_ideal':math.ceil(bits/8)+128,'ratio':raw/(math.ceil(bits/8)+128),'bps':bits/Q.size,'contexts':int(nctx)};rows.append(r);print('CTX',json.dumps(r),flush=True)
+          for kind in [0,1]:
+            bits,nctx=symbol_kt(Q,kind);r={'model':'symbol_KT_'+str(kind),'bits':bits,'bytes_ideal':math.ceil(bits/8)+128,'ratio':raw/(math.ceil(bits/8)+128),'bps':bits/Q.size,'contexts':int(nctx)};rows.append(r);print('CTX',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bits']);print('BEST',json.dumps(rows,indent=2),flush=True)
+          PY
+          python /tmp/c.py
