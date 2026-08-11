@@ -1,0 +1,65 @@
+name: Fast FORGE delay-atlas rate sweep
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  rate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/r.py <<'PY'
+          import json,subprocess,numpy as np,segyio
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes;ni,nj,nt=X.shape
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def comp(A):
+            c=szConfig();c.errorBoundMode=szErrorBoundMode.ABS;c.absErrorBound=float(eps);b,_=sz.compress(np.ascontiguousarray(A),c);D,_=sz.decompress(b,np.float32,A.shape);return int(b.size),D
+          base,D=comp(X);print('BASE',base,raw/base,float(np.max(np.abs(X-D))),flush=True)
+          def controls(n,S):
+            a=list(range(0,n,S));
+            if a[-1]!=n-1:a.append(n-1)
+            return np.asarray(a,np.int32)
+          def shifted(v,s):
+            x=np.arange(v.size,dtype=np.float32);return np.interp(x-s,x,v,left=float(v[0]),right=float(v[-1])).astype(np.float32)
+          TS=64;W=128;CS=8;SR=6;M=np.zeros_like(X);templates=[];allS=[];allG=[]
+          for i0 in range(0,ni,TS):
+            i1=min(ni,i0+TS);si=i1-i0;gi=controls(si,CS)
+            for j0 in range(0,nj,TS):
+              j1=min(nj,j0+TS);sj=j1-j0;gj=controls(sj,CS)
+              for t0 in range(0,nt,W):
+                t1=min(nt,t0+W);ci=i0+si//2;cj=j0+sj//2;rq=X[ci,cj,t0:t1].astype(np.float16);ref=rq.astype(np.float32);templates.append(rq);SS=np.zeros((len(gi),len(gj)),np.int8);GG=np.zeros_like(SS)
+                for a,ii in enumerate(gi):
+                  for b,jj in enumerate(gj):
+                    y=X[i0+ii,j0+jj,t0:t1];best=None
+                    for s in range(-SR,SR+1):
+                      v=shifted(ref,s);g=float(np.dot(y,v)/(np.dot(v,v)+1e-30));gq=int(np.rint(max(-2,min(2,g))*32));gq=max(-64,min(64,gq));e=float(np.mean((y-v*(gq/32.0)).astype(np.float64)**2));key=(e,abs(s),abs(gq-32))
+                      if best is None or key<best[0]:best=(key,s,gq)
+                    SS[a,b]=best[1];GG[a,b]=best[2]
+                allS.append(SS.copy());allG.append(GG.copy());xj=np.arange(sj);xi=np.arange(si);tmpS=np.empty((len(gi),sj));tmpG=np.empty_like(tmpS)
+                for a in range(len(gi)):tmpS[a]=np.interp(xj,gj,SS[a]);tmpG[a]=np.interp(xj,gj,GG[a])
+                SF=np.empty((si,sj));GF=np.empty_like(SF)
+                for j in range(sj):SF[:,j]=np.interp(xi,gi,tmpS[:,j]);GF[:,j]=np.interp(xi,gi,tmpG[:,j])
+                for ii in range(si):
+                  for jj in range(sj):M[i0+ii,j0+jj,t0:t1]=shifted(ref,SF[ii,jj])*(GF[ii,jj]/32.0)
+          model=z(np.concatenate([x.ravel() for x in templates]).astype(np.float16))+z(np.concatenate([x.ravel() for x in allS]).astype(np.int8))+z(np.concatenate([x.ravel() for x in allG]).astype(np.int8))+100
+          print('MODEL',model,float(np.sqrt(np.mean((X-M).astype(np.float64)**2))),flush=True)
+          rows=[]
+          for lam in [-.5,-.25,0,.0625,.125,.1875,.25,.375,.5,.625,.75,.875,1,1.125,1.25]:
+            rb,Rd=comp(np.ascontiguousarray(X-lam*M));Y=lam*M+Rd;cost=rb+(0 if lam==0 else model+4);r={'lambda':lam,'residual':rb,'model':0 if lam==0 else model+4,'bytes':cost,'ratio':raw/cost,'maxerr':float(np.max(np.abs(X-Y)))};rows.append(r);print('RATE',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:8],indent=2),flush=True)
+          PY
+          python /tmp/r.py
