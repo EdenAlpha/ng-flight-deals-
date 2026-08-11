@@ -1,0 +1,112 @@
+name: Fast FORGE tolerance-projected lifting pyramid
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  lifting:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/lift.py <<'PY'
+          import json,math,subprocess,numpy as np,segyio
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes;ni,nj,nt=X.shape
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16) if lo>=-32768 and hi<=32767 else a.astype(np.int32)
+          def plan(S):
+            anc=list(range(0,nt,S))
+            if anc[-1]!=nt-1:anc.append(nt-1)
+            depth=np.full(nt,999,np.int16);depth[anc]=-1;rows=[]
+            def rec(a,b,d):
+              if b-a<=1:return
+              m=(a+b)//2
+              if depth[m]>d:depth[m]=d;rows.append((d,m,a,b))
+              rec(a,m,d+1);rec(m,b,d+1)
+            for a,b in zip(anc[:-1],anc[1:]):rec(a,b,0)
+            rows.sort();by=[]
+            for d in range(max(r[0] for r in rows)+1):by.append([r for r in rows if r[0]==d])
+            # cubic outer points are allowed only if already known at an earlier depth.
+            packed=[]
+            for d,m,a,b in rows:
+              h=b-a;oa=a-h;ob=b+h
+              if oa<0 or ob>=nt or depth[oa]>=d or depth[ob]>=d:oa=ob=-1
+              packed.append((d,m,a,b,oa,ob))
+            return np.asarray(anc,np.int32),np.asarray(packed,np.int32),depth,by
+          @njit(cache=True)
+          def rnd_div(n,d):return (n+d//2)//d if n>=0 else -((-n+d//2)//d)
+          @njit(cache=True)
+          def encode(X,eps,alpha,anc,P,anchor_mode,cubic):
+            step=alpha*eps;Q=np.zeros(X.shape,np.int32);H=np.zeros(X.shape,np.int32);AH=np.zeros((ni,nj,anc.shape[0]),np.int32);AB=np.zeros((ni,nj,anc.shape[0]),np.int32)
+            # choose coarse anchors
+            for k in range(anc.shape[0]):
+              t=int(anc[k])
+              for i in range(ni):
+                for j in range(nj):
+                  lo=math.ceil((X[i,j,t]-eps)/step-1e-7);hi=math.floor((X[i,j,t]+eps)/step+1e-7)
+                  if anchor_mode==1 and i>0 and j>0:p=Q[i-1,j,t]+Q[i,j-1,t]-Q[i-1,j-1,t]
+                  else:p=int(round(X[i,j,t]/step))
+                  q=p
+                  if q<lo:q=lo
+                  elif q>hi:q=hi
+                  Q[i,j,t]=q
+                  if anchor_mode==1 and i>0 and j>0:AH[i,j,k]=q-p
+                  else:AB[i,j,k]=q
+            # coarse-to-fine fill; P is sorted by depth
+            for r in range(P.shape[0]):
+              m=int(P[r,1]);a=int(P[r,2]);b=int(P[r,3]);oa=int(P[r,4]);ob=int(P[r,5])
+              for i in range(ni):
+                for j in range(nj):
+                  if cubic==1 and oa>=0:
+                    num=-Q[i,j,oa]+9*Q[i,j,a]+9*Q[i,j,b]-Q[i,j,ob];p=rnd_div(num,16)
+                  else:p=rnd_div(Q[i,j,a]+Q[i,j,b],2)
+                  lo=math.ceil((X[i,j,m]-eps)/step-1e-7);hi=math.floor((X[i,j,m]+eps)/step+1e-7);q=p
+                  if q<lo:q=lo
+                  elif q>hi:q=hi
+                  Q[i,j,m]=q;H[i,j,m]=q-p
+            return Q,H,AH,AB,step
+          def cbytes(A):
+            if A.size==0:return 0
+            m=A!=0;vals=A[m];opts=[z(si(A))]
+            if A.ndim==3:
+              opts += [z(si(np.transpose(A,(2,0,1)))),z(si(np.transpose(A,(0,2,1))))]
+              # reversible spatial Lorenzo transform per temporal/level plane
+              Z=A.astype(np.int32).copy();Z[1:,1:]=A[1:,1:].astype(np.int32)-A[:-1,1:].astype(np.int32)-A[1:,:-1].astype(np.int32)+A[:-1,:-1].astype(np.int32);opts.append(z(si(Z)))
+            opts.append(z(np.packbits(m.ravel(),bitorder='little'))+(z(si(vals)) if vals.size else 0))
+            return min(opts)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);D0,_=sz.decompress(b,np.float32,X.shape);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-D0)))}),flush=True)
+          rows=[]
+          for S in [2,4,8,16,32,64]:
+            anc,P,depth,by=plan(S);print('PLAN',S,'anchors',len(anc),'depths',len(by),[len(x) for x in by],flush=True)
+            for am in [0,1]:
+              for cubic in [0,1]:
+                for alpha in [1.95,1.75,1.5,1.25,1.0]:
+                  Q,H,AH,AB,step=encode(X,eps,alpha,anc,P,am,cubic)
+                  if am==0:anchor=cbytes(AB)
+                  else:
+                    # boundary i=0 or j=0 raw anchors + interior spatial predictor syndrome
+                    mask=np.zeros(AH.shape,bool);mask[0]=True;mask[:,0]=True
+                    B=AB[mask];anchor=cbytes(B)+cbytes(AH[1:,1:])
+                  detail=0;events=[]
+                  for d,rr in enumerate(by):
+                    pos=np.asarray([x[1] for x in rr],np.int32);A=H[:,:,pos];detail+=cbytes(A);events.append(float(np.mean(A!=0)))
+                  total=anchor+detail+96;me=float(np.max(np.abs(X-Q.astype(np.float32)*step)));r={'S':S,'anchor_mode':am,'cubic':cubic,'alpha':alpha,'bytes':total,'ratio':raw/total,'anchor':anchor,'detail':detail,'events':events,'maxerr':me,'nanchors':len(anc)};rows.append(r);print('LIFT',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:15],indent=2),flush=True)
+          PY
+          python /tmp/lift.py
