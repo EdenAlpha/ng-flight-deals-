@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        alpha: ['0.0','0.125','0.25','0.375','0.5','0.75','1.0','-0.125','-0.25','-0.5']
+        alpha: ['0.0','0.0625','0.125','0.1875','0.25','0.375','0.5','-0.0625','-0.125','-0.25']
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -21,6 +21,7 @@ jobs:
           pip install --quiet numpy
           git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
           python research/patch_hpez_line_feedback.py
+          python research/patch_hpez_3d_sync.py
           cmake -S hpez-src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_CXX_FLAGS="-include cstdint -include array -DHPEZ_RESIDUAL_ALPHA=${{ matrix.alpha }}" >/dev/null
           cmake --build build -j2 >/dev/null && cmake --install build >/dev/null
       - run: |
