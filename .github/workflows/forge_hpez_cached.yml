@@ -1,0 +1,43 @@
+name: Cached FORGE official HPEZ q4 fairness
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read, actions: read}
+jobs:
+  hpez:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with:
+          name: forge-subcube-cache
+          path: data
+          github-token: ${{ github.token }}
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: 31459619473
+      - run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install -DCMAKE_CXX_FLAGS="-include cstdint -include array"
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+          pip install --quiet numpy pysz
+      - run: |
+          EPS=$(python -c "import json;print(json.load(open('data/forge_subcube_meta.json'))['eps_10pct_std'])")
+          cp data/forge_subcube_f32.bin block.bin
+          BIN=$PWD/hpez-install/bin/hpez
+          for DIMS in '512 64 64' '64 512 64' '64 64 512'; do
+            set -- $DIMS; TAG=${1}x${2}x${3}
+            $BIN -f -i block.bin -z hpez_${TAG}.bin -3 $1 $2 $3 -M ABS "$EPS" -q 4
+            $BIN -f -z hpez_${TAG}.bin -o hpez_${TAG}.out -3 $1 $2 $3
+          done
+          python - <<'PY'
+          import glob,json,os,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          m=json.load(open('data/forge_subcube_meta.json'));X=np.fromfile('block.bin','<f4').reshape(m['shape']);raw=X.nbytes;eps=float(m['eps_10pct_std']);out={}
+          for cb in glob.glob('hpez_*.bin'):
+            tag=cb[5:-4];Y=np.fromfile('hpez_'+tag+'.out','<f4').reshape(X.shape);out[tag]={'bytes':os.path.getsize(cb),'ratio':raw/os.path.getsize(cb),'maxerr':float(np.max(np.abs(X-Y)))}
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(np.ascontiguousarray(X),cfg);Z,_=sz.decompress(b,np.float32,X.shape);out['SZ3']={'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Z)))}
+          print(json.dumps(out,indent=2))
+          PY
