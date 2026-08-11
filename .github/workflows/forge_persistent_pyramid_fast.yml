@@ -1,0 +1,90 @@
+name: Fast FORGE persistent-shadow horizon pyramid
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  persistent:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/ps.py <<'PY'
+          import math,json,subprocess,numpy as np,segyio
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16) if lo>=-32768 and hi<=32767 else a.astype(np.int32)
+          def grid(n,S):
+            g=list(range(0,n,S))
+            if g[-1]!=n-1:g.append(n-1)
+            return np.array(g,np.int32)
+          @njit(cache=True)
+          def bounds(X,eps,step):
+            L=np.empty(X.shape,np.int32);U=np.empty(X.shape,np.int32)
+            for i in range(X.shape[0]):
+              for j in range(X.shape[1]):
+                for t in range(X.shape[2]):L[i,j,t]=math.ceil((X[i,j,t]-eps)/step-1e-7);U[i,j,t]=math.floor((X[i,j,t]+eps)/step+1e-7)
+            return L,U
+          @njit(cache=True)
+          def root(Q,E,L,U,i,j):
+            q=0;old=0
+            for t in range(Q.shape[2]):
+              if q<L[i,j,t]:q=L[i,j,t]
+              elif q>U[i,j,t]:q=U[i,j,t]
+              Q[i,j,t]=q;E[i,j,t]=q-old;old=q
+          @njit(cache=True)
+          def fillj(Q,E,L,U,i,a,b):
+            if b-a<=1:return
+            m=(a+b)//2;c=0;old=0
+            for t in range(Q.shape[2]):
+              p=(Q[i,a,t]+Q[i,b,t])//2;lo=L[i,m,t]-p;hi=U[i,m,t]-p
+              if c<lo:c=lo
+              elif c>hi:c=hi
+              Q[i,m,t]=p+c;E[i,m,t]=c-old;old=c
+            fillj(Q,E,L,U,i,a,m);fillj(Q,E,L,U,i,m,b)
+          @njit(cache=True)
+          def filli(Q,E,L,U,a,b):
+            if b-a<=1:return
+            m=(a+b)//2
+            for j in range(Q.shape[1]):
+              c=0;old=0
+              for t in range(Q.shape[2]):
+                p=(Q[a,j,t]+Q[b,j,t])//2;lo=L[m,j,t]-p;hi=U[m,j,t]-p
+                if c<lo:c=lo
+                elif c>hi:c=hi
+                Q[m,j,t]=p+c;E[m,j,t]=c-old;old=c
+            filli(Q,E,L,U,a,m);filli(Q,E,L,U,m,b)
+          def run(S,alpha):
+            step=alpha*eps;L,U=bounds(X,eps,step);Q=np.zeros(X.shape,np.int32);E=np.zeros(X.shape,np.int32);gi=grid(X.shape[0],S);gj=grid(X.shape[1],S)
+            for i in gi:
+              for j in gj:root(Q,E,L,U,int(i),int(j))
+            for i in gi:
+              for k in range(len(gj)-1):fillj(Q,E,L,U,int(i),int(gj[k]),int(gj[k+1]))
+            for k in range(len(gi)-1):filli(Q,E,L,U,int(gi[k]),int(gi[k+1]))
+            rootmask=np.zeros(X.shape,bool);rootmask[np.ix_(gi,gj,np.arange(X.shape[2]))]=True;R=E[rootmask];V=E[~rootmask]
+            rb=min(z(si(R)),z(np.packbits(R!=0,bitorder='little'))+(z(si(R[R!=0])) if np.any(R!=0) else 0));m=V!=0;db=min(z(si(V)),z(np.packbits(m,bitorder='little'))+(z(si(V[m])) if m.any() else 0));total=rb+db+64
+            return {'S':S,'alpha':alpha,'bytes':total,'ratio':raw/total,'roots':rb,'details':db,'event_fraction':float(m.mean()),'root_event_fraction':float(np.mean(R!=0)),'maxerr':float(np.max(np.abs(X-Q.astype(np.float32)*step))),'root_traces':len(gi)*len(gj)}
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);Y,_=sz.decompress(b,np.float32,X.shape);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Y)))}),flush=True)
+          rows=[]
+          for S in [2,4,8,16,32]:
+            for alpha in [1.95,1.75,1.5,1.25]:
+              r=run(S,alpha);rows.append(r);print('PERSIST',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:10],indent=2),flush=True)
+          PY
+          python /tmp/ps.py
