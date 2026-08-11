@@ -1,0 +1,91 @@
+name: Fast FORGE self-warping horizon pyramid
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  selfwarp:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/w.py <<'PY'
+          import math,json,subprocess,numpy as np,segyio
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16) if lo>=-32768 and hi<=32767 else a.astype(np.int32)
+          def grid(n,S):
+            g=list(range(0,n,S))
+            if g[-1]!=n-1:g.append(n-1)
+            return g
+          def root_trace(Q,L,U,i,j):
+            q=0
+            for t in range(Q.shape[2]):q=max(int(L[i,j,t]),min(int(U[i,j,t]),q));Q[i,j,t]=q
+          def best_shift(A,B,a,b,S):
+            best=None
+            for d in range(-S,S+1):
+              lo=max(a,a+d,0);hi=min(b,b+d,len(A))
+              if hi-lo<8:continue
+              # B[t] ~= A[t-d]
+              v=B[lo:hi].astype(np.int32)-A[lo-d:hi-d].astype(np.int32);cost=int(np.dot(v,v))
+              key=(cost,abs(d),d)
+              if best is None or key<best[0]:best=(key,d)
+            return 0 if best is None else best[1]
+          def half_sample(A,pos2):
+            n=len(A);pos2=max(0,min(2*(n-1),pos2));k=pos2//2
+            if pos2%2==0:return float(A[k])
+            return 0.5*(float(A[k])+float(A[min(k+1,n-1)]))
+          def pred_trace(A,B,BL=64,S=8):
+            n=len(A);P=np.empty(n,np.int32)
+            for a in range(0,n,BL):
+              b=min(n,a+BL);d=best_shift(A,B,a,b,S)
+              for t in range(a,b):
+                va=half_sample(A,2*t-d);vb=half_sample(B,2*t+d);P[t]=int(np.rint(0.5*(va+vb)))
+            return P
+          def fill_trace(Q,H,L,U,axis,target,left,right,fixed,BL,S):
+            A=Q[left,fixed] if axis==0 else Q[fixed,left];B=Q[right,fixed] if axis==0 else Q[fixed,right];P=pred_trace(A,B,BL,S)
+            for t,pv in enumerate(P):
+              lo=int(L[target,fixed,t] if axis==0 else L[fixed,target,t]);hi=int(U[target,fixed,t] if axis==0 else U[fixed,target,t]);q=max(lo,min(hi,int(pv)))
+              if axis==0:Q[target,fixed,t]=q;H[target,fixed,t]=q-int(pv)
+              else:Q[fixed,target,t]=q;H[fixed,target,t]=q-int(pv)
+          def refine_j(Q,H,L,U,i,a,b,BL,SR):
+            if b-a<=1:return
+            m=(a+b)//2;fill_trace(Q,H,L,U,1,m,a,b,i,BL,SR);refine_j(Q,H,L,U,i,a,m,BL,SR);refine_j(Q,H,L,U,i,m,b,BL,SR)
+          def refine_i(Q,H,L,U,a,b,BL,SR):
+            if b-a<=1:return
+            m=(a+b)//2
+            for j in range(Q.shape[1]):fill_trace(Q,H,L,U,0,m,a,b,j,BL,SR)
+            refine_i(Q,H,L,U,a,m,BL,SR);refine_i(Q,H,L,U,m,b,BL,SR)
+          def run(S,alpha,BL,SR):
+            step=alpha*eps;L=np.ceil((X-eps)/step-1e-7).astype(np.int32);U=np.floor((X+eps)/step+1e-7).astype(np.int32);Q=np.zeros(X.shape,np.int32);H=np.zeros(X.shape,np.int32);gi=grid(X.shape[0],S);gj=grid(X.shape[1],S)
+            for i in gi:
+              for j in gj:root_trace(Q,L,U,i,j)
+            for i in gi:
+              for k in range(len(gj)-1):refine_j(Q,H,L,U,i,gj[k],gj[k+1],BL,SR)
+            for k in range(len(gi)-1):refine_i(Q,H,L,U,gi[k],gi[k+1],BL,SR)
+            roots=Q[np.ix_(gi,gj,range(X.shape[2]))];rbytes=z(si(roots[:,:,0]))+z(si(np.diff(roots,axis=2)))
+            rootmask=np.zeros(X.shape,bool);rootmask[np.ix_(gi,gj,range(X.shape[2]))]=True;V=H[~rootmask];m=V!=0;detail=min(z(si(V)),z(np.packbits(m,bitorder='little'))+(z(si(V[m])) if m.any() else 0));total=rbytes+detail+80
+            return {'S':S,'alpha':alpha,'BL':BL,'SR':SR,'bytes':total,'ratio':raw/total,'roots':rbytes,'details':detail,'nz':float(m.mean()),'maxerr':float(np.max(np.abs(X-Q.astype(np.float32)*step))),'root_traces':len(gi)*len(gj)}
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);Y,_=sz.decompress(b,np.float32,X.shape);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Y)))}),flush=True)
+          rows=[]
+          for S in [8,16,32]:
+            for alpha in [1.95,1.75,1.5]:
+              r=run(S,alpha,64,8);rows.append(r);print('SELFWARP',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:8],indent=2),flush=True)
+          PY
+          python /tmp/w.py
