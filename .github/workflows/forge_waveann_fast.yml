@@ -1,0 +1,61 @@
+name: Fast FORGE wavelet annihilator pilot
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  fast:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/f.py <<'PY'
+          import math,subprocess,numpy as np,segyio,json
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16)
+          def ar(P):
+            S=X.astype(np.float64);d=np.sum(S*S);r=[1.0]+[float(np.sum(S[:,:,k:]*S[:,:,:-k])/d) for k in range(1,P+1)]
+            A=np.array([[r[abs(i-j)] for j in range(P)] for i in range(P)]);return np.linalg.solve(A,np.array(r[1:])),r
+          @njit(cache=True)
+          def enc(X,eps,alpha,A):
+            ni,nj,nt=X.shape;P=len(A);step=alpha*eps;Q=np.empty(X.shape,np.int32);R=np.empty(X.shape,np.float32);H=np.zeros(X.shape,np.int16)
+            for i in range(ni):
+              for j in range(nj):
+                for t in range(nt):
+                  tp=0.0
+                  for k in range(P):
+                    if t>k:tp+=A[k]*Q[i,j,t-k-1]
+                  b=(i==0 or j==0 or t<P)
+                  pf=X[i,j,t]/step if b else tp+R[i-1,j,t]+R[i,j-1,t]-R[i-1,j-1,t]
+                  q=int(round(pf));lo=math.ceil((X[i,j,t]-eps)/step-1e-7);hi=math.floor((X[i,j,t]+eps)/step+1e-7)
+                  if q<lo:q=lo
+                  elif q>hi:q=hi
+                  Q[i,j,t]=q;R[i,j,t]=q-tp
+                  if not b:H[i,j,t]=q-int(round(pf))
+            return Q,H,step
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);Y,_=sz.decompress(b,np.float32,X.shape);print('BASE',raw/int(b.size),int(b.size),float(np.max(np.abs(X-Y))),flush=True)
+          for P in [1,2,3,4]:
+            A,r=ar(P);print('AR',P,A.tolist(),r,flush=True)
+            for alpha in [1.95,1.75,1.5]:
+              Q,H,s=enc(X,eps,alpha,A);bd=np.concatenate((Q[0].ravel(),Q[1:,0].ravel(),Q[1:,1:,:P].ravel()));Z=H[1:,1:,P:];m=Z!=0
+              syn=min(z(si(Z)),z(np.packbits(m.ravel(),bitorder='little'))+(z(si(Z[m])) if m.any() else 0));total=z(si(bd))+syn+64+4*P
+              print('RESULT',json.dumps({'P':P,'alpha':alpha,'bytes':total,'ratio':raw/total,'nz':float(m.mean()),'maxerr':float(np.max(np.abs(X-Q.astype(np.float32)*s)))}),flush=True)
+          PY
+          python /tmp/f.py
