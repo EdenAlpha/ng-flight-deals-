@@ -1,0 +1,106 @@
+name: Fast FORGE fractional plane-wave annihilator
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  pwd:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/pwd.py <<'PY'
+          import json,math,subprocess,numpy as np,segyio
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes;ni,nj,nt=X.shape
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16) if lo>=-32768 and hi<=32767 else a.astype(np.int32)
+          def frac_gather(B,tidx,q,D):
+            # B shape (..., nt), evaluate B at t-q/D with clamped endpoints
+            num=tidx.astype(np.int64)*D-int(q);k=np.floor_divide(num,D);r=num-k*D;k0=np.clip(k,0,B.shape[-1]-1);k1=np.clip(k+1,0,B.shape[-1]-1)
+            return ((D-r)*B[...,k0]+r*B[...,k1])/D
+          def slopes(BI,BJ,BT,D,QR):
+            ai=(ni-1+BI-1)//BI;aj=(nj-1+BJ-1)//BJ;at=(nt+BT-1)//BT;PI=np.zeros((ai,aj,at),np.int8);PJ=np.zeros_like(PI)
+            qs=list(range(-QR,QR+1))
+            for ii in range(ai):
+              i0=1+ii*BI;i1=min(ni,i0+BI)
+              for jj in range(aj):
+                j0=1+jj*BJ;j1=min(nj,j0+BJ)
+                for kk in range(at):
+                  t0=kk*BT;t1=min(nt,t0+BT);tt=np.arange(t0,t1,2,dtype=np.int64)
+                  A=X[i0:i1,j0:j1][:,:,tt].astype(np.float64)
+                  best=(1e300,0)
+                  Prev=X[i0-1:i1-1,j0:j1].astype(np.float64)
+                  for q in qs:
+                    P=frac_gather(Prev,tt,q,D);e=float(np.mean((A-P)**2));key=(e,abs(q),q)
+                    if key<best:best=key
+                  PI[ii,jj,kk]=best[2]
+                  best=(1e300,0);Prev=X[i0:i1,j0-1:j1-1].astype(np.float64)
+                  for q in qs:
+                    P=frac_gather(Prev,tt,q,D);e=float(np.mean((A-P)**2));key=(e,abs(q),q)
+                    if key<best:best=key
+                  PJ[ii,jj,kk]=best[2]
+            return PI,PJ
+          @njit(cache=True)
+          def interp_num(A,t,q,D):
+            num=t*D-q;k=num//D;r=num-k*D;n=A.shape[0]
+            if k<0:k=0;r=0
+            elif k>=n-1:k=n-1;r=0
+            k1=k+1
+            if k1>=n:k1=n-1
+            return (D-r)*int(A[k])+r*int(A[k1])
+          @njit(cache=True)
+          def rnd_div(n,d):
+            return (n+d//2)//d if n>=0 else -((-n+d//2)//d)
+          @njit(cache=True)
+          def encode(X,eps,alpha,PI,PJ,BI,BJ,BT,D):
+            step=alpha*eps;Q=np.empty(X.shape,np.int32);H=np.zeros(X.shape,np.int32);BE=np.zeros(X.shape,np.int32)
+            # causal boundary i==0 or j==0: persistent legal state along time
+            for i in range(ni):
+              for j in range(nj):
+                if i==0 or j==0:
+                  q=0;old=0
+                  for t in range(nt):
+                    lo=math.ceil((X[i,j,t]-eps)/step-1e-7);hi=math.floor((X[i,j,t]+eps)/step+1e-7)
+                    if q<lo:q=lo
+                    elif q>hi:q=hi
+                    Q[i,j,t]=q;BE[i,j,t]=q-old;old=q
+            for i in range(1,ni):
+              ii=(i-1)//BI
+              for j in range(1,nj):
+                jj=(j-1)//BJ
+                for t in range(nt):
+                  kk=t//BT;qi=int(PI[ii,jj,kk]);qj=int(PJ[ii,jj,kk])
+                  a=interp_num(Q[i-1,j],t,qi,D);b=interp_num(Q[i,j-1],t,qj,D);c=interp_num(Q[i-1,j-1],t,qi+qj,D);p=rnd_div(a+b-c,D)
+                  lo=math.ceil((X[i,j,t]-eps)/step-1e-7);hi=math.floor((X[i,j,t]+eps)/step+1e-7);q=p
+                  if q<lo:q=lo
+                  elif q>hi:q=hi
+                  Q[i,j,t]=q;H[i,j,t]=q-p
+            return Q,H,BE,step
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);D0,_=sz.decompress(b,np.float32,X.shape);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-D0)))}),flush=True)
+          rows=[]
+          for BI,BJ,BT,DEN,QR in [(16,16,128,4,4),(16,16,64,4,4),(8,8,64,4,4),(16,16,64,8,8),(8,8,64,8,8),(8,8,32,8,8)]:
+            PI,PJ=slopes(BI,BJ,BT,DEN,QR);model=z(PI)+z(PJ)+48;ui,ci=np.unique(PI,return_counts=True);uj,cj=np.unique(PJ,return_counts=True);print('SLOPES',json.dumps({'cfg':[BI,BJ,BT,DEN,QR],'model':model,'pi':dict(zip([int(x) for x in ui],[int(x) for x in ci])),'pj':dict(zip([int(x) for x in uj],[int(x) for x in cj]))}),flush=True)
+            for alpha in [1.95,1.75,1.5,1.25,1.0]:
+              Q,H,BE,step=encode(X,eps,alpha,PI,PJ,BI,BJ,BT,DEN);bm=np.zeros(X.shape,bool);bm[0]=True;bm[:,0]=True;B=BE[bm];bnz=B!=0;boundary=min(z(si(B)),z(np.packbits(bnz,bitorder='little'))+(z(si(B[bnz])) if bnz.any() else 0));Z=H[1:,1:];m=Z!=0
+              dense=min(z(si(Z)),z(si(np.transpose(Z,(2,0,1)))),z(si(np.transpose(Z,(0,2,1)))))
+              sparse=min(z(np.packbits(m.ravel(),bitorder='little'))+(z(si(Z[m])) if m.any() else 0),z(np.packbits(np.transpose(m,(2,0,1)).ravel(),bitorder='little'))+(z(si(np.transpose(Z,(2,0,1))[np.transpose(m,(2,0,1))])) if m.any() else 0))
+              syn=min(dense,sparse);total=boundary+model+syn+64;me=float(np.max(np.abs(X-Q.astype(np.float32)*step)));r={'BI':BI,'BJ':BJ,'BT':BT,'DEN':DEN,'alpha':alpha,'bytes':total,'ratio':raw/total,'boundary':boundary,'model':model,'syndrome':syn,'nz':float(m.mean()),'maxerr':me};rows.append(r);print('FPWD',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:15],indent=2),flush=True)
+          PY
+          python /tmp/pwd.py
