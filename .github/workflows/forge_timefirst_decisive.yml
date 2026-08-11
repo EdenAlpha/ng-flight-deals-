@@ -1,0 +1,27 @@
+name: Decisive FORGE time-first trace pilot
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read, actions: read}
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with: {name: forge-subcube-cache, path: data, github-token: '${{ github.token }}', repository: EdenAlpha/ng-flight-deals-, run-id: 31459619473}
+      - run: |
+          pip install --quiet numpy zstandard
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_CXX_FLAGS="-include cstdint -include array" >/dev/null
+          cmake --build build -j2 >/dev/null && cmake --install build >/dev/null
+      - run: |
+          EPS=$(python -c "import json;print(json.load(open('data/forge_subcube_meta.json'))['eps_10pct_std'])")
+          install/bin/hpez -f -i data/forge_subcube_f32.bin -z d.hpez -3 512 64 64 -M ABS "$EPS" -q 4 >/dev/null
+          install/bin/hpez -f -z d.hpez -o diagnostic_rec.bin -3 512 64 64 >/dev/null
+          python research/forge_timefirst_decisive.py
+      - uses: actions/upload-artifact@v4
+        with: {name: forge-timefirst-decisive, path: forge_timefirst_decisive.json, retention-days: 7}
