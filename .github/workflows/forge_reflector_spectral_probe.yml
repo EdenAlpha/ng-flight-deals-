@@ -1,0 +1,86 @@
+name: Utah FORGE reflector-spectral discovery probe
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy scipy pysz segyio
+      - name: Download FORGE cube
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+      - name: Diagnose structure and test spectral generators
+        run: |
+          cat > probe.py <<'PY'
+          import json, subprocess, numpy as np, segyio
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:
+              tr=np.asarray(f.trace.raw[:],dtype=np.float32)
+          X=np.ascontiguousarray(tr.reshape(170,213,1001)); del tr
+          raw=X.nbytes; std=float(np.std(X,dtype=np.float64)); eps=.1*std
+          def corr(a,b):
+              a=a.reshape(-1).astype(np.float64);b=b.reshape(-1).astype(np.float64)
+              a-=a.mean();b-=b.mean();return float(np.dot(a,b)/(np.linalg.norm(a)*np.linalg.norm(b)+1e-300))
+          diag={'shape':list(X.shape),'raw':raw,'std':std,'eps':eps,
+                'corr_i':corr(X[1:],X[:-1]),'corr_j':corr(X[:,1:],X[:,:-1]),'corr_t1':corr(X[:,:,1:],X[:,:,:-1]),
+                'corr_t2':corr(X[:,:,2:],X[:,:,:-2])}
+          # sample local spectral concentration on 24 representative 16x16x128 blocks
+          energies=[]
+          for i in np.linspace(0,154,4,dtype=int):
+            for j in np.linspace(0,197,3,dtype=int):
+              for t in [128,384]:
+                B=X[i:i+16,j:j+16,t:t+128].astype(np.float64)
+                F=np.fft.rfftn(B); e=np.sort((F.real*F.real+F.imag*F.imag).reshape(-1))[::-1]; cs=np.cumsum(e)/e.sum()
+                energies.append([int(np.searchsorted(cs,q)+1) for q in [.9,.95,.99]])
+          diag['fft_coeffs_for_90_95_99_energy_median']=np.median(np.asarray(energies),axis=0).tolist()
+          print('DIAG',json.dumps(diag),flush=True)
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps
+          sb,_=sz.compress(X,cfg); SY,_=sz.decompress(sb,np.float32,X.shape)
+          print('SZ3',json.dumps({'bytes':int(sb.size),'ratio':raw/int(sb.size),'maxerr':float(np.max(np.abs(X-SY))) }),flush=True)
+          def zbytes(a):
+              return len(subprocess.run(['zstd','-q','-f','-19','-T0','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def cert(model,Y):
+              q=np.rint((Y-model)/(2*eps)).astype(np.int16); rec=model+q.astype(np.float32)*(2*eps)
+              m=q!=0; mask=zbytes(np.packbits(m.reshape(-1),bitorder='little')); vals=zbytes(q[m].astype(np.int8 if q[m].size and q[m].min()>=-128 and q[m].max()<=127 else np.int16)) if m.any() else 0
+              return mask+vals,float(np.max(np.abs(Y-rec))),float(m.mean())
+          # Screen sparse local 3D Fourier generators on a 64x64x512 subcube.
+          Y=X[53:117,74:138,244:756].copy(); rY=Y.nbytes
+          rows=[]
+          for bs in [(16,16,128),(16,16,64),(8,8,128)]:
+            bi,bj,bt=bs
+            for K in [16,32,64,128,256]:
+              M=np.zeros_like(Y); model_raw=0
+              for i in range(0,Y.shape[0],bi):
+                for j in range(0,Y.shape[1],bj):
+                  for t in range(0,Y.shape[2],bt):
+                    B=Y[i:i+bi,j:j+bj,t:t+bt]; shape=B.shape; F=np.fft.rfftn(B)
+                    flat=np.abs(F).reshape(-1); kk=min(K,flat.size); idx=np.argpartition(flat,-kk)[-kk:]
+                    vals=F.reshape(-1)[idx]
+                    # float16 real/imag coefficients + uint16 indices where possible
+                    scale=max(float(np.max(np.abs(vals))),1e-30); qr=(vals.real/scale).astype(np.float16); qi=(vals.imag/scale).astype(np.float16)
+                    FF=np.zeros(F.size,np.complex64); FF[idx]= (qr.astype(np.float32)+1j*qi.astype(np.float32))*scale
+                    M[i:i+shape[0],j:j+shape[1],t:t+shape[2]]=np.fft.irfftn(FF.reshape(F.shape),s=shape).real.astype(np.float32)
+                    model_raw += 4 + idx.astype(np.uint16 if F.size<=65535 else np.uint32).nbytes + qr.nbytes+qi.nbytes
+              cb,me,nz=cert(M,Y); total=model_raw+cb
+              row={'bs':bs,'K':K,'model_bytes':model_raw,'cert_bytes':cb,'total':total,'ratio':rY/total,'maxerr':me,'cert_nz':nz,'rmse':float(np.sqrt(np.mean((Y-M).astype(np.float64)**2)))}
+              rows.append(row); print('SPEC',json.dumps(row),flush=True)
+          rows.sort(key=lambda r:r['total']); print('BEST',json.dumps(rows[:10],indent=2),flush=True)
+          open('forge_reflector_probe.json','w').write(json.dumps({'diag':diag,'best':rows[:20]},indent=2))
+          PY
+          python probe.py
+      - uses: actions/upload-artifact@v4
+        with: {name: forge-reflector-probe, path: forge_reflector_probe.json, retention-days: 2}
