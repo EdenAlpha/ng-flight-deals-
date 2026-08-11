@@ -1,0 +1,55 @@
+name: FORGE HPEZ residual-feedback quantizer
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read, actions: read}
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with: {name: forge-subcube-cache, path: data, github-token: '${{ github.token }}', repository: EdenAlpha/ng-flight-deals-, run-id: 31459619473}
+      - run: |
+          pip install --quiet numpy
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          python research/patch_hpez_feedback.py
+      - run: |
+          python - <<'PY'
+          import json
+          m=json.load(open('data/forge_subcube_meta.json'))
+          print(m['eps_10pct_std'])
+          PY
+          EPS=$(python -c "import json;print(json.load(open('data/forge_subcube_meta.json'))['eps_10pct_std'])")
+          : > feedback_results.tsv
+          for A in 0.0 0.25 0.5 0.75 1.0 -0.25 -0.5 -0.75; do
+            TAG=$(echo "$A" | sed 's/-/m/g;s/\./p/g')
+            cmake -S hpez-src -B build-$TAG -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install-$TAG -DCMAKE_CXX_FLAGS="-include cstdint -include array -DHPEZ_RESIDUAL_ALPHA=$A" >/dev/null
+            cmake --build build-$TAG -j2 >/dev/null && cmake --install build-$TAG >/dev/null
+            BIN=$PWD/install-$TAG/bin/hpez
+            "$BIN" -f -i data/forge_subcube_f32.bin -z out_$TAG.hpez -3 512 64 64 -M ABS "$EPS" -q 4 >/dev/null
+            "$BIN" -f -z out_$TAG.hpez -o rec_$TAG.bin -3 512 64 64 >/dev/null
+            BYTES=$(stat -c%s out_$TAG.hpez)
+            python - "$A" "$BYTES" "$EPS" "$TAG" <<'PY'
+          import sys,json,numpy as np
+          a=float(sys.argv[1]);b=int(sys.argv[2]);eps=float(sys.argv[3]);tag=sys.argv[4]
+          x=np.fromfile('data/forge_subcube_f32.bin','<f4');r=np.fromfile(f'rec_{tag}.bin','<f4')
+          me=float(np.max(np.abs(x-r)));raw=x.nbytes
+          print(json.dumps({'alpha':a,'bytes':b,'ratio':raw/b,'maxerr':me,'eps':eps}),flush=True)
+          with open('feedback_results.tsv','a') as f:f.write(f'{a}\t{b}\t{raw/b}\t{me}\n')
+          PY
+          done
+          python - <<'PY'
+          import json
+          rows=[]
+          for line in open('feedback_results.tsv'):
+            a,b,r,e=line.split('\t');rows.append({'alpha':float(a),'bytes':int(b),'ratio':float(r),'maxerr':float(e)})
+          rows.sort(key=lambda x:x['bytes'])
+          json.dump(rows,open('forge_hpez_feedback_results.json','w'),indent=2)
+          print('BEST',json.dumps(rows[:8],indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with: {name: forge-hpez-feedback-results, path: forge_hpez_feedback_results.json, retention-days: 7}
