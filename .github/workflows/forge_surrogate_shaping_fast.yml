@@ -1,0 +1,58 @@
+name: Fast FORGE encoder-only tolerance shaping
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read, actions: read}
+jobs:
+  shape:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with:
+          name: forge-subcube-cache
+          path: data
+          github-token: ${{ github.token }}
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: 31459619473
+      - run: pip install --quiet numpy pysz
+      - run: |
+          cat > /tmp/s.py <<'PY'
+          import json,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          meta=json.load(open('data/forge_subcube_meta.json'));X=np.fromfile('data/forge_subcube_f32.bin','<f4').reshape(meta['shape']);eps=float(meta['eps_10pct_std']);raw=X.nbytes
+          def comp(A,e):
+            A=np.ascontiguousarray(A,dtype=np.float32);c=szConfig();c.errorBoundMode=szErrorBoundMode.ABS;c.absErrorBound=float(e);b,_=sz.compress(A,c);D,_=sz.decompress(b,np.float32,A.shape);return int(b.size),D
+          def nb(A,axis,d):
+            # edge-replicated one-step neighbor
+            if d<0:return np.concatenate([np.take(A,[0],axis=axis),np.take(A,range(A.shape[axis]-1),axis=axis)],axis=axis)
+            return np.concatenate([np.take(A,range(1,A.shape[axis]),axis=axis),np.take(A,[-1],axis=axis)],axis=axis)
+          def smooth(A,kind):
+            im=nb(A,0,-1);ip=nb(A,0,1);jm=nb(A,1,-1);jp=nb(A,1,1);tm=nb(A,2,-1);tp=nb(A,2,1)
+            if kind==0:return (4*A+im+ip+jm+jp+tm+tp)/10.0
+            if kind==1:return (4*A+im+ip+jm+jp+2*tm+2*tp)/12.0
+            if kind==2:return (8*A+im+ip+jm+jp+4*tm+4*tp)/20.0
+            return (2*A+im+ip+jm+jp+tm+tp)/8.0
+          def shape(delta,kind,passes,redblack=False):
+            Y=X.copy();lo=X-delta;hi=X+delta
+            if not redblack:
+              for _ in range(passes):Y=np.clip(smooth(Y,kind),lo,hi).astype(np.float32)
+            else:
+              I,J,T=np.indices(X.shape);par=(I+J+T)&1
+              for _ in range(passes):
+                for p in [0,1]:
+                  S=smooth(Y,kind);m=par==p;Y[m]=np.clip(S[m],lo[m],hi[m])
+            return Y
+          b,D=comp(X,eps);print('BASE',json.dumps({'bytes':b,'ratio':raw/b,'maxerr':float(np.max(np.abs(X-D)))}),flush=True)
+          rows=[]
+          for df in [.1,.2,.3,.4,.5,.6,.7,.8,.9]:
+            delta=df*eps;e2=eps-delta
+            for kind in [0,1,2,3]:
+              for passes in [1,2,4,8,16]:
+                for rb in [False,True]:
+                  Y=shape(delta,kind,passes,rb);bb,Z=comp(Y,e2);me=float(np.max(np.abs(X-Z)));r={'delta_frac':df,'kind':kind,'passes':passes,'redblack':rb,'bytes':bb+32,'ratio':raw/(bb+32),'compress_bytes':bb,'morph_max':float(np.max(np.abs(X-Y))),'remaining_eps':e2,'final_maxerr':me,'rough_t':float(np.mean(np.abs(np.diff(Y,axis=2)))),'rough_i':float(np.mean(np.abs(np.diff(Y,axis=0)))),'rough_j':float(np.mean(np.abs(np.diff(Y,axis=1))))};rows.append(r);print('SHAPE',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:20],indent=2),flush=True)
+          PY
+          python /tmp/s.py
