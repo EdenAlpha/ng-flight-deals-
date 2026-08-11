@@ -1,0 +1,24 @@
+name: FORGE HPEZ analytic subband benchmark
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read, actions: read}
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with: {name: forge-subcube-cache, path: data, github-token: '${{ github.token }}', repository: EdenAlpha/ng-flight-deals-, run-id: 31459619473}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install -DCMAKE_CXX_FLAGS="-include cstdint -include array"
+          cmake --build hpez-src/build -j2 && cmake --install hpez-src/build
+      - run: HPEZ_BIN=$PWD/hpez-install/bin/hpez python research/forge_subband_hpez.py
+      - uses: actions/upload-artifact@v4
+        with: {name: forge-subband-hpez-results, path: forge_subband_hpez_results.json, retention-days: 7}
