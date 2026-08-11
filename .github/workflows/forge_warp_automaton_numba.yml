@@ -1,0 +1,123 @@
+name: Fast Numba FORGE warp automaton
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/n.py <<'PY'
+          import json,subprocess,numpy as np,segyio
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16) if lo>=-32768 and hi<=32767 else a.astype(np.int32)
+          @njit(cache=True)
+          def bval(A,B,t,s):
+            ta=t-s;tb=t+s;n=A.shape[0]
+            if ta<0:ta=0
+            elif ta>=n:ta=n-1
+            if tb<0:tb=0
+            elif tb>=n:tb=n-1
+            return (int(A[ta])+int(B[tb]))//2
+          @njit(cache=True)
+          def fill_one(Q,DS,DC,L,U,axis,target,left,right,fixed,SR,ws):
+            n=Q.shape[2];s=0;c=0
+            for t in range(n):
+              if axis==0:
+                lo=L[target,fixed,t];hi=U[target,fixed,t]
+              else:
+                lo=L[fixed,target,t];hi=U[fixed,target,t]
+              # current base
+              if axis==0:p=bval(Q[left,fixed],Q[right,fixed],t,s)
+              else:p=bval(Q[fixed,left],Q[fixed,right],t,s)
+              q=p+c
+              if q<lo or q>hi:
+                bestcost=1<<30;bestdist=1<<30;bestss=0;bestcc=0;bestp=0
+                for ss in range(-SR,SR+1):
+                  if axis==0:pp=bval(Q[left,fixed],Q[right,fixed],t,ss)
+                  else:pp=bval(Q[fixed,left],Q[fixed,right],t,ss)
+                  clo=lo-pp;chi=hi-pp;cc=c
+                  if cc<clo:cc=clo
+                  elif cc>chi:cc=chi
+                  cost=ws*(1 if ss!=s else 0)+abs(cc-c);dist=abs(ss-s)
+                  if cost<bestcost or (cost==bestcost and dist<bestdist):bestcost=cost;bestdist=dist;bestss=ss;bestcc=cc;bestp=pp
+                ds=bestss-s;dc=bestcc-c;s=bestss;c=bestcc;p=bestp
+                if axis==0:DS[target,fixed,t]=ds;DC[target,fixed,t]=dc
+                else:DS[fixed,target,t]=ds;DC[fixed,target,t]=dc
+              q=p+c
+              if axis==0:Q[target,fixed,t]=q
+              else:Q[fixed,target,t]=q
+          @njit(cache=True)
+          def encode(X,eps,alpha,SR,ws):
+            step=alpha*eps;ni,nj,nt=X.shape;L=np.empty(X.shape,np.int32);U=np.empty(X.shape,np.int32)
+            for i in range(ni):
+              for j in range(nj):
+                for t in range(nt):
+                  L[i,j,t]=int(np.ceil((X[i,j,t]-eps)/step-1e-7));U[i,j,t]=int(np.floor((X[i,j,t]+eps)/step+1e-7))
+            Q=np.zeros(X.shape,np.int32);RE=np.zeros(X.shape,np.int16);DS=np.zeros(X.shape,np.int8);DC=np.zeros(X.shape,np.int16)
+            # roots: even/even plus last row/col
+            for i in range(0,ni,2):
+              for j in range(0,nj,2):
+                q=0;old=0
+                for t in range(nt):
+                  if q<L[i,j,t]:q=L[i,j,t]
+                  elif q>U[i,j,t]:q=U[i,j,t]
+                  Q[i,j,t]=q;RE[i,j,t]=q-old;old=q
+            # n=64 here: last index 63 is a root boundary
+            for i in range(0,ni,2):
+              q=0;old=0;j=nj-1
+              for t in range(nt):
+                if q<L[i,j,t]:q=L[i,j,t]
+                elif q>U[i,j,t]:q=U[i,j,t]
+                Q[i,j,t]=q;RE[i,j,t]=q-old;old=q
+            i=ni-1
+            for j in range(0,nj,2):
+              q=0;old=0
+              for t in range(nt):
+                if q<L[i,j,t]:q=L[i,j,t]
+                elif q>U[i,j,t]:q=U[i,j,t]
+                Q[i,j,t]=q;RE[i,j,t]=q-old;old=q
+            j=nj-1;q=0;old=0
+            for t in range(nt):
+              if q<L[i,j,t]:q=L[i,j,t]
+              elif q>U[i,j,t]:q=U[i,j,t]
+              Q[i,j,t]=q;RE[i,j,t]=q-old;old=q
+            # odd j on root i rows
+            for i in range(0,ni,2):
+              for j in range(1,nj-1,2):fill_one(Q,DS,DC,L,U,1,j,j-1,j+1,i,SR,ws)
+            i=ni-1
+            for j in range(1,nj-1,2):fill_one(Q,DS,DC,L,U,1,j,j-1,j+1,i,SR,ws)
+            # odd i rows, all j
+            for i in range(1,ni-1,2):
+              for j in range(nj):fill_one(Q,DS,DC,L,U,0,i,i-1,i+1,j,SR,ws)
+            return Q,RE,DS,DC,step
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);Y,_=sz.decompress(b,np.float32,X.shape);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Y)))}),flush=True)
+          rows=[]
+          for alpha in [1.75,1.5]:
+            for SR in [1,2,3]:
+              for ws in [0,1,3]:
+                Q,RE,DS,DC,step=encode(X,eps,alpha,SR,ws);rm=np.zeros(X.shape,bool);rm[0::2,0::2]=True;rm[0::2,-1]=True;rm[-1,0::2]=True;rm[-1,-1]=True;R=RE[rm];rb=min(z(si(R)),z(np.packbits(R!=0,bitorder='little'))+z(si(R[R!=0])))
+                ev=(DS!=0)|(DC!=0);V=ev[~rm];top=z(np.packbits(V,bitorder='little'));dsv=DS[~rm][V];dcv=DC[~rm][V];detail=top+z(dsv.astype(np.int8))+(z(si(dcv)) if dcv.size else 0);total=rb+detail+80
+                r={'alpha':alpha,'SR':SR,'ws':ws,'bytes':total,'ratio':raw/total,'root':rb,'detail':detail,'events':float(V.mean()),'shift_events':float(np.mean(dsv!=0)) if dsv.size else 0,'maxerr':float(np.max(np.abs(X-Q.astype(np.float32)*step)))};rows.append(r);print('WARP',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:10],indent=2),flush=True)
+          PY
+          python /tmp/n.py
