@@ -1,0 +1,106 @@
+name: Fast FORGE global legal-state syndrome optimization
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  global:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy numba pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/g.py <<'PY'
+          import math,json,subprocess,numpy as np,segyio
+          from numba import njit
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16) if lo>=-32768 and hi<=32767 else a.astype(np.int32)
+          @njit(cache=True)
+          def init(X,eps,step):
+            ni,nj,nt=X.shape;L=np.empty(X.shape,np.int32);U=np.empty(X.shape,np.int32);Q=np.empty(X.shape,np.int32)
+            for i in range(ni):
+              for j in range(nj):
+                for t in range(nt):
+                  lo=math.ceil((X[i,j,t]-eps)/step-1e-7);hi=math.floor((X[i,j,t]+eps)/step+1e-7);q=int(round(X[i,j,t]/step))
+                  if q<lo:q=lo
+                  elif q>hi:q=hi
+                  L[i,j,t]=lo;U[i,j,t]=hi;Q[i,j,t]=q
+            return L,U,Q
+          @njit(cache=True)
+          def makeH(Q):
+            ni,nj,nt=Q.shape;H=np.zeros(Q.shape,np.int32)
+            for i in range(1,ni):
+              for j in range(1,nj):
+                for t in range(1,nt):
+                  H[i,j,t]=Q[i,j,t]-Q[i-1,j,t]-Q[i,j-1,t]-Q[i,j,t-1]+Q[i-1,j-1,t]+Q[i-1,j,t-1]+Q[i,j-1,t-1]-Q[i-1,j-1,t-1]
+            return H
+          @njit(cache=True)
+          def cst(v,w): return (w if v!=0 else 0)+abs(v)
+          @njit(cache=True)
+          def optimize(Q,L,U,H,w,passes):
+            ni,nj,nt=Q.shape;changed=0
+            # q[i,j,t] affects H at offsets (0/1,0/1,0/1); sign=(-1)^(di+dj+dt)
+            for pp in range(passes):
+              ch=0
+              # alternating scan direction helps escape traversal bias
+              for ii in range(1,ni-1):
+                i=ii if pp%2==0 else ni-1-ii
+                for jj in range(1,nj-1):
+                  j=jj if pp%2==0 else nj-1-jj
+                  for tt in range(1,nt-1):
+                    t=tt if pp%2==0 else nt-1-tt
+                    old=Q[i,j,t];lo=L[i,j,t];hi=U[i,j,t]
+                    best=old;bestc=0
+                    for di in range(2):
+                      for dj in range(2):
+                        for dt in range(2):bestc+=cst(H[i+di,j+dj,t+dt],w)
+                    for cand in range(lo,hi+1):
+                      if cand==old:continue
+                      d=cand-old;cc=0
+                      for di in range(2):
+                        for dj in range(2):
+                          for dt in range(2):
+                            sg=1 if ((di+dj+dt)&1)==0 else -1
+                            cc+=cst(H[i+di,j+dj,t+dt]+sg*d,w)
+                      if cc<bestc:
+                        bestc=cc;best=cand
+                    if best!=old:
+                      d=best-old;Q[i,j,t]=best;ch+=1
+                      for di in range(2):
+                        for dj in range(2):
+                          for dt in range(2):
+                            sg=1 if ((di+dj+dt)&1)==0 else -1;H[i+di,j+dj,t+dt]+=sg*d
+              changed+=ch
+              if ch==0:break
+            return changed
+          def run(alpha,w,passes):
+            step=alpha*eps;L,U,Q=init(X,eps,step);H=makeH(Q);before=float(np.mean(H[1:,1:,1:]!=0));changed=optimize(Q,L,U,H,w,passes);Z=H[1:,1:,1:];m=Z!=0
+            # causal boundary union i=0 or j=0 or t=0 without duplicates
+            bd=np.concatenate([Q[0].ravel(),Q[1:,0].ravel(),Q[1:,1:,0].ravel()]);bb=z(si(bd))
+            dense=min(z(si(Z)),z(si(np.transpose(Z,(2,0,1)))),z(si(np.transpose(Z,(0,2,1)))))
+            sparse=z(np.packbits(m.ravel(),bitorder='little'))+(z(si(Z[m])) if m.any() else 0);hb=min(dense,sparse);total=bb+hb+64
+            me=float(np.max(np.abs(X-Q.astype(np.float32)*step)))
+            return {'alpha':alpha,'w':w,'passes':passes,'bytes':total,'ratio':raw/total,'boundary':bb,'syndrome':hb,'nz_before':before,'nz_after':float(m.mean()),'changed':int(changed),'maxerr':me}
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(X,cfg);Y,_=sz.decompress(b,np.float32,X.shape);print('BASE',json.dumps({'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Y)))}),flush=True)
+          rows=[]
+          for alpha in [1.95,1.75,1.5,1.25]:
+            for w in [1,3,6,10]:
+              r=run(alpha,w,3);rows.append(r);print('GLOBAL',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:10],indent=2),flush=True)
+          PY
+          python /tmp/g.py
