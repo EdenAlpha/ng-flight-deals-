@@ -1,0 +1,45 @@
+name: Fast FORGE shared-temporal-mode diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  klt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/k.py <<'PY'
+          import json,subprocess,numpy as np,segyio
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes;A=X.reshape(-1,X.shape[-1])
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def comp(A,e):
+            c=szConfig();c.errorBoundMode=szErrorBoundMode.ABS;c.absErrorBound=float(e);b,_=sz.compress(np.ascontiguousarray(A),c);D,_=sz.decompress(b,np.float32,A.shape);return int(b.size),D
+          bb,D=comp(X,eps);print('BASE',json.dumps({'bytes':bb,'ratio':raw/bb,'maxerr':float(np.max(np.abs(X-D)))}),flush=True)
+          U,S,Vt=np.linalg.svd(A.astype(np.float64),full_matrices=False);eng=np.cumsum(S*S)/np.sum(S*S)
+          print('ENERGY',json.dumps({str(q):int(np.searchsorted(eng,q)+1) for q in [.9,.95,.98,.99,.995,.999]}),flush=True)
+          rows=[]
+          for r in [2,4,8,12,16,24,32,48,64,96,128,192]:
+            # absorb singular values into spatial coefficient matrix; both factors float16 and zstd-charged
+            C=(U[:,:r]*S[:r]).astype(np.float32);B=Vt[:r].astype(np.float32)
+            # quantize decoder-visible factors to float16
+            Cq=C.astype(np.float16);Bq=B.astype(np.float16);model=z(Cq)+z(Bq)+32
+            M=(Cq.astype(np.float32)@Bq.astype(np.float32)).reshape(X.shape).astype(np.float32)
+            rb,Rd=comp(np.ascontiguousarray(X-M),eps);Y=M+Rd;total=model+rb
+            row={'rank':r,'bytes':total,'ratio':raw/total,'model':model,'residual':rb,'maxerr':float(np.max(np.abs(X-Y))),'rmse_model':float(np.sqrt(np.mean((X-M).astype(np.float64)**2))),'energy':float(eng[r-1])};rows.append(row);print('KLT',json.dumps(row),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows[:10],indent=2),flush=True)
+          PY
+          python /tmp/k.py
