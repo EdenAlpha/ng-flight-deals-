@@ -1,0 +1,37 @@
+name: Decisive FORGE band-core pilot
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read, actions: read}
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with: {name: forge-subcube-cache, path: data, github-token: '${{ github.token }}', repository: EdenAlpha/ng-flight-deals-, run-id: 31459619473}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz
+          python - <<'PY'
+          import json,subprocess,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          m=json.load(open('data/forge_subcube_meta.json'));X=np.fromfile('data/forge_subcube_f32.bin','<f4').reshape(m['shape']);eps=float(m['eps_10pct_std']);raw=X.nbytes;N=512;K=80;Nc=176
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def si(a):
+            lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
+            return a.astype(np.int8) if lo>=-128 and hi<=127 else a.astype(np.int16)
+          F=np.fft.rfft(X,axis=2);G=np.zeros(X.shape[:2]+(Nc//2+1,),np.complex64);G[:,:,:K+1]=F[:,:,:K+1].astype(np.complex64)*(Nc/N);C=np.fft.irfft(G,n=Nc,axis=2).astype(np.float32)
+          rows=[]
+          for beta in [.25,.5,1,2,4]:
+            c=szConfig();c.errorBoundMode=szErrorBoundMode.ABS;c.absErrorBound=beta*eps;b,_=sz.compress(np.ascontiguousarray(C),c);D,_=sz.decompress(b,np.float32,C.shape)
+            Fc=np.fft.rfft(D,axis=2);H=np.zeros(X.shape[:2]+(N//2+1,),np.complex64);H[:,:,:K+1]=Fc[:,:,:K+1].astype(np.complex64)*(N/Nc);M=np.fft.irfft(H,n=N,axis=2).astype(np.float32)
+            Q=np.rint((X-M)/(2*eps)).astype(np.int16);R=M+Q.astype(np.float32)*(2*eps);mm=Q!=0;vals=Q[mm]
+            cert=min(z(si(Q)),z(si(np.transpose(Q,(2,0,1)))),z(np.packbits(mm.ravel(),bitorder='little'))+(z(si(vals)) if vals.size else 0));E=np.diff(Q,axis=2,prepend=Q[:,:,:1]);cert=min(cert,z(si(E)),z(si(np.transpose(E,(2,0,1)))))
+            total=int(b.size)+cert+64;r={'beta':beta,'bytes':total,'ratio':raw/total,'core_bytes':int(b.size),'cert_bytes':cert,'cert_nz':float(mm.mean()),'maxerr':float(np.max(np.abs(X-R)))};rows.append(r);print('RESULT',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);open('decisive.json','w').write(json.dumps(rows,indent=2));print('BEST',json.dumps(rows[0]),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with: {name: forge-bandcore-decisive, path: decisive.json, retention-days: 7}
