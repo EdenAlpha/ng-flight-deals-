@@ -1,0 +1,66 @@
+name: FORGE HPEZ residual correlation diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read, actions: read}
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with: {name: forge-subcube-cache, path: data, github-token: '${{ github.token }}', repository: EdenAlpha/ng-flight-deals-, run-id: 31459619473}
+      - run: |
+          pip install --quiet numpy zstandard
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          python research/patch_hpez_residual_stats.py
+          python research/patch_hpez_index_stats.py
+          python research/patch_hpez_dump_indices.py
+          python research/patch_hpez_level_boundaries.py
+          python research/patch_hpez_dump_coords.py
+          python research/patch_hpez_dump_eb.py
+          cmake -S hpez-src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_CXX_FLAGS="-include cstdint -include array" >/dev/null
+          cmake --build build -j2 >/dev/null && cmake --install build >/dev/null
+      - run: |
+          EPS=$(python -c "import json;print(json.load(open('data/forge_subcube_meta.json'))['eps_10pct_std'])")
+          install/bin/hpez -f -i data/forge_subcube_f32.bin -z diagnostic.hpez -3 512 64 64 -M ABS "$EPS" -q 4 2>resid.log
+          install/bin/hpez -f -z diagnostic.hpez -o diagnostic_rec.bin -3 512 64 64 2>>resid.log
+          echo "COMPRESSED_BYTES=$(stat -c%s diagnostic.hpez)"
+          cat resid.log | grep -E 'RESIDSTAT|HPEZIDX|HPEZPRELOSSLESS|HPEZCOORD' || true
+          echo LEVEL_ENDS; cat hpez_level_ends.txt || true
+          python - <<'PY'
+          import json,numpy as np
+          m=json.load(open('data/forge_subcube_meta.json'));eps=float(m['eps_10pct_std'])
+          x=np.fromfile('data/forge_subcube_f32.bin','<f4');r=np.fromfile('diagnostic_rec.bin','<f4');me=float(np.max(np.abs(x-r)))
+          print('RECON_CHECK',json.dumps({'maxerr':me,'eps':eps,'valid':bool(me<=eps*1.00001)}),flush=True)
+          if me>eps*1.00001: raise SystemExit('reconstruction invalid')
+          PY
+          python research/analyze_hpez_indices.py
+          python research/analyze_hpez_levels.py
+          python research/analyze_hpez_coordinate_orders.py
+          python research/analyze_hpez_dyadic_classes.py
+          python research/analyze_hpez_octree_vectors.py
+          python research/analyze_hpez_cell_context.py
+          python research/analyze_hpez_temporal_bridge.py
+          python research/analyze_hpez_spatial_residual_time.py
+          python research/analyze_hpez_spacetime_stencil.py
+          python research/analyze_hpez_timefirst_trace.py
+          python research/analyze_hpez_error_allocation.py
+          python - <<'PY'
+          import re,json,os
+          names=['symbol_analysis','level_analysis','coordinate_order_analysis','dyadic_class_analysis','octree_vector_analysis','cell_context_analysis','temporal_bridge_analysis','spatial_residual_time_analysis','spacetime_stencil_analysis','timefirst_trace_analysis','error_allocation_analysis']
+          keys=['symbols','levels','geometry_orders','dyadic_classes','octree_vectors','cell_context','temporal_bridge','spatial_residual_time','spacetime_stencil','timefirst_trace','error_allocation']
+          out={'bytes':os.path.getsize('diagnostic.hpez')};s=open('resid.log').read();pats=[r'RESIDSTAT[^\n]+',r'HPEZIDX[^\n]+',r'HPEZPRELOSSLESS[^\n]+',r'HPEZCOORD[^\n]+'];out['stats']=sum([re.findall(p,s) for p in pats],[])
+          for k,n in zip(keys,names):out[k]=json.load(open('hpez_'+n+'.json'))
+          json.dump(out,open('hpez_residual_diagnostic.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-hpez-residual-diagnostic
+          path: |
+            hpez_residual_diagnostic.json
+            hpez_*_analysis.json
+          retention-days: 7
