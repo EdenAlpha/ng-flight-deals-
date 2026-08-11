@@ -1,0 +1,14 @@
+from pathlib import Path
+# Experimental hard-safe internal error-bound expansion. Gamma=1 is the mandatory control.
+p=Path('hpez-src/include/QoZ/quantizer/IntegerQuantizer.hpp')
+s=p.read_text()
+s=s.replace('namespace QoZ {', '#ifndef HPEZ_EB_EXPAND\n#define HPEZ_EB_EXPAND 1.0\n#endif\n\nnamespace QoZ {',1)
+s=s.replace('LinearQuantizer() : error_bound(1), error_bound_reciprocal(1), radius(32768) {}','LinearQuantizer() : base_error_bound(1), error_bound(1), error_bound_reciprocal(1), radius(32768) {}',1)
+s=s.replace('''LinearQuantizer(double eb, int r = 32768) : error_bound(eb),\n                                                    error_bound_reciprocal(1.0 / eb),\n                                                    radius(r) {''','''LinearQuantizer(double eb, int r = 32768) : base_error_bound(eb), error_bound(eb),\n                                                    error_bound_reciprocal(1.0 / eb),\n                                                    radius(r) {''',1)
+s=s.replace('''        void set_eb(double eb) {\n            error_bound = eb;\n            error_bound_reciprocal = 1.0 / eb;\n        }''','''        void set_eb(double eb) {\n            double use_eb = eb;\n            if (HPEZ_EB_EXPAND > 1.0) {\n                use_eb = eb * HPEZ_EB_EXPAND;\n                if (use_eb > base_error_bound) use_eb = base_error_bound;\n            }\n            error_bound = use_eb;\n            error_bound_reciprocal = 1.0 / use_eb;\n        }''',1)
+# Serialize final contract/base EB immediately after current EB so decoder has identical cap.
+s=s.replace('''            *reinterpret_cast<double *>(c) = this->error_bound;\n            \n            c += sizeof(double);\n            *reinterpret_cast<int *>(c) = this->radius;''','''            *reinterpret_cast<double *>(c) = this->error_bound;\n            c += sizeof(double);\n            *reinterpret_cast<double *>(c) = this->base_error_bound;\n            c += sizeof(double);\n            *reinterpret_cast<int *>(c) = this->radius;''',1)
+s=s.replace('''            this->error_bound = *reinterpret_cast<const double *>(c);\n           \n            this->error_bound_reciprocal = 1.0 / this->error_bound;\n            c += sizeof(double);\n            this->radius = *reinterpret_cast<const int *>(c);''','''            this->error_bound = *reinterpret_cast<const double *>(c);\n            this->error_bound_reciprocal = 1.0 / this->error_bound;\n            c += sizeof(double);\n            this->base_error_bound = *reinterpret_cast<const double *>(c);\n            c += sizeof(double);\n            this->radius = *reinterpret_cast<const int *>(c);''',1)
+s=s.replace('''        double error_bound;\n        double error_bound_reciprocal;''','''        double base_error_bound;\n        double error_bound;\n        double error_bound_reciprocal;''',1)
+p.write_text(s)
+print('patched EB expansion')
