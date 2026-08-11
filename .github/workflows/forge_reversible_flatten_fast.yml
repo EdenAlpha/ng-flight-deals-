@@ -1,0 +1,83 @@
+name: Fast FORGE reversible reflector flattening
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  flatten:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/f.py <<'PY'
+          import json,subprocess,numpy as np,segyio
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes;ni,nj,nt=X.shape
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def comp(A):
+            c=szConfig();c.errorBoundMode=szErrorBoundMode.ABS;c.absErrorBound=float(eps);b,_=sz.compress(np.ascontiguousarray(A),c);D,_=sz.decompress(b,np.float32,A.shape);return int(b.size),D
+          def controls(n,S):
+            a=list(range(0,n,S))
+            if a[-1]!=n-1:a.append(n-1)
+            return np.asarray(a,np.int32)
+          base,D=comp(X);print('BASE',json.dumps({'bytes':base,'ratio':raw/base,'maxerr':float(np.max(np.abs(X-D)))}),flush=True)
+          rows=[]
+          for TS,W,CS,SR in [(16,64,4,4),(16,128,4,6),(32,64,4,4),(32,128,8,6),(64,64,8,4),(64,128,8,6),(64,256,8,10)]:
+            Z=X.copy();allS=[]
+            for i0 in range(0,ni,TS):
+              i1=min(ni,i0+TS);si=i1-i0;gi=controls(si,CS)
+              for j0 in range(0,nj,TS):
+                j1=min(nj,j0+TS);sj=j1-j0;gj=controls(sj,CS)
+                for t0 in range(0,nt,W):
+                  t1=min(nt,t0+W);ci=i0+si//2;cj=j0+sj//2;ref=X[ci,cj,t0:t1].astype(np.float32)
+                  SS=np.zeros((len(gi),len(gj)),np.int8)
+                  for a,ii in enumerate(gi):
+                    for b,jj in enumerate(gj):
+                      y=X[i0+ii,j0+jj,t0:t1].astype(np.float32);best=None
+                      for s in range(-SR,SR+1):
+                        v=np.roll(ref,s);e=float(np.mean((y-v).astype(np.float64)**2));key=(e,abs(s),s)
+                        if best is None or key<best[0]:best=(key,s)
+                      SS[a,b]=best[1]
+                  allS.append(SS.copy());xj=np.arange(sj);xi=np.arange(si);tmp=np.empty((len(gi),sj))
+                  for a in range(len(gi)):tmp[a]=np.interp(xj,gj,SS[a])
+                  SF=np.empty((si,sj))
+                  for j in range(sj):SF[:,j]=np.interp(xi,gi,tmp[:,j])
+                  # exact integer permutation in each local time window. If y resembles roll(ref,s), flatten y by roll(y,-s).
+                  for ii in range(si):
+                    for jj in range(sj):
+                      s=int(np.rint(SF[ii,jj]));Z[i0+ii,j0+jj,t0:t1]=np.roll(X[i0+ii,j0+jj,t0:t1],-s)
+            shifts=np.concatenate([a.reshape(-1) for a in allS]).astype(np.int8);model=z(shifts)+64
+            cb,Q=comp(Z)
+            # decoder reconstructs full integer shift field from transmitted controls, then exact inverse permutation.
+            Y=np.empty_like(Q);k=0
+            for i0 in range(0,ni,TS):
+              i1=min(ni,i0+TS);si=i1-i0;gi=controls(si,CS)
+              for j0 in range(0,nj,TS):
+                j1=min(nj,j0+TS);sj=j1-j0;gj=controls(sj,CS)
+                for t0 in range(0,nt,W):
+                  t1=min(nt,t0+W);nctl=len(gi)*len(gj);SS=shifts[k:k+nctl].reshape(len(gi),len(gj));k+=nctl;xj=np.arange(sj);xi=np.arange(si);tmp=np.empty((len(gi),sj))
+                  for a in range(len(gi)):tmp[a]=np.interp(xj,gj,SS[a])
+                  SF=np.empty((si,sj))
+                  for j in range(sj):SF[:,j]=np.interp(xi,gi,tmp[:,j])
+                  for ii in range(si):
+                    for jj in range(sj):
+                      s=int(np.rint(SF[ii,jj]));Y[i0+ii,j0+jj,t0:t1]=np.roll(Q[i0+ii,j0+jj,t0:t1],s)
+            total=model+cb;me=float(np.max(np.abs(X-Y)))
+            # diagnostic coherence after flattening
+            ci=float(np.corrcoef(Z[1:].reshape(-1),Z[:-1].reshape(-1))[0,1]);cj=float(np.corrcoef(Z[:,1:].reshape(-1),Z[:,:-1].reshape(-1))[0,1])
+            r={'TS':TS,'W':W,'CS':CS,'SR':SR,'bytes':total,'ratio':raw/total,'sz_flat':cb,'shift_bytes':model,'maxerr':me,'corr_i_flat':ci,'corr_j_flat':cj};rows.append(r);print('FLAT',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows,indent=2),flush=True)
+          PY
+          python /tmp/f.py
