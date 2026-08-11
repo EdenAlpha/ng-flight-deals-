@@ -20,21 +20,23 @@ jobs:
           python research/patch_hpez_index_stats.py
           python research/patch_hpez_dump_indices.py
           python research/patch_hpez_level_boundaries.py
+          python research/patch_hpez_dump_coords.py
           cmake -S hpez-src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_CXX_FLAGS="-include cstdint -include array" >/dev/null
           cmake --build build -j2 >/dev/null && cmake --install build >/dev/null
       - run: |
           EPS=$(python -c "import json;print(json.load(open('data/forge_subcube_meta.json'))['eps_10pct_std'])")
           install/bin/hpez -f -i data/forge_subcube_f32.bin -z diagnostic.hpez -3 512 64 64 -M ABS "$EPS" -q 4 2>resid.log
           echo "COMPRESSED_BYTES=$(stat -c%s diagnostic.hpez)"
-          cat resid.log | grep -E 'RESIDSTAT|HPEZIDX|HPEZPRELOSSLESS' || true
+          cat resid.log | grep -E 'RESIDSTAT|HPEZIDX|HPEZPRELOSSLESS|HPEZCOORD' || true
           echo LEVEL_ENDS; cat hpez_level_ends.txt || true
           python research/analyze_hpez_indices.py
           python research/analyze_hpez_levels.py
+          python research/analyze_hpez_coordinate_orders.py
           python - <<'PY'
           import re,json,os
-          s=open('resid.log').read();sym=json.load(open('hpez_symbol_analysis.json'));lev=json.load(open('hpez_level_analysis.json'))
-          pats=[r'RESIDSTAT[^\n]+',r'HPEZIDX[^\n]+',r'HPEZPRELOSSLESS[^\n]+']
-          out={'bytes':os.path.getsize('diagnostic.hpez'),'stats':sum([re.findall(p,s) for p in pats],[]),'symbols':sym,'levels':lev}
+          s=open('resid.log').read();sym=json.load(open('hpez_symbol_analysis.json'));lev=json.load(open('hpez_level_analysis.json'));geo=json.load(open('hpez_coordinate_order_analysis.json'))
+          pats=[r'RESIDSTAT[^\n]+',r'HPEZIDX[^\n]+',r'HPEZPRELOSSLESS[^\n]+',r'HPEZCOORD[^\n]+']
+          out={'bytes':os.path.getsize('diagnostic.hpez'),'stats':sum([re.findall(p,s) for p in pats],[]),'symbols':sym,'levels':lev,'geometry_orders':geo}
           json.dump(out,open('hpez_residual_diagnostic.json','w'),indent=2);print(json.dumps(out,indent=2))
           PY
       - uses: actions/upload-artifact@v4
@@ -44,4 +46,5 @@ jobs:
             hpez_residual_diagnostic.json
             hpez_symbol_analysis.json
             hpez_level_analysis.json
+            hpez_coordinate_order_analysis.json
           retention-days: 7
