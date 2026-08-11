@@ -1,0 +1,78 @@
+name: Fast FORGE monotone reflector flattening
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  monotone:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy pysz segyio
+      - run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o forge.zip 'https://gdr.openei.org/files/1141/2018-19%20Reflection%20Processing.zip'
+          python - <<'PY'
+          import zipfile
+          n='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy';z=zipfile.ZipFile('forge.zip');z.extract(n,'.')
+          PY
+          cat > /tmp/m.py <<'PY'
+          import json,subprocess,numpy as np,segyio
+          from pysz import sz,szConfig,szErrorBoundMode
+          p='2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy'
+          with segyio.open(p,'r',strict=False,ignore_geometry=True) as f:T=np.asarray(f.trace.raw[:],dtype=np.float32).reshape(170,213,1001)
+          std=float(np.std(T,dtype=np.float64));eps=.1*std;X=np.ascontiguousarray(T[53:117,74:138,244:756]);del T;raw=X.nbytes;ni,nj,nt=X.shape
+          def z(a):return len(subprocess.run(['zstd','-q','-f','-19','-c'],input=np.ascontiguousarray(a).tobytes(),stdout=subprocess.PIPE,check=True).stdout)
+          def comp(A):
+            A=np.ascontiguousarray(A);c=szConfig();c.errorBoundMode=szErrorBoundMode.ABS;c.absErrorBound=float(eps);b,_=sz.compress(A,c);D,_=sz.decompress(b,np.float32,A.shape);return int(b.size),D
+          def controls(n,S):
+            a=list(range(0,n,S))
+            if a[-1]!=n-1:a.append(n-1)
+            return np.asarray(a,np.int32)
+          base,D=comp(X);print('BASE',json.dumps({'bytes':base,'ratio':raw/base,'maxerr':float(np.max(np.abs(X-D)))}),flush=True)
+          rows=[]
+          for TS,W,CS,SR in [(32,64,8,4),(32,128,8,6),(64,32,8,3),(64,64,8,4),(64,128,8,6),(64,256,8,10)]:
+            # full per-trace shift function built from tiny control surfaces for each time window
+            SFULL=np.zeros((ni,nj,nt),np.int8);allS=[]
+            for i0 in range(0,ni,TS):
+              i1=min(ni,i0+TS);si=i1-i0;gi=controls(si,CS)
+              for j0 in range(0,nj,TS):
+                j1=min(nj,j0+TS);sj=j1-j0;gj=controls(sj,CS)
+                for t0 in range(0,nt,W):
+                  t1=min(nt,t0+W);ci=i0+si//2;cj=j0+sj//2;ref=X[ci,cj,t0:t1].astype(np.float32);SS=np.zeros((len(gi),len(gj)),np.int8)
+                  for a,ii in enumerate(gi):
+                    for b,jj in enumerate(gj):
+                      y=X[i0+ii,j0+jj,t0:t1].astype(np.float32);best=None
+                      for s in range(-SR,SR+1):
+                        # compare only overlapping samples, no circular assumption
+                        if s>=0:aa=y[s:];bb=ref[:len(ref)-s] if s else ref
+                        else:aa=y[:len(y)+s];bb=ref[-s:]
+                        if len(aa)<8:continue
+                        # gain-invariant normalized mismatch
+                        den=float(np.sqrt(np.dot(aa,aa)*np.dot(bb,bb))+1e-30);rho=float(np.dot(aa,bb)/den);key=(-abs(rho),abs(s),s)
+                        if best is None or key<best[0]:best=(key,s)
+                      SS[a,b]=best[1]
+                  allS.append(SS.copy());xj=np.arange(sj);xi=np.arange(si);tmp=np.empty((len(gi),sj))
+                  for a in range(len(gi)):tmp[a]=np.interp(xj,gj,SS[a])
+                  SFi=np.empty((si,sj))
+                  for j in range(sj):SFi[:,j]=np.interp(xi,gi,tmp[:,j])
+                  SFULL[i0:i1,j0:j1,t0:t1]=np.rint(SFi)[:,:,None].astype(np.int8)
+            shifts=np.concatenate([a.ravel() for a in allS]).astype(np.int8);model=z(shifts)+64
+            # stable sort by warped coordinate; exact bijection, no local wrap discontinuities
+            Z=np.empty_like(X);PERM=np.empty((ni,nj,nt),np.uint16);tt=np.arange(nt,dtype=np.int32)
+            for i in range(ni):
+              for j in range(nj):
+                key=tt-SFULL[i,j].astype(np.int32);perm=np.argsort(key,kind='stable').astype(np.uint16);PERM[i,j]=perm;Z[i,j]=X[i,j,perm]
+            cb,Q=comp(Z)
+            # inverse exact permutation, recomputable from shifts but use PERM for independent verification
+            Y=np.empty_like(Q)
+            for i in range(ni):
+              for j in range(nj):Y[i,j,PERM[i,j]]=Q[i,j]
+            total=model+cb;me=float(np.max(np.abs(X-Y)));ci=float(np.corrcoef(Z[1:].ravel(),Z[:-1].ravel())[0,1]);cj=float(np.corrcoef(Z[:,1:].ravel(),Z[:,:-1].ravel())[0,1])
+            r={'TS':TS,'W':W,'CS':CS,'SR':SR,'bytes':total,'ratio':raw/total,'sz_warp':cb,'shift_bytes':model,'maxerr':me,'corr_i':ci,'corr_j':cj,'moved_fraction':float(np.mean(PERM!=np.arange(nt,dtype=np.uint16)[None,None,:]))};rows.append(r);print('MONO',json.dumps(r),flush=True)
+          rows.sort(key=lambda r:r['bytes']);print('BEST',json.dumps(rows,indent=2),flush=True)
+          PY
+          python /tmp/m.py
