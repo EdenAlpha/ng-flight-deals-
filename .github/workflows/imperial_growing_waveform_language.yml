@@ -1,0 +1,21 @@
+name: Imperial growing waveform language audit
+on:
+  pull_request:
+    branches: [imperial-quotient-shape-language]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py s3fs boto3
+      - name: Grow decoder-known waveform language through 128 previous records
+        run: python research/imperial_growing_waveform_language.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-growing-waveform-language
+          path: imperial_growing_waveform_language.json
+          retention-days: 7
