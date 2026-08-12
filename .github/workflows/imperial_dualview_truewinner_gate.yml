@@ -1,0 +1,31 @@
+name: Imperial dual-view true-winner gate
+on:
+  pull_request:
+    branches: [imperial-dualview-modulo-syndrome]
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - run: python research/imperial_dualview_truewinner_gate.py imperial.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-dualview-truewinner-gate
+          path: imperial_dualview_truewinner_gate.json
+          retention-days: 7
