@@ -1,0 +1,56 @@
+name: Frozen sparse-state codec on three raw Utah FORGE gathers
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        pct: [10,50,90]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+          pip install --quiet numpy zstandard pysz requests remotezip zipfile64
+      - name: Deterministically select and range-fetch substantive raw gather
+        shell: bash
+        env: {PCT: '${{ matrix.pct }}'}
+        run: |
+          python - <<'PY'
+          import os,json,struct,requests
+          import zipfile64.zipfile
+          from remotezip import RemoteZip
+          pct=int(os.environ['PCT']);url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          with RemoteZip(url) as z:
+            infos=sorted([i for i in z.infolist() if not i.is_dir() and i.filename.lower().endswith(('.sgy','.segy','.seg')) and i.compress_size>=1048576],key=lambda i:i.filename)
+          idx=round((len(infos)-1)*pct/100);zi=infos[idx];name=zi.filename.encode();off=int(zi.header_offset)
+          rh=requests.get(url,headers={'Range':f'bytes={off}-{off+29}'},timeout=30);rh.raise_for_status();h=rh.content
+          if len(h)!=30 or int.from_bytes(h[:4],'little')!=0x04034b50:raise RuntimeError('local ZIP header')
+          nlen=int.from_bytes(h[26:28],'little');xlen=int.from_bytes(h[28:30],'little');rhe=requests.get(url,headers={'Range':f'bytes={off}-{off+29+nlen+xlen}'},timeout=30);rhe.raise_for_status();local=rhe.content
+          data_off=off+30+nlen+xlen;end=data_off+zi.compress_size-1;r=requests.get(url,headers={'Range':f'bytes={data_off}-{end}'},timeout=180);r.raise_for_status();payload=r.content
+          if len(payload)!=zi.compress_size:raise RuntimeError((len(payload),zi.compress_size))
+          # Build a tiny standalone one-member ZIP for 7-Zip Deflate64 extraction.
+          local2=struct.pack('<IHHHHHIIIHH',0x04034b50,21,0,zi.compress_type,0,0,zi.CRC,zi.compress_size,zi.file_size,len(name),0)+name
+          central=struct.pack('<IHHHHHHIIIHHHHHII',0x02014b50,20,21,0,zi.compress_type,0,0,zi.CRC,zi.compress_size,zi.file_size,len(name),0,0,0,0,0,0)+name
+          cd=len(local2)+len(payload);eocd=struct.pack('<IHHHHIIH',0x06054b50,0,0,1,1,len(central),cd,0);open('member.zip','wb').write(local2+payload+central+eocd)
+          json.dump({'pct':pct,'substantive_count':len(infos),'index':idx,'name':zi.filename,'file_size':zi.file_size,'compressed_size':zi.compress_size,'crc':zi.CRC,'method':zi.compress_type,'original_header_offset':off,'original_data_offset':data_off},open('forge_selection.json','w'),indent=2)
+          print('SELECT',json.load(open('forge_selection.json')),flush=True)
+          PY
+          7z t member.zip >/dev/null
+          mkdir out && 7z x -y -oout member.zip >/dev/null
+          mv out/*.sgy forge_raw.sgy
+          test "$(stat -c%s forge_raw.sgy)" = "112237868"
+      - run: python research/forge_raw_frozen_state.py forge_raw.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-frozen-p${{ matrix.pct }}
+          path: |
+            forge_selection.json
+            forge_raw_frozen_state.json
+          retention-days: 7
