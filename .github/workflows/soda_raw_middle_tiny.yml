@@ -1,0 +1,35 @@
+name: Soda Lake median-shot tiny diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  tiny:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3
+      - name: Download deterministic median raw shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,json,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();i=round((len(keys)-1)*0.5);k,n=keys[i];os.makedirs('shots',exist_ok=True);print('DOWNLOAD',i,k,n,flush=True);s3.download_file(bucket,k,'shots/middle.sgy');json.dump({'total':len(keys),'index':i,'key':k,'size':n},open('soda_tiny_selection.json','w'),indent=2)
+          PY
+      - run: python research/soda_raw_land_tiny.py shots/middle.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-middle-tiny-results
+          path: |
+            soda_tiny_selection.json
+            soda_raw_tiny_result.json
+          retention-days: 7
