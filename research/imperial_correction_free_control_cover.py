@@ -108,7 +108,9 @@ def solve_controls(ZX,bound,h,phi):
  q=q0.copy() if not feasible else np.rint(res.x[:n]).astype(np.int32)
  if np.any(q<lo)|np.any(q>hi):raise RuntimeError('solver illegal control')
  Q=np.zeros((PC,PT),np.int32);Q[mask]=q
- return mask,Q,feasible,int(getattr(res,'status',-1)),float(getattr(res,'fun',np.nan)),interior,float(np.mean(hi-lo+1)),float(np.mean(q!=q0))
+ fun=getattr(res,'fun',None)
+ obj=float(fun) if fun is not None and np.isfinite(fun) else float('nan')
+ return mask,Q,feasible,int(getattr(res,'status',-1)),obj,interior,float(np.mean(hi-lo+1)),float(np.mean(q!=q0))
 
 
 def evaluate(X,eps,hfac,phase):
