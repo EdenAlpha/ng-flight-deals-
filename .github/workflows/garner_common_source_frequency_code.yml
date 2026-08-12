@@ -1,0 +1,23 @@
+name: Garner common-source frequency response screen
+on:
+  pull_request:
+    branches: [garner-valley-das-independent-gate]
+permissions: {contents: read}
+jobs:
+  screen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy h5py segyio zstandard pysz
+      - name: Download exact released Garner Valley DAS shaker SEG-Y
+        run: curl -L --fail --retry 4 --retry-delay 3 -o garner.sgy 'https://gdr.openei.org/files/481/large%20shaker%20NEES_130910161319%20%281%29.sgy'
+      - name: Encode one global excitation spectrum plus per-channel responses
+        run: python research/garner_common_source_frequency_code.py garner.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: garner-common-source-frequency-code
+          path: garner_common_source_frequency_code.json
+          retention-days: 7
