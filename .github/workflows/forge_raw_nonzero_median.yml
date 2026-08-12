@@ -1,0 +1,94 @@
+name: Raw Utah FORGE deterministic nonzero median gather
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  gather:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+          pip install --quiet requests remotezip zipfile64 numpy segyio pysz
+      - name: Classify zero placeholders and rebuild deterministic nonzero median member
+        shell: bash
+        run: |
+          python - <<'PY'
+          import requests,struct,json,zlib
+          import zipfile64.zipfile
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          zcrc_cache={}
+          def zero_crc(n):
+              if n in zcrc_cache:return zcrc_cache[n]
+              c=0; block=b'\0'*(1<<20); left=int(n)
+              while left:
+                  k=min(left,len(block)); c=zlib.crc32(block[:k],c); left-=k
+              zcrc_cache[n]=c&0xffffffff;return zcrc_cache[n]
+          with RemoteZip(url) as z:
+              infos=sorted([i for i in z.infolist() if not i.is_dir() and i.filename.lower().endswith(('.sgy','.segy','.seg'))],key=lambda i:i.filename)
+              rows=[]; nz=[]
+              for i in infos:
+                  is_zero=(int(i.CRC)==zero_crc(int(i.file_size)))
+                  r={'name':i.filename,'file_size':int(i.file_size),'compress_size':int(i.compress_size),'method':int(i.compress_type),'crc':int(i.CRC),'header_offset':int(i.header_offset),'exact_all_zero':bool(is_zero)}
+                  rows.append(r)
+                  if not is_zero:nz.append(i)
+              if not nz:raise RuntimeError('no nonzero SEG-Y members')
+              i=nz[len(nz)//2]
+              selected={'index_nonzero':len(nz)//2,'name':i.filename,'file_size':int(i.file_size),'compress_size':int(i.compress_size),'method':int(i.compress_type),'crc':int(i.CRC),'header_offset':int(i.header_offset)}
+          meta={'total_segy':len(rows),'zero_placeholders':sum(r['exact_all_zero'] for r in rows),'nonzero_members':len(nz),'selected':selected,'members':rows}
+          off=selected['header_offset']; h=requests.get(url,headers={'Range':f'bytes={off}-{off+4095}'},timeout=30).content
+          if h[:4]!=b'PK\x03\x04':raise RuntimeError(f'bad local header {h[:16].hex()}')
+          _,ver,flag,method,mt,md,crc_l,cs_l,us_l,nlen,xlen=struct.unpack('<IHHHHHIIIHH',h[:30]); name=h[30:30+nlen]; data_off=off+30+nlen+xlen
+          end=data_off+selected['compress_size']-1; rr=requests.get(url,headers={'Range':f'bytes={data_off}-{end}'},timeout=60);rr.raise_for_status();payload=rr.content
+          if len(payload)!=selected['compress_size']:raise RuntimeError((len(payload),selected['compress_size']))
+          local=struct.pack('<IHHHHHIIIHH',0x04034b50,21,0,selected['method'],mt,md,selected['crc'],selected['compress_size'],selected['file_size'],len(name),0)+name
+          central=struct.pack('<IHHHHHHIIIHHHHHII',0x02014b50,20,21,0,selected['method'],mt,md,selected['crc'],selected['compress_size'],selected['file_size'],len(name),0,0,0,0,0,0)+name
+          cd_off=len(local)+len(payload);eocd=struct.pack('<IHHHHIIH',0x06054b50,0,0,1,1,len(central),cd_off,0)
+          open('single_nonzero.zip','wb').write(local+payload+central+eocd)
+          meta['selected'].update({'data_offset':data_off,'payload_len':len(payload),'mini_zip_bytes':len(local)+len(payload)+len(central)+len(eocd),'local_flag':flag,'local_version':ver})
+          json.dump(meta,open('forge_nonzero_member_scan.json','w'),indent=2);print(json.dumps({k:v for k,v in meta.items() if k!='members'},indent=2),flush=True)
+          PY
+      - name: CRC-test and extract selected nonzero member
+        shell: bash
+        run: |
+          set -euxo pipefail
+          7z t single_nonzero.zip | tee 7z_nonzero_test.txt
+          mkdir extracted
+          7z x -y -oextracted single_nonzero.zip | tee 7z_nonzero_extract.txt
+          cp "$(find extracted -type f | head -1)" forge_raw_nonzero.sgy
+          sha256sum forge_raw_nonzero.sgy > forge_raw_nonzero.sha256
+      - name: Inspect SEG-Y and matched SZ3
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os,json,numpy as np,segyio
+          from collections import Counter
+          from pysz import sz,szConfig,szErrorBoundMode
+          fn='forge_raw_nonzero.sgy';out={'file_bytes':os.path.getsize(fn),'first64':open(fn,'rb').read(64).hex()}
+          h=open(fn,'rb').read(3600);bh=h[3200:3600];u16=lambda o:int.from_bytes(bh[o:o+2],'big',signed=False);i16=lambda o:int.from_bytes(bh[o:o+2],'big',signed=True)
+          out['binary_header_raw']={'dt':u16(16),'ns':u16(20),'format':u16(24),'revision':u16(300),'fixed':u16(302),'extended_headers':i16(304)}
+          try:
+              with segyio.open(fn,'r',ignore_geometry=True) as s:
+                  X=np.asarray(s.trace.raw[:],np.float32).copy();gx=np.asarray(s.attributes(segyio.TraceField.GroupX)[:],np.int64);gy=np.asarray(s.attributes(segyio.TraceField.GroupY)[:],np.int64)
+                  out['shape']=list(X.shape);out['dt_us']=int(segyio.tools.dt(s));cnt=Counter(zip(gx.tolist(),gy.tolist()));out['receiver_unique']=len(cnt);out['receiver_multiplicity']={str(k):int(v) for k,v in sorted(Counter(cnt.values()).items())}
+                  std=float(X.astype(np.float64).std());eps=.1*std;cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,np.float32,X.shape);out['sz3']={'raw_bytes':int(X.nbytes),'std':std,'eps':eps,'bytes':int(bb.size),'ratio':float(X.nbytes/int(bb.size)),'maxerr':float(np.max(np.abs(X-R)))}
+          except Exception as e:out['segyio_error']=repr(e)
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('forge_nonzero_inspect.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-raw-nonzero-median
+          path: |
+            forge_nonzero_member_scan.json
+            forge_nonzero_inspect.json
+            forge_raw_nonzero.sha256
+            7z_nonzero_test.txt
+            7z_nonzero_extract.txt
+          retention-days: 7

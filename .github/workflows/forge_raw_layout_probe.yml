@@ -1,0 +1,75 @@
+name: Raw Utah FORGE byte-layout probe
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet requests remotezip zipfile64 numpy
+      - name: Extract deterministic raw member and probe bytes
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os,json,requests,numpy as np,string
+          import zipfile64.zipfile
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          with RemoteZip(url) as z:
+            infos=sorted([i for i in z.infolist() if not i.is_dir() and i.filename.lower().endswith(('.sgy','.segy','.seg'))],key=lambda i:i.filename)
+            zi=infos[len(infos)//2]
+            with z.open(zi) as src,open('shot.sgy','wb') as dst:
+              while True:
+                b=src.read(8<<20)
+                if not b:break
+                dst.write(b)
+          size=os.path.getsize('shot.sgy')
+          with open('shot.sgy','rb') as f: head=f.read(min(size,1<<20))
+          def u16(b,o,bo):return int.from_bytes(b[o:o+2],bo,signed=False) if o+2<=len(b) else -1
+          def i16(b,o,bo):return int.from_bytes(b[o:o+2],bo,signed=True) if o+2<=len(b) else -1
+          def i32(b,o,bo):return int.from_bytes(b[o:o+4],bo,signed=True) if o+4<=len(b) else 0
+          first=head[:128]; printable=sum((32<=x<127) or x in (9,10,13) for x in head[:3200])/(min(len(head),3200) or 1)
+          out={'member':zi.filename,'declared_file_size':zi.file_size,'declared_compressed_size':zi.compress_size,'compression_type':zi.compress_type,'extracted_size':size,'first128_hex':first.hex(),'first128_ascii':''.join(chr(x) if 32<=x<127 else '.' for x in first),'text_header_printable_fraction':printable,'byte_hist_top':sorted(enumerate(np.bincount(np.frombuffer(head,np.uint8),minlength=256).tolist()),key=lambda kv:kv[1],reverse=True)[:16]}
+          # Standard 3200+400 interpretation in both endian orders.
+          std={}
+          for bo in ('big','little'):
+            bh=head[3200:3600]
+            std[bo]={'job':i32(bh,0,bo),'line':i32(bh,4,bo),'reel':i32(bh,8,bo),'dt':u16(bh,16,bo),'ns':u16(bh,20,bo),'fmt':u16(bh,24,bo),'rev':u16(bh,300,bo),'fixed':u16(bh,302,bo),'ext':i16(bh,304,bo)}
+            th=head[3600:3840]
+            std[bo]['first_trace']={'seq':i32(th,0,bo),'field_seq':i32(th,4,bo),'offset':i32(th,36,bo),'scalco':i16(th,70,bo),'sx':i32(th,72,bo),'sy':i32(th,76,bo),'gx':i32(th,80,bo),'gy':i32(th,84,bo),'ns':u16(th,114,bo),'dt':u16(th,116,bo)}
+          out['standard_interpretations']=std
+          # Search first 64 KiB for plausible binary-header start. Candidate may have extra tape labels or missing text header.
+          cand=[]
+          for bo in ('big','little'):
+            for b0 in range(0,min(65536,len(head)-400)):
+              dt=u16(head,b0+16,bo);ns=u16(head,b0+20,bo);fmt=u16(head,b0+24,bo)
+              if 50<=dt<=50000 and 1<=ns<=65535 and fmt in range(0,17):
+                # Score if a plausible trace header occurs 400 bytes later (binary-only) or 3600 offset relation is handled by b0 itself.
+                t0=b0+400
+                tns=u16(head,t0+114,bo) if t0+240<=len(head) else -1;tdt=u16(head,t0+116,bo) if t0+240<=len(head) else -1
+                score=int(1<=tns<=65535)+int(50<=tdt<=50000)+int(fmt in (0,1,2,3,5,8))
+                if score>=2:cand.append({'bo':bo,'binary_offset':b0,'dt':dt,'ns':ns,'fmt':fmt,'trace_offset_if_binary_only':t0,'trace_ns':tns,'trace_dt':tdt,'score':score})
+          cand=sorted(cand,key=lambda x:(-x['score'],abs(x['binary_offset']-3200)))[:50];out['binary_candidates']=cand
+          # At standard trace offset, test a 4-byte trace-stride hypothesis even though fmt=0.
+          tests=[]
+          for bo in ('big','little'):
+            th=head[3600:3840];ns=u16(th,114,bo);dt=u16(th,116,bo)
+            if 1<=ns<=65535:
+              tests.append({'bo':bo,'trace0_ns':ns,'trace0_dt':dt,'next_trace_if_4byte':3600+240+4*ns,'next_ns':u16(head,3600+240+4*ns+114,bo) if 3600+240+4*ns+240<=len(head) else None})
+          out['standard_trace_4byte_tests']=tests
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('forge_raw_layout_probe.json','w'),indent=2)
+          with open('forge_raw_head64k.bin','wb') as f:f.write(head[:65536])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: forge-raw-layout-probe
+          path: |
+            forge_raw_layout_probe.json
+            forge_raw_head64k.bin
+          retention-days: 7
