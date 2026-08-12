@@ -35,7 +35,7 @@ jobs:
           s=s.replace('struct.unpack(H,blob[:HS])','struct.unpack(NHDR,blob[:NHS])')
           s=s.replace("magic!=MAG or ver!=1 or nf!=10","magic!=NMAG or ver!=1 or nf!=10")
           s=s.replace('p=HS;lens=[]','p=NHS;lens=[]')
-          if "MAG=b'NEEDv001'" in s or 'struct.unpack(H,blob[:HS])' in s: raise RuntimeError('namespace patch incomplete')
+          if "\nMAG=b'NEEDv001'" in s or 'struct.unpack(H,blob[:HS])' in s or 'struct.pack(H,MAG,1,oc,dc,0' in s: raise RuntimeError('namespace patch incomplete')
           open(p,'w').write(s)
           PY
       - name: Run exact causal event-edit timing codec and byte audit
