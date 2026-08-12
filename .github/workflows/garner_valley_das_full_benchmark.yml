@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install --quiet numpy segyio zstandard pysz
+      - run: pip install --quiet numpy h5py segyio zstandard pysz
       - run: curl -L --fail --retry 4 --retry-delay 3 -o garner.sgy 'https://gdr.openei.org/files/481/large%20shaker%20NEES_130910161319%20%281%29.sgy'
       - name: Benchmark every DAS sample against matched SZ3
         run: python research/garner_valley_das_full_benchmark.py garner.sgy
