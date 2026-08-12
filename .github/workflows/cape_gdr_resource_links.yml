@@ -1,0 +1,39 @@
+name: Resolve Cape GDR resource link
+on:
+  pull_request:
+    branches: [imperial-valley-frozen-brady-transfer]
+permissions: {contents: read}
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet requests beautifulsoup4
+      - run: |
+          python - <<'PY'
+          import requests,json,re
+          from bs4 import BeautifulSoup
+          from urllib.parse import urljoin,unquote
+          u='https://gdr.openei.org/submissions/1816';needle='16B-DAS_SM_UTC_20250831_230851.872.h5';r=requests.get(u,timeout=45);r.raise_for_status();html=r.text;s=BeautifulSoup(html,'html.parser');cand=[]
+          # Preserve anchors/forms/scripts containing resource/download hints and context around the exact filename.
+          for a in s.find_all('a',href=True):
+            href=urljoin(u,a['href']);txt=' '.join(a.stripped_strings)
+            if any(x in (txt+' '+href).lower() for x in ('230851.872','download','resource','file')):cand.append({'tag':'a','text':txt[:500],'url':href})
+          for f in s.find_all('form'):
+            raw=str(f)
+            if '230851.872' in raw or 'download' in raw.lower() or 'resource' in raw.lower():cand.append({'tag':'form','text':raw[:3000],'url':urljoin(u,f.get('action',''))})
+          pos=html.find(needle);ctx=html[max(0,pos-10000):pos+10000] if pos>=0 else ''
+          urls=re.findall(r'''(?:href|src|action)=["']([^"']+)["']''',ctx,re.I)
+          ctxurls=[urljoin(u,x) for x in urls]
+          ids=sorted(set(re.findall(r'(?:resource|file|download)[^0-9]{0,20}([0-9]{1,12})',ctx,re.I)))
+          out={'status':r.status_code,'html_bytes':len(html),'needle_pos':pos,'candidates':cand[:200],'context_urls':ctxurls,'context_ids':ids,'context':ctx}
+          print(json.dumps({k:out[k] for k in ('status','html_bytes','needle_pos','candidates','context_urls','context_ids')},indent=2)[:30000]);json.dump(out,open('cape_gdr_resource_links.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cape-gdr-resource-links
+          path: cape_gdr_resource_links.json
+          retention-days: 7
