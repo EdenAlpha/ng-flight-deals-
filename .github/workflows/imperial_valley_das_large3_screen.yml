@@ -1,0 +1,77 @@
+name: Large Imperial Valley DAS three-file screen
+on:
+  pull_request:
+    branches: [soda-refined-wholefile-hard4]
+permissions: {contents: read}
+jobs:
+  file:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        slot: [0,1,2]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download deterministic full Imperial Valley DAS HDF5 file
+        shell: bash
+        env:
+          SLOT: '${{ matrix.slot }}'
+        run: |
+          python - <<'PY'
+          import boto3,json,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          slot=int(os.environ['SLOT']);s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='imperialvalleydas/v1.0.0/';rows=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.h5','.hdf5')) and o['Size']>0:rows.append((o['Key'],int(o['Size'])))
+          rows.sort()
+          if len(rows)!=2880:raise RuntimeError(('IV DAS member-count drift',len(rows)))
+          idx=round((len(rows)-1)*slot/2);key,n=rows[idx];s3.download_file(bucket,key,'das.h5');sel={'slot':slot,'index':idx,'key':key,'file_bytes':n,'total_files':len(rows)}
+          print(json.dumps(sel,indent=2),flush=True);json.dump(sel,open(f'selection_{slot}.json','w'),indent=2)
+          PY
+      - name: Compress full largest numeric DAS array and matched block SZ3
+        shell: bash
+        env:
+          SLOT: '${{ matrix.slot }}'
+        run: |
+          python research/imperial_valley_das_large_screen.py das.h5
+          mv imperial_valley_das_large_screen.json result_${SLOT}.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-valley-large-${{ matrix.slot }}
+          path: |
+            selection_${{ matrix.slot }}.json
+            result_${{ matrix.slot }}.json
+          retention-days: 7
+  aggregate:
+    needs: file
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: imperial-valley-large-*
+          path: all
+          merge-multiple: true
+      - name: Aggregate three large full-file numeric-array screens
+        run: |
+          python - <<'PY'
+          import glob,json,statistics
+          rr=[json.load(open(p)) for p in sorted(glob.glob('all/result_*.json'))];ss=[json.load(open(p)) for p in sorted(glob.glob('all/selection_*.json'))]
+          if len(rr)!=3 or len(ss)!=3:raise RuntimeError(('missing results',len(rr),len(ss)))
+          if not all(r['valid'] and r['sz3_valid'] for r in rr):raise RuntimeError('invalid result')
+          native=sum(r['native_numeric_bytes'] for r in rr);ours=sum(r['lattice_container_bytes'] for r in rr);sz3=sum(r['sz3_payload_bytes_hostile'] for r in rr);h5=sum(r['h5_file_bytes'] for r in rr)
+          out={'files':3,'total_h5_file_bytes':h5,'total_native_numeric_bytes':native,'aggregate_lattice_bytes':ours,'aggregate_block_sz3_payload_bytes':sz3,'aggregate_lattice_ratio_native':native/ours,'aggregate_sz3_ratio_native':native/sz3,'aggregate_gain_vs_block_sz3':sz3/ours,'minimum_file_gain_vs_sz3':min(r['gain_vs_block_sz3'] for r in rr),'median_file_gain_vs_sz3':statistics.median(r['gain_vs_block_sz3'] for r in rr),'maximum_file_gain_vs_sz3':max(r['gain_vs_block_sz3'] for r in rr),'all_valid':True,'scope':'largest numeric arrays only; HDF5 metadata/container not yet counted','keys':[s['key'] for s in ss]}
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('imperial_valley_large3_summary.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-valley-large3-summary
+          path: imperial_valley_large3_summary.json
+          retention-days: 7
