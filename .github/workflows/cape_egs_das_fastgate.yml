@@ -1,0 +1,21 @@
+name: Cape EGS DAS nine-tile fast gate
+on:
+  pull_request:
+    branches: [imperial-valley-frozen-brady-transfer]
+permissions: {contents: read}
+jobs:
+  fast:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz
+      - run: curl -L --fail --retry 4 --retry-delay 3 -o cape.h5 'https://gdr.openei.org/files/1816/16B-DAS_SM_UTC_20250831_230851.872.h5'
+      - run: python research/cape_egs_das_fastgate.py cape.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cape-egs-das-fastgate
+          path: cape_egs_das_fastgate.json
+          retention-days: 7
