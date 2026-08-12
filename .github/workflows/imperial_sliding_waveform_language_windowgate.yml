@@ -1,0 +1,21 @@
+name: Imperial sliding waveform language window gate
+on:
+  pull_request:
+    branches: [imperial-growing-waveform-language]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py s3fs boto3
+      - name: Build long-history phrase language from every prior sample offset
+        run: python research/imperial_sliding_waveform_language_windowgate.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-sliding-waveform-language-windowgate
+          path: imperial_sliding_waveform_language_windowgate.json
+          retention-days: 7
