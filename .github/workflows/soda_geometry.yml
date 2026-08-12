@@ -1,0 +1,61 @@
+name: Soda Lake receiver lattice diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  geometry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio boto3
+      - name: Download deterministic median shot and analyze geometry
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,json,os,numpy as np,segyio
+          from collections import Counter
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();idx=round((len(keys)-1)*.5);key,size=keys[idx];s3.download_file(bucket,key,'shot.sgy')
+          with segyio.open('shot.sgy','r',ignore_geometry=True) as f:
+            gx=np.asarray(f.attributes(segyio.TraceField.GroupX)[:],np.int64);gy=np.asarray(f.attributes(segyio.TraceField.GroupY)[:],np.int64);ntr=f.tracecount;ns=len(f.samples)
+          pts=np.unique(np.stack([gx,gy],1),axis=0);N=len(pts);ux=len(np.unique(pts[:,0]));uy=len(np.unique(pts[:,1]))
+          # Exact short displacement vectors between nearby receiver sites.
+          d=pts[:,None,:]-pts[None,:,:];ds=np.sum(d.astype(np.float64)**2,axis=2);ds[ds==0]=np.inf;nn=np.sqrt(np.min(ds,axis=1));med=float(np.median(nn));cut=(2.2*med)**2
+          cnt=Counter()
+          for i in range(N):
+            js=np.where((ds[i]>0)&(ds[i]<=cut))[0]
+            for j in js:
+              if j<=i:continue
+              v=pts[j]-pts[i];dx,dy=map(int,v)
+              if dx<0 or (dx==0 and dy<0):dx,dy=-dx,-dy
+              cnt[(dx,dy)]+=1
+          common=[{'v':list(k),'count':v,'norm':float(np.hypot(*k))} for k,v in cnt.most_common(20)]
+          # Try pairs of common non-collinear vectors as an affine lattice basis.
+          best=None
+          for a in common[:12]:
+            v1=np.array(a['v'],float)
+            for b in common[:12]:
+              v2=np.array(b['v'],float);A=np.column_stack([v1,v2]);det=np.linalg.det(A)
+              if abs(det)<1e-9:continue
+              coef=(np.linalg.inv(A)@(pts-pts[0]).T).T;ri=np.rint(coef);res=np.linalg.norm((A@ri.T).T-(pts-pts[0]),axis=1);mx=float(res.max());mean=float(res.mean())
+              ia=ri[:,0].astype(int);ib=ri[:,1].astype(int);na=int(ia.max()-ia.min()+1);nb=int(ib.max()-ib.min()+1);occ=N/(na*nb) if na*nb else 0
+              score=mx+med*(1-occ)
+              cand={'v1':v1.astype(int).tolist(),'v2':v2.astype(int).tolist(),'max_residual':mx,'mean_residual':mean,'dims':[na,nb],'occupancy':occ,'score':score}
+              if best is None or score<best['score']:best=cand
+          out={'total_objects':len(keys),'shot_index':idx,'key':key,'file_size':size,'trace_count':int(ntr),'samples_per_trace':int(ns),'unique_receivers':N,'unique_raw_x':ux,'unique_raw_y':uy,'median_nearest_distance':med,'common_short_vectors':common,'best_affine_grid':best}
+          print(json.dumps(out,indent=2));json.dump(out,open('soda_geometry.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-geometry
+          path: soda_geometry.json
+          retention-days: 7
