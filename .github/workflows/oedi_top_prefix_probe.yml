@@ -1,0 +1,32 @@
+name: Probe OEDI top-level prefixes for Cape DAS
+on:
+  pull_request:
+    branches: [imperial-valley-frozen-brady-transfer]
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet boto3
+      - run: |
+          python - <<'PY'
+          import boto3,json
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));b='gdr-data-lake';pp=[]
+          for pg in s.get_paginator('list_objects_v2').paginate(Bucket=b,Delimiter='/'):
+            pp += [x['Prefix'] for x in pg.get('CommonPrefixes',[])]
+          terms=('cape','frisco','fervo','das','forge','flow','egs','microseismic')
+          match=[p for p in pp if any(t in p.lower() for t in terms)]
+          out={'count':len(pp),'matches':match,'prefixes':pp}
+          print(json.dumps({'count':len(pp),'matches':match},indent=2));json.dump(out,open('oedi_top_prefix_probe.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oedi-top-prefix-probe
+          path: oedi_top_prefix_probe.json
+          retention-days: 7
