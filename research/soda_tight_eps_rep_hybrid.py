@@ -4,6 +4,9 @@ import numpy as np
 # Audited run/event grammar + backend primitives.
 src=open('research/soda_intergap_backend_hybrid.py').read().split('\ndef main(path):')[0]
 exec(compile(src,'soda_intergap_backend_hybrid.py','exec'),globals())
+# Preserve the PR #161 decoder before the generic sparse module imports its own
+# historical decode_main symbol into this research globals() namespace.
+decode_event_main=decode_main
 # Audited exact dense/sparse/ternary integer-array codec, without its CLI.
 s2=open('research/soda_grid_sparse.py').read().split('\npath=sys.argv[1]')[0]
 exec(compile(s2,'soda_grid_sparse.py','exec'),globals())
@@ -50,7 +53,7 @@ def encode_component_hybrid(K):
 
 
 def decode_component(mode,blob):
-    if mode==0:return decode_main(blob)
+    if mode==0:return decode_event_main(blob)
     if mode==1:return decode_array(blob)
     raise RuntimeError(('bad component mode',mode))
 
@@ -72,7 +75,7 @@ def main(path,frac):
     if not np.array_equal(RO,O):raise RuntimeError('outlier exact decode')
 
     # Existing whole-main frozen record, charged as the control.
-    base_main,_=encode_event_fixed(K);baseK=decode_main(base_main)
+    base_main,_=encode_event_fixed(K);baseK=decode_event_main(base_main)
     if not np.array_equal(baseK,K):raise RuntimeError('baseline exact K')
     base_container=TOPS+len(base_main)+len(obb)
 
