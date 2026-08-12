@@ -1,0 +1,74 @@
+name: Frozen PR161 codec across 20 precommitted Soda shots
+on:
+  pull_request:
+    branches: [soda-hard4-frozen-record]
+permissions: {contents: read}
+jobs:
+  wide20:
+    strategy:
+      fail-fast: false
+      matrix:
+        p: [4,9,14,19,24,29,34,39,44,49,54,59,64,69,74,79,84,89,94,99]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3 brotli
+      - name: Download deterministic precommitted shot
+        shell: bash
+        env: {P: '${{ matrix.p }}'}
+        run: |
+          python - <<'PY'
+          import boto3,json,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          p=int(os.environ['P']);s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort()
+          if len(keys)!=8321:raise RuntimeError(('Soda member-count drift',len(keys)))
+          i=round((len(keys)-1)*p/100);k,n=keys[i]
+          print('SHOT',p,i,k,n,flush=True);s3.download_file(bucket,k,'shot.sgy')
+          json.dump({'percentile':p,'index':i,'key':k,'size':n,'total':len(keys)},open('selection.json','w'),indent=2)
+          PY
+      - name: Run exact frozen codec and direct SZ3
+        run: python research/soda_hard4_frozen_record.py shot.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-frozen-wide-p${{ matrix.p }}
+          path: |
+            selection.json
+            soda_hard4_frozen_record.json
+          retention-days: 7
+  summary:
+    needs: wide20
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: soda-frozen-wide-p*
+          path: wide
+      - name: Aggregate and rank results
+        run: |
+          python - <<'PY'
+          import glob,json,os,statistics
+          rows=[]
+          for d in glob.glob('wide/soda-frozen-wide-p*'):
+              s=json.load(open(os.path.join(d,'selection.json')))
+              j=json.load(open(os.path.join(d,'soda_hard4_frozen_record.json')))
+              f=j['frozen']
+              rows.append({'percentile':int(s['percentile']),'index':int(s['index']),'key':s['key'],'input_size':int(s['size']),'raw_sample_bytes':int(j['raw_bytes']),'container_bytes':int(f['container_bytes']),'ratio':float(f['ratio']),'sz3_bytes':int(j['sz3_direct']['bytes']),'gain_vs_direct_sz3':float(f['gain_vs_direct_sz3']),'K_nonzero_fraction':float(j['K_nonzero_fraction']),'eps':float(j['eps']),'maxerr':float(f['maxerr']),'valid':bool(f['valid'])})
+          rows.sort(key=lambda r:r['gain_vs_direct_sz3'])
+          if len(rows)!=20:raise RuntimeError(('missing wide20 artifacts',len(rows)))
+          out={'count':len(rows),'all_valid':all(r['valid'] for r in rows),'all_clear_2x_direct_sz3':all(r['gain_vs_direct_sz3']>=2 for r in rows),'min_gain':min(r['gain_vs_direct_sz3'] for r in rows),'median_gain':statistics.median(r['gain_vs_direct_sz3'] for r in rows),'max_gain':max(r['gain_vs_direct_sz3'] for r in rows),'weakest':rows[:5],'rows':rows}
+          print(json.dumps(out,indent=2));json.dump(out,open('soda_frozen_wide20_summary.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-frozen-wide20-summary
+          path: soda_frozen_wide20_summary.json
+          retention-days: 7
