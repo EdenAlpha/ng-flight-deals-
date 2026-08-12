@@ -1,0 +1,54 @@
+name: Active raw FORGE shot geometry diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  active:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.10'}
+      - run: pip install --quiet requests remotezip numpy segyio zipfile-deflate64
+      - name: Extract deterministic median active member and inspect
+        run: |
+          python - <<'PY'
+          import zipfile_deflate64
+          import json,requests,numpy as np,segyio,hashlib,os
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip';rz=RemoteZip(url)
+          seg=sorted([i for i in rz.infolist() if (not i.is_dir()) and i.filename.lower().endswith(('.sgy','.segy','.seg'))],key=lambda i:i.filename)
+          active=[i for i in seg if i.compress_size>1_000_000];dead=[i for i in seg if i.compress_size<=1_000_000]
+          if not active:raise SystemExit('no active members')
+          pick=active[len(active)//2];print('ACTIVE',len(active),'DEAD',len(dead),'SELECT',pick.filename,pick.compress_size,pick.file_size,flush=True)
+          with rz.open(pick) as src,open('active.sgy','wb') as dst:
+            while True:
+              b=src.read(8<<20)
+              if not b:break
+              dst.write(b)
+          raw=open('active.sgy','rb').read();assert len(raw)==pick.file_size
+          def u16(off,e):return int.from_bytes(raw[off:off+2],e)
+          hdr={e:{'fmt':u16(3224,e),'ns':u16(3220,e),'dt':u16(3216,e),'tr0_ns':u16(3714,e),'tr0_dt':u16(3716,e)} for e in ['big','little']}
+          attempts={};parsed=None
+          for e in ['big','little']:
+            try:
+              with segyio.open('active.sgy','r',ignore_geometry=True,endian=e) as f:
+                X=np.asarray(f.trace.raw[:],np.float32).copy();ntr=f.tracecount;ns=len(f.samples);dt=int(segyio.tools.dt(f));fields={}
+                for name,field in [('gx',segyio.TraceField.GroupX),('gy',segyio.TraceField.GroupY),('sx',segyio.TraceField.SourceX),('sy',segyio.TraceField.SourceY)]:
+                  fields[name]=np.asarray(f.attributes(field)[:],np.int64)
+              attempts[e]={'ok':True,'ntr':ntr,'ns':ns,'dt':dt};parsed=(e,X,fields,ntr,ns,dt);break
+            except Exception as ex:attempts[e]={'ok':False,'error':repr(ex)}
+          out={'archive':url,'total_segy':len(seg),'active_members':len(active),'dead_members':len(dead),'active_threshold_zip_bytes':1_000_000,'selected':pick.filename,'zip_bytes':pick.compress_size,'file_bytes':pick.file_size,'sha256':hashlib.sha256(raw).hexdigest(),'header':hdr,'attempts':attempts,'zero_byte_fraction':float(np.mean(np.frombuffer(raw,np.uint8)==0))}
+          if parsed:
+            e,X,F,ntr,ns,dt=parsed;gx,gy=F['gx'],F['gy'];pairs=np.stack([gx,gy],1);uniq,c=np.unique(pairs,axis=0,return_counts=True);geom={'endian':e,'unique_receivers':len(uniq),'multiplicity_mode':int(np.bincount(c).argmax()),'multiplicity_max':int(c.max()),'unique_gx':int(np.unique(gx).size),'unique_gy':int(np.unique(gy).size)}
+            if len(uniq)<=10000:
+              pts=uniq.astype(float);d=pts[:,None,:]-pts[None,:,:];ds=np.sum(d*d,2);ds[ds==0]=np.inf;nn=np.sqrt(ds.min(1));geom.update(nearest_median=float(np.median(nn)),nearest_p10=float(np.quantile(nn,.1)),nearest_p90=float(np.quantile(nn,.9)))
+            out.update(trace_count=ntr,samples_per_trace=ns,dt_us=dt,sample_raw_bytes=int(X.nbytes),sample_std=float(X.astype(np.float64).std()),sample_min=float(X.min()),sample_max=float(X.max()),geometry=geom,source_xy_unique=int(np.unique(np.stack([F['sx'],F['sy']],1),axis=0).shape[0]))
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('forge_raw_active_diag.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-raw-active-diag
+          path: forge_raw_active_diag.json
+          retention-days: 7
