@@ -1,0 +1,50 @@
+name: Soda composed refined standalone whole-file gate
+on:
+  pull_request:
+    branches: [soda-standalone-header-transform]
+permissions: {contents: read}
+jobs:
+  p75:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3 brotli
+      - name: Download exact audited p75 shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,json
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();i=round((len(keys)-1)*.75);k,n=keys[i]
+          if len(keys)!=8321 or i!=6240 or k!='soda_lake/raw_seismic/2010/v1.0.0/F6618R1.SGY':raise RuntimeError(('p75 drift',len(keys),i,k))
+          s3.download_file(bucket,k,'shot.sgy');json.dump({'percentile':75,'index':i,'key':k,'size':n,'total':len(keys)},open('selection.json','w'),indent=2)
+          PY
+      - name: Encode decode and verify composed container
+        run: python research/soda_record_refined_composed.py shot.sgy shot.srseg reconstructed.sgy
+      - name: Hostile whole-file accounting against audited strongest sample baseline
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('soda_record_standalone.json'));e=r['encode'];strong=133219
+          optimistic=int(e['file_header_bytes'])+int(e['header_blob_bytes'])+strong;ours=int(e['container_bytes']);gain=optimistic/ours;gate=optimistic/2
+          audit={'our_whole_file_bytes':ours,'our_whole_file_ratio':e['whole_file_ratio'],'file_header_bytes':e['file_header_bytes'],'header_blob_bytes':e['header_blob_bytes'],'header_diag':e['header_diag'],'sample_blob_bytes':e['sample_blob_bytes'],'sample_diag':e['sample_diag'],'strongest_sample_baseline_bytes':strong,'baseline_source':'PR #171 exact p75 official HPEZ/SZ3 geometry hybrid','optimistic_baseline_whole_file_lower_bound_bytes':optimistic,'strict_two_x_gate_bytes':gate,'margin_bytes_below_gate':gate-ours,'gain_vs_optimistic_whole_file_baseline':gain,'clears_strict_2x_even_with_free_baseline_metadata':bool(gain>=2.0),'headers_exact':r['verify']['headers_exact'],'maxerr':r['verify']['maxerr'],'public_eps':r['verify']['public_eps'],'valid':r['verify']['valid']}
+          if not audit['headers_exact'] or not audit['valid']:raise RuntimeError(('composed verification',audit))
+          print(json.dumps(audit,indent=2),flush=True);json.dump(audit,open('soda_record_refined_composed_fair.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-record-refined-composed-p75
+          path: |
+            selection.json
+            shot.srseg
+            soda_record_standalone.json
+            soda_record_refined_composed_fair.json
+          retention-days: 7
