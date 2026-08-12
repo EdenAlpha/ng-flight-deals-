@@ -1,0 +1,36 @@
+name: Soda Lake receiver geometry diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  geometry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy segyio boto3
+      - name: Download deterministic Soda Lake shots
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/'
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600: keys.append((o['Key'],int(o['Size'])))
+          keys.sort();pos=[round((len(keys)-1)*q) for q in (0.1,0.5,0.9)];os.makedirs('shots',exist_ok=True)
+          for j,i in enumerate(pos):
+            k,n=keys[i];print('DOWNLOAD',j,i,k,n,flush=True);s3.download_file(bucket,k,f'shots/shot{j}.sgy')
+          PY
+      - run: python research/soda_geometry_diag.py shots/shot0.sgy shots/shot1.sgy shots/shot2.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-geometry-diagnostic
+          path: soda_geometry_diag.json
+          retention-days: 7
