@@ -11,16 +11,33 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install --quiet boto3
+      - run: pip install --quiet boto3 requests beautifulsoup4
       - name: Locate exact public Cape EGS HDF5 keys
         run: |
           python - <<'PY'
-          import boto3,json,os
+          import boto3,json,os,re,requests
+          from bs4 import BeautifulSoup
+          from urllib.parse import urljoin,urlparse,unquote
           from botocore import UNSIGNED
           from botocore.config import Config
+          needle='16B-DAS_SM_UTC_20250831_230851.872.h5';page='https://gdr.openei.org/submissions/1816';web=[]
+          # Fast path: inspect official submission HTML for any download/resource URL associated with the known file.
+          r=requests.get(page,timeout=45);r.raise_for_status();soup=BeautifulSoup(r.text,'html.parser')
+          for a in soup.find_all('a',href=True):
+            txt=' '.join(a.stripped_strings);href=urljoin(page,a['href']);probe=(txt+' '+href)
+            if needle in probe or ('download' in href.lower() and ('1816' in href or 'resource' in href.lower())):
+              web.append({'text':txt[:300],'href':href})
+          print('official-page candidate links',json.dumps(web[:30],indent=2),flush=True)
+          # If the href itself is a direct file or redirects to one, record it. We still prefer the public S3 object when available.
+          direct=[]
+          for x in web:
+            try:
+              q=requests.head(x['href'],allow_redirects=True,timeout=20)
+              u=q.url;cd=q.headers.get('content-disposition','');cl=q.headers.get('content-length')
+              if needle in unquote(u) or needle in unquote(cd):direct.append({'href':x['href'],'final_url':u,'content_length':int(cl) if cl and cl.isdigit() else None,'content_disposition':cd})
+            except Exception:pass
           s=boto3.client('s3',config=Config(signature_version=UNSIGNED,connect_timeout=20,read_timeout=60,retries={'max_attempts':4}))
-          bucket='gdr-data-lake';needle='16B-DAS_SM_UTC_20250831_230851.872.h5';hits=[];nobj=0
-          # First inspect top-level prefixes; then fall back to a streaming whole-bucket scan and stop once the Cape family is found.
+          bucket='gdr-data-lake';hits=[];nobj=0
           top=s.list_objects_v2(Bucket=bucket,Delimiter='/')
           prefixes=[p['Prefix'] for p in top.get('CommonPrefixes',[])]
           cand=[p for p in prefixes if any(x in p.lower() for x in ('cape','frisco','fervo','1816','8638'))]
@@ -31,24 +48,24 @@ jobs:
                 nobj+=1
                 if o['Key'].endswith('.h5') and '16B-DAS_SM_UTC_' in o['Key']:hits.append({'key':o['Key'],'bytes':int(o['Size'])})
           if not hits:
+            # Whole-lake fallback, streaming and stopping immediately at exact filename.
             for pg in s.get_paginator('list_objects_v2').paginate(Bucket=bucket):
               for o in pg.get('Contents',[]):
                 nobj+=1;k=o['Key']
-                if k.endswith(needle) or (k.endswith('.h5') and '16B-DAS_SM_UTC_20250831_23' in k):
-                  hits.append({'key':k,'bytes':int(o['Size'])})
-              if any(h['key'].endswith(needle) for h in hits):
-                # continue a little only if prefix not yet obvious; exact hit is enough to infer/list its parent next
-                break
-          exact=[h for h in hits if h['key'].endswith(needle)]
-          if not exact:raise RuntimeError(('Cape key not found',nobj,cand,hits[:10]))
-          parent=exact[0]['key'].rsplit('/',1)[0]+'/'
-          family=[]
-          for pg in s.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=parent):
-            for o in pg.get('Contents',[]):
-              k=o['Key']
-              if k.endswith('.h5') and '16B-DAS_SM_UTC_' in k:family.append({'key':k,'bytes':int(o['Size'])})
-          family.sort(key=lambda x:x['key'])
-          out={'bucket':bucket,'parent_prefix':parent,'exact':exact[0],'family_count':len(family),'family_bytes':sum(x['bytes'] for x in family),'first':family[:5],'middle':family[len(family)//2:len(family)//2+5],'last':family[-5:]}
+                if k.endswith(needle):hits.append({'key':k,'bytes':int(o['Size'])});break
+              if hits:break
+          if hits:
+            exact=hits[0];parent=exact['key'].rsplit('/',1)[0]+'/';family=[]
+            for pg in s.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=parent):
+              for o in pg.get('Contents',[]):
+                k=o['Key']
+                if k.endswith('.h5') and '16B-DAS_SM_UTC_' in k:family.append({'key':k,'bytes':int(o['Size'])})
+            family.sort(key=lambda x:x['key'])
+            out={'source':'gdr-data-lake','bucket':bucket,'parent_prefix':parent,'exact':exact,'family_count':len(family),'family_bytes':sum(x['bytes'] for x in family),'first':family[:5],'middle':family[len(family)//2:len(family)//2+5],'last':family[-5:],'official_page_links':web[:30],'direct_links':direct}
+          elif direct:
+            out={'source':'official-gdr-download','exact':direct[0],'family_count':None,'official_page_links':web[:30],'direct_links':direct}
+          else:
+            raise RuntimeError(('Cape resource not found',nobj,cand,web[:10]))
           print(json.dumps(out,indent=2),flush=True);json.dump(out,open('cape_egs_das_locator.json','w'),indent=2)
           PY
       - uses: actions/upload-artifact@v4
