@@ -6,7 +6,7 @@ from pysz import sz, szConfig, szErrorBoundMode
 ZC=zstd.ZstdCompressor(level=19); ZD=zstd.ZstdDecompressor()
 VELS=[0.,1200.,1600.,2000.,2500.,3200.,4000.,5000.,6500.]
 IDT={1:np.dtype('<i1'),2:np.dtype('<i2'),3:np.dtype('<i4')}
-PH='<IHHIBBB5Q'; PHS=struct.calcsize(PH)
+PH='<IHHIBBBB5Q'; PHS=struct.calcsize(PH)
 
 def coord_scale(s):
     s=np.asarray(s,dtype=np.float64)
@@ -98,7 +98,6 @@ def load(path):
         if x==0 and y==0:extra.append(i);continue
         groups.setdefault((round(float(x),6),round(float(y),6)),[]).append(i)
     counts=np.array([len(v) for v in groups.values()]);C=int(np.bincount(counts).argmax()); keys=list(groups); src=np.array([np.median(sx[np.isfinite(sx)&(sx!=0)]),np.median(sy[np.isfinite(sy)&(sy!=0)])]); rec=np.asarray(keys,float); off=np.linalg.norm(rec-src,axis=1)
-    # radial offset ordering is deterministic from SEG-Y geometry; also keep file/receiver-id order as control
     orders={'receiver':np.arange(len(keys)), 'offset':np.argsort(off)}; layouts={}
     for name,o in orders.items():
         panels=[];offs=[]
