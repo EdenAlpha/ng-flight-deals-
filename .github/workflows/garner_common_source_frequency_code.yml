@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install --quiet numpy scipy segyio zstandard pysz
+      - run: pip install --quiet numpy scipy h5py segyio zstandard pysz
       - name: Download exact released Garner Valley DAS shaker SEG-Y
         run: curl -L --fail --retry 4 --retry-delay 3 -o garner.sgy 'https://gdr.openei.org/files/481/large%20shaker%20NEES_130910161319%20%281%29.sgy'
       - name: Encode one global excitation spectrum plus per-channel responses
