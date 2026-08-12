@@ -10,7 +10,7 @@ CMAG=b'TC4Gv001'; CH='<8sBBBB4II'; CHS=struct.calcsize(CH)
 
 
 def build(K,order):
-    P=np.transpose(K,order+(3,));sh=P.shape;tr=P.reshape(-1,sh[-1]);counts=np.zeros((4,tr.shape[0]),np.uint16);gby=[[] for _ in range(4)];mags=[]
+    P=np.transpose(K,order+(3,));sh=P.shape;tr=P.reshape(-1,sh[-1]);counts=np.zeros((4,tr.shape[0]),np.uint16);gby=[[] for _ in range(4)];mby=[[] for _ in range(4)]
     for i,row in enumerate(tr):
         for ci in range(4):
             if ci==0:pos=np.flatnonzero(row==1)
@@ -22,8 +22,9 @@ def build(K,order):
             g=np.empty(pos.size,np.int32);g[0]=pos[0]+1
             if pos.size>1:g[1:]=np.diff(pos)
             gby[ci].extend(g.tolist())
-            if ci>=2:mags.extend((np.abs(row[pos]).astype(np.int32)-2).tolist())
-    return counts,[np.asarray(x,np.int32) for x in gby],np.asarray(mags,np.int32)
+            if ci>=2:mby[ci].extend((np.abs(row[pos]).astype(np.int32)-2).tolist())
+    mags=np.asarray(mby[2]+mby[3],np.int32)
+    return counts,[np.asarray(x,np.int32) for x in gby],mags
 
 
 def enc(K,order,level,split):
