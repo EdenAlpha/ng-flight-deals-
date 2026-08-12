@@ -1,0 +1,49 @@
+name: Soda Lake causal neighbour event-edit p75 screen
+on:
+  pull_request:
+    branches: [soda-event-gap-coder]
+permissions: {contents: read}
+jobs:
+  p75:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3
+      - name: Download deterministic p75 shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,json
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          p=.75;s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();i=round((len(keys)-1)*p);k,n=keys[i];print('SHOT',i,k,n,flush=True);s3.download_file(bucket,k,'shot.sgy');json.dump({'percentile':75,'index':i,'key':k,'size':n,'total':len(keys)},open('selection.json','w'),indent=2)
+          PY
+      - name: Isolate new codec header globals from imported PR126 codec
+        run: |
+          python - <<'PY'
+          p='research/soda_neighbor_event_edit.py'
+          s=open(p).read()
+          s=s.replace("MAG=b'NEEDv001'; H='<8sBBBB4II'; HS=struct.calcsize(H)","NMAG=b'NEEDv001'; NHDR='<8sBBBB4II'; NHS=struct.calcsize(NHDR)")
+          s=s.replace('struct.pack(H,MAG,1,oc,dc,0,*K.shape,len(frames))','struct.pack(NHDR,NMAG,1,oc,dc,0,*K.shape,len(frames))')
+          s=s.replace('struct.unpack(H,blob[:HS])','struct.unpack(NHDR,blob[:NHS])')
+          s=s.replace("magic!=MAG or ver!=1 or nf!=10","magic!=NMAG or ver!=1 or nf!=10")
+          s=s.replace('p=HS;lens=[]','p=NHS;lens=[]')
+          if "\nMAG=b'NEEDv001'" in s or 'struct.unpack(H,blob[:HS])' in s or 'struct.pack(H,MAG,1,oc,dc,0' in s: raise RuntimeError('namespace patch incomplete')
+          open(p,'w').write(s)
+          PY
+      - name: Run exact causal event-edit timing codec and byte audit
+        run: python research/soda_neighbor_event_edit.py shot.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-neighbor-event-edit-p75
+          path: |
+            selection.json
+            soda_neighbor_event_edit.json
+          retention-days: 7
