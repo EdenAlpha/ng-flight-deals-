@@ -79,7 +79,9 @@ def main(path):
     variants=[]
     for v in ('run_first','run4','site_shared_run4'):
         r=eval_variant(X,tm,outids,G0.shape,internal_eps,v);Y=r.pop('recon');r['maxerr']=float(np.max(np.abs(X-Y)));r['valid']=bool(r['maxerr']<=public_eps*(1+3e-6))
-        if not r['valid']:raise RuntimeError((v,'hard error',r['maxerr'],public_eps));variants.append(r)
+        if not r['valid']:
+            raise RuntimeError((v,'hard error',r['maxerr'],public_eps))
+        variants.append(r)
     variants.sort(key=lambda r:r['container_bytes']);best=variants[0];szb,sze=sz3_bytes(X,public_eps);target=szb/2
     out={'file':os.path.basename(path),'shape':list(X.shape),'epsilon_fraction_of_std':frac,'public_eps':public_eps,'internal_eps':internal_eps,'raw_bytes':raw,'geometry':geom,'old_phase_bytes':int(oldphase),'pr189_refined_phase_bytes':int(refold['container_bytes']),'variants':variants,'best':best,'sz3':{'bytes':int(szb),'ratio':float(raw/szb),'maxerr':float(sze)},'two_x_target_bytes':target,'gain_vs_direct_sz3':float(szb/best['container_bytes']),'clears_2x':bool(best['container_bytes']<=target)}
     print(json.dumps({'old_phase':oldphase,'pr189_refined_phase':refold['container_bytes'],'best_variant':best['variant'],'best_bytes':best['container_bytes'],'gain_sz3':out['gain_vs_direct_sz3'],'target':target,'clears_2x':out['clears_2x'],'variants':[{k:r[k] for k in ('variant','container_bytes','K_nonzero_fraction','maxerr')} for r in variants]},indent=2),flush=True);json.dump(out,open('soda_tight_run_aware_phase.json','w'),indent=2)
