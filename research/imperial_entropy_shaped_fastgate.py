@@ -1,4 +1,5 @@
-import json,sys
+import json,sys,os
+sys.path.insert(0,os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import h5py,numpy as np
 from research.imperial_entropy_shaped_codeword import stats,szrun,legal,traversals,synthesize
 
