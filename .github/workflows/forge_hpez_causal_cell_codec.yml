@@ -1,0 +1,42 @@
+name: FORGE HPEZ causal cell codec
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read, actions: read}
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with:
+          name: forge-subcube-cache
+          path: data
+          github-token: ${{ github.token }}
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: 31459619473
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          pip install --quiet numpy
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          python research/patch_hpez_causal_dump.py
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install -DCMAKE_CXX_FLAGS="-include cstdint -include array"
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+      - run: |
+          EPS=$(python -c "import json;print(json.load(open('data/forge_subcube_meta.json'))['eps_10pct_std'])")
+          BIN=$PWD/hpez-install/bin/hpez
+          "$BIN" -f -i data/forge_subcube_f32.bin -z stock.hpez -3 512 64 64 -M ABS "$EPS" -q 4
+          "$BIN" -f -z stock.hpez -o stock_rec.bin -3 512 64 64
+          test -s hpez_prefix.bin
+          test -s hpez_final_quant_inds.bin
+          test -s hpez_final_quant_coords_u64.bin
+          python research/benchmark_hpez_causal_cells.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-hpez-causal-cell-results
+          path: forge_hpez_causal_cell_results.json
+          retention-days: 7
