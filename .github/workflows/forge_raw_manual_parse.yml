@@ -1,0 +1,112 @@
+name: Raw Utah FORGE ranged extraction with variable-trace parser
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  parse:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet requests remotezip zipfile64 numpy pysz
+      - name: Ranged extraction
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,requests,os
+          import zipfile64.zipfile
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip';out={'url':url}
+          r=requests.get(url,headers={'Range':'bytes=0-0'},stream=True,timeout=30);out['range_status']=r.status_code;out['content_range']=r.headers.get('Content-Range');r.close()
+          if out['range_status']!=206: raise RuntimeError('HTTP Range unsupported')
+          with RemoteZip(url) as z:
+            infos=sorted([i for i in z.infolist() if not i.is_dir() and i.filename.lower().endswith(('.sgy','.segy','.seg'))],key=lambda i:i.filename)
+            i=infos[len(infos)//2]
+            out['segy_count']=len(infos);out['selected']={'index':len(infos)//2,'name':i.filename,'bytes':i.file_size,'compress_type':int(i.compress_type),'header_offset':int(i.header_offset)}
+            print('SELECT',out['selected'],flush=True)
+            with z.open(i) as src,open('forge_raw_shot.sgy','wb') as dst:
+              while True:
+                b=src.read(8<<20)
+                if not b: break
+                dst.write(b)
+          out['extracted_bytes']=os.path.getsize('forge_raw_shot.sgy');json.dump(out,open('forge_raw_extract.json','w'),indent=2)
+          PY
+      - name: Parse variable-length SEG-Y and benchmark common rectangular core
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os,struct,json,numpy as np
+          from collections import Counter
+          from pysz import sz,szConfig,szErrorBoundMode
+          fn='forge_raw_shot.sgy'; size=os.path.getsize(fn)
+          def i16(b,o): return int.from_bytes(b[o:o+2],'big',signed=True)
+          def u16(b,o): return int.from_bytes(b[o:o+2],'big',signed=False)
+          def i32(b,o): return int.from_bytes(b[o:o+4],'big',signed=True)
+          def scaled(v,s):
+            return float(v)*(float(s) if s>0 else (1.0/float(-s) if s<0 else 1.0))
+          def ibm32_to_f32(raw):
+            u=np.frombuffer(raw,dtype='>u4').astype(np.uint32)
+            sign=np.where((u>>31)!=0,-1.0,1.0); exp=((u>>24)&0x7f).astype(np.int32)-64; frac=(u&0x00ffffff).astype(np.float64)
+            out=sign*np.ldexp(frac/float(1<<24),4*exp); out[u==0]=0.0
+            return out.astype(np.float32)
+          with open(fn,'rb') as f:
+            h=f.read(3600)
+            if len(h)!=3600: raise RuntimeError('short SEG-Y header')
+            bh=h[3200:3600]
+            dt_bin=u16(bh,16); ns_bin=u16(bh,20); fmt=u16(bh,24); rev=u16(bh,300); fixed=u16(bh,302); ext=i16(bh,304)
+            bps={1:4,2:4,3:2,5:4,6:8,7:3,8:1,9:8,10:4,11:2,12:8,15:3,16:1}.get(fmt)
+            if bps is None: raise RuntimeError(f'unsupported sample format {fmt}')
+            data0=3600+(ext if ext>0 else 0)*3200
+            f.seek(data0); pos=data0; traces=[]; nbad=0
+            while pos+240<=size:
+              th=f.read(240)
+              if len(th)<240: break
+              ns=u16(th,114) or ns_bin; dt=u16(th,116) or dt_bin
+              if ns<=0 or ns>2000000 or pos+240+ns*bps>size:
+                nbad+=1; break
+              scal=i16(th,70); sx=scaled(i32(th,72),scal); sy=scaled(i32(th,76),scal); gx=scaled(i32(th,80),scal); gy=scaled(i32(th,84),scal)
+              off=i32(th,36); trseq=i32(th,0); raw=f.read(ns*bps)
+              traces.append({'pos':pos,'ns':ns,'dt':dt,'sx':sx,'sy':sy,'gx':gx,'gy':gy,'offset':off,'trseq':trseq,'raw':raw})
+              pos += 240+ns*bps
+            trailing=size-pos
+          n=len(traces); nsc=Counter(t['ns'] for t in traces); ndt=Counter(t['dt'] for t in traces); coords=Counter((t['gx'],t['gy']) for t in traces); mult=Counter(coords.values())
+          common_ns=nsc.most_common(1)[0][0] if nsc else 0; common=[t for t in traces if t['ns']==common_ns]
+          print('HEADER',{'dt_bin':dt_bin,'ns_bin':ns_bin,'fmt':fmt,'rev':rev,'fixed':fixed,'ext':ext,'data0':data0},flush=True)
+          print('TRACE_COUNTS',{'n':n,'ns':nsc.most_common(10),'dt':ndt.most_common(10),'trailing':trailing,'bad':nbad},flush=True)
+          # Decode only the modal-length traces for a fair rectangular initial baseline; all trace metadata is still reported.
+          def decode(t):
+            raw=t['raw']
+            if fmt==1:return ibm32_to_f32(raw)
+            if fmt==5:return np.frombuffer(raw,dtype='>f4').astype(np.float32)
+            if fmt==2:return np.frombuffer(raw,dtype='>i4').astype(np.float32)
+            if fmt==3:return np.frombuffer(raw,dtype='>i2').astype(np.float32)
+            if fmt==8:return np.frombuffer(raw,dtype='i1').astype(np.float32)
+            if fmt==6:return np.frombuffer(raw,dtype='>f8').astype(np.float32)
+            raise RuntimeError(f'decode format {fmt} not implemented')
+          X=np.stack([decode(t) for t in common],axis=0) if common else np.empty((0,0),np.float32)
+          finite=np.isfinite(X)
+          if X.size and not finite.all(): X=np.where(finite,X,0).astype(np.float32)
+          sz3=None
+          if X.size:
+            std=float(X.astype(np.float64).std());eps=.1*std;cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps);bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,np.float32,X.shape);sz3={'common_shape':list(X.shape),'raw_bytes':int(X.nbytes),'std':std,'eps':eps,'bytes':int(bb.size),'ratio':float(X.nbytes/int(bb.size)),'maxerr':float(np.max(np.abs(X-R)))}
+          pts=np.asarray(list(coords.keys()),float);gdiag={}
+          if len(pts)>1 and len(pts)<=20000:
+            # Chunked nearest-neighbour to avoid a huge full distance matrix.
+            best=np.full(len(pts),np.inf)
+            for a in range(0,len(pts),512):
+              q=pts[a:a+512];d2=np.sum((q[:,None,:]-pts[None,:,:])**2,axis=2)
+              rows=np.arange(a,min(a+512,len(pts)));d2[np.arange(len(rows)),rows]=np.inf;best[a:a+len(rows)]=np.min(d2,axis=1)
+            nn=np.sqrt(best);gdiag={'nearest_median':float(np.median(nn)),'nearest_q10':float(np.quantile(nn,.1)),'nearest_q90':float(np.quantile(nn,.9))}
+          out={'file_bytes':size,'binary_header':{'dt_us':dt_bin,'ns':ns_bin,'format':fmt,'revision_word':rev,'fixed_length_flag':fixed,'extended_text_headers':ext,'data_offset':data0},'trace_count':n,'parsed_end':pos,'trailing_bytes':trailing,'parse_bad_count':nbad,'sample_count_distribution':[[int(k),int(v)] for k,v in nsc.most_common(20)],'sample_interval_distribution':[[int(k),int(v)] for k,v in ndt.most_common(20)],'receiver_unique':len(coords),'receiver_multiplicity':{str(k):int(v) for k,v in sorted(mult.items())},'source_unique':len(set((t['sx'],t['sy']) for t in traces)),'geometry_diag':gdiag,'modal_trace_fraction':float(len(common)/n) if n else 0,'sz3_modal_core':sz3}
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('forge_raw_manual_parse.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-raw-manual-parse
+          path: |
+            forge_raw_extract.json
+            forge_raw_manual_parse.json
+          retention-days: 7
