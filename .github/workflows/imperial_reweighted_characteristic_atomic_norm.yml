@@ -1,9 +1,8 @@
 name: Imperial reweighted characteristic atomic norm
 on:
   pull_request:
-    branches: [imperial-sparse-characteristic-synthesis]
+    branches: [imperial-valley-frozen-brady-transfer]
 permissions: {contents: read}
-# Retrigger only; experiment definition unchanged.
 jobs:
   audit:
     runs-on: ubuntu-24.04
