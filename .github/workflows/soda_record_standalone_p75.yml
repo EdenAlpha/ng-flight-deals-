@@ -1,0 +1,68 @@
+name: Standalone PR161 Soda p75 whole SEG-Y
+on:
+  pull_request:
+    branches: [soda-hard4-frozen-record]
+permissions: {contents: read}
+jobs:
+  p75:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Build official HPEZ
+        run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install -DCMAKE_CXX_FLAGS="-include cstdint -include array"
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+      - run: pip install --quiet numpy segyio zstandard pysz boto3 brotli
+      - name: Download deterministic p75 shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,json
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();i=round((len(keys)-1)*.75);k,n=keys[i]
+          if len(keys)!=8321 or i!=6240 or k!='soda_lake/raw_seismic/2010/v1.0.0/F6618R1.SGY':raise RuntimeError(('p75 drift',len(keys),i,k))
+          s3.download_file(bucket,k,'shot.sgy');json.dump({'percentile':75,'index':i,'key':k,'size':n,'total':len(keys)},open('selection.json','w'),indent=2);print('SHOT',i,k,n,flush=True)
+          PY
+      - name: Encode decode and verify real whole-file container
+        run: python research/soda_record_standalone.py shot.sgy shot.srseg reconstructed.sgy
+      - name: Rerun strongest matched HPEZ/SZ3 sample fairness
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BIN=$PWD/hpez-install/bin/hpez
+          python research/soda_grid_fairness.py prepare shot.sgy
+          export EPS=$(python -c "import json;print(json.load(open('fair/prep.json'))['eps'])")
+          bash fair/run_hpez.sh
+          python research/soda_grid_fairness.py analyze shot.sgy
+      - name: Hostile whole-file accounting
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('soda_record_standalone.json'));f=json.load(open('soda_grid_fairness.json'));e=r['encode'];s=f['strongest']
+          # Give the competitor our exact header blob and file framing, but charge it ZERO bytes
+          # for sample-container metadata. This is an optimistic lower bound on any decodable
+          # whole-file baseline, hence a harder comparison for our real container.
+          optimistic=int(e['file_header_bytes'])+int(e['header_blob_bytes'])+int(s['bytes']);ours=int(e['container_bytes']);gain=optimistic/ours
+          audit={'our_whole_file_bytes':ours,'our_whole_file_ratio':e['whole_file_ratio'],'header_blob_bytes':e['header_blob_bytes'],'sample_blob_bytes':e['sample_blob_bytes'],'sample_format':e['sample_format'],'strongest_sample_baseline':s,'optimistic_baseline_whole_file_lower_bound_bytes':optimistic,'gain_vs_optimistic_whole_file_baseline':gain,'clears_strict_2x_even_with_free_baseline_metadata':bool(gain>=2.0),'headers_exact':r['verify']['headers_exact'],'maxerr':r['verify']['maxerr'],'public_eps':r['verify']['public_eps'],'valid':r['verify']['valid']}
+          print(json.dumps(audit,indent=2),flush=True);json.dump(audit,open('soda_record_standalone_fair.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-record-standalone-p75
+          path: |
+            selection.json
+            shot.srseg
+            soda_record_standalone.json
+            soda_grid_fairness.json
+            soda_record_standalone_fair.json
+          retention-days: 7
