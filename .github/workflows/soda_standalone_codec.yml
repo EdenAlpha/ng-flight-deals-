@@ -25,8 +25,8 @@ jobs:
               if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
           keys.sort();i=round((len(keys)-1)*.5);k,n=keys[i];print('SHOT',i,k,n,flush=True);s3.download_file(bucket,k,'middle.sgy');json.dump({'total':len(keys),'index':i,'key':k,'size':n},open('standalone_selection.json','w'),indent=2)
           PY
-      - name: Encode standalone container, decode to SEG-Y, reopen and verify
-        run: python research/soda_standalone_codec.py middle.sgy middle.segc reconstructed.sgy
+      - name: Encode standalone container, decode exact-format SEG-Y, reopen and verify
+        run: python research/soda_standalone_codec_v2.py middle.sgy middle.segc reconstructed.sgy
       - uses: actions/upload-artifact@v4
         with:
           name: soda-standalone-codec-results
