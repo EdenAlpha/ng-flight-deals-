@@ -22,7 +22,11 @@ jobs:
           bucket='gdr-data-lake';key='soda_lake/raw_seismic/2010/v1.0.0/F4746R1.SGY';os.makedirs('shots',exist_ok=True)
           boto3.client('s3',config=Config(signature_version=UNSIGNED)).download_file(bucket,key,'shots/middle.sgy')
           PY
-      - run: python research/soda_moveout_pilot.py shots/middle.sgy
+      - name: Run corrected pilot
+        shell: bash
+        run: |
+          sed -i "s/PH='<IHHIBBB5Q'/PH='<IHHIBBBB5Q'/" research/soda_moveout_pilot.py
+          python research/soda_moveout_pilot.py shots/middle.sgy
       - uses: actions/upload-artifact@v4
         with:
           name: soda-moveout-pilot
