@@ -35,7 +35,7 @@ jobs:
           s3.download_file(bucket,k,'shot.sgy');json.dump({'percentile':p,'index':i,'key':k,'size':n,'total':len(keys)},open('selection.json','w'),indent=2)
           PY
       - name: Run exact bounded-arithmetic candidates
-        run: python research/soda_tight_bounded_arithmetic.py shot.sgy ${{ matrix.frac }}
+        run: python research/soda_tight_bounded_arithmetic_v2.py shot.sgy ${{ matrix.frac }}
       - uses: actions/upload-artifact@v4
         with:
           name: soda-tight-bounded-arith-p${{ matrix.p }}-f${{ matrix.frac }}
