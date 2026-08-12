@@ -1,0 +1,40 @@
+name: Raw Utah FORGE member inventory
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  inventory:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet remotezip zipfile64 requests
+      - name: Inventory SEG-Y members without downloading payloads
+        run: |
+          python - <<'PY'
+          import json
+          import zipfile64.zipfile
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          with RemoteZip(url) as z:
+            infos=sorted([i for i in z.infolist() if not i.is_dir() and i.filename.lower().endswith(('.sgy','.segy','.seg'))],key=lambda i:i.filename)
+          rows=[]
+          for i in infos:
+            ratio=(i.compress_size/i.file_size) if i.file_size else 0
+            rows.append({'name':i.filename,'file_size':int(i.file_size),'compressed_size':int(i.compress_size),'compressed_fraction':float(ratio),'compress_type':int(i.compress_type),'crc':int(i.CRC),'header_offset':int(i.header_offset)})
+          # Substantive = at least 1 MiB compressed OR >1% of uncompressed size. This deterministically excludes extreme zero-fill placeholders.
+          good=[r for r in rows if r['compressed_size']>=1048576 or r['compressed_fraction']>=0.01]
+          good.sort(key=lambda r:r['name'])
+          selected=good[len(good)//2] if good else None
+          out={'url':url,'total_segy':len(rows),'substantive_count':len(good),'selected_substantive_median':selected,'members':rows}
+          print('TOTAL',len(rows),'SUBSTANTIVE',len(good),flush=True);print('SELECT',selected,flush=True)
+          for r in rows: print('MEM',r['name'],r['file_size'],r['compressed_size'],f"{r['compressed_fraction']:.6f}",r['crc'],flush=True)
+          json.dump(out,open('forge_raw_member_inventory.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-raw-member-inventory
+          path: forge_raw_member_inventory.json
+          retention-days: 7
