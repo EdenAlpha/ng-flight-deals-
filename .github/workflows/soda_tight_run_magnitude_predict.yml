@@ -34,7 +34,7 @@ jobs:
           print('SHOT',p,i,k,n,flush=True);s3.download_file(bucket,k,'shot.sgy');json.dump({'percentile':p,'index':i,'key':k,'size':n,'total':len(keys)},open('selection.json','w'),indent=2)
           PY
       - name: Run exact run-causal magnitude predictor dictionary
-        run: python research/soda_tight_run_magnitude_predict.py shot.sgy ${{ matrix.frac }}
+        run: python research/soda_tight_run_magnitude_predict_safe.py shot.sgy ${{ matrix.frac }}
       - uses: actions/upload-artifact@v4
         with:
           name: soda-tight-magpred-p${{ matrix.p }}-f${{ matrix.frac }}
