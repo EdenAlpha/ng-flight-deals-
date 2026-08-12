@@ -23,12 +23,20 @@ def load_little_segy(path):
         if len(head)!=3600: raise RuntimeError('short SEG-Y')
         bh=head[3200:3600]
         dt=u16(bh,16); ns=u16(bh,20); fmt=u16(bh,24); ext=i16(bh,304)
-        if fmt!=5: raise RuntimeError(f'expected little-endian IEEE float format 5, got {fmt}')
+        family_header_fallback=False
+        if fmt!=5:
+            fam_ns=16001; fam_dt=1000; fam_fmt=5; fam_ntr=1747
+            fam_stride=240+4*fam_ns
+            if not any(head) and size==3600+fam_ntr*fam_stride:
+                ns=fam_ns; dt=fam_dt; fmt=fam_fmt; ext=0; family_header_fallback=True
+            else:
+                raise RuntimeError(f'expected little-endian IEEE float format 5, got {fmt}')
         data0=3600+max(0,ext)*3200
         stride=240+4*ns
         rem=size-data0
         if ns<=0 or rem<=0 or rem%stride: raise RuntimeError({'size':size,'data0':data0,'ns':ns,'stride':stride,'remainder':rem%stride})
         ntr=rem//stride
+        if family_header_fallback and ntr!=1747: raise RuntimeError(f'fallback trace-count mismatch {ntr}')
         X=np.empty((ntr,ns),np.float32); gx=np.empty(ntr,np.float64); gy=np.empty(ntr,np.float64); sx=np.empty(ntr,np.float64); sy=np.empty(ntr,np.float64)
         f.seek(data0)
         for i in range(ntr):
@@ -37,7 +45,7 @@ def load_little_segy(path):
             if ns_t!=ns: raise RuntimeError(f'variable trace length {ns_t} at {i}')
             sc=i16(th,70); sx[i]=scale_coord(i32(th,72),sc); sy[i]=scale_coord(i32(th,76),sc); gx[i]=scale_coord(i32(th,80),sc); gy[i]=scale_coord(i32(th,84),sc)
             raw=f.read(4*ns); X[i]=np.frombuffer(raw,dtype='<f4',count=ns)
-    return X,gx,gy,sx,sy,{'file_bytes':size,'data_offset':data0,'dt_us':dt,'ns':ns,'format':fmt,'trace_count':int(ntr)}
+    return X,gx,gy,sx,sy,{'file_bytes':size,'data_offset':data0,'dt_us':dt,'ns':ns,'format':fmt,'trace_count':int(ntr),'family_header_fallback':bool(family_header_fallback)}
 
 def dtype_code(a):
     lo=int(a.min()) if a.size else 0; hi=int(a.max()) if a.size else 0
