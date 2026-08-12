@@ -1,0 +1,103 @@
+name: Frozen Utah FORGE whole-file codec across 12 raw gathers
+on:
+  pull_request:
+    branches: [forge-standalone-3shot-v2]
+permissions: {contents: read}
+jobs:
+  gather:
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        slot: [0,1,2,3,4,5,6,7,8,9,10,11]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+          pip install --quiet numpy zstandard pysz requests
+      - name: Range-extract deterministic raw Utah gather from archive
+        shell: bash
+        env:
+          SLOT: '${{ matrix.slot }}'
+        run: |
+          python - <<'PY'
+          import json,os,requests,struct
+          slot=int(os.environ['SLOT']);url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          h=requests.head(url,allow_redirects=True,timeout=60);h.raise_for_status();size=int(h.headers['Content-Length']);start=max(0,size-131072)
+          r=requests.get(url,headers={'Range':f'bytes={start}-{size-1}'},timeout=90);r.raise_for_status();tail=r.content;pos=tail.rfind(b'PK\x05\x06')
+          if pos<0:raise RuntimeError('EOCD not found')
+          _,disk,cdisk,nd,nt,cdsz,cdoff,cl=struct.unpack('<4s4H2LH',tail[pos:pos+22])
+          r=requests.get(url,headers={'Range':f'bytes={cdoff}-{cdoff+cdsz-1}'},timeout=120);r.raise_for_status();cd=r.content
+          rows=[];p=0
+          while p+46<=len(cd) and cd[p:p+4]==b'PK\x01\x02':
+            method=struct.unpack_from('<H',cd,p+10)[0];crc=struct.unpack_from('<I',cd,p+16)[0];cs=struct.unpack_from('<I',cd,p+20)[0];us=struct.unpack_from('<I',cd,p+24)[0];nl=struct.unpack_from('<H',cd,p+28)[0];xl=struct.unpack_from('<H',cd,p+30)[0];cm=struct.unpack_from('<H',cd,p+32)[0];off=struct.unpack_from('<I',cd,p+42)[0];name=cd[p+46:p+46+nl].decode('utf-8','replace')
+            if name.lower().endswith(('.sgy','.segy','.seg')):rows.append((name,us,cs,crc,method,off))
+            p+=46+nl+xl+cm
+          rows.sort(key=lambda q:q[0])
+          if len(rows)<100:raise RuntimeError(('unexpected SEG-Y member count',len(rows)))
+          idx=round((len(rows)-1)*slot/11);name,us,cs,crc,method,off=rows[idx]
+          lh=requests.get(url,headers={'Range':f'bytes={off}-{off+29}'},timeout=60);lh.raise_for_status();hdr=lh.content
+          if hdr[:4]!=b'PK\x03\x04':raise RuntimeError(('bad local header',off,hdr[:4]))
+          lnl=struct.unpack_from('<H',hdr,26)[0];lxl=struct.unpack_from('<H',hdr,28)[0];dataoff=off+30+lnl+lxl
+          pay=requests.get(url,headers={'Range':f'bytes={dataoff}-{dataoff+cs-1}'},timeout=180);pay.raise_for_status();payload=pay.content
+          if len(payload)!=cs:raise RuntimeError(('payload length',len(payload),cs))
+          nb=name.encode();local=struct.pack('<IHHHHHIIIHH',0x04034b50,21,0,method,0,0,crc,cs,us,len(nb),0)+nb;central=struct.pack('<IHHHHHHIIIHHHHHII',0x02014b50,20,21,0,method,0,0,crc,cs,us,len(nb),0,0,0,0,0,0)+nb;co=len(local)+len(payload);eocd=struct.pack('<IHHHHIIH',0x06054b50,0,0,1,1,len(central),co,0);open('member.zip','wb').write(local+payload+central+eocd)
+          sel={'slot':slot,'archive_member_index':idx,'archive_segy_members':len(rows),'name':name,'uncompressed_bytes':us,'compressed_member_bytes':cs,'method':method,'crc32':crc,'local_header_offset':off}
+          print(json.dumps(sel,indent=2),flush=True);json.dump(sel,open(f'selection_{slot}.json','w'),indent=2)
+          PY
+          7z t member.zip >/dev/null
+          mkdir x && 7z x -y -ox member.zip >/dev/null
+          NAME=$(python -c "import json;print(json.load(open('selection_${{ matrix.slot }}.json'))['name'])")
+          mv "x/$NAME" forge_raw.sgy
+      - name: Encode decode verify lattice and matched SZ3 whole-file containers
+        shell: bash
+        env:
+          SLOT: '${{ matrix.slot }}'
+        run: |
+          python research/forge_standalone_segc.py forge_raw.sgy
+          python - <<'PY'
+          import json,os
+          slot=int(os.environ['SLOT']);r=json.load(open('forge_standalone_result.json'));a=r['lattice'];b=r['sz3'];v=r['lattice_verify'];bv=r['sz3_verify']
+          out={'slot':slot,'input_bytes':int(a['input_bytes']),'container_bytes':int(a['container_bytes']),'whole_file_ratio':float(a['whole_file_ratio']),'sample_blob_bytes':int(a['sample_blob_bytes']),'header_blob_bytes':int(a['header_blob_bytes']),'K_nonzero_fraction':float(a['sample']['K_nonzero_fraction']),'sz3_container_bytes':int(b['container_bytes']),'sz3_whole_file_ratio':float(b['whole_file_ratio']),'gain_vs_sz3':float(r['whole_file_size_gain']),'headers_exact':bool(v['headers_exact']),'valid':bool(v['valid']),'sz3_valid':bool(bv['valid']),'maxerr':float(v['sample_maxerr']),'eps':float(v['eps'])}
+          if not out['headers_exact'] or not out['valid'] or not out['sz3_valid']:raise RuntimeError(('validation',out))
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open(f'result_{slot}.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-large12-${{ matrix.slot }}
+          path: |
+            selection_${{ matrix.slot }}.json
+            result_${{ matrix.slot }}.json
+          retention-days: 7
+  aggregate:
+    needs: gather
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: forge-large12-*
+          path: all
+          merge-multiple: true
+      - name: Aggregate exact whole-file bytes and matched SZ3 bytes
+        run: |
+          python - <<'PY'
+          import glob,json,statistics
+          rr=[json.load(open(p)) for p in sorted(glob.glob('all/result_*.json'))];ss=[json.load(open(p)) for p in sorted(glob.glob('all/selection_*.json'))]
+          if len(rr)!=12 or len(ss)!=12:raise RuntimeError(('missing results',len(rr),len(ss)))
+          if not all(x['headers_exact'] and x['valid'] and x['sz3_valid'] for x in rr):raise RuntimeError('invalid member')
+          raw=sum(x['input_bytes'] for x in rr);ours=sum(x['container_bytes'] for x in rr);sz3=sum(x['sz3_container_bytes'] for x in rr);g=[x['gain_vs_sz3'] for x in rr];rat=[x['whole_file_ratio'] for x in rr]
+          out={'gathers':12,'aggregate_input_bytes':raw,'aggregate_container_bytes':ours,'aggregate_sz3_container_bytes':sz3,'aggregate_whole_file_ratio':raw/ours,'aggregate_sz3_whole_file_ratio':raw/sz3,'aggregate_gain_vs_sz3':sz3/ours,'minimum_member_ratio':min(rat),'median_member_ratio':statistics.median(rat),'maximum_member_ratio':max(rat),'minimum_gain_vs_sz3':min(g),'median_gain_vs_sz3':statistics.median(g),'maximum_gain_vs_sz3':max(g),'all_headers_exact':True,'all_hard_error_valid':True,'members':[x['name'] for x in ss]}
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('forge_large12_summary.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-large12-summary
+          path: forge_large12_summary.json
+          retention-days: 7
