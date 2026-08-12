@@ -1,0 +1,32 @@
+name: Trace Brady versus Imperial DAS generalization
+on:
+  pull_request:
+    branches: [imperial-valley-frozen-brady-transfer]
+permissions: {contents: read}
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py boto3
+      - name: Download exact Brady and Imperial Valley inputs
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2 -o brady.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          bucket='gdr-data-lake';key='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));s3.download_file(bucket,key,'imperial.h5')
+          if os.path.getsize('imperial.h5')!=415030456:raise RuntimeError(('Imperial file drift',os.path.getsize('imperial.h5')))
+          PY
+      - name: Measure structural cause of generalization gap
+        run: python research/trace_brady_vs_imperial_generalization.py brady.sgy imperial.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brady-imperial-generalization-trace
+          path: brady_imperial_generalization_trace.json
+          retention-days: 7
