@@ -3,7 +3,8 @@ import imperial_sparsest_legal_lorenzo_surface as m
 
 # Same experiment, only enlarge the spatial patch so pysz's internal output
 # buffer is safely above its tiny-array format overhead. Keep four fixed cable
-# regimes so the MILP remains tractable.
+# regimes so the MILP remains tractable. This commit intentionally retriggers
+# CI after the original tiny-patch run executed before this wrapper was active.
 m.NC=32
 m.NT=64
 m.SPECS=(
