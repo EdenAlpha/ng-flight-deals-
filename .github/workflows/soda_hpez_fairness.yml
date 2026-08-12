@@ -1,0 +1,62 @@
+name: Soda Lake official HPEZ q4 fairness
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  hpez:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio pysz boto3
+      - name: Download and prepare exact median shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          os.makedirs('shots',exist_ok=True)
+          boto3.client('s3',config=Config(signature_version=UNSIGNED)).download_file('gdr-data-lake','soda_lake/raw_seismic/2010/v1.0.0/F4746R1.SGY','shots/middle.sgy')
+          PY
+          python research/prepare_soda_hpez.py shots/middle.sgy
+      - name: Build official HPEZ q4
+        run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install -DCMAKE_CXX_FLAGS="-include cstdint -include array"
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+      - name: Compress layouts and verify
+        shell: bash
+        run: |
+          EPS=$(python -c "import json;print(json.load(open('soda_hpez_meta.json'))['eps'])")
+          BIN=$PWD/hpez-install/bin/hpez
+          run2() { IN=$1; TAG=$2; A=$3; B=$4; $BIN -f -i "$IN" -z "${TAG}.hpez" -2 "$A" "$B" -M ABS "$EPS" -q 4; $BIN -f -z "${TAG}.hpez" -o "${TAG}.out" -2 "$A" "$B"; }
+          run3() { IN=$1; TAG=$2; A=$3; B=$4; C=$5; $BIN -f -i "$IN" -z "${TAG}.hpez" -3 "$A" "$B" "$C" -M ABS "$EPS" -q 4; $BIN -f -z "${TAG}.hpez" -o "${TAG}.out" -3 "$A" "$B" "$C"; }
+          run2 soda_file.bin file_1993x2000 1993 2000
+          run2 soda_file.bin file_2000x1993 2000 1993
+          for L in receiver offset lexgeo; do
+            run3 soda_${L}3d.bin ${L}_3x664x2000 3 664 2000
+            run3 soda_${L}3d.bin ${L}_2000x664x3 2000 664 3
+            run3 soda_${L}3d.bin ${L}_664x2000x3 664 2000 3
+          done
+          python - <<'PY'
+          import glob,json,os,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          m=json.load(open('soda_hpez_meta.json'));eps=float(m['eps']);raw=int(m['raw_bytes']);rows=[]
+          extra_bytes=0;extra_err=0.0
+          if os.path.exists('soda_extra.bin'):
+              E=np.fromfile('soda_extra.bin','<f4');cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(np.ascontiguousarray(E),cfg);R,_=sz.decompress(b,np.float32,E.shape);extra_bytes=int(b.size);extra_err=float(np.max(np.abs(E-R)))
+          for cb in glob.glob('*.hpez'):
+              tag=cb[:-5]; base='soda_file.bin' if tag.startswith('file_') else 'soda_'+tag.split('_')[0]+'3d.bin'
+              X=np.fromfile(base,'<f4');Y=np.fromfile(tag+'.out','<f4');me=float(np.max(np.abs(X-Y)));core=os.path.getsize(cb);grouped=not tag.startswith('file_');total=core+(extra_bytes if grouped else 0);rows.append({'tag':tag,'core_bytes':core,'extra_bytes':extra_bytes if grouped else 0,'bytes':total,'ratio':raw/total,'maxerr':max(me,extra_err if grouped else 0.0),'valid':bool(max(me,extra_err if grouped else 0.0)<=eps*(1+5e-6))})
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'meta':m,'extra_sz3_bytes':extra_bytes,'rows':rows};print(json.dumps(out,indent=2));json.dump(out,open('soda_hpez_fairness.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-hpez-fairness
+          path: soda_hpez_fairness.json
+          retention-days: 7
