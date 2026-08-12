@@ -1,0 +1,33 @@
+name: Soda Lake moveout gain ablation
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  ablate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3
+      - name: Download deterministic median Soda Lake shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          os.makedirs('shots',exist_ok=True)
+          boto3.client('s3',config=Config(signature_version=UNSIGNED)).download_file('gdr-data-lake','soda_lake/raw_seismic/2010/v1.0.0/F4746R1.SGY','shots/middle.sgy')
+          PY
+      - name: Run ablation
+        run: |
+          sed -i "s/PH='<IHHIBBB5Q'/PH='<IHHIBBBB5Q'/" research/soda_moveout_pilot.py
+          python research/soda_moveout_ablation.py shots/middle.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-moveout-ablation
+          path: soda_moveout_ablation.json
+          retention-days: 7
