@@ -8,7 +8,7 @@ src=open('research/soda_tight_rice_frames.py').read().split('\ndef main(path,fra
 exec(compile(src,'soda_tight_rice_frames.py','exec'),globals())
 
 BA_MAGIC=b'BARITH01'
-BA_HDR='<8sBBBBBB4I12B12Q'
+BA_HDR='<8sBBBBB4I12B12Q'
 BA_HS=struct.calcsize(BA_HDR)
 FULL=1<<32;HALF=1<<31;Q1=1<<30;Q3=3<<30
 CUTS=(3,7,15,31,63)
@@ -168,22 +168,22 @@ def main(path,frac):
     O=np.rint(X[outids]/step).astype(np.int32);K=delta(G,3);cache=structural_sequences(K);inc=[]
     for r2 in (0,1):
         for r9 in (0,1):
-            mb,parts=encode_main_candidate(K,r2,r9,cache);R=decode_main_candidate(mb)
-            if not np.array_equal(R,K):raise RuntimeError('bounded incumbent K')
-            inc.append((len(mb),r2,r9,parts))
-    inc.sort(key=lambda x:x[0]);bo=best_out(O);RO=decode_out_blob(bo,O.shape)
-    if not np.array_equal(RO,O):raise RuntimeError('bounded outlier')
-    incbytes=TOP_HS+inc[0][0]+int(bo[0]);rows=[]
+            b,parts=encode_main_candidate(K,r2,r9,cache);R=decode_main_candidate(b)
+            if not np.array_equal(R,K):raise RuntimeError('incumbent decode')
+            inc.append((len(b),r2,r9,b,parts))
+    inc.sort(key=lambda r:r[0]);base=inc[0];bo=best_out(O);RO=decode_out_blob(bo,O.shape)
+    if not np.array_equal(RO,O):raise RuntimeError('bounded outlier decode')
+    base_container=TOP_HS+base[0]+bo[0];rows=[]
     for cut in CUTS:
         for rep9 in (0,1):
             mb,parts=encode_bounded(K,cut,rep9,cache);RK=decode_bounded(mb)
             if not np.array_equal(RK,K):raise RuntimeError(('bounded exact K',cut,rep9))
-            total=TOP_HS+len(mb)+int(bo[0]);rows.append({'cut':cut,'rep_magnitude_rice':bool(rep9),'main_bytes':len(mb),'container_bytes':total,'parts':parts,'blob':mb})
-    rows.sort(key=lambda r:r['container_bytes']);best=rows[0];RK=decode_bounded(best['blob']);RG=undelta(RK,3);Y=np.empty_like(X)
-    for tid,c,l,s in tm:Y[tid]=RG[c,l,s].astype(np.float32)*np.float32(step)
-    Y[outids]=RO.astype(np.float32)*np.float32(step);me=float(np.max(np.abs(X-Y)))
-    if me>public_eps*(1+3e-6):raise RuntimeError(('bounded hard error',me,public_eps))
-    szb,sze=sz3_bytes(X,public_eps);out={'file':os.path.basename(path),'shape':list(X.shape),'epsilon_fraction_of_std':float(frac),'public_eps':public_eps,'internal_eps':internal_eps,'raw_bytes':raw,'geometry':geom,'K_nonzero_fraction':float(np.mean(K!=0)),'incumbent':{'container_bytes':incbytes,'main_bytes':inc[0][0],'rep_inter_rice':bool(inc[0][1]),'rep_magnitude_rice':bool(inc[0][2]),'parts':inc[0][3]},'best_bounded':{k:v for k,v in best.items() if k!='blob'},'all_bounded':[{k:v for k,v in r.items() if k!='blob'} for r in rows],'improvement_vs_incumbent':incbytes/best['container_bytes'],'maxerr':me,'valid':True,'sz3':{'bytes':int(szb),'ratio':raw/szb,'maxerr':float(sze)},'gain_vs_direct_sz3':szb/best['container_bytes']}
-    print(json.dumps({'frac':frac,'incumbent_bytes':incbytes,'best_cut':best['cut'],'best_rep_mag_rice':best['rep_magnitude_rice'],'best_bytes':best['container_bytes'],'improvement':out['improvement_vs_incumbent'],'gain_sz3':out['gain_vs_direct_sz3'],'model_bytes':best['parts']['gap_model'],'arith_bytes':best['parts']['gap_arithmetic'],'tail_bytes':best['parts']['gap_tail'],'timing_bytes':best['parts']['timing_bytes']},indent=2),flush=True);json.dump(out,open('soda_tight_bounded_arithmetic.json','w'),indent=2)
+            container=TOP_HS+len(mb)+bo[0];rows.append((container,cut,rep9,mb,parts))
+    rows.sort(key=lambda r:r[0]);w=rows[0];RK=decode_bounded(w[3]);Q=np.cumsum(RK,axis=3,dtype=np.int64).astype(np.int32);Y=np.empty_like(X)
+    for tid,c,l,s in tm:Y[tid]=Q[c,l,s].astype(np.float32)*np.float32(step)
+    Y[outids]=RO.astype(np.float32)*np.float32(step);me=float(np.max(np.abs(X-Y)));szb,sze=sz3_bytes(X,public_eps)
+    out={'file':os.path.basename(path),'shape':list(X.shape),'epsilon_fraction_of_std':float(frac),'public_eps':public_eps,'internal_eps':internal_eps,'raw_bytes':raw,'geometry':geom,'incumbent':{'container_bytes':int(base_container),'main_bytes':base[0],'inter_rice':bool(base[1]),'magnitude_rice':bool(base[2]),'parts':base[4]},'best':{'container_bytes':int(w[0]),'main_bytes':len(w[3]),'cut':int(w[1]),'magnitude_rice':bool(w[2]),'parts':w[4]},'all':[{'container_bytes':int(r[0]),'cut':int(r[1]),'magnitude_rice':bool(r[2]),'parts':r[4]} for r in rows],'improvement_vs_incumbent':float(base_container/w[0]),'sz3':{'bytes':int(szb),'ratio':float(raw/szb),'maxerr':float(sze)},'gain_vs_direct_sz3':float(szb/w[0]),'maxerr':me,'valid':bool(me<=public_eps)}
+    if not out['valid']:raise RuntimeError(('bounded hard error',me,public_eps))
+    print(json.dumps({'frac':frac,'incumbent':base_container,'best_bytes':w[0],'cut':w[1],'magnitude_rice':bool(w[2]),'improvement':out['improvement_vs_incumbent'],'gain_sz3':out['gain_vs_direct_sz3'],'model':w[4]['gap_model'],'arith':w[4]['gap_arithmetic'],'tail':w[4]['gap_tail'],'maxerr':me},indent=2),flush=True);json.dump(out,open('soda_tight_bounded_arithmetic.json','w'),indent=2)
 
 main(sys.argv[1],float(sys.argv[2]))
