@@ -1,0 +1,41 @@
+name: Soda Lake moveout quick screen
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  quick:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3
+      - name: Download deterministic median Soda Lake shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          bucket='gdr-data-lake';key='soda_lake/raw_seismic/2010/v1.0.0/F4746R1.SGY';os.makedirs('shots',exist_ok=True)
+          boto3.client('s3',config=Config(signature_version=UNSIGNED)).download_file(bucket,key,'shots/middle.sgy')
+          PY
+      - name: Restrict to compact moveout screen and run
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('research/soda_moveout_pilot.py')
+          s=p.read_text()
+          s=s.replace("VELS=[0.,1200.,1600.,2000.,2500.,3200.,4000.,5000.,6500.]", "VELS=[0.,1600.,2500.,4000.]")
+          s=s.replace("for frac in [0.0005,0.001,0.002,0.004]:", "for frac in [0.001,0.002]:")
+          p.write_text(s)
+          PY
+          python research/soda_moveout_pilot.py shots/middle.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-moveout-quick
+          path: soda_moveout_pilot.json
+          retention-days: 7
