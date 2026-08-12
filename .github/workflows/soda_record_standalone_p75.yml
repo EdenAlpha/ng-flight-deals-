@@ -34,7 +34,7 @@ jobs:
           s3.download_file(bucket,k,'shot.sgy');json.dump({'percentile':75,'index':i,'key':k,'size':n,'total':len(keys)},open('selection.json','w'),indent=2);print('SHOT',i,k,n,flush=True)
           PY
       - name: Encode decode and verify real whole-file container
-        run: python research/soda_record_standalone_v2.py shot.sgy shot.srseg reconstructed.sgy
+        run: python research/soda_record_standalone_safe.py shot.sgy shot.srseg reconstructed.sgy
       - name: Rerun strongest matched HPEZ/SZ3 sample fairness
         shell: bash
         run: |
