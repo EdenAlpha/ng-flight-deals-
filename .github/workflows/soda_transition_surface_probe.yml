@@ -1,0 +1,31 @@
+name: Soda Lake transition surface probe
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3
+      - name: Download deterministic median Soda Lake shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          os.makedirs('shots',exist_ok=True)
+          boto3.client('s3',config=Config(signature_version=UNSIGNED)).download_file('gdr-data-lake','soda_lake/raw_seismic/2010/v1.0.0/F4746R1.SGY','shots/middle.sgy')
+          PY
+          python research/patch_soda_lattice_collision.py
+      - run: python research/soda_transition_surface_probe.py shots/middle.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-transition-surface-probe
+          path: soda_transition_surface_probe.json
+          retention-days: 7

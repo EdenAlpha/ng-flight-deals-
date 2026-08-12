@@ -1,0 +1,63 @@
+name: Soda Lake lattice-matched HPEZ fairness
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  hpez:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio pysz boto3 zstandard
+      - name: Download deterministic median shot and prepare lattice
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          os.makedirs('shots',exist_ok=True)
+          boto3.client('s3',config=Config(signature_version=UNSIGNED)).download_file('gdr-data-lake','soda_lake/raw_seismic/2010/v1.0.0/F4746R1.SGY','shots/middle.sgy')
+          PY
+          python research/patch_soda_lattice_collision.py
+          python research/prepare_soda_lattice_hpez.py shots/middle.sgy
+      - name: Build official HPEZ q4
+        run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install -DCMAKE_CXX_FLAGS="-include cstdint -include array"
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+      - name: Compress matched lattice and verify
+        shell: bash
+        run: |
+          EPS=$(python -c "import json;print(json.load(open('soda_lattice_hpez_meta.json'))['eps'])")
+          BIN=$PWD/hpez-install/bin/hpez
+          run3() { TAG=$1; A=$2; B=$3; C=$4; $BIN -f -i soda_lattice_hpez.bin -z "${TAG}.hpez" -3 "$A" "$B" "$C" -M ABS "$EPS" -q 4; $BIN -f -z "${TAG}.hpez" -o "${TAG}.out" -3 "$A" "$B" "$C"; }
+          run3 lattice_45x46x2000 45 46 2000
+          run3 lattice_2000x46x45 2000 46 45
+          run3 lattice_46x2000x45 46 2000 45
+          run3 lattice_3x690x2000 3 690 2000
+          run3 lattice_2000x690x3 2000 690 3
+          run3 lattice_690x2000x3 690 2000 3
+          python - <<'PY'
+          import glob,json,os,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          m=json.load(open('soda_lattice_hpez_meta.json'));eps=float(m['eps']);raw=int(m['raw_bytes']);shape=m['shape_grid'];V=np.fromfile('soda_lattice_true.bin','<f4').reshape(shape);present=np.fromfile('soda_lattice_present.bin',np.uint8).reshape(shape[:3]).astype(bool)
+          extra_bytes=0;extra_err=0.0
+          if os.path.exists('soda_lattice_extra.bin'):
+              E=np.fromfile('soda_lattice_extra.bin','<f4');cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(np.ascontiguousarray(E),cfg);R,_=sz.decompress(b,np.float32,E.shape);extra_bytes=int(b.size);extra_err=float(np.max(np.abs(E-R)))
+          rows=[]
+          for cb in glob.glob('lattice_*.hpez'):
+              tag=cb[:-5];Y=np.fromfile(tag+'.out','<f4').reshape(shape);me=0.0
+              for c in range(shape[0]):me=max(me,float(np.max(np.abs(V[c][present[c]]-Y[c][present[c]]))))
+              total=os.path.getsize(cb)+extra_bytes;rows.append({'tag':tag,'core_bytes':os.path.getsize(cb),'extra_bytes':extra_bytes,'bytes':total,'ratio':raw/total,'maxerr':max(me,extra_err),'valid':bool(max(me,extra_err)<=eps*(1+5e-6))})
+          rows.sort(key=lambda r:r['ratio'],reverse=True);out={'meta':m,'rows':rows};print(json.dumps(out,indent=2));json.dump(out,open('soda_lattice_hpez_fairness.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-lattice-hpez-fairness
+          path: soda_lattice_hpez_fairness.json
+          retention-days: 7
