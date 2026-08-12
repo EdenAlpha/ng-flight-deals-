@@ -1,0 +1,33 @@
+name: Cape EGS independent full-record DAS benchmark
+on:
+  pull_request:
+    branches: [imperial-valley-frozen-brady-transfer]
+permissions: {contents: read}
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz
+      - name: Download first official Cape EGS continuous DAS record
+        run: |
+          curl -L --fail --retry 4 --retry-delay 3 -o cape.h5 'https://gdr.openei.org/files/1816/16B-DAS_SM_UTC_20250831_230851.872.h5'
+          ls -lh cape.h5
+          python - <<'PY'
+          import h5py,os
+          print('bytes',os.path.getsize('cape.h5'))
+          with h5py.File('cape.h5','r') as f:
+            def v(n,o):
+              if isinstance(o,h5py.Dataset):print(n,o.shape,o.dtype)
+            f.visititems(v)
+          PY
+      - name: Run corrected full-record matched benchmark
+        run: python research/cape_egs_das_benchmark.py cape.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cape-egs-das-benchmark
+          path: cape_egs_das_benchmark.json
+          retention-days: 7
