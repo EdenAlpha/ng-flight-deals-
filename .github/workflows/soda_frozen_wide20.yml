@@ -43,3 +43,29 @@ jobs:
             selection.json
             soda_hard4_frozen_record.json
           retention-days: 7
+  summary:
+    needs: wide20
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: soda-frozen-wide-p*
+          path: wide
+      - name: Aggregate and rank results
+        run: |
+          python - <<'PY'
+          import glob,json,os,statistics
+          rows=[]
+          for d in glob.glob('wide/soda-frozen-wide-p*'):
+              s=json.load(open(os.path.join(d,'selection.json')));j=json.load(open(os.path.join(d,'soda_hard4_frozen_record.json'));)
+              f=j['frozen'];rows.append({'percentile':int(s['percentile']),'index':int(s['index']),'key':s['key'],'input_size':int(s['size']),'raw_sample_bytes':int(j['raw_bytes']),'container_bytes':int(f['container_bytes']),'ratio':float(f['ratio']),'sz3_bytes':int(j['sz3_direct']['bytes']),'gain_vs_direct_sz3':float(f['gain_vs_direct_sz3']),'K_nonzero_fraction':float(j['K_nonzero_fraction']),'eps':float(j['eps']),'maxerr':float(f['maxerr']),'valid':bool(f['valid'])})
+          rows.sort(key=lambda r:r['gain_vs_direct_sz3'])
+          out={'count':len(rows),'all_valid':all(r['valid'] for r in rows),'all_clear_2x_direct_sz3':all(r['gain_vs_direct_sz3']>=2 for r in rows),'min_gain':min(r['gain_vs_direct_sz3'] for r in rows),'median_gain':statistics.median(r['gain_vs_direct_sz3'] for r in rows),'max_gain':max(r['gain_vs_direct_sz3'] for r in rows),'weakest':rows[:5],'rows':rows}
+          print(json.dumps(out,indent=2));json.dump(out,open('soda_frozen_wide20_summary.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-frozen-wide20-summary
+          path: soda_frozen_wide20_summary.json
+          retention-days: 7
