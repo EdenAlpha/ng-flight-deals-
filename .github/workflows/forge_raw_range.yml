@@ -1,0 +1,66 @@
+name: Raw Utah FORGE range-extraction diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet requests remotezip numpy segyio pysz
+      - name: Probe archive and extract deterministic member
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,os,requests
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          out={'url':url}
+          h=requests.head(url,allow_redirects=True,timeout=30);out['head']={'status':h.status_code,'content_length':h.headers.get('Content-Length'),'accept_ranges':h.headers.get('Accept-Ranges'),'content_type':h.headers.get('Content-Type'),'final_url':h.url}
+          r=requests.get(url,headers={'Range':'bytes=0-0'},stream=True,allow_redirects=True,timeout=30);out['range']={'status':r.status_code,'content_range':r.headers.get('Content-Range'),'content_length':r.headers.get('Content-Length'),'accept_ranges':r.headers.get('Accept-Ranges')}; first=next(r.iter_content(1024),b'');out['range']['first_bytes_hex']=first[:16].hex();r.close()
+          if out['range']['status']!=206: raise RuntimeError('server did not honor HTTP range; refusing multi-GB download')
+          with RemoteZip(url) as z:
+            infos=[i for i in z.infolist() if (not i.is_dir()) and i.filename.lower().endswith(('.sgy','.segy','.seg'))]
+            infos.sort(key=lambda x:x.filename);out['segy_count']=len(infos);out['members']=[{'name':i.filename,'bytes':i.file_size,'compressed':i.compress_size} for i in infos]
+            i=infos[len(infos)//2];out['selected']={'index':len(infos)//2,'name':i.filename,'bytes':i.file_size,'compressed':i.compress_size};print('SELECT',out['selected'],flush=True)
+            with z.open(i) as src, open('forge_raw_shot.sgy','wb') as dst:
+              while True:
+                b=src.read(8<<20)
+                if not b:break
+                dst.write(b)
+          json.dump(out,open('forge_range.json','w'),indent=2)
+          PY
+      - name: Inspect extracted raw gather and matched SZ3
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,os,numpy as np,segyio
+          from collections import Counter
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='forge_raw_shot.sgy';meta=json.load(open('forge_range.json'))
+          with segyio.open(f,'r',ignore_geometry=True) as s:
+            X=np.asarray(s.trace.raw[:],np.float32).copy();dt=int(segyio.tools.dt(s))
+            def attr(field):
+              try:return np.asarray(s.attributes(field)[:],np.int64)
+              except:return np.zeros(X.shape[0],np.int64)
+            gx=attr(segyio.TraceField.GroupX);gy=attr(segyio.TraceField.GroupY);sx=attr(segyio.TraceField.SourceX);sy=attr(segyio.TraceField.SourceY)
+          std=float(X.astype(np.float64).std());eps=.1*std;raw=X.nbytes
+          coord=list(zip(gx.tolist(),gy.tolist()));cnt=Counter(coord);mult=Counter(cnt.values());uniq=len(cnt)
+          pts=np.asarray(list(cnt.keys()),float);diag={}
+          if len(pts)>1:
+            d=pts[:,None,:]-pts[None,:,:];ds=np.sum(d*d,2);ds[ds==0]=np.inf;j=np.argmin(ds,1);v=pts[j]-pts;l=np.sqrt(np.sum(v*v,1));diag={'nearest_median':float(np.median(l)),'nearest_q10':float(np.quantile(l,.1)),'nearest_q90':float(np.quantile(l,.9))}
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(b,np.float32,X.shape)
+          out={'selected':meta['selected'],'shape':list(X.shape),'dt_us':dt,'raw_sample_bytes':raw,'std':std,'eps':eps,'receiver_unique':uniq,'receiver_multiplicity':{str(k):int(v) for k,v in sorted(mult.items())},'source_unique':len(set(zip(sx.tolist(),sy.tolist()))),'geometry_diag':diag,'sz3':{'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-R)))}}
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('forge_raw_inspect.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-raw-range-diagnostic
+          path: |
+            forge_range.json
+            forge_raw_inspect.json
+          retention-days: 7
