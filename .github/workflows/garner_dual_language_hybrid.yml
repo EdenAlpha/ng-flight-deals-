@@ -1,0 +1,22 @@
+name: Garner adaptive dual-language full-array codec
+on:
+  pull_request:
+    branches: [garner-valley-das-independent-gate]
+permissions: {contents: read}
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py segyio zstandard pysz
+      - run: curl -L --fail --retry 4 --retry-delay 3 -o garner.sgy 'https://gdr.openei.org/files/481/large%20shaker%20NEES_130910161319%20%281%29.sgy'
+      - name: Compose lattice and spectral languages over every tile
+        run: python research/garner_dual_language_hybrid.py garner.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: garner-dual-language-hybrid
+          path: garner_dual_language_hybrid.json
+          retention-days: 7
