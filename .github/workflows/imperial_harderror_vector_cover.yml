@@ -1,0 +1,36 @@
+name: Imperial hard-error vector covering code audit
+on:
+  pull_request:
+    branches: [imperial-quotient-shape-language]
+permissions: {contents: read}
+jobs:
+  cover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py boto3
+      - name: Download three consecutive Imperial Valley records ending at the canonical file
+        run: |
+          python - <<'PY'
+          import boto3,os,json
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';prefix='imperialvalleydas/v1.0.0/';target=prefix+'DF__UTC_20201113_235932.602.h5';s=boto3.client('s3',config=Config(signature_version=UNSIGNED));rows=[]
+          for pg in s.get_paginator('list_objects_v2').paginate(Bucket=b,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].endswith('.h5'):rows.append((o['Key'],int(o['Size'])))
+          rows.sort();keys=[k for k,_ in rows];i=keys.index(target);sel=rows[i-2:i+1]
+          if len(sel)!=3:raise RuntimeError('need 3 records')
+          for j,(k,n) in enumerate(sel):s.download_file(b,k,f'r{j}.h5');assert os.path.getsize(f'r{j}.h5')==n
+          print(json.dumps(sel,indent=2))
+          PY
+      - name: Search previous waveform language through the target tolerance boxes
+        run: python research/imperial_harderror_vector_cover.py r0.h5 r1.h5 r2.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-harderror-vector-cover
+          path: imperial_harderror_vector_cover.json
+          retention-days: 7
