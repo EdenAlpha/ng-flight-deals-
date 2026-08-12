@@ -3,6 +3,7 @@ on:
   pull_request:
     branches: [imperial-valley-frozen-brady-transfer]
 permissions: {contents: read}
+# synchronize trigger; experiment definition unchanged
 jobs:
   screen:
     runs-on: ubuntu-24.04
