@@ -1,0 +1,52 @@
+name: Frozen sparse-state codec on raw Utah FORGE
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install benchmark tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+          pip install --quiet numpy zstandard pysz requests
+      - name: Range-fetch deterministic nonzero-median Utah FORGE member
+        shell: bash
+        run: |
+          python - <<'PY'
+          import requests,struct,json
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          # Frozen selection established independently in PR #112: lexicographic median
+          # after excluding only members whose CRC exactly equals an all-zero file of
+          # the same size. 33 real members remain from 121; this is nonzero index 16.
+          name=b'1511994193_1017_50500_16500_20171202_220556_570.sgy'
+          file_size=112237868; comp_size=102933340; crc=226598985; method=9; data_off=1647386036
+          end=data_off+comp_size-1
+          r=requests.get(url,headers={'Range':f'bytes={data_off}-{end}'},timeout=120);r.raise_for_status();payload=r.content
+          if len(payload)!=comp_size:raise RuntimeError((len(payload),comp_size))
+          local=struct.pack('<IHHHHHIIIHH',0x04034b50,21,0,method,0,0,crc,comp_size,file_size,len(name),0)+name
+          central=struct.pack('<IHHHHHHIIIHHHHHII',0x02014b50,20,21,0,method,0,0,crc,comp_size,file_size,len(name),0,0,0,0,0,0)+name
+          cd_off=len(local)+len(payload);eocd=struct.pack('<IHHHHIIH',0x06054b50,0,0,1,1,len(central),cd_off,0)
+          open('forge_member.zip','wb').write(local+payload+central+eocd)
+          json.dump({'selection_rule':'median lexicographic nonzero member after exact all-zero CRC exclusion','nonzero_index':16,'nonzero_count':33,'archive_segy_count':121,'name':name.decode(),'file_size':file_size,'compressed_size':comp_size,'crc':crc,'method':method,'data_offset':data_off},open('forge_raw_selection.json','w'),indent=2)
+          PY
+          7z t forge_member.zip
+          mkdir extracted
+          7z x -y -oextracted forge_member.zip
+          mv "extracted/1511994193_1017_50500_16500_20171202_220556_570.sgy" forge_raw.sgy
+          test "$(stat -c%s forge_raw.sgy)" = "112237868"
+      - name: Run frozen state-lattice benchmark
+        run: python research/forge_raw_frozen_state.py forge_raw.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-raw-frozen-state-results
+          path: |
+            forge_raw_selection.json
+            forge_raw_frozen_state.json
+          retention-days: 7

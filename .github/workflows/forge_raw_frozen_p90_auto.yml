@@ -1,0 +1,46 @@
+name: Frozen sparse-state FORGE p90 endian-auto
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  p90:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+          pip install --quiet numpy zstandard pysz requests remotezip zipfile64
+      - name: Fetch deterministic p90 substantive member
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,struct,requests
+          import zipfile64.zipfile
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          with RemoteZip(url) as z:
+            infos=sorted([i for i in z.infolist() if not i.is_dir() and i.filename.lower().endswith(('.sgy','.segy','.seg')) and i.compress_size>=1048576],key=lambda i:i.filename)
+          idx=round((len(infos)-1)*.90);zi=infos[idx];name=zi.filename.encode();off=int(zi.header_offset)
+          h=requests.get(url,headers={'Range':f'bytes={off}-{off+29}'},timeout=30).content;nlen=int.from_bytes(h[26:28],'little');xlen=int.from_bytes(h[28:30],'little');data_off=off+30+nlen+xlen
+          payload=requests.get(url,headers={'Range':f'bytes={data_off}-{data_off+zi.compress_size-1}'},timeout=180).content
+          if len(payload)!=zi.compress_size:raise RuntimeError((len(payload),zi.compress_size))
+          local=struct.pack('<IHHHHHIIIHH',0x04034b50,21,0,zi.compress_type,0,0,zi.CRC,zi.compress_size,zi.file_size,len(name),0)+name
+          central=struct.pack('<IHHHHHHIIIHHHHHII',0x02014b50,20,21,0,zi.compress_type,0,0,zi.CRC,zi.compress_size,zi.file_size,len(name),0,0,0,0,0,0)+name
+          cd=len(local)+len(payload);eocd=struct.pack('<IHHHHIIH',0x06054b50,0,0,1,1,len(central),cd,0);open('member.zip','wb').write(local+payload+central+eocd)
+          json.dump({'pct':90,'substantive_count':len(infos),'index':idx,'name':zi.filename,'file_size':zi.file_size,'compressed_size':zi.compress_size,'crc':zi.CRC},open('forge_selection_p90.json','w'),indent=2)
+          PY
+          7z t member.zip >/dev/null
+          mkdir out && 7z x -y -oout member.zip >/dev/null
+          mv out/*.sgy forge_raw.sgy
+      - run: python research/forge_raw_frozen_state_auto.py forge_raw.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-frozen-p90-auto
+          path: |
+            forge_selection_p90.json
+            forge_raw_frozen_auto.json
+          retention-days: 7
