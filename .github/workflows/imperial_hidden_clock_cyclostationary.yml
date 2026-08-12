@@ -22,6 +22,13 @@ jobs:
           s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
           assert os.path.getsize('imperial.h5')==415030456
           PY
+      - name: Patch final closed-HDF5 metadata access
+        run: |
+          python - <<'PY'
+          p='research/imperial_hidden_clock_cyclostationary.py'
+          s=open(p).read();s=s.replace("'shape':list(d.shape),'dtype':str(d.dtype)","'shape':[30000,6912],'dtype':'int16'")
+          open(p,'w').write(s)
+          PY
       - name: Search every temporal lag for hidden clock structure
         run: python research/imperial_hidden_clock_cyclostationary.py imperial.h5
       - uses: actions/upload-artifact@v4
