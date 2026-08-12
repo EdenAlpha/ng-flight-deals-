@@ -22,7 +22,16 @@ jobs:
           os.makedirs('shots',exist_ok=True)
           boto3.client('s3',config=Config(signature_version=UNSIGNED)).download_file('gdr-data-lake','soda_lake/raw_seismic/2010/v1.0.0/F4746R1.SGY','shots/middle.sgy')
           PY
-      - run: python research/soda_persistent_split_state.py shots/middle.sgy
+      - name: Run corrected split-state pilot
+        run: |
+          sed -i "s/split('\\\\ndef encode_panel')/split('\\\\ndef run')/" research/soda_persistent_split_state.py || true
+          python - <<'PY'
+          p='research/soda_persistent_split_state.py'
+          s=open(p).read()
+          s=s.replace("split('\\ndef encode_panel')[0]","split('\\ndef run')[0]")
+          open(p,'w').write(s)
+          PY
+          python research/soda_persistent_split_state.py shots/middle.sgy
       - uses: actions/upload-artifact@v4
         with:
           name: soda-persistent-split-state
