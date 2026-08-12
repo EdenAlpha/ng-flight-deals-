@@ -59,12 +59,10 @@ def main(path):
     frac=.05;X,gx,gy,dt=load(path);std=float(X.astype(np.float64).std());public_eps=frac*std;internal_eps=public_eps*INTERNAL_SAFETY;step=2*internal_eps;raw=int(X.nbytes);G0,tm,outids,geom=geometry_map(X,gx,gy);szb,sze=sz3_bytes(X,public_eps);outrows=[]
     for kind in ('nearest','phase'):
         G,P=states(X,tm,outids,G0.shape,step,kind);K=delta(G,3);mb,parts=prepare_refined_main(K)
-        if decode_refined_main(mb).shape!=K.shape:raise RuntimeError('main audit shape')
-        vrows=value_screen(K);best=vrows[0];current_value=int(parts['value_bytes']);pred_main=len(mb)-current_value+best['value_bytes_plus_mode'];phase_extra=0
+        if not np.array_equal(decode_refined_main(mb),K):raise RuntimeError('main exact K audit')
+        vrows=value_screen(K);best=vrows[0];current_value=int(parts['value_bytes']);pred_main=len(mb)-current_value+best['value_bytes_plus_mode']
         if kind=='phase':
-            # Use exact PR #189 phase top overhead relative to main+outlier by recomputing the full phase arm.
-            rr=eval_phase(X,tm,outids,G0.shape,internal_eps);phase_extra=int(rr['container_bytes']-rr['main_bytes']-rr['outlier_bytes'])
-            outlier=int(rr['outlier_bytes'])
+            rr=eval_phase(X,tm,outids,G0.shape,internal_eps);phase_extra=int(rr['container_bytes']-rr['main_bytes']-rr['outlier_bytes']);outlier=int(rr['outlier_bytes'])
         else:
             rr=eval_no_phase(X,tm,outids,G0.shape,internal_eps);phase_extra=int(rr['container_bytes']-rr['main_bytes']-rr['outlier_bytes']);outlier=int(rr['outlier_bytes'])
         pred_container=pred_main+outlier+phase_extra
