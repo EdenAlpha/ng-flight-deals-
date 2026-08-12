@@ -9,14 +9,6 @@ exec(compile(src,'soda_event_gap.py','exec'),globals())
 CMAG=b'TC4Gv001'; CH='<8sBBBB4II'; CHS=struct.calcsize(CH)
 
 
-def class_id(v):
-    if v==1:return 0
-    if v==-1:return 1
-    if v>1:return 2
-    if v<-1:return 3
-    return -1
-
-
 def build(K,order):
     P=np.transpose(K,order+(3,));sh=P.shape;tr=P.reshape(-1,sh[-1]);counts=np.zeros((4,tr.shape[0]),np.uint16);gby=[[] for _ in range(4)];mags=[]
     for i,row in enumerate(tr):
@@ -31,11 +23,11 @@ def build(K,order):
             if pos.size>1:g[1:]=np.diff(pos)
             gby[ci].extend(g.tolist())
             if ci>=2:mags.extend((np.abs(row[pos]).astype(np.int32)-2).tolist())
-    return counts,[np.asarray(x,np.int32) for x in gby],np.asarray(mags,np.int32),sh
+    return counts,[np.asarray(x,np.int32) for x in gby],np.asarray(mags,np.int32)
 
 
 def enc(K,order,level,split):
-    zc=zstd.ZstdCompressor(level=level);counts,gby,mags,psh=build(K,order);frames=[]
+    zc=zstd.ZstdCompressor(level=level);counts,gby,mags=build(K,order);frames=[]
     if split:
         for ci in range(4):
             frames.append(zc.compress(counts[ci].astype('<u2',copy=False).tobytes()));frames.append(zc.compress(leb128_u(gby[ci])))
@@ -52,15 +44,20 @@ def dec(blob):
     magic,ver,oc,split,dc,C,L,S,T,nf=struct.unpack(CH,blob[:CHS])
     if magic!=CMAG or ver!=1:raise RuntimeError('class header')
     order=tuple((oc>>(2*i))&3 for i in range(3));psh=tuple((C,L,S)[i] for i in order)+(T,);ntr=int(np.prod(psh[:-1]));p=CHS;lens=[]
-    for _ in range(nf):lens.append(struct.unpack('<Q',blob[p:p+8])[0]);p+=8
+    for _ in range(nf):
+        lens.append(struct.unpack('<Q',blob[p:p+8])[0]);p+=8
     fs=[]
-    for n in lens:fs.append(blob[p:p+n]);p+=n
+    for n in lens:
+        fs.append(blob[p:p+n]);p+=n
     if p!=len(blob):raise RuntimeError('class stream length')
     zd=zstd.ZstdDecompressor()
     if not split:
-        if nf!=3:raise RuntimeError(('combined nf',nf));counts=np.frombuffer(zd.decompress(fs[0]),'<u2',count=4*ntr).astype(np.int32).reshape(4,ntr);ne=int(counts.sum());gaps=leb128_decode(zd.decompress(fs[1]),ne);mn=2
+        if nf!=3:raise RuntimeError(('combined nf',nf))
+        counts=np.frombuffer(zd.decompress(fs[0]),'<u2',count=4*ntr).astype(np.int32).reshape(4,ntr)
+        ne=int(counts.sum());gaps=leb128_decode(zd.decompress(fs[1]),ne);mn=2
     else:
-        if nf!=9:raise RuntimeError(('split nf',nf));counts=np.empty((4,ntr),np.int32);gg=[]
+        if nf!=9:raise RuntimeError(('split nf',nf))
+        counts=np.empty((4,ntr),np.int32);gg=[]
         for ci in range(4):
             counts[ci]=np.frombuffer(zd.decompress(fs[2*ci]),'<u2',count=ntr).astype(np.int32);n=int(counts[ci].sum());gg.extend(leb128_decode(zd.decompress(fs[2*ci+1]),n).tolist())
         gaps=np.asarray(gg,np.int32);mn=8
