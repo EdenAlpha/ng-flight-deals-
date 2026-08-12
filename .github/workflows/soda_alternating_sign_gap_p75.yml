@@ -35,7 +35,7 @@ jobs:
           s=s.replace('struct.unpack(HDR,blob[:HS])','struct.unpack(AHDR,blob[:AHS])')
           s=s.replace("magic!=MAG or ver!=1","magic!=AMAG or ver!=1")
           s=s.replace('p=HS;cb=','p=AHS;cb=')
-          if "MAG=b'ASGNv001'" in s or 'struct.unpack(HDR,blob[:HS])' in s: raise RuntimeError('namespace patch incomplete')
+          if "\nMAG=b'ASGNv001'" in s or 'struct.unpack(HDR,blob[:HS])' in s or 'struct.pack(HDR,MAG,1,oc,smode,dc' in s: raise RuntimeError('namespace patch incomplete')
           open(p,'w').write(s)
           PY
       - name: Run exact alternating-sign transform and byte audit
