@@ -1,0 +1,21 @@
+name: Imperial growing waveform language fast gate
+on:
+  pull_request:
+    branches: [imperial-growing-waveform-language]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py s3fs boto3
+      - name: Fast-gate 2/8/32/128-record waveform-language scaling
+        run: python research/imperial_growing_waveform_language_fastgate.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-growing-waveform-language-fastgate
+          path: imperial_growing_waveform_language.json
+          retention-days: 7
