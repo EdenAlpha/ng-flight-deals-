@@ -18,7 +18,7 @@ def site_order(L,S,code):
 def build_class_sequences(K,scode):
     C,L,S,T=K.shape
     if C!=3:raise RuntimeError('mask-class codec requires 3 components')
-    sites=site_order(L,S,scode);counts=np.zeros((7,len(sites)),np.uint16);gaps_by=[[] for _ in range(7)];vals=[]
+    sites=site_order(L,S,scode);counts=np.zeros((7,len(sites)),np.uint16);gaps_by=[[] for _ in range(7)];vals_by=[[] for _ in range(7)]
     for j,(l,s) in enumerate(sites):
         A=K[:,l,s,:]
         mask=(A[0]!=0).astype(np.uint8)|((A[1]!=0).astype(np.uint8)<<1)|((A[2]!=0).astype(np.uint8)<<2)
@@ -29,8 +29,8 @@ def build_class_sequences(K,scode):
             if pos.size>1:g[1:]=np.diff(pos)
             gaps_by[mi].extend(g.tolist());comps=[c for c in range(3) if m&(1<<c)]
             for t in pos.tolist():
-                for c in comps:vals.append(int(A[c,t]))
-    gaps_by=[np.asarray(x,np.int32) for x in gaps_by];vals=np.asarray(vals,np.int32)
+                for c in comps:vals_by[mi].append(int(A[c,t]))
+    gaps_by=[np.asarray(x,np.int32) for x in gaps_by];vals=np.asarray([v for part in vals_by for v in part],np.int32)
     cev=[int(counts[i].sum()) for i in range(7)];cvv=[cev[m-1]*int(((m&1)>0)+((m&2)>0)+((m&4)>0)) for m in range(1,8)]
     return counts,gaps_by,vals,cev,cvv
 
