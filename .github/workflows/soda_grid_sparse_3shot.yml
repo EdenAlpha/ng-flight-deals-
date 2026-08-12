@@ -1,0 +1,53 @@
+name: Soda Lake sparse-state 3-shot validation
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3
+      - name: Select deterministic 10/50/90 percentile shots
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os,json
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600: keys.append((o['Key'],int(o['Size'])))
+          keys.sort();inds=[round((len(keys)-1)*p) for p in (.1,.5,.9)];os.makedirs('shots',exist_ok=True);sel=[]
+          for j,i in enumerate(inds):
+            k,n=keys[i];fn=f'shots/shot{j}.sgy';print('SHOT',j,i,k,n,flush=True);s3.download_file(bucket,k,fn);sel.append({'slot':j,'index':i,'key':k,'size':n})
+          json.dump({'total':len(keys),'selected':sel},open('soda_sparse_3shot_selection.json','w'),indent=2)
+          PY
+      - name: Run frozen sparse-state algorithm on all shots
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in 0 1 2; do
+            python research/soda_grid_sparse.py "shots/shot${i}.sgy"
+            mv soda_grid_sparse.json "soda_grid_sparse_shot${i}.json"
+          done
+          python - <<'PY'
+          import json
+          for i in range(3):
+            r=json.load(open(f'soda_grid_sparse_shot{i}.json'))
+            print('RESULT',i,'codec',r['ratio'],'sz3',r['sz3']['ratio'],'gain',r['ratio']/r['sz3']['ratio'],'bytes',r['container_bytes'],flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-grid-sparse-3shot-results
+          path: |
+            soda_sparse_3shot_selection.json
+            soda_grid_sparse_shot0.json
+            soda_grid_sparse_shot1.json
+            soda_grid_sparse_shot2.json
+          retention-days: 7
