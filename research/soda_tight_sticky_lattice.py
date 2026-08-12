@@ -7,6 +7,15 @@ import numpy as np
 src=open('research/soda_tight_rice_frames.py').read().split('\ndef main(path,frac):')[0]
 exec(compile(src,'soda_tight_rice_frames.py','exec'),globals())
 
+# Historical research modules share globals when exec-composed.  Pin the sparse
+# outlier array codec in its own namespace so later experiment header symbols
+# cannot alter SH/SHS/SMAG used by encode_array/decode_array.
+_sp={'__name__':'soda_grid_sparse_isolated'}
+_spsrc=open('research/soda_grid_sparse.py').read().split('\npath=sys.argv[1]')[0]
+exec(compile(_spsrc,'soda_grid_sparse.py','exec'),_sp)
+encode_out_sparse=_sp['encode_out_sparse']
+decode_out_sparse=_sp['decode_out_sparse']
+
 SMAG=b'STICKY01'
 SHDR='<8sddBBBQQ'
 STHS=struct.calcsize(SHDR)
