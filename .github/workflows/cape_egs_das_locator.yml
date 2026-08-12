@@ -1,0 +1,58 @@
+name: Locate Cape EGS DAS objects in OEDI lake
+on:
+  pull_request:
+    branches: [imperial-valley-frozen-brady-transfer]
+permissions: {contents: read}
+jobs:
+  locate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet boto3
+      - name: Locate exact public Cape EGS HDF5 keys
+        run: |
+          python - <<'PY'
+          import boto3,json,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED,connect_timeout=20,read_timeout=60,retries={'max_attempts':4}))
+          bucket='gdr-data-lake';needle='16B-DAS_SM_UTC_20250831_230851.872.h5';hits=[];nobj=0
+          # First inspect top-level prefixes; then fall back to a streaming whole-bucket scan and stop once the Cape family is found.
+          top=s.list_objects_v2(Bucket=bucket,Delimiter='/')
+          prefixes=[p['Prefix'] for p in top.get('CommonPrefixes',[])]
+          cand=[p for p in prefixes if any(x in p.lower() for x in ('cape','frisco','fervo','1816','8638'))]
+          print('candidate top prefixes',cand,flush=True)
+          for p in cand:
+            for pg in s.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=p):
+              for o in pg.get('Contents',[]):
+                nobj+=1
+                if o['Key'].endswith('.h5') and '16B-DAS_SM_UTC_' in o['Key']:hits.append({'key':o['Key'],'bytes':int(o['Size'])})
+          if not hits:
+            for pg in s.get_paginator('list_objects_v2').paginate(Bucket=bucket):
+              for o in pg.get('Contents',[]):
+                nobj+=1;k=o['Key']
+                if k.endswith(needle) or (k.endswith('.h5') and '16B-DAS_SM_UTC_20250831_23' in k):
+                  hits.append({'key':k,'bytes':int(o['Size'])})
+              if any(h['key'].endswith(needle) for h in hits):
+                # continue a little only if prefix not yet obvious; exact hit is enough to infer/list its parent next
+                break
+          exact=[h for h in hits if h['key'].endswith(needle)]
+          if not exact:raise RuntimeError(('Cape key not found',nobj,cand,hits[:10]))
+          parent=exact[0]['key'].rsplit('/',1)[0]+'/'
+          family=[]
+          for pg in s.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=parent):
+            for o in pg.get('Contents',[]):
+              k=o['Key']
+              if k.endswith('.h5') and '16B-DAS_SM_UTC_' in k:family.append({'key':k,'bytes':int(o['Size'])})
+          family.sort(key=lambda x:x['key'])
+          out={'bucket':bucket,'parent_prefix':parent,'exact':exact[0],'family_count':len(family),'family_bytes':sum(x['bytes'] for x in family),'first':family[:5],'middle':family[len(family)//2:len(family)//2+5],'last':family[-5:]}
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('cape_egs_das_locator.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cape-egs-das-locator
+          path: cape_egs_das_locator.json
+          retention-days: 7
