@@ -1,0 +1,39 @@
+name: Soda Lake three-shot HPEZ lattice fairness
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  hpez:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio pysz boto3 zstandard
+      - name: Download deterministic three raw shots
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          keys=['soda_lake/raw_seismic/2010/v1.0.0/F1750R1.SGY','soda_lake/raw_seismic/2010/v1.0.0/F4746R1.SGY','soda_lake/raw_seismic/2010/v1.0.0/F7741R1.SGY']
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));os.makedirs('shots',exist_ok=True)
+          for i,k in enumerate(keys):s3.download_file('gdr-data-lake',k,f'shots/shot{i}.sgy')
+          PY
+          python research/patch_soda_lattice_collision.py
+      - name: Build official HPEZ q4
+        run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install -DCMAKE_CXX_FLAGS="-include cstdint -include array"
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+      - name: Run final matched fairness matrix
+        run: python research/soda_hpez_three_fairness.py "$PWD/hpez-install/bin/hpez" shots/shot0.sgy shots/shot1.sgy shots/shot2.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-hpez-three-fairness
+          path: soda_hpez_three_fairness.json
+          retention-days: 7
