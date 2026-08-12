@@ -32,11 +32,11 @@ def fft_spatial_corr(Z,maxoff):
 
 def offset_detail(Z,d):
     a=Z[:-d] if d else Z;b=Z[d:] if d else Z;corr=float(np.mean(a*b));sg=float(np.mean((a>=0)==(b>=0)))
-    def bin8(x):
-        q=np.zeros(x.shape,np.int8);ax=np.abs(x);q+=(ax>0.5);q+=(ax>1.0);q+=(ax>2.0);q+=(ax>4.0);return q+4*(x<0)
-    aa=bin8(a[:,::8]).ravel().astype(np.int32);bb=bin8(b[:,::8]).ravel().astype(np.int32);joint=np.bincount(aa*8+bb,minlength=64).reshape(8,8).astype(np.float64);joint/=joint.sum();pa=joint.sum(1);pb=joint.sum(0);mi=0.
-    for i in range(8):
-        for j in range(8):
+    def bin10(x):
+        q=np.zeros(x.shape,np.int8);ax=np.abs(x);q+=(ax>0.5);q+=(ax>1.0);q+=(ax>2.0);q+=(ax>4.0);return q+5*(x<0)
+    aa=bin10(a[:,::8]).ravel().astype(np.int32);bb=bin10(b[:,::8]).ravel().astype(np.int32);joint=np.bincount(aa*10+bb,minlength=100).reshape(10,10).astype(np.float64);joint/=joint.sum();pa=joint.sum(1);pb=joint.sum(0);mi=0.
+    for i in range(10):
+        for j in range(10):
             if joint[i,j]>0:mi+=joint[i,j]*np.log2(joint[i,j]/(pa[i]*pb[j]))
     return {'offset':d,'corr':corr,'sign_agreement':sg,'coarse_empirical_mi_bits':float(mi)}
 
