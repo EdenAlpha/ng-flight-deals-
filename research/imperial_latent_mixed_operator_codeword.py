@@ -70,11 +70,18 @@ def zblob(a):
 def factor_decode(Q,H,mode):
     k=Q.shape[1]
     if mode=='f16':
-        qb=zblob(Q.astype(np.float16));hb=zblob(H.astype(np.float16))
-        D=zstd.ZstdDecompressor()
-        Qd=np.frombuffer(D.decompress(qb),np.float16).astype(np.float64).reshape(Q.shape)
-        Hd=np.frombuffer(D.decompress(hb),np.float16).astype(np.float64).reshape(H.shape)
-        return Qd@Hd,len(qb)+len(hb)+48
+        # Scale each component before float16 storage. Raw H can exceed float16 range.
+        Qs=np.maximum(np.max(np.abs(Q),axis=0),1e-30)
+        Hs=np.maximum(np.max(np.abs(H),axis=1),1e-30)
+        Qn=(Q/Qs).astype(np.float16);Hn=(H/Hs[:,None]).astype(np.float16)
+        if not np.all(np.isfinite(Qn)) or not np.all(np.isfinite(Hn)):
+            raise RuntimeError('nonfinite scaled float16 factors')
+        qb=zblob(Qn);hb=zblob(Hn);D=zstd.ZstdDecompressor()
+        Qd=np.frombuffer(D.decompress(qb),np.float16).astype(np.float64).reshape(Q.shape)*Qs
+        Hd=np.frombuffer(D.decompress(hb),np.float16).astype(np.float64).reshape(H.shape)*Hs[:,None]
+        R=Qd@Hd
+        if not np.all(np.isfinite(R)):raise RuntimeError('nonfinite decoded f16 factor product')
+        return R,len(qb)+len(hb)+8*k+64
     bits=8 if mode=='q8q8' else 16
     qmax=127
     Qs=np.maximum(np.max(np.abs(Q),axis=0)/qmax,1e-30)
@@ -126,11 +133,15 @@ def main(path):
                         for mode in ('f16','q8q8','q8q16'):
                             Rd,fb=factor_decode(Q,H,mode)
                             P=diff2(Rd)
-                            K=np.rint((X-P)/step).astype(np.int32)
+                            if not np.all(np.isfinite(P)):raise RuntimeError(('nonfinite prediction',name,k,method,rounds,mode))
+                            Qcorr=(X-P)/step
+                            if not np.all(np.isfinite(Qcorr)):raise RuntimeError(('nonfinite correction coordinate',name,k,method,rounds,mode))
+                            K=np.rint(Qcorr).astype(np.int32)
                             cb,nzf=encode_corr(K)
                             Xh=P+step*K
+                            if not np.all(np.isfinite(Xh)):raise RuntimeError(('nonfinite reconstruction',name,k,method,rounds,mode))
                             me=float(np.max(np.abs(X-Xh)))
-                            if me>eps*(1+5e-6):raise RuntimeError(('hard',name,k,method,rounds,mode,me,eps))
+                            if not math.isfinite(me) or me>eps*(1+5e-6):raise RuntimeError(('hard',name,k,method,rounds,mode,me,eps))
                             totalb=fb+cb[0]+64
                             rows.append({'tile':name,'rank':k,'method':method,'rounds':rounds,'factor_mode':mode,
                                          'prequant_max_excess':v,'prequant_violation_fraction':frac,'prequant_rmse_over_eps':rm/eps,
@@ -152,7 +163,7 @@ def main(path):
                                        'factor_bytes':sum(r['factor_bytes'] for r in rr),'correction_bytes':sum(r['correction_bytes'] for r in rr)})
         combos.sort(key=lambda r:r['bytes'])
         out={'std':std,'eps':eps,'bound':b,'shape':[C,T],'two_x_sz3_target_bps':1.6659195794753086,
-             'combos':combos,'rows':rows,'scope':'Latent mixed-potential operator code. The encoder searches for a low-rank double-integrated field; only its mixed derivative must satisfy the public hard-error box. Quantized transmitted factors are decoded first, then a fully counted exact 2epsilon measurement-domain correction is applied. Three precommitted easy/medium/hard tiles, one fixed definition in aggregate. No AI.'}
+             'combos':combos,'rows':rows,'scope':'Latent mixed-potential operator code. The encoder searches for a low-rank double-integrated field; only its mixed derivative must satisfy the public hard-error box. Quantized transmitted factors are decoded first, then a fully counted exact 2epsilon measurement-domain correction is applied. Three precommitted easy/medium/hard tiles, one fixed definition in aggregate. Nonfinite decoded factors/predictions/reconstructions are fatal. No AI.'}
         print(json.dumps({'best':combos[:12]},indent=2),flush=True)
         json.dump(out,open('imperial_latent_mixed_operator_codeword.json','w'),indent=2)
 if __name__=='__main__':main(sys.argv[1])
