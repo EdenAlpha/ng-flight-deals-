@@ -1,0 +1,40 @@
+name: Raw Utah FORGE sparse lattice pilot
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet requests remotezip zipfile64 numpy zstandard pysz
+      - name: Range-extract deterministic median substantive raw gather
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,os
+          import zipfile64.zipfile
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          with RemoteZip(url) as z:
+            infos=sorted([i for i in z.infolist() if not i.is_dir() and i.filename.lower().endswith(('.sgy','.segy','.seg')) and i.compress_size>=1048576],key=lambda i:i.filename)
+            zi=infos[len(infos)//2];print('SELECT',len(infos),zi.filename,zi.file_size,zi.compress_size,flush=True)
+            with z.open(zi) as src,open('forge_raw.sgy','wb') as dst:
+              while True:
+                b=src.read(8<<20)
+                if not b:break
+                dst.write(b)
+          json.dump({'substantive_count':len(infos),'index':len(infos)//2,'name':zi.filename,'file_size':zi.file_size,'compressed_size':zi.compress_size,'crc':zi.CRC},open('forge_raw_selection.json','w'),indent=2)
+          PY
+      - run: python research/forge_raw_lattice.py forge_raw.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-raw-lattice-results
+          path: |
+            forge_raw_selection.json
+            forge_raw_lattice.json
+          retention-days: 7
