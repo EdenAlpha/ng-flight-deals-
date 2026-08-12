@@ -5,6 +5,7 @@ from pysz import sz,szConfig,szErrorBoundMode
 
 ZC=zstd.ZstdCompressor(level=19);ZD=zstd.ZstdDecompressor()
 IDT={1:np.dtype('<i1'),2:np.dtype('<i2'),3:np.dtype('<i4')}
+OUTER='<BBQ'; OHS=struct.calcsize(OUTER)
 
 def pack_int(a):
     a=np.asarray(a);lo=int(a.min()) if a.size else 0;hi=int(a.max()) if a.size else 0
@@ -29,6 +30,7 @@ def unleb128(b,n):
     while i<n:
         x=shift=0
         while True:
+            if j>=len(b):raise RuntimeError('truncated varint')
             v=b[j];j+=1;x|=(v&127)<<shift
             if v<128:break
             shift+=7
@@ -36,67 +38,74 @@ def unleb128(b,n):
     if j!=len(b):raise RuntimeError('varint trailing data')
     return out
 
-def sparse_mask_values(K,order='C',xor_rows=False):
-    if xor_rows:
-        M=K!=0;T=M.copy();T[1:]=np.logical_xor(M[1:],M[:-1]);mask=T
-    else:mask=K!=0
-    flat=mask.ravel(order=order);mb=ZC.compress(np.packbits(flat,bitorder='little').tobytes())
-    # Values are always taken in canonical C event order and are decoded after mask inversion.
-    vals=K[K!=0];dc,vb=pack_int(vals)
-    head=struct.pack('<BBQQ',0 if order=='C' else 1,int(xor_rows),len(mb),len(vb))
-    return head+mb+vb,{'kind':'mask','order':order,'xor_rows':xor_rows,'dtype':dc,'mask_bytes':len(mb),'value_bytes':len(vb),'events':int(vals.size)},dc
+def dense_payload(K):
+    dc,b=pack_int(K);h=struct.pack('<BQ',dc,len(b));return h+b,{'kind':'dense','dtype':dc,'payload':len(b)}
+def decode_dense(pay,shape):
+    hs=struct.calcsize('<BQ');dc,L=struct.unpack('<BQ',pay[:hs]);b=pay[hs:hs+L]
+    if hs+L!=len(pay):raise RuntimeError('dense length mismatch')
+    return unpack_int(b,dc,int(np.prod(shape))).reshape(shape)
 
-def decode_sparse(blob,shape,dc):
-    hs=struct.calcsize('<BBQQ');ordc,xr,lm,lv=struct.unpack('<BBQQ',blob[:hs]);mb=blob[hs:hs+lm];vb=blob[hs+lm:hs+lm+lv];n=int(np.prod(shape));order='C' if ordc==0 else 'F';T=np.unpackbits(np.frombuffer(ZD.decompress(mb),np.uint8),bitorder='little',count=n).astype(bool).reshape(shape,order=order)
+def sparse_payload(K,order='C',xor_rows=False):
+    M=K!=0
+    if xor_rows:
+        T=M.copy();T[1:]=np.logical_xor(M[1:],M[:-1]);mask=T
+    else:mask=M
+    mb=ZC.compress(np.packbits(mask.ravel(order=order),bitorder='little').tobytes());vals=K[M];dc,vb=pack_int(vals)
+    h=struct.pack('<BBBQQ',0 if order=='C' else 1,int(xor_rows),dc,len(mb),len(vb))
+    return h+mb+vb,{'kind':'mask','order':order,'xor_rows':xor_rows,'dtype':dc,'mask_bytes':len(mb),'value_bytes':len(vb),'events':int(vals.size)}
+def decode_sparse(pay,shape):
+    hs=struct.calcsize('<BBBQQ');ordc,xr,dc,lm,lv=struct.unpack('<BBBQQ',pay[:hs]);p=hs;mb=pay[p:p+lm];p+=lm;vb=pay[p:p+lv];p+=lv
+    if p!=len(pay):raise RuntimeError('sparse length mismatch')
+    n=int(np.prod(shape));order='C' if ordc==0 else 'F';T=np.unpackbits(np.frombuffer(ZD.decompress(mb),np.uint8),bitorder='little',count=n).astype(bool).reshape(shape,order=order)
     if xr:
         M=T.copy()
         for i in range(1,shape[0]):M[i]=np.logical_xor(T[i],M[i-1])
     else:M=T
     vals=unpack_int(vb,dc,int(M.sum()));K=np.zeros(shape,np.int32);K[M]=vals;return K
 
-def gap_codec(K):
+def gap_payload(K):
     nr,nt=K.shape;chunks=[];counts=[];vals=[]
     for r in range(nr):
-        pos=np.flatnonzero(K[r]);counts.append(len(pos));prev=-1
+        pos=np.flatnonzero(K[r]);counts.append(len(pos))
         if len(pos):
             gaps=np.diff(np.r_[-1,pos]).astype(np.uint64)-1;chunks.append(leb128(gaps));vals.append(K[r,pos])
-    count_raw=leb128(np.asarray(counts,np.uint64));gap_raw=b''.join(chunks);valarr=np.concatenate(vals) if vals else np.empty(0,np.int32);dc,vb=pack_int(valarr)
-    cb=ZC.compress(count_raw);gb=ZC.compress(gap_raw);head=struct.pack('<QQQB',len(cb),len(gb),len(vb),dc);return head+cb+gb+vb,{'kind':'gaps','count_bytes':len(cb),'gap_bytes':len(gb),'value_bytes':len(vb),'events':int(valarr.size)},dc
-
-def decode_gap(blob,shape):
-    nr,nt=shape;hs=struct.calcsize('<QQQB');lc,lg,lv,dc=struct.unpack('<QQQB',blob[:hs]);p=hs;cb=blob[p:p+lc];p+=lc;gb=blob[p:p+lg];p+=lg;vb=blob[p:p+lv]
-    counts=unleb128(ZD.decompress(cb),nr).astype(int);ne=int(counts.sum());vals=unpack_int(vb,dc,ne);raw=ZD.decompress(gb);# decode all gaps as one stream using total events
-    gaps=unleb128(raw,ne).astype(np.int64);K=np.zeros(shape,np.int32);vi=0
+    count_raw=leb128(np.asarray(counts,np.uint64));gap_raw=b''.join(chunks);valarr=np.concatenate(vals) if vals else np.empty(0,np.int32);dc,vb=pack_int(valarr);cb=ZC.compress(count_raw);gb=ZC.compress(gap_raw)
+    h=struct.pack('<BQQQ',dc,len(cb),len(gb),len(vb));return h+cb+gb+vb,{'kind':'gaps','dtype':dc,'count_bytes':len(cb),'gap_bytes':len(gb),'value_bytes':len(vb),'events':int(valarr.size)}
+def decode_gap(pay,shape):
+    nr,nt=shape;hs=struct.calcsize('<BQQQ');dc,lc,lg,lv=struct.unpack('<BQQQ',pay[:hs]);p=hs;cb=pay[p:p+lc];p+=lc;gb=pay[p:p+lg];p+=lg;vb=pay[p:p+lv];p+=lv
+    if p!=len(pay):raise RuntimeError('gap length mismatch')
+    counts=unleb128(ZD.decompress(cb),nr).astype(int);ne=int(counts.sum());vals=unpack_int(vb,dc,ne);gaps=unleb128(ZD.decompress(gb),ne).astype(np.int64);K=np.zeros(shape,np.int32);vi=0
     for r,c in enumerate(counts):
         if c:
-            pos=np.cumsum(gaps[vi:vi+c]+1)-1;K[r,pos]=vals[vi:vi+c];vi+=c
+            pos=np.cumsum(gaps[vi:vi+c]+1)-1
+            if pos[-1]>=nt:raise RuntimeError('gap position out of range')
+            K[r,pos]=vals[vi:vi+c];vi+=c
     return K
+
+def wrap(mode,typ,pay):return struct.pack(OUTER,mode,typ,len(pay))+pay
+def decode_candidate(blob,shape):
+    mode,typ,L=struct.unpack(OUTER,blob[:OHS]);pay=blob[OHS:OHS+L]
+    if OHS+L!=len(blob):raise RuntimeError('outer length mismatch')
+    K=decode_dense(pay,shape) if typ==0 else decode_sparse(pay,shape) if typ==1 else decode_gap(pay,shape)
+    if mode==0:Q=K
+    elif mode==1:Q=np.cumsum(K,axis=1,dtype=np.int32)
+    elif mode==2:Q=np.cumsum(K,axis=0,dtype=np.int32)
+    elif mode==3:Q=np.cumsum(np.cumsum(K,axis=0,dtype=np.int32),axis=1,dtype=np.int32)
+    else:raise RuntimeError('bad mode')
+    return Q
 
 def encode_panel(A,eps):
     Q=np.rint(A/(2*eps)).astype(np.int32);Kt=d1(Q,1);Kx=d1(Q,0);Kl=d1(Kt,0);cands=[]
     for mode,K in [(0,Q),(1,Kt),(2,Kx),(3,Kl)]:
-        dc,b=pack_int(K);h=struct.pack('<BBBQ',mode,0,dc,len(b));cands.append((len(h)+len(b),h+b,{'kind':'dense','mode':mode,'payload':len(b)},('dense',mode,dc)))
-    # Sparse candidates on temporal transition field, which dominated prior runs.
+        pay,m=dense_payload(K);b=wrap(mode,0,pay);cands.append((len(b),b,{**m,'mode':mode}))
     for order in ['C','F']:
         for xr in [False,True]:
-            b,m,dc=sparse_mask_values(Kt,order,xr);h=struct.pack('<BBQ',1,1,len(b));cands.append((len(h)+len(b),h+b,{**m,'mode':1},('sparse',dc)))
-    b,m,dc=gap_codec(Kt);h=struct.pack('<BBQ',1,2,len(b));cands.append((len(h)+len(b),h+b,{**m,'mode':1},('gap',)))
-    cands.sort(key=lambda x:x[0]);_,blob,meta,_=cands[0]
-    # Decode selected stream from actual bytes.
-    mode,typ,L=struct.unpack('<BBQ',blob[:struct.calcsize('<BBQ')]);pay=blob[struct.calcsize('<BBQ'):]
-    if typ==0:
-        # Dense header is shorter/different: reparse original.
-        mode,typ,dc,L=struct.unpack('<BBBQ',blob[:struct.calcsize('<BBBQ')]);pay=blob[struct.calcsize('<BBBQ'):];K=unpack_int(pay,dc,A.size).reshape(A.shape)
-    elif typ==1:
-        # dtype is internal metadata returned in payload meta; infer by decompressed values impossible cheaply, so parse from stored candidate construction map by re-evaluating min header metadata.
-        # Reconstruct dtype from original Kt range deterministically; decoder can equivalently store this one byte in a production container.
-        lo=int(Kt.min());hi=int(Kt.max());dc=1 if lo>=-128 and hi<=127 else 2 if lo>=-32768 and hi<=32767 else 3;K=decode_sparse(pay,A.shape,dc)
-    else:K=decode_gap(pay,A.shape)
-    if mode==0:R=K
-    elif mode==1:R=np.cumsum(K,axis=1,dtype=np.int32)
-    elif mode==2:R=np.cumsum(K,axis=0,dtype=np.int32)
-    else:R=np.cumsum(np.cumsum(K,axis=0,dtype=np.int32),axis=1,dtype=np.int32)
-    return blob,R.astype(np.float32)*np.float32(2*eps),meta,cands
+            pay,m=sparse_payload(Kt,order,xr);b=wrap(1,1,pay);cands.append((len(b),b,{**m,'mode':1}))
+    pay,m=gap_payload(Kt);b=wrap(1,2,pay);cands.append((len(b),b,{**m,'mode':1}))
+    cands.sort(key=lambda x:x[0]);_,blob,meta=cands[0];QQ=decode_candidate(blob,A.shape)
+    if not np.array_equal(Q,QQ):raise RuntimeError('integer roundtrip mismatch')
+    R=QQ.astype(np.float32)*np.float32(2*eps)
+    return blob,R,meta,cands
 
 def load(path):
     with segyio.open(path,'r',ignore_geometry=True) as f:
@@ -117,14 +126,14 @@ def sz3(A,eps):
 def bench(path):
     X,panels,extra,geom=load(path);raw=int(X.nbytes);eps=.1*float(X.astype(np.float64).std());parts=[];maxerr=0.;diagn=[]
     for A in panels:
-        b,R,m,cands=encode_panel(A,eps);parts.append(b);maxerr=max(maxerr,float(np.max(np.abs(A-R))));diagn.append({'selected':m,'alternatives':[{'bytes':x[0],**x[2]} for x in cands[:10]]})
-    eb,ee=sz3(extra,eps);# compare separate bad-trace transition encoding too
-    zbad=10**18;zr=None
+        b,R,m,cands=encode_panel(A,eps);parts.append(b);maxerr=max(maxerr,float(np.max(np.abs(A-R))));diagn.append({'selected':m,'alternatives':[{'bytes':x[0],**x[2]} for x in cands]})
+    eb,ee=sz3(extra,eps)
     if extra.size:
-        bb,RR,mm,_=encode_panel(extra,eps);zbad=len(bb);zr=(bb,RR,mm)
-        if zbad<=eb:eb=zbad;ee=float(np.max(np.abs(extra-zr[1])));diagn.append({'bad_selected':zr[2],'bad_codec':'transition'})
+        bb,RR,mm,_=encode_panel(extra,eps)
+        if len(bb)<eb:eb=len(bb);ee=float(np.max(np.abs(extra-RR)));diagn.append({'bad_selected':mm,'bad_codec':'transition'})
         else:diagn.append({'bad_codec':'sz3','bad_bytes':eb})
-    total=32+sum(map(len,parts))+eb;return {'file':os.path.basename(path),'shape':list(X.shape),'raw_bytes':raw,'eps':eps,'geometry':geom,'bytes':total,'ratio':raw/total,'maxerr':max(maxerr,ee),'valid':bool(max(maxerr,ee)<=eps*(1+5e-6)),'extra_bytes':eb,'panels':diagn}
+    total=32+sum(map(len,parts))+eb;mx=max(maxerr,ee)
+    return {'file':os.path.basename(path),'shape':list(X.shape),'raw_bytes':raw,'eps':eps,'geometry':geom,'bytes':total,'ratio':raw/total,'maxerr':mx,'valid':bool(mx<=eps*(1+5e-6)),'extra_bytes':eb,'panels':diagn}
 
 out={'shots':[]}
 for p in sys.argv[1:]:
