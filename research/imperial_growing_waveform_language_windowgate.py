@@ -49,7 +49,10 @@ def main():
     scalar_counts=np.zeros(g.QBINS,np.int64);scalar_total=0
     anchor_counts=np.zeros(g.QBINS,np.int64);anchor_total=0
     rows=[]
-    for hidx,key in enumerate(history,1):
+    # Accumulate the nearest prior record first so 2/8/32/128 mean exact
+    # nested suffixes immediately preceding the target, not increasingly old
+    # prefixes of a 128-record window.
+    for hidx,key in enumerate(reversed(history),1):
         rf,hf=g.open_h5(fs,key)
         try:
             d=hf['Acoustic']
@@ -78,7 +81,7 @@ def main():
          'history_checkpoints':list(HIST),'std':g.STD,'eps':g.EPS,'step':g.STEP,
          'phase':g.PHASE,'maxerr':maxerr,'strict_2x_target_bps':g.TARGET_BPS,
          'fullfile_sz3_bps_reference':g.FULL_SZ3_BPS,'rows':rows,
-         'scope':'Distributed-window directional gate for PR269. One fixed channel per cable regime and four fixed 1024-sample windows per minute are used solely to measure the 2/8/32/128-record phrase-recurrence/rate curve faster. The target contributes no model counts and the exact PR269 hard-error lattice is verified. Ideal static arithmetic screen only, not a whole-file codec claim.'}
+         'scope':'Distributed-window directional gate for PR269. One fixed channel per cable regime and four fixed 1024-sample windows per minute are used solely to measure the exact nearest-history 2/8/32/128-record phrase-recurrence/rate curve faster. The target contributes no model counts and the exact PR269 hard-error lattice is verified. Ideal static arithmetic screen only, not a whole-file codec claim.'}
     json.dump(out,open('imperial_growing_waveform_language_windowgate.json','w'),indent=2)
     print(json.dumps(out,indent=2),flush=True)
 if __name__=='__main__':main()
