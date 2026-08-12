@@ -8,7 +8,7 @@ exec(compile(src,'soda_intergap_backend_hybrid.py','exec'),globals())
 
 SAFETY=0.9999
 FILE_MAGIC=b'SRSEG001'; FILE_HDR='<8sBIIIQQQ'; FHS=struct.calcsize(FILE_HDR)
-HEAD_MAGIC=b'SRHDR001'; HEAD_HDR='<8sIBBQQ'; HHS=struct.calcsize(HEAD_HDR)
+HEAD_MAGIC=b'SRHDR001'; HEAD_HDR='<8sIBBQQ'; HEAD_HS=struct.calcsize(HEAD_HDR)
 SAMP_MAGIC=b'SRSMP001'; SAMP_HDR='<8sdBBQQ'; SHS=struct.calcsize(SAMP_HDR)
 
 
@@ -26,20 +26,18 @@ def header_delta_plane(H):
 
 
 def encode_headers(gh,H):
-    # Same reversible delta/byte-plane transform as PR #113, but let the already
-    # audited exact backend menu choose the smallest lossless representation.
     gt=bytes(gh);dt=header_delta_plane(H);gb=best_comp(gt)[0];db=best_comp(dt)[0]
     ng,mg,bg=gb;nd,md,bd=db
     if decomp_one(bg,mg)!=gt or decomp_one(bd,md)!=dt:raise RuntimeError('header backend roundtrip')
     h=struct.pack(HEAD_HDR,HEAD_MAGIC,H.shape[0],mg,md,len(bg),len(bd))
-    return h+bg+bd,{'global_raw_bytes':len(gt),'trace_header_raw_bytes':H.size,'global_method':METHOD_NAMES[mg],'global_bytes':len(bg),'trace_method':METHOD_NAMES[md],'trace_bytes':len(bd),'header_header_bytes':HHS}
+    return h+bg+bd,{'global_raw_bytes':len(gt),'trace_header_raw_bytes':H.size,'global_method':METHOD_NAMES[mg],'global_bytes':len(bg),'trace_method':METHOD_NAMES[md],'trace_bytes':len(bd),'header_header_bytes':HEAD_HS}
 
 
 def decode_headers(blob):
-    if len(blob)<HHS:raise RuntimeError('short header blob')
-    magic,ntr,mg,md,lg,ld=struct.unpack(HEAD_HDR,blob[:HHS])
+    if len(blob)<HEAD_HS:raise RuntimeError('short header blob')
+    magic,ntr,mg,md,lg,ld=struct.unpack(HEAD_HDR,blob[:HEAD_HS])
     if magic!=HEAD_MAGIC:raise RuntimeError('bad header magic')
-    p=HHS;bg=blob[p:p+lg];p+=lg;bd=blob[p:p+ld];p+=ld
+    p=HEAD_HS;bg=blob[p:p+lg];p+=lg;bd=blob[p:p+ld];p+=ld
     if p!=len(blob):raise RuntimeError('header blob length')
     gh=decomp_one(bg,mg);dt=decomp_one(bd,md)
     if len(gh)!=3600 or len(dt)!=ntr*240:raise RuntimeError('header raw lengths')
