@@ -9,11 +9,12 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/setup-python@v5
-        with: {python-version: '3.11'}
-      - run: pip install --quiet requests remotezip numpy segyio
+        with: {python-version: '3.10'}
+      - run: pip install --quiet requests remotezip numpy segyio zipfile-deflate64
       - name: Range-open official FORGE raw archive and inspect one shot
         run: |
           python - <<'PY'
+          import zipfile_deflate64
           import json,os,requests,numpy as np,segyio
           from remotezip import RemoteZip
           url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
@@ -25,7 +26,7 @@ jobs:
           seg=[i for i in infos if i.filename.lower().endswith(('.sgy','.segy','.seg'))]
           if not seg: raise SystemExit(f'no segy members; first={[(i.filename,i.file_size) for i in infos[:20]]}')
           seg.sort(key=lambda i:i.filename);mid=seg[len(seg)//2]
-          print('MEMBERS',len(infos),'SEGY',len(seg),'SELECT',mid.filename,mid.file_size,mid.compress_size,flush=True)
+          print('MEMBERS',len(infos),'SEGY',len(seg),'SELECT',mid.filename,mid.file_size,mid.compress_size,'METHOD',mid.compress_type,flush=True)
           with rz.open(mid) as src, open('shot.sgy','wb') as dst:
             while True:
               b=src.read(8<<20)
@@ -40,7 +41,7 @@ jobs:
           geom={'unique_receivers':int(len(uniq)),'multiplicity_mode':int(np.bincount(counts).argmax()) if counts.size else 0,'multiplicity_max':int(counts.max()) if counts.size else 0,'unique_gx':int(np.unique(gx).size),'unique_gy':int(np.unique(gy).size)}
           if 1<len(uniq)<=10000:
             pts=uniq.astype(float);d=pts[:,None,:]-pts[None,:,:];ds=np.sum(d*d,2);ds[ds==0]=np.inf;nn=np.sqrt(np.min(ds,1));geom['nearest_median']=float(np.median(nn));geom['nearest_p10']=float(np.quantile(nn,.1));geom['nearest_p90']=float(np.quantile(nn,.9))
-          out={'archive_url':url,'range_probe':range_probe,'archive_members':len(infos),'segy_members':len(seg),'selected_member':mid.filename,'member_file_bytes':mid.file_size,'member_zip_bytes':mid.compress_size,'trace_count':int(ntr),'samples_per_trace':int(ns),'dt_us':dt,'sample_raw_bytes':int(ntr*ns*4),'sample_std':float(X.astype(np.float64).std()),'sample_min':float(np.min(X)),'sample_max':float(np.max(X)),'geometry':geom,'source_xy_unique':int(np.unique(np.stack([fields['sx'],fields['sy']],1),axis=0).shape[0])}
+          out={'archive_url':url,'range_probe':range_probe,'archive_members':len(infos),'segy_members':len(seg),'selected_member':mid.filename,'member_file_bytes':mid.file_size,'member_zip_bytes':mid.compress_size,'member_method':mid.compress_type,'trace_count':int(ntr),'samples_per_trace':int(ns),'dt_us':dt,'sample_raw_bytes':int(ntr*ns*4),'sample_std':float(X.astype(np.float64).std()),'sample_min':float(np.min(X)),'sample_max':float(np.max(X)),'geometry':geom,'source_xy_unique':int(np.unique(np.stack([fields['sx'],fields['sy']],1),axis=0).shape[0])}
           print(json.dumps(out,indent=2),flush=True);json.dump(out,open('forge_raw_remotezip_diag.json','w'),indent=2)
           PY
       - uses: actions/upload-artifact@v4
