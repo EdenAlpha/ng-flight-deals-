@@ -21,29 +21,33 @@ jobs:
           b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5';s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));s3.download_file(b,k,'das.h5')
           if os.path.getsize('das.h5')!=415030456:raise RuntimeError('file drift')
           PY
-      - name: Nine precommitted full-resolution tiles versus SZ3
+      - name: Nine tiles with precommitted Brady N dictionary versus SZ3
         run: |
           python - <<'PY'
           import json,sys,h5py,numpy as np
           from pysz import sz,szConfig,szErrorBoundMode
           sys.path.insert(0,'research');import imperial_valley_frozen_brady_transfer as m
-          public_eps=133.69778037805762;internal_eps=public_eps*m.SAFETY
+          public_eps=133.69778037805762;internal_eps=public_eps*m.SAFETY;budgets=[32,64,96,128,192,256]
           cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=public_eps
-          tstarts=[0,14336,28672];sstarts=[0,3328,6784];rows=[];ours=szb=raw=0
+          tstarts=[0,14336,28672];sstarts=[0,3328,6784];rows=[];ours=szb=raw=0;budget_counts={str(n):0 for n in budgets}
           with h5py.File('das.h5','r') as f:
             d=f['Acoustic']
             for t0 in tstarts:
               for s0 in sstarts:
-                W=np.asarray(d[t0:t0+1024,s0:s0+128]).T.astype(np.float32,copy=False);blob,me,diag=m.encode_tile(W,internal_eps)
-                if me>public_eps*(1+3e-6):raise RuntimeError(('Brady hard error',t0,s0,me))
+                W=np.asarray(d[t0:t0+1024,s0:s0+128]).T.astype(np.float32,copy=False);cand=[]
+                for n in budgets:
+                  m.NKEEP=n;blob,me,diag=m.encode_tile(W,internal_eps)
+                  if me>public_eps*(1+3e-6):raise RuntimeError(('Brady hard error',t0,s0,n,me))
+                  cand.append((len(blob),n,blob,me,diag))
+                nb,n,blob,me,diag=min(cand,key=lambda q:(q[0],q[1]));budget_counts[str(n)]+=1
                 best=None
                 for orient,X in [('channel_time',W),('time_channel',W.T)]:
                   X=np.ascontiguousarray(X,np.float32);b,_=sz.compress(X,cfg);R,_=sz.decompress(b,np.float32,X.shape);sme=float(np.max(np.abs(X-R)))
                   if sme>public_eps*(1+3e-6):raise RuntimeError(('SZ3 hard error',orient,sme))
                   q=(int(b.size),orient,sme)
                   if best is None or q[0]<best[0]:best=q
-                r=W.nbytes;ours+=len(blob);szb+=best[0];raw+=r;row={'t0':t0,'s0':s0,'raw_bytes':r,'brady_bytes':len(blob),'brady_ratio':r/len(blob),'correction_nonzero_fraction':diag['correction_nonzero_fraction'],'correction_mode':diag['mode'],'maxerr':me,'sz3_bytes':best[0],'sz3_ratio':r/best[0],'sz3_orientation':best[1],'gain_vs_sz3':best[0]/len(blob)};rows.append(row);print(json.dumps(row),flush=True)
-          out={'tiles':9,'raw_bytes':raw,'brady_bytes':ours,'brady_ratio':raw/ours,'sz3_bytes':szb,'sz3_ratio':raw/szb,'gain_vs_sz3':szb/ours,'min_tile_gain':min(x['gain_vs_sz3'] for x in rows),'median_tile_gain':float(np.median([x['gain_vs_sz3'] for x in rows])),'max_tile_gain':max(x['gain_vs_sz3'] for x in rows),'rows':rows}
+                r=W.nbytes;ours+=nb;szb+=best[0];raw+=r;row={'t0':t0,'s0':s0,'raw_bytes':r,'chosen_N':n,'brady_bytes':nb,'brady_ratio':r/nb,'candidate_bytes':{str(q[1]):q[0] for q in cand},'correction_nonzero_fraction':diag['correction_nonzero_fraction'],'correction_mode':diag['mode'],'maxerr':me,'sz3_bytes':best[0],'sz3_ratio':r/best[0],'sz3_orientation':best[1],'gain_vs_sz3':best[0]/nb};rows.append(row);print(json.dumps(row),flush=True)
+          out={'tiles':9,'budgets':budgets,'budget_counts':budget_counts,'raw_bytes':raw,'brady_bytes':ours,'brady_ratio':raw/ours,'sz3_bytes':szb,'sz3_ratio':raw/szb,'gain_vs_sz3':szb/ours,'min_tile_gain':min(x['gain_vs_sz3'] for x in rows),'median_tile_gain':float(np.median([x['gain_vs_sz3'] for x in rows])),'max_tile_gain':max(x['gain_vs_sz3'] for x in rows),'fixed_N256_control':{'brady_bytes':519632,'gain_vs_sz3':0.963905225236321},'rows':rows}
           print(json.dumps(out,indent=2),flush=True);json.dump(out,open('imperial_valley_brady_nine_tile.json','w'),indent=2)
           PY
       - uses: actions/upload-artifact@v4
