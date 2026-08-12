@@ -1,0 +1,46 @@
+name: Active raw FORGE receiver geometry
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  geom:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.10'}
+      - run: pip install --quiet requests remotezip numpy segyio zipfile-deflate64
+      - name: Extract deterministic median active shot and analyze receiver lattice
+        run: |
+          python - <<'PY'
+          import zipfile_deflate64,json,numpy as np,segyio
+          from collections import Counter
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip';rz=RemoteZip(url);seg=sorted([i for i in rz.infolist() if (not i.is_dir()) and i.filename.lower().endswith('.sgy')],key=lambda i:i.filename);active=[i for i in seg if i.compress_size>1_000_000];pick=active[len(active)//2]
+          with rz.open(pick) as src,open('shot.sgy','wb') as dst:
+            while True:
+              b=src.read(8<<20)
+              if not b:break
+              dst.write(b)
+          with segyio.open('shot.sgy','r',ignore_geometry=True,endian='little') as f:
+            gx=np.asarray(f.attributes(segyio.TraceField.GroupX)[:],np.int64);gy=np.asarray(f.attributes(segyio.TraceField.GroupY)[:],np.int64)
+          pts=np.unique(np.stack([gx,gy],1),axis=0).astype(float);N=len(pts);d=pts[:,None,:]-pts[None,:,:];ds=np.sum(d*d,2);ds[ds==0]=np.inf;j=np.argmin(ds,1);v=pts[j]-pts;v=np.where(((v[:,0]<0)|((v[:,0]==0)&(v[:,1]<0)))[:,None],-v,v);lens=np.linalg.norm(v,axis=1);med=float(np.median(lens));good=v[(lens>.8*med)&(lens<1.2*med)]
+          # Cluster nearest-neighbour direction modulo sign by angle; report dominant vectors rounded to raw coordinate units.
+          cnt=Counter((int(round(x)),int(round(y))) for x,y in good);common=[{'v':list(k),'count':int(n),'norm':float(np.hypot(*k))} for k,n in cnt.most_common(20)]
+          # Use median of dominant-vector cluster as along-line axis, then sweep cross-line clustering thresholds.
+          if not common:raise SystemExit('no common vectors')
+          v0=np.array(common[0]['v'],float);u=v0/np.linalg.norm(v0);perp=np.array([-u[1],u[0]]);a=pts@u;b=pts@perp;sweeps=[]
+          for frac in [.05,.1,.15,.2,.3,.4,.5,.75,1,1.5,2,3,4]:
+            th=frac*med;order=np.argsort(b);cuts=np.where(np.diff(b[order])>th)[0]+1;groups=np.split(order,cuts);sizes=sorted([len(g) for g in groups],reverse=True);sp=[]
+            for g in groups:
+              aa=np.sort(a[g]);sp.extend(np.diff(aa).tolist())
+            sp=np.asarray(sp);sweeps.append({'threshold_frac':frac,'line_count':len(groups),'sizes_top20':sizes[:20],'size_median':float(np.median(sizes)),'size_max':int(max(sizes)),'size_min':int(min(sizes)),'along_spacing_median':float(np.median(sp)) if sp.size else None,'along_spacing_mad':float(np.median(np.abs(sp-np.median(sp)))) if sp.size else None})
+          out={'member':pick.filename,'receiver_sites':N,'nearest_spacing_median':med,'nearest_spacing_p10':float(np.quantile(lens,.1)),'nearest_spacing_p90':float(np.quantile(lens,.9)),'common_nearest_vectors':common,'chosen_axis':u.tolist(),'cross_axis':perp.tolist(),'sweeps':sweeps}
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('forge_active_geometry.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-active-geometry
+          path: forge_active_geometry.json
+          retention-days: 7

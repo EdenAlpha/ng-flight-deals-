@@ -1,0 +1,60 @@
+name: Raw FORGE remote-ZIP shot diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.10'}
+      - run: pip install --quiet requests remotezip numpy segyio zipfile-deflate64
+      - name: Range-open official FORGE raw archive and inspect member bytes
+        run: |
+          python - <<'PY'
+          import zipfile_deflate64
+          import json,os,requests,numpy as np,segyio,hashlib,struct
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          r=requests.get(url,headers={'Range':'bytes=0-31'},timeout=60,allow_redirects=True)
+          range_probe={'status':r.status_code,'content_range':r.headers.get('Content-Range'),'content_length':r.headers.get('Content-Length'),'accept_ranges':r.headers.get('Accept-Ranges'),'final_url':r.url}
+          rz=RemoteZip(url);infos=[i for i in rz.infolist() if not i.is_dir()];seg=sorted([i for i in infos if i.filename.lower().endswith(('.sgy','.segy','.seg'))],key=lambda i:i.filename)
+          # Keep lexical median selection, but report archive size distribution so a dead/empty shot is obvious.
+          mid=seg[len(seg)//2];cs=np.asarray([i.compress_size for i in seg],np.int64);us=np.asarray([i.file_size for i in seg],np.int64)
+          print('SELECT',mid.filename,mid.file_size,mid.compress_size,'METHOD',mid.compress_type,flush=True)
+          with rz.open(mid) as src,open('shot.sgy','wb') as dst:
+            while True:
+              b=src.read(8<<20)
+              if not b:break
+              dst.write(b)
+          raw=open('shot.sgy','rb').read();actual=len(raw)
+          if actual!=mid.file_size:raise RuntimeError(f'extracted {actual} != member {mid.file_size}')
+          def u16(off,end):return int.from_bytes(raw[off:off+2],end,signed=False)
+          def i32(off,end):return int.from_bytes(raw[off:off+4],end,signed=True)
+          hdr={}
+          for e in ['big','little']:
+            fmt=u16(3224,e);ns=u16(3220,e);dt=u16(3216,e);tr_ns=u16(3600+114,e) if actual>=3840 else None;tr_dt=u16(3600+116,e) if actual>=3840 else None
+            bps={1:4,2:4,3:2,5:4,6:8,7:3,8:1,9:8,10:4,11:2,12:8,15:3,16:1}.get(fmt)
+            rem=actual-3600;stride=(240+ns*bps) if bps and ns else None;ntr=(rem//stride if stride and rem%stride==0 else None)
+            hdr[e]={'format':fmt,'binary_ns':ns,'binary_dt':dt,'trace0_ns':tr_ns,'trace0_dt':tr_dt,'bytes_per_sample':bps,'fixed_stride':stride,'fixed_trace_count':ntr,'remainder_if_stride':(rem%stride if stride else None)}
+          opens={}
+          for e in ['big','little']:
+            try:
+              with segyio.open('shot.sgy','r',ignore_geometry=True,endian=e) as f:
+                opens[e]={'ok':True,'trace_count':f.tracecount,'samples':len(f.samples),'dt':int(segyio.tools.dt(f))}
+            except Exception as ex:opens[e]={'ok':False,'error':repr(ex)}
+          # Probe plausible receiver/source coords directly from first trace for both endian conventions.
+          coords={}
+          for e in ['big','little']:
+            if actual>=3840:
+              h0=3600;coords[e]={'sx':i32(h0+72,e),'sy':i32(h0+76,e),'gx':i32(h0+80,e),'gy':i32(h0+84,e)}
+          out={'archive_url':url,'range_probe':range_probe,'archive_members':len(infos),'segy_members':len(seg),'selected_member':mid.filename,'member_file_bytes':mid.file_size,'member_zip_bytes':mid.compress_size,'member_method':mid.compress_type,'actual_extracted_bytes':actual,'sha256':hashlib.sha256(raw).hexdigest(),'compressed_size_quantiles':{str(q):float(np.quantile(cs,q)) for q in [0,.1,.25,.5,.75,.9,1]},'uncompressed_size_quantiles':{str(q):float(np.quantile(us,q)) for q in [0,.1,.25,.5,.75,.9,1]},'header_interpretations':hdr,'segyio_attempts':opens,'trace0_coords':coords,'zero_fraction_bytes':float(np.mean(np.frombuffer(raw,np.uint8)==0))}
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('forge_raw_remotezip_diag.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-raw-remotezip-diag
+          path: forge_raw_remotezip_diag.json
+          retention-days: 7
