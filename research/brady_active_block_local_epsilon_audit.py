@@ -1,4 +1,5 @@
 import json,os,sys
+sys.path.insert(0,os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 from pysz import sz,szConfig,szErrorBoundMode
 from research.imperial_valley_frozen_brady_transfer import encode_tile,decode_tile,SAFETY
