@@ -29,11 +29,11 @@ jobs:
             k,n=keys[i]; p=f'shots/shot{j}.sgy'; print('DOWNLOAD',j,i,k,n,flush=True); s3.download_file(bucket,k,p); sel.append({'slot':j,'index':i,'key':k,'size':n})
           json.dump({'total':len(keys),'selected':sel},open('soda_grid_selection.json','w'),indent=2)
           PY
-      - run: python research/soda_grid_kxyf.py shots/shot0.sgy shots/shot1.sgy shots/shot2.sgy
+      - run: python research/soda_lattice_kxyf.py shots/shot0.sgy shots/shot1.sgy shots/shot2.sgy
       - uses: actions/upload-artifact@v4
         with:
-          name: soda-grid-kxyf-results
+          name: soda-lattice-kxyf-results
           path: |
             soda_grid_selection.json
-            soda_grid_kxyf_results.json
+            soda_lattice_kxyf_results.json
           retention-days: 7
