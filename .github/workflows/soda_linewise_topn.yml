@@ -1,0 +1,35 @@
+name: Soda Lake physical receiver-line top-N pilot
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  linewise:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3
+      - name: Download deterministic median raw shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os,json
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();i=round((len(keys)-1)*.5);k,n=keys[i];os.makedirs('shots',exist_ok=True);print('SHOT',i,k,n);s3.download_file(bucket,k,'shots/middle.sgy');json.dump({'index':i,'key':k,'size':n},open('soda_linewise_selection.json','w'))
+          PY
+      - run: python research/soda_linewise_topn.py shots/middle.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-linewise-topn-results
+          path: |
+            soda_linewise_selection.json
+            soda_linewise_topn.json
+          retention-days: 7
