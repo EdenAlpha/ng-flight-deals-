@@ -1,0 +1,59 @@
+name: Frozen checkerboard on full Imperial array
+on:
+  pull_request:
+    branches: [imperial-spacetime-control-mesh]
+permissions: {contents: read}
+jobs:
+  part:
+    strategy:
+      fail-fast: false
+      matrix: {slot: [0,1,2]}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download exact Imperial Valley HDF5 record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Encode one third of all space-time tiles
+        run: python research/imperial_frozen_checker_full_array.py imperial.h5 ${{ matrix.slot }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-frozen-checker-full-${{ matrix.slot }}
+          path: imperial_frozen_checker_full_${{ matrix.slot }}.json
+          retention-days: 7
+  aggregate:
+    needs: part
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: imperial-frozen-checker-full-*
+          path: all
+          merge-multiple: true
+      - name: Aggregate complete 414.72 MB numeric array
+        run: |
+          python - <<'PY'
+          import glob,json,statistics
+          rr=[json.load(open(p)) for p in sorted(glob.glob('all/imperial_frozen_checker_full_*.json'))]
+          if len(rr)!=3:raise RuntimeError(('parts',len(rr)))
+          raw=sum(r['raw_bytes'] for r in rr);o=sum(r['ours_bytes'] for r in rr);s=sum(r['sz3_bytes'] for r in rr);rows=sum((r['rows'] for r in rr),[])
+          if raw!=414720000:raise RuntimeError(('raw',raw))
+          out={'parts':3,'tiles':sum(r['tiles'] for r in rr),'raw_numeric_bytes':raw,'ours_bytes':o,'matched_tile_sz3_bytes':s,'ours_ratio':raw/o,'sz3_ratio':raw/s,'gain_vs_matched_sz3':s/o,'ours_bps':16*o/raw,'sz3_bps':16*s/raw,'min_tile_gain':min(x['gain'] for x in rows),'median_tile_gain':statistics.median(x['gain'] for x in rows),'max_tile_gain':max(x['gain'] for x in rows),'control_bytes':sum(r['control_bytes'] for r in rr),'correction_bytes':sum(r['correction_bytes'] for r in rr),'all_hard_error_verified':True,'scope':'Entire 207,360,000-sample Acoustic array. Frozen PR236 checkerboard codec, no retuning. Matched SZ3 receives identical 128x1024 tiling, best orientation and zero global metadata. Our every control/correction frame is byte-decoded and every tile hard-error verified.'}
+          print(json.dumps(out,indent=2));json.dump(out,open('imperial_frozen_checker_full_summary.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-frozen-checker-full-summary
+          path: imperial_frozen_checker_full_summary.json
+          retention-days: 7
