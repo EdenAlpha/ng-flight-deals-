@@ -22,8 +22,10 @@ jobs:
           s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
           assert os.path.getsize('imperial.h5')==415030456
           PY
-      - name: Solve tolerance-box coefficient annihilation
-        run: python research/imperial_tolerance_annihilating_basis.py imperial.h5
+      - name: Fix SciPy import and solve tolerance-box coefficient annihilation
+        run: |
+          sed -i 's/from scipy.linalg import hadamard, dct/from scipy.linalg import hadamard\nfrom scipy.fft import dct/' research/imperial_tolerance_annihilating_basis.py
+          python research/imperial_tolerance_annihilating_basis.py imperial.h5
       - uses: actions/upload-artifact@v4
         with:
           name: imperial-tolerance-annihilating-basis
