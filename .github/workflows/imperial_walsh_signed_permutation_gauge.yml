@@ -1,0 +1,31 @@
+name: Imperial Walsh signed-permutation gauge
+on:
+  pull_request:
+    branches: [imperial-rank-motion-coordinate]
+permissions: {contents: read}
+jobs:
+  screen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download benchmark data
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          bucket='gdr-data-lake';key='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          client=boto3.client('s3',config=Config(signature_version=UNSIGNED));client.download_file(bucket,key,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run signed-permutation benchmark
+        run: python research/imperial_walsh_signed_permutation_gauge.py imperial.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-walsh-signed-permutation-gauge
+          path: imperial_walsh_signed_permutation_gauge.json
+          retention-days: 7
