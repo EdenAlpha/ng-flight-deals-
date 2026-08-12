@@ -1,0 +1,52 @@
+name: Soda Lake global line-station lattice diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  lattice:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio boto3
+      - shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,json,numpy as np,segyio
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();idx=round((len(keys)-1)*.5);key,size=keys[idx];s3.download_file(bucket,key,'shot.sgy')
+          with segyio.open('shot.sgy','r',ignore_geometry=True) as f:
+            gx=np.asarray(f.attributes(segyio.TraceField.GroupX)[:],np.int64);gy=np.asarray(f.attributes(segyio.TraceField.GroupY)[:],np.int64)
+          pts=np.unique(np.stack([gx,gy],1),axis=0).astype(float);N=len(pts)
+          d=pts[:,None,:]-pts[None,:,:];ds=np.sum(d*d,2);ds[ds==0]=np.inf;j=np.argmin(ds,1);v=pts[j]-pts;v=np.where(((v[:,0]<0)|((v[:,0]==0)&(v[:,1]<0)))[:,None],-v,v);lens=np.linalg.norm(v,axis=1);sp=float(np.median(lens));vv=v[(lens>.5*sp)&(lens<1.5*sp)];u=np.median(vv,0);u=u/np.linalg.norm(u);perp=np.array([-u[1],u[0]]);a=pts@u;b=pts@perp
+          order=np.argsort(b);cuts=np.where(np.diff(b[order])>.2*sp)[0]+1;groups=np.split(order,cuts);main=[g for g in groups if len(g)>=10];main=sorted(main,key=lambda g:float(np.mean(b[g])));main_idx=np.concatenate(main);amin=float(a[main_idx].min())
+          # Search global along-line phase/spacing near measured nearest-neighbour spacing and assess integer-lattice residual/occupancy.
+          trials=[]
+          for scale in np.linspace(.995,1.005,101):
+            s=sp*scale
+            # choose phase from circular median-ish scan over each receiver's modulo position
+            mods=np.mod(a[main_idx]-amin,s)
+            for phase in np.quantile(mods,[0,.1,.25,.5,.75,.9]):
+              jj=np.rint((a[main_idx]-amin-phase)/s).astype(int);pred=amin+phase+jj*s;res=np.abs(a[main_idx]-pred);nr=int(jj.max()-jj.min()+1);occ=len(main_idx)/(len(main)*nr)
+              score=float(np.median(res)+np.quantile(res,.95)+s*(1-occ)*.05)
+              trials.append((score,s,float(phase),float(np.median(res)),float(np.quantile(res,.95)),float(res.max()),nr,float(occ),jj))
+          best=min(trials,key=lambda x:x[0]);_,s,phase,med,p95,mx,nstation,occ,jj=best
+          # Per-line station index ranges and holes.
+          line_rows=[];cursor=0
+          for li,g in enumerate(main):
+            q=jj[cursor:cursor+len(g)];cursor+=len(g);uq=np.unique(q);line_rows.append({'line':li,'receivers':len(g),'jmin':int(uq.min()),'jmax':int(uq.max()),'span':int(uq.max()-uq.min()+1),'holes':int(uq.max()-uq.min()+1-len(uq))})
+          out={'key':key,'sites':N,'main_lines':len(main),'main_sites':int(len(main_idx)),'along_axis':u.tolist(),'cross_axis':perp.tolist(),'measured_spacing':sp,'best_global_station_spacing':s,'phase':phase,'median_station_residual':med,'p95_station_residual':p95,'max_station_residual':mx,'global_station_count':nstation,'rectangular_occupancy':occ,'line_rows':line_rows}
+          print(json.dumps(out,indent=2));json.dump(out,open('soda_global_lattice.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-global-lattice
+          path: soda_global_lattice.json
+          retention-days: 7
