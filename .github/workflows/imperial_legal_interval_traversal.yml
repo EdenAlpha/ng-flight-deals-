@@ -1,0 +1,31 @@
+name: Imperial legal interval traversal screen
+on:
+  pull_request:
+    branches: [imperial-valley-frozen-brady-transfer]
+permissions: {contents: read}
+jobs:
+  screen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download exact Imperial Valley file
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          bucket='gdr-data-lake';key='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5';expected=415030456
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));s3.download_file(bucket,key,'das.h5')
+          if os.path.getsize('das.h5')!=expected:raise RuntimeError((os.path.getsize('das.h5'),expected))
+          PY
+      - name: Search legal interval graph traversals
+        run: python research/imperial_legal_interval_traversal.py das.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-legal-interval-traversal
+          path: imperial_legal_interval_traversal.json
+          retention-days: 7
