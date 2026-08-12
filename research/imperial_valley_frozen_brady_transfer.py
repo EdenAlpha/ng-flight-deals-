@@ -62,8 +62,11 @@ def decode_correction(mode,c,b1,b2,shape):
         S=decode_int(b1,c,shape);return np.cumsum(S,axis=0,dtype=np.int32)
     if mode==3:
         L=decode_int(b1,c,shape);C=L.copy()
+        # Same PR56 Lorenzo definition, inverted one spatial row at a time.
         for i in range(1,C.shape[0]):
-            for j in range(1,C.shape[1]):C[i,j]=L[i,j]+C[i-1,j]+C[i,j-1]-C[i-1,j-1]
+            if C.shape[1]>1:
+                d=L[i,1:].astype(np.int64)+C[i-1,1:].astype(np.int64)-C[i-1,:-1].astype(np.int64)
+                C[i,1:]=(np.int64(C[i,0])+np.cumsum(d,dtype=np.int64)).astype(np.int32)
         return C
     raise RuntimeError(('bad correction mode',mode))
 
@@ -75,19 +78,22 @@ def prediction_from_model(nc,nt,idx,qv,scale):
 
 def encode_tile(W,internal_eps):
     nc,nt=W.shape;F=np.fft.fft(np.fft.rfft(W,axis=1),axis=0);flat=F.ravel();n=min(NKEEP,flat.size)
-    ii=np.argpartition(np.abs(flat),-n)[-n:] if n<flat.size else np.arange(flat.size);ii=np.sort(ii).astype(np.uint32);v=flat[ii];xy=np.stack([v.real,v.imag],axis=-1);rawscale=max(float(np.max(np.abs(xy)))/127.0,1e-30);s16=np.float16(rawscale);scale=float(np.float32(s16));q=np.clip(np.rint(xy/scale),-127,127).astype(np.int8)
+    ii=np.argpartition(np.abs(flat),-n)[-n:] if n<flat.size else np.arange(flat.size);ii=np.sort(ii).astype(np.uint32);v=flat[ii];xy=np.stack([v.real,v.imag],axis=-1);rawscale=max(float(np.max(np.abs(xy)))/127.0,1e-30);s32=np.float32(rawscale)
+    if not np.isfinite(s32) or s32<=0:raise RuntimeError(('bad spectral scale',rawscale,s32))
+    scale=float(s32);q=np.clip(np.rint(xy/scale),-127,127).astype(np.int8)
     P=prediction_from_model(nc,nt,ii,q,scale);step=2*internal_eps;Q=np.rint((W.astype(np.float64)-P.astype(np.float64))/step).astype(np.int32);best,allcorr=correction_candidates(Q);_,mode,c,b1,b2=best
-    ib=comp(ii.tobytes());vb=comp(q.tobytes());header=struct.pack(HDR,MAG,1,mode,c,0,nc,nt,n,len(ib),len(vb),len(b1),len(b2));blob=header+s16.tobytes()+ib+vb+b1+b2
-    R=decode_tile(blob,internal_eps)
-    me=float(np.max(np.abs(W-R)))
-    return blob,me,{'mode':mode,'model_bytes':len(ib)+len(vb)+2,'correction_bytes':len(b1)+len(b2),'header_bytes':HS,'scale':scale,'correction_candidates':allcorr,'correction_nonzero_fraction':float(np.mean(Q!=0))}
+    RQ=decode_correction(mode,c,b1,b2,Q.shape)
+    if not np.array_equal(RQ,Q):raise RuntimeError(('correction integer roundtrip',mode))
+    ib=comp(ii.tobytes());vb=comp(q.tobytes());header=struct.pack(HDR,MAG,1,mode,c,0,nc,nt,n,len(ib),len(vb),len(b1),len(b2));blob=header+s32.tobytes()+ib+vb+b1+b2
+    R=decode_tile(blob,internal_eps);me=float(np.max(np.abs(W-R)))
+    return blob,me,{'mode':mode,'model_bytes':len(ib)+len(vb)+4,'correction_bytes':len(b1)+len(b2),'header_bytes':HS,'scale':scale,'correction_candidates':allcorr,'correction_nonzero_fraction':float(np.mean(Q!=0))}
 
 
 def decode_tile(blob,internal_eps):
-    if len(blob)<HS+2:raise RuntimeError('short tile')
+    if len(blob)<HS+4:raise RuntimeError('short tile')
     magic,ver,mode,c,_r,nc,nt,n,li,lv,l1,l2=struct.unpack(HDR,blob[:HS])
     if magic!=MAG or ver!=1:raise RuntimeError('tile header')
-    p=HS;scale=float(np.frombuffer(blob[p:p+2],np.float16,count=1)[0]);p+=2;ib=blob[p:p+li];p+=li;vb=blob[p:p+lv];p+=lv;b1=blob[p:p+l1];p+=l1;b2=blob[p:p+l2];p+=l2
+    p=HS;scale=float(np.frombuffer(blob[p:p+4],np.float32,count=1)[0]);p+=4;ib=blob[p:p+li];p+=li;vb=blob[p:p+lv];p+=lv;b1=blob[p:p+l1];p+=l1;b2=blob[p:p+l2];p+=l2
     if p!=len(blob):raise RuntimeError('tile length')
     ii=np.frombuffer(decomp(ib),np.uint32,count=n).astype(np.int64);q=np.frombuffer(decomp(vb),np.int8,count=n*2).reshape(n,2);P=prediction_from_model(nc,nt,ii,q,scale);Q=decode_correction(mode,c,b1,b2,(nc,nt));return P+Q.astype(np.float32)*np.float32(2*internal_eps)
 
@@ -114,20 +120,18 @@ def main(path):
         native,name,shape,dtype=dataset_info(f);d=f[name]
         if tuple(shape)!=(30000,6912) or dtype!='int16':raise RuntimeError(('unexpected IV array',name,shape,dtype))
         mu,std=stats(d);public_eps=.1*std;internal_eps=public_eps*SAFETY
-        total=64;tiles=0;model=0;corr=0;maxerr=0.0;mode_counts={str(i):0 for i in range(4)};nz_weight=0.0;samples=0;rows=[]
+        total=64;tiles=0;model=0;corr=0;maxerr=0.0;mode_counts={str(i):0 for i in range(4)};nz_weight=0.0;samples=0
         for t0 in range(0,shape[0],TIME):
             t1=min(shape[0],t0+TIME)
             for s0 in range(0,shape[1],SPACE):
-                s1=min(shape[1],s0+SPACE);W=np.asarray(d[t0:t1,s0:s1]).T.astype(np.float32,copy=False);blob,me,diag=encode_tile(W,internal_eps);R=decode_tile(blob,internal_eps)
-                if not np.array_equal(R,decode_tile(blob,internal_eps)):raise RuntimeError('nondeterministic decode')
-                me2=float(np.max(np.abs(W-R)))
-                if me2>public_eps*(1+3e-6):raise RuntimeError(('hard error',t0,s0,me2,public_eps))
-                total+=len(blob);tiles+=1;model+=diag['model_bytes'];corr+=diag['correction_bytes'];maxerr=max(maxerr,me2);mode_counts[str(diag['mode'])]+=1;nz_weight+=diag['correction_nonzero_fraction']*W.size;samples+=W.size
-                if tiles<=5 or tiles%100==0:print(json.dumps({'tile':tiles,'t0':t0,'s0':s0,'shape':list(W.shape),'bytes':len(blob),'ratio':W.nbytes/len(blob),'mode':diag['mode'],'corr_nz':diag['correction_nonzero_fraction'],'maxerr':me2}),flush=True)
+                s1=min(shape[1],s0+SPACE);W=np.asarray(d[t0:t1,s0:s1]).T.astype(np.float32,copy=False);blob,me,diag=encode_tile(W,internal_eps)
+                if me>public_eps*(1+3e-6):raise RuntimeError(('hard error',t0,s0,me,public_eps))
+                total+=len(blob);tiles+=1;model+=diag['model_bytes'];corr+=diag['correction_bytes'];maxerr=max(maxerr,me);mode_counts[str(diag['mode'])]+=1;nz_weight+=diag['correction_nonzero_fraction']*W.size;samples+=W.size
+                if tiles<=5 or tiles%100==0:print(json.dumps({'tile':tiles,'t0':t0,'s0':s0,'shape':list(W.shape),'bytes':len(blob),'ratio':W.nbytes/len(blob),'mode':diag['mode'],'corr_nz':diag['correction_nonzero_fraction'],'maxerr':me}),flush=True)
         # Exact baseline from PR #204 file slot 2; same HDF5 key, numeric array, global epsilon, and full-array block screen.
         baseline_native=414720000;baseline_eps=133.69778037805762;baseline_sz3=86361271
         if native!=baseline_native or abs(public_eps-baseline_eps)>1e-6:raise RuntimeError(('baseline identity drift',native,public_eps,baseline_native,baseline_eps))
-        out={'file_bytes':fbytes,'dataset':name,'shape':list(shape),'dtype':dtype,'native_numeric_bytes':native,'global_mean':mu,'global_std':std,'public_eps':public_eps,'internal_eps':internal_eps,'frozen_brady_definition':{'space_tile':SPACE,'time_tile':TIME,'topN':NKEEP,'coefficient_quantization':'int8 complex','scale_storage':'float16','zstd_level':ZLEVEL,'source':'PR56 Brady winner; scale decode made exact here'},'tiles':tiles,'container_bytes':total,'ratio_native':native/total,'model_bytes':model,'correction_bytes':corr,'correction_nonzero_fraction':nz_weight/samples,'correction_mode_counts':mode_counts,'maxerr':maxerr,'valid':bool(maxerr<=public_eps*(1+3e-6)),'pr204_matched_block_sz3_bytes':baseline_sz3,'pr204_sz3_ratio':native/baseline_sz3,'gain_vs_pr204_sz3':baseline_sz3/total,'pr204_generic_lattice_bytes':100374449,'gain_vs_pr204_generic_lattice':100374449/total,'scope':'entire Acoustic numeric array; HDF5 metadata not included'}
+        out={'file_bytes':fbytes,'dataset':name,'shape':list(shape),'dtype':dtype,'native_numeric_bytes':native,'global_mean':mu,'global_std':std,'public_eps':public_eps,'internal_eps':internal_eps,'frozen_brady_definition':{'space_tile':SPACE,'time_tile':TIME,'topN':NKEEP,'coefficient_quantization':'int8 complex','scale_storage':'float32','zstd_level':ZLEVEL,'source':'PR56 Brady winner; scale widened only to represent Imperial coefficient range exactly'},'tiles':tiles,'container_bytes':total,'ratio_native':native/total,'model_bytes':model,'correction_bytes':corr,'correction_nonzero_fraction':nz_weight/samples,'correction_mode_counts':mode_counts,'maxerr':maxerr,'valid':bool(maxerr<=public_eps*(1+3e-6)),'pr204_matched_block_sz3_bytes':baseline_sz3,'pr204_sz3_ratio':native/baseline_sz3,'gain_vs_pr204_sz3':baseline_sz3/total,'pr204_generic_lattice_bytes':100374449,'gain_vs_pr204_generic_lattice':100374449/total,'scope':'entire Acoustic numeric array; HDF5 metadata not included'}
         print(json.dumps(out,indent=2),flush=True);json.dump(out,open('imperial_valley_frozen_brady_transfer.json','w'),indent=2)
 
 if __name__=='__main__':main(sys.argv[1])
