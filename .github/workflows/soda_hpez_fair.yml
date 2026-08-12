@@ -1,0 +1,113 @@
+name: Soda Lake official HPEZ q4 fair comparator
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  hpez:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Build official HPEZ QoZ2
+        run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install -DCMAKE_CXX_FLAGS="-include cstdint -include array"
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+      - name: Download deterministic median Soda raw shot and prepare physical grid
+        run: |
+          pip install --quiet numpy segyio boto3 pysz
+          python - <<'PY'
+          import boto3,os,json,numpy as np,segyio
+          from collections import defaultdict
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();idx=round((len(keys)-1)*.5);key,size=keys[idx];s3.download_file(bucket,key,'middle.sgy')
+          with segyio.open('middle.sgy','r',ignore_geometry=True) as f:
+            X=np.asarray(f.trace.raw[:],np.float32).copy();gx=np.asarray(f.attributes(segyio.TraceField.GroupX)[:],np.int64);gy=np.asarray(f.attributes(segyio.TraceField.GroupY)[:],np.int64)
+          eps=.1*float(X.astype(np.float64).std());X.astype('<f4',copy=False).tofile('file.bin')
+          coord=defaultdict(list)
+          for i,k in enumerate(zip(gx.tolist(),gy.tolist())):coord[k].append(i)
+          keys2=list(coord.keys());pts=np.asarray(keys2,float);d=pts[:,None,:]-pts[None,:,:];ds=np.sum(d*d,2);ds[ds==0]=np.inf;nn=np.argmin(ds,1);v=pts[nn]-pts;v=np.where(((v[:,0]<0)|((v[:,0]==0)&(v[:,1]<0)))[:,None],-v,v);lens=np.linalg.norm(v,axis=1);sp=float(np.median(lens));vv=v[(lens>.5*sp)&(lens<1.5*sp)];u=np.median(vv,0);u=u/np.linalg.norm(u);perp=np.array([-u[1],u[0]]);a=pts@u;b=pts@perp
+          order=np.argsort(b);cuts=np.where(np.diff(b[order])>.2*sp)[0]+1;groups=np.split(order,cuts);main=[g for g in groups if len(g)>=10];main=sorted(main,key=lambda g:float(np.mean(b[g])));main_idx=np.concatenate(main);amin=float(a[main_idx].min());best=None
+          for scale in np.linspace(.995,1.005,101):
+            s=sp*scale;mods=np.mod(a[main_idx]-amin,s)
+            for phase in np.quantile(mods,[0,.1,.25,.5,.75,.9]):
+              qi=np.rint((a[main_idx]-amin-phase)/s).astype(int);pred=amin+phase+qi*s;res=np.abs(a[main_idx]-pred);span=int(qi.max()-qi.min()+1);occ=len(main_idx)/(len(main)*span);score=float(np.median(res)+np.quantile(res,.95)+s*(1-occ)*.05)
+              if best is None or score<best[0]:best=(score,s,float(phase),int(qi.min()),int(qi.max()))
+          _,s,phase,jmin,jmax=best;L=len(main);S=jmax-jmin+1;T=X.shape[1];G=np.zeros((3,L,S,T),np.float32);tm=[];used=set()
+          for li,g in enumerate(main):
+            for q in g.tolist():
+              ids=coord[keys2[q]]
+              if len(ids)!=3:continue
+              st=int(round((a[q]-amin-phase)/s))-jmin
+              for c,tid in enumerate(ids):G[c,li,st]=X[tid];tm.append((tid,c,li,st));used.add(tid)
+          outids=np.asarray([i for i in range(X.shape[0]) if i not in used],np.int64);O=X[outids]
+          G.astype('<f4',copy=False).tofile('grid4.bin');O.astype('<f4',copy=False).tofile('out.bin')
+          for c in range(3):G[c].astype('<f4',copy=False).tofile(f'grid_c{c}.bin')
+          np.asarray(tm,np.int32).tofile('trace_map_i32.bin');outids.astype('<i4').tofile('outids_i32.bin')
+          meta={'total_objects':len(keys),'index':idx,'key':key,'file_size':size,'shape':list(X.shape),'raw':int(X.nbytes),'eps':eps,'grid_shape':list(G.shape),'out_shape':list(O.shape),'trace_map_count':len(tm)};json.dump(meta,open('meta.json','w'),indent=2);print(json.dumps(meta,indent=2))
+          PY
+      - name: Run HPEZ q4 layouts and verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          EPS=$(python -c "import json;print(json.load(open('meta.json'))['eps'])")
+          NTR=$(python -c "import json;print(json.load(open('meta.json'))['shape'][0])")
+          NT=$(python -c "import json;print(json.load(open('meta.json'))['shape'][1])")
+          L=$(python -c "import json;print(json.load(open('meta.json'))['grid_shape'][1])")
+          S=$(python -c "import json;print(json.load(open('meta.json'))['grid_shape'][2])")
+          NO=$(python -c "import json;print(json.load(open('meta.json'))['out_shape'][0])")
+          BIN=$PWD/hpez-install/bin/hpez
+          $BIN -f -i file.bin -z hpez_file_native.bin -2 "$NT" "$NTR" -M ABS "$EPS" -q 4
+          $BIN -f -z hpez_file_native.bin -o hpez_file_native.out -2 "$NT" "$NTR"
+          $BIN -f -i file.bin -z hpez_file_flip.bin -2 "$NTR" "$NT" -M ABS "$EPS" -q 4
+          $BIN -f -z hpez_file_flip.bin -o hpez_file_flip.out -2 "$NTR" "$NT"
+          # Physically correct component x acquisition-line x station x time layout.
+          GRID4_OK=0
+          if $BIN -f -i grid4.bin -z hpez_grid4.bin -4 "$NT" "$S" "$L" 3 -M ABS "$EPS" -q 4; then
+            if $BIN -f -z hpez_grid4.bin -o hpez_grid4.out -4 "$NT" "$S" "$L" 3; then GRID4_OK=1; fi
+          fi
+          echo "$GRID4_OK" > grid4_ok.txt
+          for c in 0 1 2; do
+            $BIN -f -i "grid_c${c}.bin" -z "hpez_grid_c${c}.bin" -3 "$NT" "$S" "$L" -M ABS "$EPS" -q 4
+            $BIN -f -z "hpez_grid_c${c}.bin" -o "hpez_grid_c${c}.out" -3 "$NT" "$S" "$L"
+          done
+          if [ "$NO" -gt 0 ]; then
+            $BIN -f -i out.bin -z hpez_out.bin -2 "$NT" "$NO" -M ABS "$EPS" -q 4
+            $BIN -f -z hpez_out.bin -o hpez_out.out -2 "$NT" "$NO"
+          fi
+          python - <<'PY'
+          import json,os,numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          m=json.load(open('meta.json'));shape=tuple(m['shape']);raw=m['raw'];eps=float(m['eps']);X=np.fromfile('file.bin','<f4').reshape(shape);out={'meta':m,'HPEZ_q4':{}}
+          for name in ['file_native','file_flip']:
+            Y=np.fromfile(f'hpez_{name}.out','<f4').reshape(shape);n=os.path.getsize(f'hpez_{name}.bin');out['HPEZ_q4'][name]={'bytes':n,'ratio':raw/n,'maxerr':float(np.max(np.abs(X-Y)))}
+          Gshape=tuple(m['grid_shape']);tm=np.fromfile('trace_map_i32.bin','<i4').reshape(-1,4);outids=np.fromfile('outids_i32.bin','<i4').astype(np.int64);NO=len(outids);outbytes=os.path.getsize('hpez_out.bin') if NO else 0
+          if open('grid4_ok.txt').read().strip()=='1':
+            G=np.fromfile('hpez_grid4.out','<f4').reshape(Gshape);Y=np.empty_like(X)
+            for tid,c,l,s in tm:Y[tid]=G[c,l,s]
+            if NO:Y[outids]=np.fromfile('hpez_out.out','<f4').reshape(NO,shape[1])
+            n=os.path.getsize('hpez_grid4.bin')+outbytes;out['HPEZ_q4']['physical_grid4_plus_out']={'bytes':n,'ratio':raw/n,'maxerr':float(np.max(np.abs(X-Y)))}
+          comps=[]
+          for c in range(3):comps.append(np.fromfile(f'hpez_grid_c{c}.out','<f4').reshape(Gshape[1:]))
+          Y=np.empty_like(X)
+          for tid,c,l,s in tm:Y[tid]=comps[c][l,s]
+          if NO:Y[outids]=np.fromfile('hpez_out.out','<f4').reshape(NO,shape[1])
+          n=sum(os.path.getsize(f'hpez_grid_c{c}.bin') for c in range(3))+outbytes;out['HPEZ_q4']['physical_grid3_components_plus_out']={'bytes':n,'ratio':raw/n,'maxerr':float(np.max(np.abs(X-Y)))}
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(np.ascontiguousarray(X),cfg);Z,_=sz.decompress(b,np.float32,shape);out['SZ3']={'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-Z)))}
+          print(json.dumps(out,indent=2));json.dump(out,open('soda_hpez_fair.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-hpez-fair-results
+          path: |
+            meta.json
+            soda_hpez_fair.json
+          retention-days: 7
