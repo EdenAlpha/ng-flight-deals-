@@ -1,0 +1,33 @@
+name: Inspect independent Garner Valley DAS SEG-Y
+on:
+  pull_request:
+    branches: [imperial-valley-frozen-brady-transfer]
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio
+      - name: Download released Garner Valley DAS shaker record
+        run: |
+          curl -L --fail --retry 4 --retry-delay 3 -o garner.sgy 'https://gdr.openei.org/files/481/large%20shaker%20NEES_130910161319%20%281%29.sgy'
+          ls -lh garner.sgy
+      - name: Inspect geometry and samples
+        run: |
+          python - <<'PY'
+          import json,os,numpy as np,segyio
+          p='garner.sgy';out={'file_bytes':os.path.getsize(p)}
+          with segyio.open(p,'r',ignore_geometry=True) as f:
+            f.mmap();ntr=f.tracecount;ns=len(f.samples);fmt=int(f.bin[segyio.BinField.Format]);dt=int(f.bin[segyio.BinField.Interval]);A=np.stack([np.asarray(f.trace[i],np.float32) for i in range(ntr)])
+            out.update({'tracecount':ntr,'ns':ns,'shape':[ntr,ns],'sample_format_code':fmt,'sample_interval_us':dt,'numeric_bytes':int(A.nbytes),'dtype':str(A.dtype),'min':float(A.min()),'max':float(A.max()),'mean':float(A.mean(dtype=np.float64)),'std':float(A.std(dtype=np.float64)),'nonzero_fraction':float(np.mean(A!=0)),'finite':bool(np.all(np.isfinite(A)))})
+          print(json.dumps(out,indent=2));json.dump(out,open('garner_valley_das_inspect.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: garner-valley-das-inspect
+          path: garner_valley_das_inspect.json
+          retention-days: 7

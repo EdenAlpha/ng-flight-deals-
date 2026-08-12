@@ -1,0 +1,22 @@
+name: Full corrected Garner Valley DAS benchmark
+on:
+  pull_request:
+    branches: [imperial-valley-frozen-brady-transfer]
+permissions: {contents: read}
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py segyio zstandard pysz
+      - run: curl -L --fail --retry 4 --retry-delay 3 -o garner.sgy 'https://gdr.openei.org/files/481/large%20shaker%20NEES_130910161319%20%281%29.sgy'
+      - name: Benchmark every DAS sample against matched SZ3
+        run: python research/garner_valley_das_full_benchmark.py garner.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: garner-valley-das-full-benchmark
+          path: garner_valley_das_full_benchmark.json
+          retention-days: 7
