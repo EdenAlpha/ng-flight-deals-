@@ -1,4 +1,6 @@
-import research.imperial_growing_waveform_language as g
+import os, sys
+sys.path.insert(0, os.path.dirname(__file__))
+import imperial_growing_waveform_language as g
 
 # Identical experiment to PR269, but one representative channel from each
 # precommitted cable regime instead of eight. All history checkpoints,
