@@ -26,7 +26,7 @@ jobs:
           keys.sort();i=round((len(keys)-1)*p);k,n=keys[i];print('SHOT',i,k,n,flush=True);s3.download_file(bucket,k,'shot.sgy');json.dump({'percentile':75,'index':i,'key':k,'size':n,'total':len(keys)},open('selection.json','w'),indent=2)
           PY
       - name: Run exact stacked codec and byte decode
-        run: python research/soda_factor_backend_stack.py shot.sgy
+        run: python research/soda_factor_backend_stack_run.py shot.sgy
       - uses: actions/upload-artifact@v4
         with:
           name: soda-factor-backend-stack-p75
