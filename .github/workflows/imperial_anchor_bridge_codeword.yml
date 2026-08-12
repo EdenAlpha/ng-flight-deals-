@@ -1,12 +1,12 @@
-name: Imperial tolerance-bridge anchor codeword
+name: Imperial fine-control tolerance bridge
 on:
   pull_request:
-    branches: [imperial-gauge-aware-spatial-decimation]
+    branches: [imperial-anchor-bridge-codeword]
 permissions: {contents: read}
 jobs:
   screen:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -22,10 +22,10 @@ jobs:
           s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
           assert os.path.getsize('imperial.h5')==415030456
           PY
-      - name: Jointly synthesize anchor states and omitted channels
+      - name: Spend fine anchor error-box freedom to erase omitted channels
         run: python research/imperial_anchor_bridge_codeword.py imperial.h5
       - uses: actions/upload-artifact@v4
         with:
-          name: imperial-anchor-bridge-codeword
+          name: imperial-anchor-bridge-fine-control
           path: imperial_anchor_bridge_codeword.json
           retention-days: 7
