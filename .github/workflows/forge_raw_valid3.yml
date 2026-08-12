@@ -1,0 +1,67 @@
+name: Frozen sparse-state codec on three canonical raw Utah FORGE gathers
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        idx: [3,14,25]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+          pip install --quiet numpy zstandard pysz requests remotezip zipfile64
+      - name: Range-fetch fixed canonical acquisition member
+        shell: bash
+        env: {IDX: '${{ matrix.idx }}'}
+        run: |
+          python - <<'PY'
+          import os,json,struct,requests
+          import zipfile64.zipfile
+          from remotezip import RemoteZip
+          idx=int(os.environ['IDX']);url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          with RemoteZip(url) as z:
+            infos=sorted([i for i in z.infolist() if not i.is_dir() and i.filename.lower().endswith(('.sgy','.segy','.seg')) and i.compress_size>=1048576],key=lambda i:i.filename)
+          family=infos[:29];zi=family[idx];name=zi.filename.encode();off=int(zi.header_offset)
+          h=requests.get(url,headers={'Range':f'bytes={off}-{off+29}'},timeout=30).content;nlen=int.from_bytes(h[26:28],'little');xlen=int.from_bytes(h[28:30],'little');do=off+30+nlen+xlen
+          payload=requests.get(url,headers={'Range':f'bytes={do}-{do+zi.compress_size-1}'},timeout=180).content
+          if len(payload)!=zi.compress_size:raise RuntimeError((len(payload),zi.compress_size))
+          local=struct.pack('<IHHHHHIIIHH',0x04034b50,21,0,zi.compress_type,0,0,zi.CRC,zi.compress_size,zi.file_size,len(name),0)+name;central=struct.pack('<IHHHHHHIIIHHHHHII',0x02014b50,20,21,0,zi.compress_type,0,0,zi.CRC,zi.compress_size,zi.file_size,len(name),0,0,0,0,0,0)+name;cd=len(local)+len(payload);e=struct.pack('<IHHHHIIH',0x06054b50,0,0,1,1,len(central),cd,0);open('member.zip','wb').write(local+payload+central+e)
+          json.dump({'family_size':len(family),'family_index':idx,'name':zi.filename,'file_size':zi.file_size,'compressed_size':zi.compress_size,'crc':zi.CRC},open('forge_valid_selection.json','w'),indent=2)
+          print('SELECT',json.load(open('forge_valid_selection.json')),flush=True)
+          PY
+          7z t member.zip >/dev/null
+          mkdir out && 7z x -y -oout member.zip >/dev/null
+          mv out/*.sgy forge_raw.sgy
+      - name: Apply objective family-layout fallback only when global header is all zero
+        run: |
+          python - <<'PY'
+          import json,os,shutil
+          src='forge_raw.sgy';dst='forge_raw_parse.sgy';raw=bytearray(open(src,'rb').read())
+          ntr,ns,dt,fmt=1747,16001,1000,5;expected=3600+ntr*(240+4*ns)
+          zero_header=not any(raw[:3600]);used=False
+          if zero_header:
+              if len(raw)!=expected: raise RuntimeError(('zero-header member does not match validated Utah family layout',len(raw),expected))
+              raw[3216:3218]=dt.to_bytes(2,'little');raw[3220:3222]=ns.to_bytes(2,'little');raw[3224:3226]=fmt.to_bytes(2,'little');used=True
+              open(dst,'wb').write(raw)
+          else:
+              shutil.copyfile(src,dst)
+          meta={'fallback_used':used,'original_global_header_all_zero':zero_header,'original_bytes':os.path.getsize(src),'expected_family_bytes':expected,'ntr':ntr,'ns':ns,'dt_us':dt,'format':fmt}
+          json.dump(meta,open('forge_family_layout_fallback.json','w'),indent=2);print(json.dumps(meta,indent=2))
+          PY
+      - run: python research/forge_raw_frozen_state.py forge_raw_parse.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-valid-frozen-${{ matrix.idx }}
+          path: |
+            forge_valid_selection.json
+            forge_family_layout_fallback.json
+            forge_raw_frozen_state.json
+          retention-days: 7
