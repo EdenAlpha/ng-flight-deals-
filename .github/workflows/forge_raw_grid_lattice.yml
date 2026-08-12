@@ -1,0 +1,44 @@
+name: Raw FORGE geometry-lattice cross-survey benchmark
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.10'}
+      - run: pip install --quiet requests remotezip zipfile-deflate64 numpy segyio zstandard pysz
+      - name: Extract deterministic median active raw FORGE shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import zipfile_deflate64,json
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          rz=RemoteZip(url)
+          seg=sorted([i for i in rz.infolist() if (not i.is_dir()) and i.filename.lower().endswith('.sgy')],key=lambda i:i.filename)
+          active=[i for i in seg if i.compress_size>1_000_000]
+          dead=[i for i in seg if i.compress_size<=1_000_000]
+          if not active: raise SystemExit('no active members')
+          pick=active[len(active)//2]
+          print('TOTAL',len(seg),'ACTIVE',len(active),'DEAD',len(dead),'SELECT',pick.filename,pick.compress_size,pick.file_size,flush=True)
+          with rz.open(pick) as src,open('shot.sgy','wb') as dst:
+            while True:
+              b=src.read(8<<20)
+              if not b: break
+              dst.write(b)
+          json.dump({'archive':url,'total':len(seg),'active':len(active),'dead':len(dead),'selection_rank':len(active)//2,'member':pick.filename,'zip_bytes':pick.compress_size,'file_bytes':pick.file_size},open('forge_raw_selection.json','w'),indent=2)
+          PY
+      - name: Run exact-byte geometry-lattice codec and SZ3 baseline
+        run: python research/forge_raw_grid_lattice.py shot.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-raw-grid-lattice-results
+          path: |
+            forge_raw_selection.json
+            forge_raw_grid_lattice.json
+          retention-days: 7
