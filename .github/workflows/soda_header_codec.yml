@@ -1,0 +1,56 @@
+name: Soda Lake lossless SEG-Y header codec diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  headers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy zstandard boto3
+      - shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os,json,struct,numpy as np,zstandard as zstd
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();idx=round((len(keys)-1)*.5);key,size=keys[idx];s3.download_file(bucket,key,'middle.sgy');raw=open('middle.sgy','rb').read();ntr=1993;ns=2000;stride=240+4*ns
+          assert len(raw)==3600+ntr*stride
+          gh=raw[:3600];H=np.empty((ntr,240),np.uint8)
+          for i in range(ntr):H[i]=np.frombuffer(raw,dtype=np.uint8,count=240,offset=3600+i*stride)
+          zc=zstd.ZstdCompressor(level=22)
+          def frame(b):return zc.compress(b)
+          cand=[]
+          # mode0: direct exact header bytes (global header + trace headers)
+          a=frame(gh+H.tobytes());cand.append(('direct',a))
+          # mode1: global separately + byte-column transpose of 240-byte trace headers
+          g=frame(gh);t=frame(np.ascontiguousarray(H.T).tobytes());cand.append(('byte_columns',g+t))
+          # mode2: exact XOR to previous trace header, then byte-column transpose
+          X=H.copy();X[1:]=np.bitwise_xor(H[1:],H[:-1]);t=frame(np.ascontiguousarray(X.T).tobytes());cand.append(('xor_columns',g+t))
+          # mode3: modulo byte delta to previous trace header, then byte columns
+          D=H.copy();D[1:]=(H[1:].astype(np.int16)-H[:-1].astype(np.int16))%256;t=frame(np.ascontiguousarray(D.T.astype(np.uint8)).tobytes());cand.append(('delta8_columns',g+t))
+          # independently verify reversible transforms before accounting
+          RX=X.copy();RX[1:]=0
+          for i in range(1,ntr):RX[i]=np.bitwise_xor(X[i],RX[i-1])
+          assert np.array_equal(RX,H)
+          RD=D.astype(np.uint8).copy();
+          for i in range(1,ntr):RD[i]=((D[i].astype(np.uint16)+RD[i-1].astype(np.uint16))%256).astype(np.uint8)
+          assert np.array_equal(RD,H)
+          cand.sort(key=lambda x:len(x[1]));name,b=cand[0];header_container=struct.pack('<8sBI',b'SGYHDR01',{'direct':0,'byte_columns':1,'xor_columns':2,'delta8_columns':3}[name],len(b))+b
+          header_raw=3600+ntr*240
+          sample_raw=ntr*ns*4;sample_codec=53073;sz3_sample=107255
+          result={'key':key,'full_file_bytes':len(raw),'sample_raw_bytes':sample_raw,'header_raw_bytes':header_raw,'candidates':[{'mode':n,'bytes':len(x)} for n,x in cand],'header_container_bytes':len(header_container),'best_mode':name,'header_lossless_ratio':header_raw/len(header_container),'full_file_ratio_with_grid_sample_codec':len(raw)/(sample_codec+len(header_container)),'full_file_ratio_with_sz3_samples_same_header_codec':len(raw)/(sz3_sample+len(header_container)),'sample_codec_vs_sz3_full_file_size_gain':(sz3_sample+len(header_container))/(sample_codec+len(header_container))}
+          print(json.dumps(result,indent=2));json.dump(result,open('soda_header_codec.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-header-codec-results
+          path: soda_header_codec.json
+          retention-days: 7
