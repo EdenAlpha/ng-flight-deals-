@@ -1,0 +1,96 @@
+name: Utah FORGE p90 structural layout probe
+on:
+  pull_request:
+    branches: [forge-raw-lattice-pilot]
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+          pip install --quiet requests numpy
+      - name: CRC-extract fixed p90 member
+        shell: bash
+        run: |
+          python - <<'PY'
+          import requests,struct
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip';name=b'1511995638_1030_50500_17800_20171202_220608_145.sgy';fs=112237868;cs=91312195;crc=3192394387;method=9;off=2970205976
+          r=requests.get(url,headers={'Range':f'bytes={off}-{off+cs-1}'},timeout=120);r.raise_for_status();payload=r.content
+          if len(payload)!=cs:raise RuntimeError((len(payload),cs))
+          local=struct.pack('<IHHHHHIIIHH',0x04034b50,21,0,method,0,0,crc,cs,fs,len(name),0)+name;central=struct.pack('<IHHHHHHIIIHHHHHII',0x02014b50,20,21,0,method,0,0,crc,cs,fs,len(name),0,0,0,0,0,0)+name;cd=len(local)+len(payload);eocd=struct.pack('<IHHHHIIH',0x06054b50,0,0,1,1,len(central),cd,0);open('member.zip','wb').write(local+payload+central+eocd)
+          PY
+          7z t member.zip | tee 7z_test.txt
+          mkdir x && 7z x -y -ox member.zip >/dev/null
+          mv x/1511995638_1030_50500_17800_20171202_220608_145.sgy p90.sgy
+      - name: Probe structural layouts
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os,json,numpy as np
+          fn='p90.sgy';size=os.path.getsize(fn);mm=np.memmap(fn,np.uint8,'r')
+          def U16(o,bo):return int.from_bytes(bytes(mm[o:o+2]),bo,signed=False) if 0<=o<=size-2 else -1
+          def I16(o,bo):return int.from_bytes(bytes(mm[o:o+2]),bo,signed=True) if 0<=o<=size-2 else -1
+          def I32(o,bo):return int.from_bytes(bytes(mm[o:o+4]),bo,signed=True) if 0<=o<=size-4 else 0
+          # Find nonzero extents efficiently by chunks.
+          first_nz=None;last_nz=None;nz_chunks=[];chunk=1<<20
+          for a in range(0,size,chunk):
+              q=np.asarray(mm[a:min(size,a+chunk)])
+              ix=np.flatnonzero(q)
+              if ix.size:
+                  if first_nz is None:first_nz=a+int(ix[0])
+                  last_nz=a+int(ix[-1]);nz_chunks.append(a//chunk)
+          std={}
+          for bo in ('little','big'):
+              std[bo]={'dt':U16(3216,bo),'ns':U16(3220,bo),'fmt':U16(3224,bo),'rev':U16(3500,bo),'fixed':U16(3502,bo),'ext':I16(3504,bo),'trace0_ns':U16(3714,bo),'trace0_dt':U16(3716,bo),'trace0_seq':I32(3600,bo)}
+          # Search offsets with self-consistent SEG-Y arithmetic. Test possible starts in first 4 MiB at byte granularity around nonzero regions,
+          # plus 3200-byte aligned starts throughout first 16 MiB.
+          bps={1:4,2:4,3:2,5:4,6:8,7:3,8:1,9:8,10:4,11:2,12:8,15:3,16:1}
+          starts=set([0])
+          lim=min(size-3600,4<<20)
+          # Candidate text starts need not be aligned; scan binary-header candidates at 2-byte granularity to keep cost bounded.
+          for text0 in range(0,lim,2):
+              bh=text0+3200
+              for bo in ('little','big'):
+                  dt=U16(bh+16,bo);ns=U16(bh+20,bo);fmt=U16(bh+24,bo)
+                  if 100<=dt<=20000 and 100<=ns<=65535 and fmt in bps:
+                      starts.add(text0)
+          for text0 in range(0,min(size-3600,16<<20),3200):starts.add(text0)
+          cand=[]
+          for text0 in sorted(starts):
+              bh=text0+3200
+              for bo in ('little','big'):
+                  dt=U16(bh+16,bo);ns=U16(bh+20,bo);fmt=U16(bh+24,bo)
+                  if fmt not in bps or not(50<=dt<=50000 and 1<=ns<=65535):continue
+                  ext=I16(bh+304,bo);data0=text0+3600+(ext if ext>0 else 0)*3200;stride=240+bps[fmt]*ns
+                  if data0>size:continue
+                  rem=size-data0;div=(rem%stride==0);ntr=rem//stride if div else None
+                  tns=U16(data0+114,bo);tdt=U16(data0+116,bo)
+                  score=4*int(div)+2*int(tns in (0,ns))+2*int(tdt in (0,dt))+int(fmt in (1,5))+int(text0%3200==0)
+                  if score>=4:cand.append({'score':score,'text_offset':text0,'binary_offset':bh,'data_offset':data0,'endian':bo,'dt':dt,'ns':ns,'fmt':fmt,'ext':ext,'stride':stride,'divisible':div,'ntr':ntr,'trace0_ns':tns,'trace0_dt':tdt,'trace0_seq':I32(data0,bo)})
+          cand=sorted(cand,key=lambda q:(-q['score'],q['text_offset']))[:100]
+          # Also test whether the whole file is a fixed raw float matrix after a small prefix by factoring likely ns=16001.
+          float_layout=[]
+          for data0 in [0,3600,3840,3200,first_nz or 0]:
+              for ns in [16001,16000,8001,4001,2000]:
+                  st=240+4*ns
+                  if data0<size and (size-data0)%st==0:float_layout.append({'data0':int(data0),'ns':ns,'ntr':int((size-data0)//st),'stride':st})
+          out={'file_size':size,'first_nonzero':first_nz,'last_nonzero':last_nz,'nonzero_chunk_count':len(nz_chunks),'nonzero_chunk_first20':nz_chunks[:20],'first256_hex':bytes(mm[:256]).hex(),'offset_3200_3840_hex':bytes(mm[3200:3840]).hex(),'standard':std,'candidates':cand,'float_layout_hints':float_layout}
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('p90_layout_probe.json','w'),indent=2)
+          open('p90_head1m.bin','wb').write(bytes(mm[:1<<20]))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: forge-p90-layout-probe
+          path: |
+            p90_layout_probe.json
+            p90_head1m.bin
+            7z_test.txt
+          retention-days: 7
