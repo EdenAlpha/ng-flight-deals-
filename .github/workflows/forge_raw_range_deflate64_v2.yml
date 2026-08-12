@@ -1,0 +1,63 @@
+name: Raw Utah FORGE Deflate64 ranged extraction v2
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet requests remotezip zipfile64 numpy segyio pysz
+      - name: Range-extract one deterministic Deflate64 SEG-Y member
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,requests,os
+          import zipfile64.zipfile
+          from remotezip import RemoteZip
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip';out={'url':url}
+          r=requests.get(url,headers={'Range':'bytes=0-0'},stream=True,timeout=30);out['range_status']=r.status_code;out['content_range']=r.headers.get('Content-Range');r.close()
+          if out['range_status']!=206:raise RuntimeError('range unsupported')
+          with RemoteZip(url) as z:
+            infos=sorted([i for i in z.infolist() if not i.is_dir() and i.filename.lower().endswith(('.sgy','.segy','.seg'))],key=lambda i:i.filename)
+            out['segy_count']=len(infos);out['compression_types']=sorted(set(int(i.compress_type) for i in infos));i=infos[len(infos)//2]
+            out['selected']={'index':len(infos)//2,'name':i.filename,'bytes':i.file_size,'compressed':i.compress_size,'compress_type':int(i.compress_type),'header_offset':int(i.header_offset)};print('SELECT',out['selected'],flush=True)
+            with z.open(i) as src,open('forge_raw_shot.sgy','wb') as dst:
+              while True:
+                b=src.read(8<<20)
+                if not b:break
+                dst.write(b)
+          out['extracted_bytes']=os.path.getsize('forge_raw_shot.sgy');json.dump(out,open('forge_range64_v2.json','w'),indent=2)
+          PY
+      - name: Inspect gather and matched SZ3
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,numpy as np,segyio
+          from collections import Counter
+          from pysz import sz,szConfig,szErrorBoundMode
+          meta=json.load(open('forge_range64_v2.json'))
+          with segyio.open('forge_raw_shot.sgy','r',ignore_geometry=True) as s:
+            X=np.asarray(s.trace.raw[:],np.float32).copy();dt=int(segyio.tools.dt(s))
+            def a(field):
+              try:return np.asarray(s.attributes(field)[:],np.int64)
+              except:return np.zeros(X.shape[0],np.int64)
+            gx,gy,sx,sy=a(segyio.TraceField.GroupX),a(segyio.TraceField.GroupY),a(segyio.TraceField.SourceX),a(segyio.TraceField.SourceY)
+          coord=list(zip(gx.tolist(),gy.tolist()));cnt=Counter(coord);mult=Counter(cnt.values());pts=np.asarray(list(cnt.keys()),float);diag={}
+          if len(pts)>1:
+            d=pts[:,None,:]-pts[None,:,:];d2=np.sum(d*d,2);d2[d2==0]=np.inf;j=np.argmin(d2,1);nn=np.sqrt(d2[np.arange(len(pts)),j]);diag={'nearest_median':float(np.median(nn)),'nearest_q10':float(np.quantile(nn,.1)),'nearest_q90':float(np.quantile(nn,.9))}
+          std=float(X.astype(np.float64).std());eps=.1*std;raw=X.nbytes;cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;b,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(b,np.float32,X.shape)
+          out={'selected':meta['selected'],'shape':list(X.shape),'dt_us':dt,'raw_sample_bytes':raw,'std':std,'eps':eps,'receiver_unique':len(cnt),'receiver_multiplicity':{str(k):int(v) for k,v in sorted(mult.items())},'source_unique':len(set(zip(sx.tolist(),sy.tolist()))),'geometry_diag':diag,'sz3':{'bytes':int(b.size),'ratio':raw/int(b.size),'maxerr':float(np.max(np.abs(X-R)))}}
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('forge_raw_inspect64_v2.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-raw-deflate64-v2-diagnostic
+          path: |
+            forge_range64_v2.json
+            forge_raw_inspect64_v2.json
+          retention-days: 7
