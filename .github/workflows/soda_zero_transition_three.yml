@@ -1,0 +1,31 @@
+name: Soda Lake zero-model transition benchmark
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  zero:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3
+      - name: Download deterministic three Soda Lake shots
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          keys=['soda_lake/raw_seismic/2010/v1.0.0/F1750R1.SGY','soda_lake/raw_seismic/2010/v1.0.0/F4746R1.SGY','soda_lake/raw_seismic/2010/v1.0.0/F7741R1.SGY']
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));os.makedirs('shots',exist_ok=True)
+          for i,k in enumerate(keys):s3.download_file('gdr-data-lake',k,f'shots/shot{i}.sgy')
+          PY
+      - run: python research/soda_zero_transition_three.py shots/shot0.sgy shots/shot1.sgy shots/shot2.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-zero-transition-three
+          path: soda_zero_transition_three.json
+          retention-days: 7

@@ -1,0 +1,31 @@
+name: Soda Lake combined phase-count codec
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  phase:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard boto3
+      - name: Download deterministic three shots
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          keys=['soda_lake/raw_seismic/2010/v1.0.0/F1750R1.SGY','soda_lake/raw_seismic/2010/v1.0.0/F4746R1.SGY','soda_lake/raw_seismic/2010/v1.0.0/F7741R1.SGY']
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));os.makedirs('shots',exist_ok=True)
+          for i,k in enumerate(keys):s3.download_file('gdr-data-lake',k,f'shots/shot{i}.sgy')
+          PY
+      - run: python research/soda_phase_count_codec.py shots/shot0.sgy shots/shot1.sgy shots/shot2.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-phase-count-results
+          path: soda_phase_count_results.json
+          retention-days: 7
