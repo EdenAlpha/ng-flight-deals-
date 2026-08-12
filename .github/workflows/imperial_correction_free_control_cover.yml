@@ -23,7 +23,14 @@ jobs:
           assert os.path.getsize('imperial.h5')==415030456
           PY
       - name: Solve global legal control assignments that erase omitted-sample corrections
-        run: python research/imperial_correction_free_control_cover.py imperial.h5
+        run: |
+          python - <<'PY'
+          p='research/imperial_correction_free_control_cover.py'
+          s=open(p).read()
+          s=s.replace("float(getattr(res,'fun',np.nan))","(float(res.fun) if res.fun is not None else None)")
+          open(p,'w').write(s)
+          PY
+          python research/imperial_correction_free_control_cover.py imperial.h5
       - uses: actions/upload-artifact@v4
         with:
           name: imperial-correction-free-control-cover
