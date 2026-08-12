@@ -1,0 +1,64 @@
+name: Official strongest fairness on weakest wide20 Soda p54
+on:
+  pull_request:
+    branches: [soda-hard4-frozen-record]
+permissions: {contents: read}
+jobs:
+  p54:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Build official HPEZ
+        run: |
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install -DCMAKE_CXX_FLAGS="-include cstdint -include array"
+          cmake --build hpez-src/build -j2
+          cmake --install hpez-src/build
+      - run: pip install --quiet numpy segyio zstandard pysz boto3 brotli
+      - name: Download exact weakest wide20 shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,json
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          p=54;ei=4493;ek='soda_lake/raw_seismic/2010/v1.0.0/F5045R1.SGY'
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();i=round((len(keys)-1)*p/100);k,n=keys[i]
+          if len(keys)!=8321 or i!=ei or k!=ek:raise RuntimeError(('p54 selection drift',len(keys),i,k,ei,ek))
+          s3.download_file(bucket,k,'shot.sgy');json.dump({'percentile':p,'index':i,'key':k,'size':n,'total':len(keys)},open('selection.json','w'),indent=2);print('SHOT',p,i,k,n,flush=True)
+          PY
+      - name: Run exact frozen PR165 codec
+        run: python research/soda_hard4_frozen_record.py shot.sgy
+      - name: Run official HPEZ SZ3 adversarial dictionary
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BIN=$PWD/hpez-install/bin/hpez
+          python research/soda_grid_fairness.py prepare shot.sgy
+          export EPS=$(python -c "import json;print(json.load(open('fair/prep.json'))['eps'])")
+          bash fair/run_hpez.sh
+          python research/soda_grid_fairness.py analyze shot.sgy
+      - name: Compare against strongest matched baseline
+        run: |
+          python - <<'PY'
+          import json
+          a=json.load(open('soda_hard4_frozen_record.json'));f=json.load(open('soda_grid_fairness.json'));s=f['strongest'];c=int(a['frozen']['container_bytes']);b=int(s['bytes'])
+          out={'percentile':54,'codec_bytes':c,'codec_ratio':a['frozen']['ratio'],'codec_valid':a['frozen']['valid'],'strongest_baseline':s,'gain_vs_strongest':b/c,'two_x_gate_bytes':b/2,'clears_two_x':c<=b/2,'direct_sz3':a['sz3_direct'],'geometry_hybrid':f.get('geometry_hybrid'),'hpez_geometry':f.get('hpez_geometry'),'sz3_geometry':f.get('sz3_geometry')}
+          print(json.dumps(out,indent=2));json.dump(out,open('soda_wide_p54_fairness.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-wide-p54-fairness
+          path: |
+            selection.json
+            soda_hard4_frozen_record.json
+            soda_grid_fairness.json
+            soda_wide_p54_fairness.json
+          retention-days: 7
