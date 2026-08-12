@@ -1,0 +1,88 @@
+name: Frozen Soda whole-file codec across 64 survey-spread shots
+on:
+  pull_request:
+    branches: [soda-refined-wholefile-hard4]
+permissions: {contents: read}
+jobs:
+  shot:
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        slot: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3 brotli
+      - name: Download precommitted survey-spread shot
+        shell: bash
+        env:
+          SLOT: '${{ matrix.slot }}'
+        run: |
+          python - <<'PY'
+          import boto3,json,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          slot=int(os.environ['SLOT'])
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort()
+          if len(keys)!=8321:raise RuntimeError(('Soda member-count drift',len(keys)))
+          idx=round((len(keys)-1)*slot/63);key,n=keys[idx]
+          s3.download_file(bucket,key,'shot.sgy')
+          sel={'slot':slot,'index':idx,'key':key,'bytes':n,'total_members':len(keys)}
+          print(json.dumps(sel,indent=2),flush=True);json.dump(sel,open(f'selection_{slot}.json','w'),indent=2)
+          PY
+      - name: Encode decode and verify frozen whole-file codec
+        shell: bash
+        env:
+          SLOT: '${{ matrix.slot }}'
+        run: |
+          python research/soda_record_refined_composed.py shot.sgy shot.srseg reconstructed.sgy
+          python - <<'PY'
+          import json,os
+          slot=int(os.environ['SLOT']);r=json.load(open('soda_record_standalone.json'));e=r['encode'];v=r['verify']
+          out={'slot':slot,'input_bytes':int(e['input_bytes']),'container_bytes':int(e['container_bytes']),'whole_file_ratio':float(e['whole_file_ratio']),'header_blob_bytes':int(e['header_blob_bytes']),'sample_blob_bytes':int(e['sample_blob_bytes']),'headers_exact':bool(v['headers_exact']),'valid':bool(v['valid']),'maxerr':float(v['maxerr']),'public_eps':float(v['public_eps'])}
+          if not out['headers_exact'] or not out['valid']:raise RuntimeError(('validation',out))
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open(f'result_{slot}.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-large64-${{ matrix.slot }}
+          path: |
+            selection_${{ matrix.slot }}.json
+            result_${{ matrix.slot }}.json
+          retention-days: 7
+  aggregate:
+    needs: shot
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: soda-large64-*
+          path: all
+          merge-multiple: true
+      - name: Aggregate exact survey-scale bytes
+        run: |
+          python - <<'PY'
+          import glob,json,statistics
+          rr=[]
+          for p in sorted(glob.glob('all/result_*.json')):rr.append(json.load(open(p)))
+          sels=[json.load(open(p)) for p in sorted(glob.glob('all/selection_*.json'))]
+          if len(rr)!=64 or len(sels)!=64:raise RuntimeError(('missing results',len(rr),len(sels)))
+          if not all(x['headers_exact'] and x['valid'] for x in rr):raise RuntimeError('invalid member')
+          raw=sum(x['input_bytes'] for x in rr);comp=sum(x['container_bytes'] for x in rr);ratios=[x['whole_file_ratio'] for x in rr]
+          out={'shots':64,'aggregate_input_bytes':raw,'aggregate_container_bytes':comp,'aggregate_whole_file_ratio':raw/comp,'minimum_member_ratio':min(ratios),'median_member_ratio':statistics.median(ratios),'maximum_member_ratio':max(ratios),'all_headers_exact':True,'all_hard_error_valid':True,'selection_indices':[x['index'] for x in sels],'selection_keys':[x['key'] for x in sels]}
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('soda_large64_summary.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-large64-summary
+          path: soda_large64_summary.json
+          retention-days: 7
