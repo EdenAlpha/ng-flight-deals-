@@ -63,7 +63,7 @@ def main(path):
             if me>128.000001 or me>eps:raise RuntimeError(('grid',name,me,eps))
             szb,ori=m.szrun(X,eps);fb,fr=m.encode_array(Q);tiles.append({'tile':name,'sz3_bytes':szb,'fixed256_bytes':fb,'fixed256_rep':fr})
             for mode in MODES:
-                best,cands=encode_mode(Q,mode);maxerr=float(np.max(np.abs(X-Q*STEP)));best.update({'tile':name,'bps':8*best['bytes']/Q.size,'sorted_bps':8*best['sorted_bytes']/Q.size,'defect_bps':8*best['defect_bytes']/Q.size,'seed_bps':8*best['seed_bytes']/Q.size,'sz3_bytes':szb,'fixed256_bytes':fb,'gain_vs_sz3':szb/best['bytes'],'gain_vs_fixed256':fb/best['bytes'],'maxerr':maxerr,'candidates':cands});rows.append(best);print(json.dumps({k:v for k,v in best.items() if k not in ('candidates','coefficients')},flush=True))
+                best,cands=encode_mode(Q,mode);maxerr=float(np.max(np.abs(X-Q*STEP)));best.update({'tile':name,'bps':8*best['bytes']/Q.size,'sorted_bps':8*best['sorted_bytes']/Q.size,'defect_bps':8*best['defect_bytes']/Q.size,'seed_bps':8*best['seed_bytes']/Q.size,'sz3_bytes':szb,'fixed256_bytes':fb,'gain_vs_sz3':szb/best['bytes'],'gain_vs_fixed256':fb/best['bytes'],'maxerr':maxerr,'candidates':cands});rows.append(best);print(json.dumps({k:v for k,v in best.items() if k not in ('candidates','coefficients')}),flush=True)
         n=C*T*len(tiles);szb=sum(x['sz3_bytes'] for x in tiles);fb=sum(x['fixed256_bytes'] for x in tiles);combos=[]
         for mode in MODES:
             rr=[r for r in rows if r['mode']==mode];b=sum(r['bytes'] for r in rr)
