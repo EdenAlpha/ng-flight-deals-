@@ -9,7 +9,7 @@ exec(compile(src,'soda_tight_rice_frames.py','exec'),globals())
 
 SMAG=b'STICKY01'
 SHDR='<8sddBBBQQ'
-SHS=struct.calcsize(SHDR)
+STHS=struct.calcsize(SHDR)
 MODES={0:('nearest-2eps',2.0),1:('sticky-1.5eps',1.5),2:('sticky-1.0eps',1.0),3:('sticky-0.5eps',0.5)}
 
 
@@ -58,7 +58,7 @@ def main(path,frac):
         G,O,step,name=make_states(X,tm,outids,G0.shape,internal_eps,mode);K=delta(G,3);best,bo,RO=best_integer_container(K,O);lm,r2,r9,mb,parts=best;outblob=bo[6];ok=0 if bo[1]=='gap' else 1;td=1 if bo[2] else 0
         top=struct.pack(SHDR,SMAG,internal_eps,step,mode,ok,td,len(mb),len(outblob))+mb+outblob
         # Full byte decode of the chosen integer representation.
-        magic,ee,ss,mm,ook,tt,llm,llo=struct.unpack(SHDR,top[:SHS]);p=SHS;RK=decode_main_candidate(top[p:p+llm]);p+=llm;obb=top[p:p+llo];p+=llo
+        magic,ee,ss,mm,ook,tt,llm,llo=struct.unpack(SHDR,top[:STHS]);p=STHS;RK=decode_main_candidate(top[p:p+llm]);p+=llm;obb=top[p:p+llo];p+=llo
         if magic!=SMAG or p!=len(top) or mm!=mode:raise RuntimeError('sticky top header')
         Q=np.cumsum(RK,axis=3,dtype=np.int64).astype(np.int32)
         if ook==0:A=decode(obb).reshape(O.shape);RO2=undelta(A,1) if tt else A
