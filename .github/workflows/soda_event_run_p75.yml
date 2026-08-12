@@ -1,0 +1,36 @@
+name: Soda Lake contiguous event-run p75 screen
+on:
+  pull_request:
+    branches: [soda-alternating-sign-gap]
+permissions: {contents: read}
+jobs:
+  p75:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3
+      - name: Download deterministic p75 shot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,json
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          p=.75;s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();i=round((len(keys)-1)*p);k,n=keys[i];print('SHOT',i,k,n,flush=True);s3.download_file(bucket,k,'shot.sgy');json.dump({'percentile':75,'index':i,'key':k,'size':n,'total':len(keys)},open('selection.json','w'),indent=2)
+          PY
+      - name: Run exact contiguous event-run timing sweep
+        run: python research/soda_event_run_timing.py shot.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-event-run-p75
+          path: |
+            selection.json
+            soda_event_run_timing.json
+          retention-days: 7
