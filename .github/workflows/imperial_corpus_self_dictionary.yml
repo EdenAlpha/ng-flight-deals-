@@ -1,12 +1,12 @@
-name: Imperial corpus self-dictionary recurrence probe
+name: Imperial shared phrase-language entropy audit
 on:
   pull_request:
-    branches: [imperial-valley-frozen-brady-transfer]
+    branches: [imperial-corpus-self-dictionary]
 permissions: {contents: read}
 jobs:
-  recur:
+  language:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,14 +25,13 @@ jobs:
               if o['Key'].endswith('.h5'):rows.append((o['Key'],int(o['Size'])))
           rows.sort();keys=[k for k,_ in rows];i=keys.index(target);sel=rows[i-2:i+1]
           if len(sel)!=3:raise RuntimeError('need 3 records')
-          for j,(k,n) in enumerate(sel):
-            s.download_file(b,k,f'r{j}.h5');assert os.path.getsize(f'r{j}.h5')==n
+          for j,(k,n) in enumerate(sel):s.download_file(b,k,f'r{j}.h5');assert os.path.getsize(f'r{j}.h5')==n
           print(json.dumps(sel,indent=2))
           PY
-      - name: Treat previous records as an exact waveform phrase dictionary
-        run: python research/imperial_corpus_self_dictionary.py r0.h5 r1.h5 r2.h5
+      - name: Measure phrase entropy instead of storing recurrence pointers
+        run: python research/imperial_corpus_phrase_language.py r0.h5 r1.h5 r2.h5
       - uses: actions/upload-artifact@v4
         with:
-          name: imperial-corpus-self-dictionary
-          path: imperial_corpus_self_dictionary.json
+          name: imperial-corpus-phrase-language
+          path: imperial_corpus_phrase_language.json
           retention-days: 7
