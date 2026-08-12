@@ -1,0 +1,62 @@
+name: Standalone Utah FORGE SEG-Y containers on ten canonical shots
+on:
+  pull_request:
+    branches: [forge-standalone-3shot-v2]
+permissions: {contents: read}
+jobs:
+  shot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        idx: [0,3,6,9,12,15,18,21,25,28]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+          pip install --quiet numpy zstandard pysz requests remotezip zipfile64
+      - name: Range-fetch deterministic canonical Utah member
+        shell: bash
+        env: {IDX: '${{ matrix.idx }}'}
+        run: |
+          python - <<'PY'
+          import json,os,requests,struct
+          import zipfile64.zipfile
+          from remotezip import RemoteZip
+          idx=int(os.environ['IDX']);url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          with RemoteZip(url) as z:
+              infos=sorted([i for i in z.infolist() if not i.is_dir() and i.filename.lower().endswith(('.sgy','.segy','.seg')) and i.compress_size>=1048576],key=lambda i:i.filename)
+          family=infos[:29]
+          if len(family)!=29: raise RuntimeError(('canonical family size drift',len(family)))
+          zi=family[idx];name=zi.filename.encode();off=int(zi.header_offset)
+          h=requests.get(url,headers={'Range':f'bytes={off}-{off+29}'},timeout=30).content
+          if len(h)!=30 or int.from_bytes(h[:4],'little')!=0x04034b50: raise RuntimeError('bad local zip header')
+          nlen=int.from_bytes(h[26:28],'little');xlen=int.from_bytes(h[28:30],'little');do=off+30+nlen+xlen
+          payload=requests.get(url,headers={'Range':f'bytes={do}-{do+zi.compress_size-1}'},timeout=180).content
+          if len(payload)!=zi.compress_size: raise RuntimeError((len(payload),zi.compress_size))
+          local=struct.pack('<IHHHHHIIIHH',0x04034b50,21,0,zi.compress_type,0,0,zi.CRC,zi.compress_size,zi.file_size,len(name),0)+name
+          central=struct.pack('<IHHHHHHIIIHHHHHII',0x02014b50,20,21,0,zi.compress_type,0,0,zi.CRC,zi.compress_size,zi.file_size,len(name),0,0,0,0,0,0)+name
+          cd=len(local)+len(payload);e=struct.pack('<IHHHHIIH',0x06054b50,0,0,1,1,len(central),cd,0)
+          open('member.zip','wb').write(local+payload+central+e)
+          sel={'family_size':len(family),'family_index':idx,'name':zi.filename,'file_size':zi.file_size,'compressed_size':zi.compress_size,'crc':zi.CRC,'header_offset':off}
+          json.dump(sel,open('selection.json','w'),indent=2);print('SELECT',sel,flush=True)
+          PY
+          7z t member.zip >/dev/null
+          mkdir x && 7z x -y -ox member.zip >/dev/null
+          mv x/*.sgy forge_raw.sgy
+      - name: Build decode and verify standalone lattice and matched SZ3 containers
+        run: python research/forge_standalone_segc.py forge_raw.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-standalone-canonical-${{ matrix.idx }}
+          path: |
+            selection.json
+            forge_standalone_result.json
+            utah.segc
+            utah_sz3.segz
+          retention-days: 7
