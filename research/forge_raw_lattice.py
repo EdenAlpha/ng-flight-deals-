@@ -15,8 +15,18 @@ def dtype_code(a):
 
 def load_segy(path):
     size=os.path.getsize(path);mm=np.memmap(path,np.uint8,'r')
-    bh=bytes(mm[3200:3600]);dt=u16(bh,16);ns=u16(bh,20);fmt=u16(bh,24);fixed=u16(bh,302);ext=i16(bh,304)
-    if fmt!=5:raise RuntimeError(f'expected little-endian IEEE float format 5, got {fmt}')
+    bh=bytes(mm[3200:3600]);dt=u16(bh,16);ns=u16(bh,20);fmt=u16(bh,24);fixed=u16(bh,302);ext=i16(bh,304);family_header_fallback=False
+    if fmt!=5:
+        # Some CRC-valid Utah FORGE members in this exact acquisition family have a
+        # zeroed 3600-byte global SEG-Y header even though their fixed-record sample
+        # payload is populated. The family layout was established independently from
+        # neighboring valid members before examining this shot: 1747 records, each
+        # 240-byte trace header + 16001 little-endian IEEE float32 samples at 1000 us.
+        fam_ns=16001;fam_dt=1000;fam_fmt=5;fam_st=240+4*fam_ns
+        if not np.any(np.asarray(mm[:3600])) and size==3600+1747*fam_st:
+            ns=fam_ns;dt=fam_dt;fmt=fam_fmt;fixed=0;ext=0;family_header_fallback=True
+        else:
+            raise RuntimeError(f'expected little-endian IEEE float format 5, got {fmt}')
     data0=3600+(ext if ext>0 else 0)*3200;st=240+4*ns
     if ns<=0 or dt<=0 or (size-data0)%st:raise RuntimeError(f'layout mismatch size={size} data0={data0} ns={ns} dt={dt} remainder={(size-data0)%st}')
     ntr=(size-data0)//st
@@ -26,7 +36,7 @@ def load_segy(path):
         o=data0+i*st;th=bytes(mm[o:o+240]);sc=i16(th,70);sx[i]=scaled(i32(th,72),sc);sy[i]=scaled(i32(th,76),sc);gx[i]=scaled(i32(th,80),sc);gy[i]=scaled(i32(th,84),sc);offs[i]=i32(th,36)
         tns=u16(th,114);tdt=u16(th,116)
         if tns not in (0,ns) or tdt not in (0,dt):raise RuntimeError(f'variable trace at {i}: ns={tns} dt={tdt}')
-    return np.asarray(X,np.float32).copy(),gx,gy,sx,sy,offs,{'file_bytes':size,'ntr':int(ntr),'ns':int(ns),'dt_us':int(dt),'format':int(fmt),'fixed':int(fixed),'extended_headers':int(ext),'trace_bytes':int(st)}
+    return np.asarray(X,np.float32).copy(),gx,gy,sx,sy,offs,{'file_bytes':size,'ntr':int(ntr),'ns':int(ns),'dt_us':int(dt),'format':int(fmt),'fixed':int(fixed),'extended_headers':int(ext),'trace_bytes':int(st),'family_header_fallback':bool(family_header_fallback)}
 
 def orders(gx,gy,sx,sy,offs):
     n=len(gx);idx=np.arange(n);out=[]

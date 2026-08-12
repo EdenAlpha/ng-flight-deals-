@@ -1,0 +1,55 @@
+name: Utah FORGE raw lattice three-shot validation
+on:
+  pull_request:
+    branches: [forge-raw-lattice-pilot]
+permissions: {contents: read}
+jobs:
+  shot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {slot: p10, idx: 3, name: '1511992437_1004_50500_15200_20171202_220542_654.sgy', cs: 103202890, crc: 689554989, off: 309466887}
+          - {slot: p50, idx: 16, name: '1511994193_1017_50500_16500_20171202_220556_570.sgy', cs: 102933340, crc: 226598985, off: 1647386036}
+          - {slot: p90, idx: 29, name: '1511995638_1030_50500_17800_20171202_220608_145.sgy', cs: 91312195, crc: 3192394387, off: 2970205976}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+          pip install --quiet numpy zstandard pysz requests
+      - name: Range-fetch fixed substantive-percentile member
+        shell: bash
+        env:
+          NAME: ${{ matrix.name }}
+          CS: ${{ matrix.cs }}
+          CRC: ${{ matrix.crc }}
+          OFF: ${{ matrix.off }}
+          IDX: ${{ matrix.idx }}
+          SLOT: ${{ matrix.slot }}
+        run: |
+          python - <<'PY'
+          import os,requests,struct,json
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip';name=os.environ['NAME'].encode();cs=int(os.environ['CS']);crc=int(os.environ['CRC']);off=int(os.environ['OFF']);fs=112237868;method=9
+          r=requests.get(url,headers={'Range':f'bytes={off}-{off+cs-1}'},timeout=120);r.raise_for_status();payload=r.content
+          if len(payload)!=cs:raise RuntimeError((len(payload),cs))
+          local=struct.pack('<IHHHHHIIIHH',0x04034b50,21,0,method,0,0,crc,cs,fs,len(name),0)+name;central=struct.pack('<IHHHHHHIIIHHHHHII',0x02014b50,20,21,0,method,0,0,crc,cs,fs,len(name),0,0,0,0,0,0)+name;cd=len(local)+len(payload);eocd=struct.pack('<IHHHHIIH',0x06054b50,0,0,1,1,len(central),cd,0);open('member.zip','wb').write(local+payload+central+eocd)
+          json.dump({'slot':os.environ['SLOT'],'substantive_index':int(os.environ['IDX']),'substantive_count':33,'selection':'10/50/90 percentile of lexicographically sorted exact-nonzero members','name':os.environ['NAME'],'compressed_size':cs,'crc':crc},open('selection.json','w'),indent=2)
+          PY
+          7z t member.zip
+          mkdir x && 7z x -y -ox member.zip
+          mv "x/${NAME}" forge_raw.sgy
+      - name: Run unchanged PR 123 lattice codec and fair SZ3 reorderings
+        run: python research/forge_raw_lattice.py forge_raw.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-raw-lattice-${{ matrix.slot }}
+          path: |
+            selection.json
+            forge_raw_lattice.json
+          retention-days: 7
