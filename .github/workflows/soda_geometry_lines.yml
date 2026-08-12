@@ -1,0 +1,47 @@
+name: Soda Lake receiver-line diagnostic
+on:
+  pull_request:
+    branches: [seismic-bench-base]
+permissions: {contents: read}
+jobs:
+  lines:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio boto3
+      - shell: bash
+        run: |
+          python - <<'PY'
+          import boto3,json,numpy as np,segyio
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort();idx=round((len(keys)-1)*.5);key,size=keys[idx];s3.download_file(bucket,key,'shot.sgy')
+          with segyio.open('shot.sgy','r',ignore_geometry=True) as f:
+            gx=np.asarray(f.attributes(segyio.TraceField.GroupX)[:],np.int64);gy=np.asarray(f.attributes(segyio.TraceField.GroupY)[:],np.int64)
+          pts=np.unique(np.stack([gx,gy],1),axis=0).astype(float);N=len(pts)
+          # Estimate along-line axis from median vector to each site's nearest neighbor, canonicalized to one half-plane.
+          d=pts[:,None,:]-pts[None,:,:];ds=np.sum(d*d,2);ds[ds==0]=np.inf;j=np.argmin(ds,1);v=pts[j]-pts
+          v=np.where(((v[:,0]<0)|((v[:,0]==0)&(v[:,1]<0)))[:,None],-v,v);lens=np.linalg.norm(v,axis=1);m=np.median(lens);vv=v[(lens>.5*m)&(lens<1.5*m)];u=np.median(vv,axis=0);u=u/np.linalg.norm(u);perp=np.array([-u[1],u[0]])
+          a=pts@u;b=pts@perp
+          # Cluster cross-line coordinate. Threshold is small relative to along-line receiver spacing; sweep for stable partitions.
+          sweeps=[]
+          for frac in [.05,.1,.15,.2,.3,.4,.5,.75,1.0,1.5,2.0]:
+            th=frac*m;order=np.argsort(b);sv=b[order];cuts=np.where(np.diff(sv)>th)[0]+1;groups=np.split(order,cuts);sizes=sorted([len(g) for g in groups],reverse=True);cent=np.array([np.mean(b[g]) for g in groups]);
+            # along-line regularity inside groups
+            spac=[]
+            for g in groups:
+              aa=np.sort(a[g]);spac.extend(np.diff(aa).tolist())
+            spac=np.asarray(spac);sweeps.append({'threshold_frac':frac,'line_count':len(groups),'sizes_top20':sizes[:20],'size_median':float(np.median(sizes)),'size_min':int(min(sizes)),'size_max':int(max(sizes)),'cross_center_spacing_median':float(np.median(np.diff(np.sort(cent)))) if len(cent)>1 else None,'along_spacing_median':float(np.median(spac)) if spac.size else None,'along_spacing_mad':float(np.median(np.abs(spac-np.median(spac)))) if spac.size else None})
+          out={'key':key,'sites':N,'nearest_spacing':float(m),'axis_u':u.tolist(),'axis_perp':perp.tolist(),'sweeps':sweeps};print(json.dumps(out,indent=2));json.dump(out,open('soda_line_geometry.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-line-geometry
+          path: soda_line_geometry.json
+          retention-days: 7
