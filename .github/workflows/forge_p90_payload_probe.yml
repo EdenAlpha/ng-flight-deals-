@@ -1,0 +1,65 @@
+name: Utah FORGE p90 fixed-family payload probe
+on:
+  pull_request:
+    branches: [forge-raw-lattice-pilot]
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+          pip install --quiet requests numpy
+      - name: CRC-extract fixed p90 member
+        shell: bash
+        run: |
+          python - <<'PY'
+          import requests,struct
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip';name=b'1511995638_1030_50500_17800_20171202_220608_145.sgy';fs=112237868;cs=91312195;crc=3192394387;method=9;off=2970205976
+          r=requests.get(url,headers={'Range':f'bytes={off}-{off+cs-1}'},timeout=120);r.raise_for_status();payload=r.content
+          if len(payload)!=cs:raise RuntimeError((len(payload),cs))
+          local=struct.pack('<IHHHHHIIIHH',0x04034b50,21,0,method,0,0,crc,cs,fs,len(name),0)+name;central=struct.pack('<IHHHHHHIIIHHHHHII',0x02014b50,20,21,0,method,0,0,crc,cs,fs,len(name),0,0,0,0,0,0)+name;cd=len(local)+len(payload);eocd=struct.pack('<IHHHHIIH',0x06054b50,0,0,1,1,len(central),cd,0);open('member.zip','wb').write(local+payload+central+eocd)
+          PY
+          7z t member.zip
+          mkdir x && 7z x -y -ox member.zip >/dev/null
+          mv x/1511995638_1030_50500_17800_20171202_220608_145.sgy p90.sgy
+      - name: Test fixed family record structure
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os,json,numpy as np
+          fn='p90.sgy';size=os.path.getsize(fn);mm=np.memmap(fn,np.uint8,'r')
+          data0=3600; ntr=1747; ns=16001; stride=240+4*ns
+          if data0+ntr*stride!=size:raise RuntimeError(('family arithmetic mismatch',data0+ntr*stride,size))
+          # Header slots and sample slots are assessed separately.
+          header_nz=0;header_bytes=ntr*240;sample_nonzero=0;sample_count=ntr*ns
+          X=np.empty((ntr,ns),np.float32)
+          for i in range(ntr):
+              o=data0+i*stride
+              h=np.asarray(mm[o:o+240]);header_nz+=int(np.count_nonzero(h))
+              X[i]=np.frombuffer(mm,dtype='<f4',count=ns,offset=o+240)
+          finite=np.isfinite(X);absx=np.abs(X.astype(np.float64));nz=X!=0
+          # Big-endian interpretation diagnostic on a deterministic sample subset.
+          picks=np.linspace(0,sample_count-1,200000,dtype=np.int64);tr=picks//ns;tt=picks%ns
+          little=X[tr,tt].astype(np.float64)
+          big=np.empty(len(picks),np.float32)
+          for k,(i,t) in enumerate(zip(tr[:len(picks)],tt[:len(picks)])):
+              o=data0+int(i)*stride+240+4*int(t);big[k]=np.frombuffer(bytes(mm[o:o+4]),dtype='>f4',count=1)[0]
+          def stats(a):
+              a=np.asarray(a,dtype=np.float64);f=np.isfinite(a);q=np.abs(a[f]);return {'finite_fraction':float(f.mean()),'zero_fraction':float(np.mean(a[f]==0)) if f.any() else None,'median_abs':float(np.median(q)) if q.size else None,'p99_abs':float(np.quantile(q,.99)) if q.size else None,'max_abs':float(np.max(q)) if q.size else None}
+          # Temporal state diagnostics under the exact same epsilon definition as the codec.
+          std=float(X.astype(np.float64).std());eps=.1*std;Q=np.rint(X.astype(np.float64)/(2*eps)).astype(np.int32) if eps>0 else np.zeros_like(X,np.int32);K=Q.copy();K[:,1:]-=Q[:,:-1]
+          out={'file_size':size,'family_layout':{'data0':data0,'ntr':ntr,'ns':ns,'stride':stride,'exact_size_match':True},'global_header_nonzero_bytes':int(np.count_nonzero(np.asarray(mm[:3600]))),'trace_header_nonzero_bytes':header_nz,'trace_header_zero_fraction':float(1-header_nz/header_bytes),'little_samples':{'finite_fraction':float(finite.mean()),'zero_fraction':float(np.mean(X==0)),'std':std,'min':float(np.min(X)),'max':float(np.max(X)),'median_abs':float(np.median(absx)),'p99_abs':float(np.quantile(absx,.99))},'sample_subset_little':stats(little),'sample_subset_big':stats(big),'eps':eps,'K_nonzero_fraction':float(np.mean(K!=0)) if K.size else None,'Q_min':int(Q.min()) if Q.size else None,'Q_max':int(Q.max()) if Q.size else None,'K_min':int(K.min()) if K.size else None,'K_max':int(K.max()) if K.size else None}
+          print(json.dumps(out,indent=2),flush=True);json.dump(out,open('p90_payload_probe.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-p90-payload-probe
+          path: p90_payload_probe.json
+          retention-days: 7
