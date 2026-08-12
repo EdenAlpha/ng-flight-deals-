@@ -7,9 +7,26 @@ src=open('research/soda_intergap_backend_hybrid.py').read().split('\ndef main(pa
 exec(compile(src,'soda_intergap_backend_hybrid.py','exec'),globals())
 
 SAFETY=0.9999
+FROZEN_METHODS=(3,3,3,3,3,3,0,3,3,3)  # PR #165: Brotli-11 except raw first-sign
+FROZEN_ORDER=(0,1,2)
+FROZEN_CTXMODE=4
 FILE_MAGIC=b'SRSEG001'; FILE_HDR='<8sBIIIQQQ'; FHS=struct.calcsize(FILE_HDR)
 HEAD_MAGIC=b'SRHDR001'; HEAD_HDR='<8sIBBQQ'; HEAD_HS=struct.calcsize(HEAD_HDR)
 SAMP_MAGIC=b'SRSMP001'; SAMP_HDR='<8sdBBQQ'; SHS=struct.calcsize(SAMP_HDR)
+
+
+def encode_main_fixed(K):
+    sh,dc,rawframes,meta=prepare_raw_frames(K,FROZEN_ORDER,FROZEN_CTXMODE);frames=[];choices=[]
+    for i,(raw,m) in enumerate(zip(rawframes,FROZEN_METHODS)):
+        b=comp_one(raw,m)
+        if decomp_one(b,m)!=raw:raise RuntimeError(('fixed backend roundtrip',i,m))
+        frames.append(b);choices.append({'frame':i,'raw_bytes':len(raw),'method':METHOD_NAMES[m],'bytes':len(b)})
+    oc=int(FROZEN_ORDER[0]|(FROZEN_ORDER[1]<<2)|(FROZEN_ORDER[2]<<4));h=struct.pack(HHDR,HMAG,1,oc,dc,FROZEN_CTXMODE,*K.shape,*FROZEN_METHODS,*[len(x) for x in frames])
+    names=['run_counts','first_starts','inter_starts','long_support','very_support','long_residual','sign_first','sign_repeat','exception_support','exception_magnitude']
+    parts={names[i]:len(frames[i]) for i in range(10)};parts['timing_bytes']=sum(len(x) for x in frames[:6]);parts['value_bytes']=sum(len(x) for x in frames[6:]);parts['header_bytes']=HHS;parts['backend_choices']=choices;parts.update(meta)
+    blob=h+b''.join(frames)
+    if len(blob)<HHS:raise RuntimeError(('short frozen main blob',len(blob),HHS))
+    return blob,parts
 
 
 def split_headers(raw,ntr,ns):
@@ -70,14 +87,14 @@ def ieee_to_ibm32_bytes(x):
 def encode_samples(X,gx,gy,internal_eps):
     step=2*internal_eps;G,tm,outids,geom=geometry_map(X,gx,gy)
     for tid,c,l,s in tm:G[c,l,s]=np.rint(X[tid]/step).astype(np.int32)
-    O=np.rint(X[outids]/step).astype(np.int32);K=delta(G,3);mb,parts=encode_main(K,(0,1,2),4);RK=decode_main(mb)
+    O=np.rint(X[outids]/step).astype(np.int32);K=delta(G,3);mb,parts=encode_main_fixed(K);RK=decode_main(mb)
     if not np.array_equal(RK,K):raise RuntimeError('main K encode audit')
     bo=best_out(O);obb=bo[6];out_kind=0 if bo[1]=='gap' else 1;tdiff=1 if bo[2] else 0
     if out_kind==0:A=decode(obb).reshape(O.shape);RO=undelta(A,1) if tdiff else A
     else:A=decode_out_sparse(obb);RO=undelta(A,1) if tdiff else A
     if not np.array_equal(RO,O):raise RuntimeError('outlier encode audit')
     h=struct.pack(SAMP_HDR,SAMP_MAGIC,float(internal_eps),out_kind,tdiff,len(mb),len(obb))
-    diag={'main_bytes':len(mb),'outlier_bytes':len(obb),'sample_header_bytes':SHS,'main_parts':parts,'outlier_kind':bo[1],'outlier_tdiff':bool(bo[2]),'geometry':geom,'K_nonzero_fraction':float(np.mean(K!=0))}
+    diag={'main_bytes':len(mb),'outlier_bytes':len(obb),'sample_header_bytes':SHS,'main_parts':parts,'outlier_kind':bo[1],'outlier_tdiff':bool(bo[2]),'geometry':geom,'K_nonzero_fraction':float(np.mean(K!=0)),'frozen_order':list(FROZEN_ORDER),'frozen_context_mode':FROZEN_CTXMODE,'frozen_backend_methods':[METHOD_NAMES[m] for m in FROZEN_METHODS]}
     return h+mb+obb,diag
 
 
@@ -132,7 +149,7 @@ def verify(original,container,reconstructed):
         a=3600+i*stride
         if raw[a:a+240]!=out[a:a+240]:exact=False;break
     me=float(np.max(np.abs(X-Y)));public_eps=.1*float(X.astype(np.float64).std())
-    return {'headers_exact':bool(exact),'trace_count_match':ntr==ntr2,'samples_per_trace_match':ns==ns2,'maxerr':me,'public_eps':public_eps,'valid':bool(me<=public_eps*(1+3e-6)),'original_file_bytes':len(raw),'compressed_file_bytes':os.path.getsize(container),'whole_file_ratio':len(raw)/os.path.getsize(container)}
+    return {'headers_exact':bool(exact),'trace_count_match':ntr==ntr2,'samples_per_trace_match':ns==ns2,'maxerr':me,'public_eps':public_eps,'valid':bool(me<=public_eps),'original_file_bytes':len(raw),'compressed_file_bytes':os.path.getsize(container),'whole_file_ratio':len(raw)/os.path.getsize(container)}
 
 
 def main(inp,container,recon):
