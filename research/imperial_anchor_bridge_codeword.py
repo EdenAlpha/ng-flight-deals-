@@ -17,7 +17,6 @@ def choose_chain(lo,hi,xodd,bound,h,phi,lam,kcost,D):
     for i in range(na-1):
         nsa=hi[i]-lo[i]+1; nsb=hi[i+1]-lo[i+1]+1
         for s in range(maxs):cc[s]=1e300
-        # if anchors differ by two channels there is one omitted midpoint; final pair 126->127 has no omitted point
         hasodd=i < xodd.size
         for sb in range(nsb):
             qb=lo[i+1]+sb; best=1e300; bi=0
@@ -91,15 +90,14 @@ def k_model(K,D=32):
 
 def solve_tile(X,bound,phase_idx,lam):
     h=2*bound;phi=h*phase_idx/PHASES;anchors=np.r_[np.arange(0,C,2,dtype=np.int32),C-1];odds=np.arange(1,C-1,2,dtype=np.int32)
-    lo,hi=legal(X[anchors],bound,h,phi);Q=np.empty((len(anchors),T),np.int32);K=np.zeros((len(odds),T),np.int32)
-    # initialize a cost that strongly rewards zero correction, then learn the actual correction alphabet
+    lo,hi=legal(X[anchors],bound,h,phi);Q=np.empty((len(anchors),T),np.int32)
     D=32;kcost=2.0+np.log2(1+np.abs(np.arange(-D,D+1,dtype=np.float64)));kcost[D]=0.0;kcost[D-1]=kcost[D+1]=1.0
     for r in range(ROUNDS):
         for t in range(T):Q[:,t]=choose_chain(lo[:,t],hi[:,t],X[odds,t],bound,h,phi,lam,kcost,D)
-        mid=phi+0.5*h*(Q[:-1]+Q[1:])
+        mid=phi+0.5*h*(Q[:-2]+Q[1:-1])
         K=np.rint((X[odds]-mid)/h).astype(np.int32)
         kcost,D=k_model(K,D)
-    R=np.empty_like(X);R[anchors]=phi+h*Q;R[odds]=phi+0.5*h*(Q[:-1]+Q[1:])+h*K
+    R=np.empty_like(X);R[anchors]=phi+h*Q;R[odds]=phi+0.5*h*(Q[:-2]+Q[1:-1])+h*K
     me=float(np.max(np.abs(X-R)))
     ar,all_ar=anchor_reps(Q);kr=encode_int(K);total=ar[0]+kr[0]+80
     return {'phase':phase_idx,'lambda':lam,'bytes':total,'anchor_bytes':ar[0],'anchor_rep':ar[1],'anchor_all_reps':all_ar,'correction_bytes':kr[0],'correction_rep':kr[1],'correction_nonzero_fraction':float(np.mean(K!=0)),'correction_abs1_fraction':float(np.mean(np.abs(K)==1)),'anchor_mean_legal_states':float(np.mean(hi-lo+1)),'maxerr':me},R
