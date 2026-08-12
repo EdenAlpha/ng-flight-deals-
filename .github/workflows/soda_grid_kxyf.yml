@@ -29,7 +29,34 @@ jobs:
             k,n=keys[i]; p=f'shots/shot{j}.sgy'; print('DOWNLOAD',j,i,k,n,flush=True); s3.download_file(bucket,k,p); sel.append({'slot':j,'index':i,'key':k,'size':n})
           json.dump({'total':len(keys),'selected':sel},open('soda_grid_selection.json','w'),indent=2)
           PY
-      - run: python research/soda_lattice_kxyf.py shots/shot0.sgy shots/shot1.sgy shots/shot2.sgy
+      - name: Run collision-safe lattice codec
+        shell: bash
+        run: |
+          python - <<'PY'
+          p='research/soda_lattice_kxyf.py'
+          s=open(p).read()
+          old="li-=li.min();si-=si.min();pairs=list(zip(li.tolist(),si.tolist()))"
+          new="""li-=li.min();si-=si.min()
+    # Rare surveyed-coordinate boundary collisions: move only the later point to
+    # the nearest free station on the same receiver line, minimizing physical
+    # along-line snap error. No trace is dropped or overwritten.
+    seen=set()
+    for idx in np.argsort(along):
+        l=int(li[idx]); q=int(si[idx])
+        if (l,q) in seen:
+            choices=[]
+            for dq in (-1,1,-2,2,-3,3):
+                qq=q+dq
+                if qq>=0 and (l,qq) not in seen:
+                    choices.append((abs(along[idx]-(a0+qq*along_step)),qq))
+            if not choices: raise RuntimeError('unable to resolve lattice collision')
+            si[idx]=min(choices)[1];q=int(si[idx])
+        seen.add((l,q))
+    pairs=list(zip(li.tolist(),si.tolist()))"""
+          if old not in s: raise SystemExit('patch anchor missing')
+          open(p,'w').write(s.replace(old,new))
+          PY
+          python research/soda_lattice_kxyf.py shots/shot0.sgy shots/shot1.sgy shots/shot2.sgy
       - uses: actions/upload-artifact@v4
         with:
           name: soda-lattice-kxyf-results
