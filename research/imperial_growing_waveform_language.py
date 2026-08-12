@@ -117,8 +117,11 @@ def main():
     shape_counts={p:Counter() for p in POLS}; shape_total=0
     scalar_counts=np.zeros(QBINS,np.int64); scalar_total=0
     anchor_counts=np.zeros(QBINS,np.int64); anchor_total=0
-    # Process from oldest to newest so every checkpoint is a genuine prefix of decoder history.
-    for hidx,key in enumerate(history,1):
+    # Accumulate from the immediately preceding record backward in time. Since
+    # all model statistics are counts, order is irrelevant; this makes the
+    # checkpoints exact nested suffixes: 2/8/32/128 records immediately before
+    # the target, rather than increasingly old prefixes of a 128-record window.
+    for hidx,key in enumerate(reversed(history),1):
         rf,hf=open_h5(fs,key)
         try:
             d=hf['Acoustic'];
@@ -146,7 +149,7 @@ def main():
         'std':STD,'eps':EPS,'step':STEP,'phase':PHASE,'maxerr':maxerr,
         'fullfile_sz3_bps_reference':FULL_SZ3_BPS,'strict_2x_target_bps':TARGET_BPS,
         'rows':rows,
-        'scope':'Long-history sequential waveform-language rate audit. A fixed 16-sample translation-invariant phrase language is learned only from prior Imperial records, with history prefixes 2/8/32/128. Target contributes no model counts. Shape IDs are content IDs/frequencies, not location pointers; anchors and escapes use previous-history scalar probabilities. Target lattice reconstruction is explicitly hard-error checked. Rates are ideal static arithmetic codelengths, not yet a byte-container claim. Prior records are read as the decoder-known language state under this screen; a production sequential codec must reproduce the same dictionary state from its own decoded history.'
+        'scope':'Long-history sequential waveform-language rate audit. A fixed 16-sample translation-invariant phrase language is learned only from the immediately preceding Imperial records, with nested history suffixes of 2/8/32/128 records. Target contributes no model counts. Shape IDs are content IDs/frequencies, not location pointers; anchors and escapes use previous-history scalar probabilities. Target lattice reconstruction is explicitly hard-error checked. Rates are ideal static arithmetic codelengths, not yet a byte-container claim. Prior records are read as the decoder-known language state under this screen; a production sequential codec must reproduce the same dictionary state from its own decoded history.'
     }
     json.dump(out,open('imperial_growing_waveform_language.json','w'),indent=2)
     print(json.dumps(out,indent=2),flush=True)
