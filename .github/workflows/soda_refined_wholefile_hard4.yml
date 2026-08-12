@@ -1,0 +1,58 @@
+name: Frozen refined whole-file codec across hard Soda shots
+on:
+  pull_request:
+    branches: [soda-refined-standalone-composed]
+permissions: {contents: read}
+jobs:
+  hard4:
+    strategy:
+      fail-fast: false
+      matrix:
+        p: [35,45,75,85]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz boto3 brotli
+      - name: Download deterministic hard shot
+        shell: bash
+        env: {P: '${{ matrix.p }}'}
+        run: |
+          python - <<'PY'
+          import boto3,json,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          p=int(os.environ['P']);s3=boto3.client('s3',config=Config(signature_version=UNSIGNED));bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/';keys=[]
+          for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].lower().endswith(('.sgy','.segy','.seg')) and o['Size']>3600:keys.append((o['Key'],int(o['Size'])))
+          keys.sort()
+          if len(keys)!=8321:raise RuntimeError(('Soda member-count drift',len(keys)))
+          i=round((len(keys)-1)*p/100);k,n=keys[i];print('SHOT',p,i,k,n,flush=True);s3.download_file(bucket,k,'shot.sgy')
+          json.dump({'percentile':p,'index':i,'key':k,'size':n,'total':len(keys)},open('selection.json','w'),indent=2)
+          PY
+      - name: Encode decode and verify exact composed standalone
+        run: python research/soda_record_refined_composed.py shot.sgy shot.srseg reconstructed.sgy
+      - name: Hostile whole-file accounting from independently audited strongest sample baselines
+        shell: bash
+        env: {P: '${{ matrix.p }}'}
+        run: |
+          python - <<'PY'
+          import json,os
+          p=int(os.environ['P']);strong={35:151927,45:194601,75:133219,85:110310}[p]
+          source={35:'PR165 p35 strongest matched baseline',45:'PR165 p45 strongest matched baseline',75:'PR171 exact p75 official geometry-hybrid baseline',85:'PR165 p85 strongest matched baseline'}[p]
+          r=json.load(open('soda_record_standalone.json'));e=r['encode'];ours=int(e['container_bytes']);optimistic=int(e['file_header_bytes'])+int(e['header_blob_bytes'])+strong;gate=optimistic/2;gain=optimistic/ours
+          audit={'percentile':p,'our_whole_file_bytes':ours,'our_whole_file_ratio':e['whole_file_ratio'],'file_header_bytes':int(e['file_header_bytes']),'header_blob_bytes':int(e['header_blob_bytes']),'header_diag':e['header_diag'],'sample_blob_bytes':int(e['sample_blob_bytes']),'strongest_sample_baseline_bytes':strong,'baseline_source':source,'optimistic_baseline_whole_file_lower_bound_bytes':optimistic,'strict_two_x_gate_bytes':gate,'margin_bytes_below_gate':gate-ours,'gain_vs_optimistic_whole_file_baseline':gain,'clears_strict_2x':bool(gain>=2.0),'headers_exact':bool(r['verify']['headers_exact']),'maxerr':float(r['verify']['maxerr']),'public_eps':float(r['verify']['public_eps']),'valid':bool(r['verify']['valid'])}
+          if not audit['headers_exact'] or not audit['valid']:raise RuntimeError(('standalone validation',audit))
+          print(json.dumps(audit,indent=2),flush=True);json.dump(audit,open('soda_refined_wholefile_hard4.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-refined-wholefile-p${{ matrix.p }}
+          path: |
+            selection.json
+            soda_record_standalone.json
+            soda_refined_wholefile_hard4.json
+          retention-days: 7
