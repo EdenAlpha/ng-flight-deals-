@@ -1,0 +1,38 @@
+name: Imperial DASPack matched benchmark
+on:
+  pull_request:
+    branches: [imperial-persistent-ar32-step267-full-array]
+permissions: {contents: read}
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install pinned codecs
+        run: |
+          pip install --quiet numpy h5py pysz boto3 zstandard daspack-dev==0.0.1a0
+          python - <<'PY'
+          import importlib.metadata
+          from daspack import DASCoder, Quantizer
+          print('daspack-dev',importlib.metadata.version('daspack-dev'))
+          print(DASCoder,Quantizer)
+          PY
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Benchmark DASPack at identical hard error
+        run: python research/imperial_daspack_matched_benchmark.py imperial.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-daspack-matched-benchmark
+          path: imperial_daspack_matched_benchmark.json
+          retention-days: 7
