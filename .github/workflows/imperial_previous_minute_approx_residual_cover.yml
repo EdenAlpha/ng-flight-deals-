@@ -1,0 +1,21 @@
+name: Imperial previous-minute approximate residual cover
+on:
+  pull_request:
+    branches: [imperial-persistent-ar32-step267-full-array]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy h5py pysz boto3 zstandard
+      - name: Build previous-minute decoder-known residual codebook and query target
+        run: python research/imperial_previous_minute_approx_residual_cover.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-previous-minute-approx-residual-cover
+          path: imperial_previous_minute_approx_residual_cover.json
+          retention-days: 7
