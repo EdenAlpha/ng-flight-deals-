@@ -1,0 +1,31 @@
+name: Imperial 256-lane interrogator topology
+on:
+  pull_request:
+    branches: [imperial-persistent-ar32-step267-full-array]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy numba h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley HDF5 record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Test exact 256-lane innovation topologies
+        run: python research/imperial_256lane_interrogator_topology_fast.py imperial.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-256lane-interrogator-topology
+          path: imperial_256lane_interrogator_topology.json
+          retention-days: 7
