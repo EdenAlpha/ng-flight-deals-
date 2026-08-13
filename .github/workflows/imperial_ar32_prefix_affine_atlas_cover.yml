@@ -1,0 +1,31 @@
+name: Imperial AR32 prefix affine atlas cover
+on:
+  pull_request:
+    branches: [imperial-persistent-ar32-step267-full-array]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy h5py pysz boto3 zstandard
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Build decoder-known affine atlas and query held-out hard boxes
+        run: python research/imperial_ar32_prefix_affine_atlas_cover.py imperial.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-ar32-prefix-affine-atlas-cover
+          path: imperial_ar32_prefix_affine_atlas_cover.json
+          retention-days: 7
