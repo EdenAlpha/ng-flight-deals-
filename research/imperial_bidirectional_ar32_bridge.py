@@ -23,7 +23,6 @@ def rollout_left(anchor,co,n):
     return out
 
 def rollout_right(anchor,co,n):
-    # anchor supplied in chronological order for samples after the interior.
     s=np.asarray(anchor[::-1],np.int64).copy();tmp=np.empty(n,np.int64)
     for i in range(n):
         v=float(co[-1])
@@ -32,12 +31,13 @@ def rollout_right(anchor,co,n):
     return tmp[::-1]
 
 def encode_int(a):
-    a=np.asarray(a,np.int64);b,rep,dec=m.encode_k(a);dec=np.asarray(dec,np.int64).reshape(a.shape)
+    a=np.asarray(a,np.int64);shape=a.shape;aa=a.reshape(1,-1) if a.ndim==1 else a
+    b,rep,dec=m.encode_k(aa);dec=np.asarray(dec,np.int64).reshape(shape)
     if not np.array_equal(dec,a):raise RuntimeError('integer frame mismatch')
     return int(b)+24,rep,dec
 
 def make_anchors(X,start,stop,B,eps):
-    nb=(stop-start)//B;mask=np.zeros((C,stop-start),bool);Q=[]
+    nb=(stop-start)//B;mask=np.zeros((C,stop-start),bool)
     for bi in range(nb):
         s=bi*B;e=s+B;mask[:,s:s+P]=True;mask[:,e-P:e]=True
     vals=X[:,start:stop][mask]
@@ -48,17 +48,16 @@ def make_anchors(X,start,stop,B,eps):
 
 def bridge_encode(X,eps,fco,bco,B):
     start=TRAIN;stop=TRAIN+((END-TRAIN)//B)*B
-    mask,A,ab,arep=make_anchors(X,start,stop,B,eps);N=stop-start;Pred=np.zeros((C,N),np.int64);K=[];positions=[]
+    mask,A,ab,arep=make_anchors(X,start,stop,B,eps);N=stop-start;K=[]
     for c in range(C):
         for s in range(0,N,B):
             e=s+B;left=A[c,s:s+P];right=A[c,e-P:e];n=B-2*P
             fl=rollout_left(left,fco,n);br=rollout_right(right,bco,n)
-            if n>1:w=np.linspace(1.0,0.0,n,dtype=np.float64)
-            else:w=np.array([.5])
-            pr=np.rint(w*fl+(1-w)*br).astype(np.int64);Pred[c,s+P:e-P]=pr;Pred[c,s:s+P]=left;Pred[c,e-P:e]=right
+            w=np.linspace(1.0,0.0,n,dtype=np.float64) if n>1 else np.array([.5])
+            pr=np.rint(w*fl+(1-w)*br).astype(np.int64)
             src=X[c,start+s+P:start+e-P];kk=np.rint((src-pr)/STEP).astype(np.int64);rr=pr+STEP*kk
             if float(np.max(np.abs(src-rr)))>eps*(1+1e-10):raise RuntimeError(('bridge hard',B,c,s))
-            K.extend(kk.tolist());positions.extend([(c,start+s+P+i) for i in range(n)])
+            K.extend(kk.tolist())
     K=np.asarray(K,np.int64);kb,krep,kd=encode_int(K)
     D=A.copy();off=0
     for c in range(C):
@@ -74,7 +73,6 @@ def bridge_encode(X,eps,fco,bco,B):
 
 def causal_encode(X,eps,fco,start,stop):
     R=np.zeros((C,stop),np.int64);K=np.zeros((C,stop),np.int64)
-    # Replay from t=0 because causal model needs exact previous decoded state.
     for c in range(C):
         for t in range(stop):
             if t<P:p=0
@@ -101,13 +99,13 @@ def main(path):
     with h5py.File(path,'r') as f:
         d=f['Acoustic'];_,std=m.stats(d);eps=.1*std;rows=[]
         for name,c0 in SPECS:
-            X=np.asarray(d[:END,c0:c0+C],np.float64).T;mb,fco,bco=fit_models(X);reg=[]
+            X=np.asarray(d[:END,c0:c0+C],np.float64).T;mb,fco,bco=fit_models(X)
             for B in BLOCKS:
                 z=bridge_encode(X,eps,fco,bco,B);z['model_bytes']=mb;z['total_bytes']=z['bytes']+mb;z['total_bps']=8*z['total_bytes']/z['samples']
                 ca=causal_encode(X,eps,fco,z['target_start'],z['target_stop']);szb=szrun(X[:,z['target_start']:z['target_stop']],eps)
                 z.update({'region':name,'c0':c0,'causal_bytes':ca['bytes'],'causal_bps':ca['bps'],'gain_vs_causal':ca['bytes']/z['total_bytes'],'causal_rep':ca['rep'],
                           'sz3_bytes':szb[0],'sz3_bps':8*szb[0]/z['samples'],'gain_vs_sz3':szb[0]/z['total_bytes'],'sz3_orientation':szb[2]})
-                reg.append(z);rows.append(z);print(json.dumps(z),flush=True)
+                rows.append(z);print(json.dumps(z),flush=True)
     combos=[]
     for B in BLOCKS:
         rr=[z for z in rows if z['B']==B];b=sum(z['total_bytes'] for z in rr);ca=sum(z['causal_bytes'] for z in rr);sz=sum(z['sz3_bytes'] for z in rr);n=sum(z['samples'] for z in rr)
