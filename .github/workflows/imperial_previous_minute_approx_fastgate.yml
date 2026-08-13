@@ -1,0 +1,21 @@
+name: Imperial previous-minute approximate fast gate
+on:
+  pull_request:
+    branches: [imperial-previous-minute-approx-residual-cover]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy h5py pysz boto3 zstandard
+      - name: Query one previous 128-channel hard block
+        run: python research/imperial_previous_minute_approx_fastgate.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-previous-minute-approx-fastgate
+          path: imperial_previous_minute_approx_residual_cover.json
+          retention-days: 7
