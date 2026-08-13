@@ -30,7 +30,7 @@ jobs:
           assert os.path.getsize('imperial.h5')==415030456
           PY
       - name: Benchmark DASPack at identical hard error
-        run: python research/imperial_daspack_matched_benchmark.py imperial.h5
+        run: python research/imperial_daspack_matched_benchmark_fixed.py imperial.h5
       - uses: actions/upload-artifact@v4
         with:
           name: imperial-daspack-matched-benchmark
