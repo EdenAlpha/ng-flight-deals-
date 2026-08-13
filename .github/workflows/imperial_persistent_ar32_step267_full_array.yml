@@ -1,0 +1,37 @@
+name: Imperial persistent AR32 step267 full array
+on:
+  pull_request:
+    branches: [imperial-persistent-ar32-full-array-jit]
+permissions: {contents: read}
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        slot: [0,1,2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run full-array AR32 at step 267
+        run: |
+          python research/imperial_persistent_ar32_step267_full_array.py imperial.h5 ${{ matrix.slot }}
+          mv imperial_persistent_ar16_full_${{ matrix.slot }}.json imperial_persistent_ar32_step267_full_${{ matrix.slot }}.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-persistent-ar32-step267-full-${{ matrix.slot }}
+          path: imperial_persistent_ar32_step267_full_${{ matrix.slot }}.json
+          retention-days: 7
