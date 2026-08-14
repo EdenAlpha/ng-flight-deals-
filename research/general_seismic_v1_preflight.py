@@ -47,8 +47,7 @@ def list_objects(uri):
 def _parse_tar_num(raw):
     raw=raw.rstrip(b'\0 ').strip()
     if not raw:return 0
-    if raw[0] & 0x80:
-        return int.from_bytes(raw,'big',signed=True)
+    if raw[0] & 0x80:return int.from_bytes(raw,'big',signed=True)
     return int(raw,8)
 
 def _tar_name(h):
@@ -57,68 +56,66 @@ def _tar_name(h):
     return (prefix+'/'+name) if prefix else name
 
 def index_tar_waveforms(outer, member_pattern):
-    bucket,key,total=outer['bucket'],outer['key'],int(outer['size'])
-    rx=re.compile(member_pattern)
-    out=[]; pos=0; cache_start=-1; cache=b''; longname=None
+    bucket,key,total=outer['bucket'],outer['key'],int(outer['size']);rx=re.compile(member_pattern)
+    out=[];pos=0;cache_start=-1;cache=b'';longname=None
     while pos+512<=total:
         if not (cache_start <= pos and pos+512 <= cache_start+len(cache)):
-            cache_start=pos
-            end=min(total-1,pos+RANGE_BLOCK-1)
-            cache=s3.get_object(Bucket=bucket,Key=key,Range=f'bytes={pos}-{end}')['Body'].read()
-        off=pos-cache_start; h=cache[off:off+512]
-        if len(h)<512: raise RuntimeError(('short TAR header',key,pos,len(h)))
+            cache_start=pos;end=min(total-1,pos+RANGE_BLOCK-1);cache=s3.get_object(Bucket=bucket,Key=key,Range=f'bytes={pos}-{end}')['Body'].read()
+        off=pos-cache_start;h=cache[off:off+512]
+        if len(h)<512:raise RuntimeError(('short TAR header',key,pos,len(h)))
         if not h.strip(b'\0'):break
-        name=_tar_name(h); size=_parse_tar_num(h[124:136]); typ=h[156:157]
+        name=_tar_name(h);size=_parse_tar_num(h[124:136]);typ=h[156:157]
         if size<0:raise RuntimeError(('negative TAR member size',key,pos,name,size))
         data_off=pos+512
         if typ==b'L':
-            # GNU long-name record: fetch the name payload, then apply it to the next entry.
-            end=min(total-1,data_off+size-1)
-            payload=s3.get_object(Bucket=bucket,Key=key,Range=f'bytes={data_off}-{end}')['Body'].read() if size else b''
-            longname=payload.split(b'\0',1)[0].decode('utf-8','replace')
+            end=min(total-1,data_off+size-1);payload=s3.get_object(Bucket=bucket,Key=key,Range=f'bytes={data_off}-{end}')['Body'].read() if size else b'';longname=payload.split(b'\0',1)[0].decode('utf-8','replace')
         elif typ in (b'0',b'\0'):
-            if longname:
-                name=longname; longname=None
-            if rx.search(name):
-                out.append({'bucket':bucket,'key':key,'member':name,'member_offset':data_off,'size':int(size),'uri':f"s3tar://{bucket}/{key}::{name}"})
-        else:
-            longname=None
+            if longname:name=longname;longname=None
+            if rx.search(name):out.append({'bucket':bucket,'key':key,'member':name,'member_offset':data_off,'size':int(size),'uri':f"s3tar://{bucket}/{key}::{name}"})
+        else:longname=None
         pos=data_off+((size+511)//512)*512
     return out
 
 def _outer_filters(ds,objs):
-    inc=ds.get('include_regex'); exc=ds.get('exclude_regex')
+    inc=ds.get('include_regex');exc=ds.get('exclude_regex')
     if inc:
         rx=re.compile(inc);objs=[o for o in objs if rx.search(o['key'])]
     if exc:
         rx=re.compile(exc);objs=[o for o in objs if not rx.search(o['key'])]
     return objs
 
+def _dedupe_tar_members(ds,members):
+    mode=ds.get('member_dedupe')
+    if not mode:return members
+    if mode!='logical_path_size':raise RuntimeError(('unknown member_dedupe',mode))
+    groups={}
+    for o in sorted(members,key=canonical):
+        k=(o.get('member',''),int(o['size']))
+        groups.setdefault(k,[]).append(o)
+    out=[]
+    for k,gg in sorted(groups.items(),key=lambda kv:(kv[0][0],kv[0][1])):
+        keep=dict(min(gg,key=canonical));keep['archive_copy_count']=len(gg);keep['archive_copy_sources']=[g['key'] for g in sorted(gg,key=canonical)];out.append(keep)
+    out.sort(key=canonical);return out
+
 def resolve_objects(ds):
     explicit=ds.get('objects')
     if explicit:
         out=[object_meta(u) for u in explicit];out.sort(key=canonical);return out
     src=ds.get('source','')
-    if not src.startswith('s3://'):
-        raise RuntimeError('dataset has neither explicit S3 objects nor an S3 prefix')
+    if not src.startswith('s3://'):raise RuntimeError('dataset has neither explicit S3 objects nor an S3 prefix')
     objs=list_objects(src)
     if ds.get('container_index')=='tar':
-        outers=[o for o in _outer_filters(ds,objs) if o['key'].lower().endswith('.tar')]
-        pat=ds.get('member_include_regex')
+        outers=[o for o in _outer_filters(ds,objs) if o['key'].lower().endswith('.tar')];pat=ds.get('member_include_regex')
         if not pat:raise RuntimeError('tar container_index requires member_include_regex')
         members=[]
-        # Tar archives are independent; scan them concurrently. Only 1 MiB header ranges
-        # are read, never waveform payload, so selection remains cheap and signal-blind.
         with ThreadPoolExecutor(max_workers=min(16,max(1,len(outers)))) as ex:
             fut={ex.submit(index_tar_waveforms,o,pat):o for o in outers}
-            for f in as_completed(fut):
-                members.extend(f.result())
-        members.sort(key=canonical)
-        return members
+            for f in as_completed(fut):members.extend(f.result())
+        return _dedupe_tar_members(ds,members)
     return objs
 
 def eligible(ds, objs):
-    inc=ds.get('include_regex'); exc=ds.get('exclude_regex')
+    inc=ds.get('include_regex');exc=ds.get('exclude_regex')
     if inc and not ds.get('container_index'):
         rx=re.compile(inc);objs=[o for o in objs if rx.search(o['key'])]
     if exc and not ds.get('container_index'):
@@ -140,8 +137,7 @@ def spans(objs):
     for z in sizes:s+=z;cum.append(s)
     used=set();ans=[]
     for frac in (0.10,0.50,0.90):
-        target=frac*total
-        i=min(range(len(objs)),key=lambda j:abs((cum[j]-sizes[j]/2)-target));lo=hi=i;n=sizes[i]
+        target=frac*total;i=min(range(len(objs)),key=lambda j:abs((cum[j]-sizes[j]/2)-target));lo=hi=i;n=sizes[i]
         while n<TARGET and (lo>0 or hi+1<len(objs)):
             if lo>0 and hi+1<len(objs):
                 lmid=cum[lo-1]-sizes[lo-1]/2;rmid=cum[hi+1]-sizes[hi+1]/2;take_left=abs(lmid-target)<=abs(rmid-target)
@@ -162,23 +158,22 @@ def spans(objs):
                     if side=='L':lo-=1;n+=objs[lo]['size']
                     else:hi+=1;n+=objs[hi]['size']
                 inds=list(range(lo,hi+1))
-        used.update(inds);sel=[objs[j] for j in inds]
-        ans.append({'center_fraction':frac,'bytes':sum(o['size'] for o in sel),'gb':sum(o['size'] for o in sel)/1e9,'objects':sel})
+        used.update(inds);sel=[objs[j] for j in inds];ans.append({'center_fraction':frac,'bytes':sum(o['size'] for o in sel),'gb':sum(o['size'] for o in sel)/1e9,'objects':sel})
     return ans
 
 def main(manifest):
-    m=json.load(open(manifest));rows=[]
+    m=json.load(open(manifest));rows=[];whole_threshold=float(m['selection_policy']['whole_survey_threshold_gb'])
     for ds in m['datasets']:
         row={'id':ds['id'],'category':ds['category'],'format':ds['format'],'source':ds.get('source'),'explicit_objects':len(ds.get('objects',[]))}
         try:
-            objs=eligible(ds,resolve_objects(ds));total=sum(o['size'] for o in objs)
-            row.update(status='ok' if objs else 'empty',eligible_objects=len(objs),eligible_bytes=total,eligible_gb=total/1e9)
-            if ds['source_size_gb']<=25:row['selected']=[{'center_fraction':None,'bytes':total,'gb':total/1e9,'objects':objs}]
+            objs=eligible(ds,resolve_objects(ds));total=sum(o['size'] for o in objs);eligible_gb=total/1e9
+            duplicate_copies=sum(max(0,int(o.get('archive_copy_count',1))-1) for o in objs)
+            row.update(status='ok' if objs else 'empty',eligible_objects=len(objs),eligible_bytes=total,eligible_gb=eligible_gb,duplicate_archive_copies=duplicate_copies)
+            if eligible_gb<=whole_threshold:row['selected']=[{'center_fraction':None,'bytes':total,'gb':eligible_gb,'objects':objs}]
             else:row['selected']=spans(objs)
             row['selected_bytes']=sum(x['bytes'] for x in row.get('selected',[]));row['selected_gb']=row['selected_bytes']/1e9
             min_gb=float(m['selection_policy']['minimum_primary_test_size_gb'])
-            if row['selected_gb']+1e-9<min_gb:
-                row['status']='too_small';row['error']=f"selected payload {row['selected_gb']:.3f} GB is below frozen minimum {min_gb} GB"
+            if row['selected_gb']+1e-9<min_gb:row['status']='too_small';row['error']=f"selected payload {row['selected_gb']:.3f} GB is below frozen minimum {min_gb} GB"
         except Exception as e:row.update(status='error',error=repr(e))
         rows.append(row);print(json.dumps({k:v for k,v in row.items() if k!='selected'}),flush=True)
     out={'benchmark':m['name'],'frozen':m['frozen'],'target_span_bytes':TARGET,'datasets':rows};json.dump(out,open('general_seismic_v1_preflight.json','w'),indent=2)

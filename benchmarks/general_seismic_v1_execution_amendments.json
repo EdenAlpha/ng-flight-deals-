@@ -1,7 +1,8 @@
 {
   "date": "2026-08-14",
   "compression_results_seen_before_revision": false,
-  "reason": "Pre-headline reader validation established reproducible numeric paths for every primary survey. San Emidio is restricted to its public DataCube AU4 raw subset because the SmartSolo DLD path in the authors' workflow depends on proprietary vendor tooling. EGS Collab Experiment 2 is restricted to its public HDF5 waveform subset because the archive mixes HDF5 and TDMS containers while the HDF5 subset alone comfortably exceeds the frozen >25 GB threshold and has a verified /data_product/data schema. These are execution-format restrictions within the same surveys, made before any frozen headline survey compression result and without inspecting signal statistics or headline compression outputs.",
+  "headline_survey_compression_results_seen_before_revision": false,
+  "reason": "Pre-headline reader validation established reproducible numeric paths for every primary survey. San Emidio is restricted to its public DataCube AU4 raw subset because the SmartSolo DLD path in the authors' workflow depends on proprietary vendor tooling. A subsequent archive-structure audit, still before any completed frozen headline survey result, found that the two public DataCube TAR packages expose the same 35 logical .AU4 waveform members twice: 70 TAR entries with identical logical member paths and sizes, and exactly 2x the unique member byte total. The benchmark therefore deduplicates TAR packaging copies by (logical member path, byte size) before applying the frozen size/selection rule. The 35 unique AU4 members total 14.860618093 GB, so the <=25 GB rule benchmarks that unique payload whole. EGS Collab Experiment 2 is restricted to its public HDF5 waveform subset because the archive mixes HDF5 and TDMS containers while the HDF5 subset alone comfortably exceeds the frozen >25 GB threshold and has a verified /data_product/data schema. These are execution-format/packaging corrections within the same surveys, made without using signal statistics or headline compression outputs.",
   "dataset_overrides": {
     "land_san_emidio_2021": {
       "name": "WHOLESCALE San Emidio Nevada 2021 DataCube raw level-0",
@@ -10,8 +11,9 @@
       "include_regex": "(?i)datacube",
       "exclude_regex": "(?i)(gps|metadata|readme)",
       "member_include_regex": "(?i)\\.AU4$",
-      "test_policy": "3x >=10GB deterministic spans over complete native DataCube level-0 .AU4 waveform members inside the public TAR archive",
-      "note": "Raw DataCube only. SmartSolo DLD is excluded solely because the documented conversion path depends on proprietary vendor tooling; processed SAC is not used."
+      "member_dedupe": "logical_path_size",
+      "test_policy": "complete unique public native DataCube level-0 .AU4 waveform payload after deduplicating overlapping TAR packaging copies",
+      "note": "Raw DataCube only. SmartSolo DLD is excluded solely because the documented conversion path depends on proprietary vendor tooling; processed SAC is not used. Two public DataCube TAR packages contain duplicate copies of the same 35 logical AU4 members, so packaging copies are deduplicated by logical path and byte size before selection."
     },
     "das_egs_collab_exp2": {
       "format": "HDF5",
