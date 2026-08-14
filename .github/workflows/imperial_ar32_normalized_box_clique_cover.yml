@@ -1,0 +1,43 @@
+name: Imperial AR32 normalized box clique cover
+on:
+  pull_request:
+    branches: [imperial-ar32-state-normalized-procedural-cover]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy networkx h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Construct target-trained hard-box clique cover
+        run: python research/imperial_ar32_normalized_box_clique_cover.py imperial.h5
+      - name: Surface compact result
+        if: always()
+        run: |
+          if [ -f imperial_ar32_normalized_box_clique_cover.json ]; then
+            python - <<'PY'
+          import json
+          d=json.load(open('imperial_ar32_normalized_box_clique_cover.json'))
+          print(json.dumps({'raw':d['raw_box_graph'],'normalized':d['state_normalized_box_graph'],'cover':d['constructive_clique_cover'],'paid':d['paid_target_trained_codebook'],'target':d['two_x_target_bps'],'ratio':d['paid_bps_over_2x_target']},indent=2))
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-ar32-normalized-box-clique-cover
+          path: imperial_ar32_normalized_box_clique_cover.json
+          if-no-files-found: ignore
+          retention-days: 7
