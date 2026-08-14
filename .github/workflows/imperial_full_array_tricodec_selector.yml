@@ -1,0 +1,50 @@
+name: Imperial full-array tricodec selector
+on:
+  pull_request:
+    branches: [imperial-huber-ar32-coldstart-arithmetic-full-array]
+permissions: {contents: read}
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        slot: [0,1,2,3,4,5,6,7,8]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3 daspack-dev==0.0.1a0
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run selector slot
+        run: python research/imperial_full_array_tricodec_selector.py imperial.h5 ${{ matrix.slot }}
+      - name: Surface selector result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json,os
+          s=os.environ['SLOT'];d=json.load(open(f'imperial_full_array_tricodec_selector_{s}.json'))
+          w=d['winner_counts']
+          msg=(f"selector={d['selector_bytes']} bytes ({d['selector_bps']:.5f} bps), "
+               f"gain_vs_AR={d['gain_selector_vs_ar']:.6f}, gain_vs_SZ3={d['gain_selector_vs_sz3']:.6f}, "
+               f"gain_vs_DASPack={d['gain_selector_vs_daspack']:.6f}, wins AR/SZ3/DAS={w['ar']}/{w['sz3']}/{w['daspack']}")
+          print(f"::notice title=tricodec slot {s}::{msg}")
+          PY
+        env:
+          SLOT: ${{ matrix.slot }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-full-array-tricodec-selector-${{ matrix.slot }}
+          path: imperial_full_array_tricodec_selector_${{ matrix.slot }}.json
+          if-no-files-found: ignore
+          retention-days: 7
