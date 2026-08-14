@@ -19,9 +19,7 @@ def variant(K,co,L,M):
  old=h.NT;h.NT=nb
  ab,nbit,nbits,Id=h.arithmetic(ids)
  h.NT=old
- # Also test simple lossless index streams; dictionary/escapes are shared.
  izc=zpack(ids.astype('<u2'));izt=zpack(ids.T.astype('<u2'));methods=[('arithmetic',int(ab)),('zstd_channel',len(izc)+h.MODEL_BYTES+16),('zstd_time',len(izt)+h.MODEL_BYTES+16)];method,idbytes=min(methods,key=lambda x:x[1]);total=int(idbytes)+len(dblob)+len(eblob)+48
- # Decode exact container components.
  dd=np.frombuffer(ZD.decompress(dblob),'<i2').reshape(mm,L).astype(np.int32) if mm else np.empty((0,L),np.int32);ed=np.frombuffer(ZD.decompress(eblob),'<i2').reshape(-1,L).astype(np.int32)
  if method=='arithmetic':
   if not np.array_equal(Id,ids):
@@ -34,9 +32,13 @@ def variant(K,co,L,M):
  for c in range(C):
   for q in range(nb):
    x=int(ID[c,q])
-   if x<mm:out[c,q]=dd[x]
+   if x<mm:
+    out[c,q]=dd[x]
    elif x==mm:
-    if ep>=len(ed):raise RuntimeError(('escape eof',L,M));out[c,q]=ed[ep];ep+=1
+    if ep>=len(ed):
+     raise RuntimeError(('escape eof',L,M))
+    out[c,q]=ed[ep]
+    ep+=1
    else:raise RuntimeError(('bad id',x,mm))
  if ep!=len(ed):raise RuntimeError(('escape tail',ep,len(ed)))
  Kd=out.reshape(C,NT)
