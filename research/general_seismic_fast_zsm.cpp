@@ -13,14 +13,14 @@ static constexpr uint32_t MAXV = 0xffffffffu;
 static constexpr uint32_t HALF = 0x80000000u;
 static constexpr uint32_t Q1   = 0x40000000u;
 static constexpr uint32_t Q3   = 0xc0000000u;
-static constexpr int NZERO=9*9*6;
-static constexpr int NSIGN=3*3*6;
-static constexpr int NPREF=6*6*16;
-static constexpr int NSUFF=16*16*6;
-static constexpr int OFF_SIGN=NZERO;
-static constexpr int OFF_PREF=OFF_SIGN+NSIGN;
-static constexpr int OFF_SUFF=OFF_PREF+NPREF;
-static constexpr int NCTX=OFF_SUFF+NSUFF;
+static constexpr int Z_NZERO=9*9*6;
+static constexpr int Z_NSIGN=3*3*6;
+static constexpr int Z_NPREF=6*6*16;
+static constexpr int Z_NSUFF=16*16*6;
+static constexpr int OFF_SIGN=Z_NZERO;
+static constexpr int OFF_PREF=OFF_SIGN+Z_NSIGN;
+static constexpr int OFF_SUFF=OFF_PREF+Z_NPREF;
+static constexpr int NCTX=OFF_SUFF+Z_NSUFF;
 
 struct BitWriter {
     std::string bytes;
