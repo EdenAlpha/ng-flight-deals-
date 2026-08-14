@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install --quiet numpy h5py zstandard boto3
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
       - name: Download canonical Imperial Valley record
         run: |
           python - <<'PY'
