@@ -1,0 +1,31 @@
+name: Imperial JPEG2000 base hard repair regions
+on:
+  pull_request:
+    branches: [imperial-huber-ar32-coldstart-arithmetic-regions]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3 pillow
+      - name: Download Imperial
+        run: python -c "import boto3;from botocore import UNSIGNED;from botocore.config import Config;boto3.client('s3',config=Config(signature_version=UNSIGNED)).download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')"
+      - name: Run dense base plus hard repair
+        run: python research/imperial_jp2_base_hardrepair_regions.py imperial.h5
+      - name: Surface compact result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_jp2_base_hardrepair_regions.json'))
+          for r in d['rows']:
+            print(f"::notice title=JP2-repair {r['region']}::bytes={r['jp2_repair_bytes']}, bps={r['jp2_repair_bps']:.5f}, AR={r['arithmetic_bps']:.5f}, gainAR={r['gain_vs_arithmetic']:.6f}, gainSZ3={r['gain_vs_sz3']:.6f}, repair_density={r['mean_correction_density']:.5f}, base_fraction={r['base_byte_fraction']:.4f}, repair_fraction={r['correction_byte_fraction']:.4f}, rates={r['ratio_counts']}")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-jp2-base-hardrepair-regions
+          path: imperial_jp2_base_hardrepair_regions.json
+          retention-days: 7
