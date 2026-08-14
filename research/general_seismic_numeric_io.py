@@ -84,13 +84,36 @@ def hdf5_s3_panels(bucket,key,**kw):
         with h5py.File(fh,'r') as f:yield from _hdf5_panels_open(f,**kw)
 
 
+def _sz3_lossless_numeric_view(X):
+    """Use the narrowest SZ3-supported float that preserves the input values.
+
+    pysz is benchmarked on a floating representation because the public wrapper
+    used here targets float32/float64.  Integer seismic counts are promoted only
+    as far as needed: int16 (and any exactly representable int32 panel) therefore
+    gets float32, while larger integer values fall back to float64.  Existing
+    float32/float64 inputs keep their native precision.  This avoids silently
+    handicapping SZ3 with double precision when single precision is lossless.
+    """
+    X=np.ascontiguousarray(X)
+    if np.issubdtype(X.dtype,np.integer):
+        # Every benchmark integer type fits exactly in float64; refuse exotic
+        # values outside that range instead of silently changing the source.
+        A64=np.ascontiguousarray(X.astype(np.float64))
+        if not np.array_equal(A64, X.astype(np.float64,copy=False)):
+            raise RuntimeError(('integer source cannot be represented losslessly in float64',X.dtype))
+        A32=np.ascontiguousarray(X.astype(np.float32))
+        if np.array_equal(A32.astype(np.float64),A64):
+            return A32
+        return A64
+    if X.dtype==np.float32:return X
+    if X.dtype==np.float64:return X
+    if np.issubdtype(X.dtype,np.floating):return np.ascontiguousarray(X.astype(np.float64))
+    raise TypeError(('unsupported SZ3 benchmark dtype',X.dtype))
+
+
 def matched_sz3(X,eps):
     from pysz import sz,szConfig,szErrorBoundMode
-    X=np.ascontiguousarray(X)
-    # Preserve raw integer counts exactly when needed: SZ3 accepts float64, while
-    # float32 is the natural common representation for floating seismic payloads.
-    if np.issubdtype(X.dtype,np.integer):A=np.ascontiguousarray(X.astype(np.float64))
-    else:A=np.ascontiguousarray(X.astype(np.float32,copy=False))
+    A=_sz3_lossless_numeric_view(X)
     cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps)
     bb,_=sz.compress(A,cfg);R,_=sz.decompress(bb,A.dtype,A.shape)
     me=float(np.max(np.abs(A.astype(np.float64)-R.astype(np.float64))))
