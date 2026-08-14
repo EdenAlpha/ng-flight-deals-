@@ -1,0 +1,44 @@
+name: Imperial AR32 state-normalized procedural cover
+on:
+  pull_request:
+    branches: [imperial-ar32-state-normalized-residual-support]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Search state-normalized procedural 8-D codebook
+        run: python research/imperial_ar32_state_normalized_procedural_cover.py imperial.h5
+      - name: Surface compact result
+        if: always()
+        run: |
+          if [ -f imperial_ar32_state_normalized_procedural_cover.json ]; then
+            python - <<'PY'
+          import json
+          j=json.load(open('imperial_ar32_state_normalized_procedural_cover.json'))
+          keep=['coverage_fraction_at_2pow22','predicted_coverage_at_2pow24_poisson','estimated_geometric_index_bps','two_x_target_bps','ratio_estimated_geometric_bps_to_2x_target','raw_prefix_fraction_within_2eps','state_normalized_prefix_fraction_within_2eps']
+          print(json.dumps({k:j.get(k) for k in keep},indent=2))
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-ar32-state-normalized-procedural-cover
+          path: imperial_ar32_state_normalized_procedural_cover.json
+          if-no-files-found: ignore
+          retention-days: 7
