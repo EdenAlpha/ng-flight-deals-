@@ -23,8 +23,6 @@ def ar_predict(R,c,t,co):
 
 @njit(cache=True)
 def motif_pred(K,c,t,nneigh):
-    # Prefix K is a free, decoder-known motif dictionary. Compare the latest
-    # L exact innovations to prefix histories ending every DSTRIDE samples.
     bestd0=1<<60;bestd1=1<<60;bestd2=1<<60
     bestk0=0;bestk1=0;bestk2=0
     for idx in range(L,TRAIN,DSTRIDE):
@@ -35,12 +33,9 @@ def motif_pred(K,c,t,nneigh):
             dist += z
         target=int(K[c,idx])
         if dist<bestd0:
-            bestd2,bestk2=bestd1,bestk1
-            bestd1,bestk1=bestd0,bestk0
-            bestd0,bestk0=dist,target
+            bestd2,bestk2=bestd1,bestk1;bestd1,bestk1=bestd0,bestk0;bestd0,bestk0=dist,target
         elif dist<bestd1:
-            bestd2,bestk2=bestd1,bestk1
-            bestd1,bestk1=dist,target
+            bestd2,bestk2=bestd1,bestk1;bestd1,bestk1=dist,target
         elif dist<bestd2:
             bestd2,bestk2=dist,target
     if nneigh==1:return float(bestk0)
@@ -52,29 +47,23 @@ def encode_candidate(X,co,Rprefix,Kprefix,nneigh,strength):
     R[:,:TRAIN]=Rprefix[:,:TRAIN];K[:,:TRAIN]=Kprefix[:,:TRAIN]
     for c in range(C):
         for t in range(TRAIN,NT):
-            pa=ar_predict(R,c,t,co)
-            pk=motif_pred(K,c,t,nneigh)
+            pa=ar_predict(R,c,t,co);pk=motif_pred(K,c,t,nneigh)
             p=int(np.rint(float(pa)+float(strength)*STEP*clip4(pk)))
-            k=int(np.rint((float(X[c,t])-float(p))/STEP))
-            K[c,t]=k;R[c,t]=p+STEP*k
+            k=int(np.rint((float(X[c,t])-float(p))/STEP));K[c,t]=k;R[c,t]=p+STEP*k
     return R,K
 
 @njit(cache=True)
-def decode_candidate(K,co,nneigh,strength):
-    R=np.zeros((C,NT),np.int32)
+def decode_candidate(K,co,nneigh,strength,Rprefix):
+    # The prefix itself is reconstructed outside this kernel by the audited incumbent
+    # float32-dot decoder, then the deterministic motif predictor takes over.
+    R=np.zeros((C,NT),np.int32);R[:,:TRAIN]=Rprefix[:,:TRAIN]
     for c in range(C):
-        for t in range(TRAIN):
-            p=ar_predict(R,c,t,co)
-            R[c,t]=p+STEP*int(K[c,t])
         for t in range(TRAIN,NT):
-            pa=ar_predict(R,c,t,co)
-            pk=motif_pred(K,c,t,nneigh)
-            p=int(np.rint(float(pa)+float(strength)*STEP*clip4(pk)))
-            R[c,t]=p+STEP*int(K[c,t])
+            pa=ar_predict(R,c,t,co);pk=motif_pred(K,c,t,nneigh)
+            p=int(np.rint(float(pa)+float(strength)*STEP*clip4(pk)));R[c,t]=p+STEP*int(K[c,t])
     return R
 
 def main(path):
-    # Compile tiny signatures before the measured loop.
     with h5py.File(path,'r') as f:
         d=f['Acoustic'];_,gstd=base.m.stats(d);eps=.1*gstd;rows=[]
         for region,c0 in SPECS:
@@ -90,7 +79,9 @@ def main(path):
                     me=float(np.max(np.abs(X-R.astype(np.float64))))
                     if me>eps*(1+1e-12):raise RuntimeError((region,nneigh,strength,'encoder hard',me,eps))
                     n,bits,nb,Kd=base.arithmetic(K);n+=SELECTOR_BYTES
-                    Rd=decode_candidate(Kd,np.asarray(co,np.float32),int(nneigh),float(strength))
+                    audited_prefix=base.decode_source(Kd[:,:TRAIN],co)
+                    if not np.array_equal(audited_prefix,R[:,:TRAIN]):raise RuntimeError((region,nneigh,strength,'audited prefix mismatch'))
+                    Rd=decode_candidate(Kd,np.asarray(co,np.float32),int(nneigh),float(strength),audited_prefix)
                     if not np.array_equal(Rd,R):raise RuntimeError((region,nneigh,strength,'decoder replay'))
                     dme=float(np.max(np.abs(X-Rd.astype(np.float64))))
                     if dme>eps*(1+1e-12):raise RuntimeError((region,nneigh,strength,'decoder hard',dme,eps))
@@ -100,5 +91,5 @@ def main(path):
             for q in candidates:q['gain_vs_sz3']=sz/q['bytes']
             best=min(candidates,key=lambda q:q['bytes'])
             row={'region':region,'c0':c0,'samples':int(X.size),'eps':float(eps),'baseline_bytes':int(baseline),'baseline_bps':8*baseline/X.size,'baseline_zero_fraction':float(np.mean(Kb==0)),'sz3_bytes':int(sz),'sz3_bps':8*sz/X.size,'best':best,'candidates':candidates};rows.append(row);print(json.dumps({'summary':row},indent=2),flush=True)
-        json.dump({'rows':rows,'history_length':L,'dictionary_stride':DSTRIDE,'scope':'Decoder-real nonlinear temporal motif gate. The unchanged Huber AR32 step267 path is used for the first 1024 samples. That exact decoded K prefix becomes a free per-channel dictionary of six-symbol innovation histories. For each later sample the decoder finds the nearest prefix history by L1 distance and uses the following prefix K (or the mean of three nearest followers) only as a bounded +/-4K correction to the ordinary AR32 prediction. No dictionary or nonlinear model is transmitted. Neighbors 1/3 and correction strengths 0.5/1.0 are screened with one selector byte charged. Exact arithmetic K decode, independent recursive source replay and unchanged max error are mandatory. Hard/easy 128x2048 gate. No AI. Draft/do not merge.'},open('imperial_ar32_prefix_motif_knn.json','w'),indent=2)
+        json.dump({'rows':rows,'history_length':L,'dictionary_stride':DSTRIDE,'scope':'Decoder-real nonlinear temporal motif gate. The unchanged audited Huber AR32 step267 decoder reconstructs the first 1024 samples exactly. That decoded K prefix becomes a free per-channel dictionary of six-symbol innovation histories. For each later sample the decoder finds the nearest prefix history by L1 distance and uses the following prefix K (or mean of three nearest followers) only as a bounded +/-4K correction to a deterministic tail AR predictor. No dictionary/model is transmitted. Neighbors 1/3 and strengths 0.5/1.0 are screened with one selector byte charged. Exact arithmetic K decode, audited prefix replay, complete tail replay and unchanged max error are mandatory. Hard/easy 128x2048. No AI. Draft/do not merge.'},open('imperial_ar32_prefix_motif_knn.json','w'),indent=2)
 if __name__=='__main__':main(sys.argv[1])
