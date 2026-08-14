@@ -4,7 +4,7 @@ import imperial_decoder_phase_automaton as m
 import imperial_huber_ar32_coldstart_arithmetic_regions as h
 
 REGION=('easy',2304);C=128;NT=4096;TRAIN=1024;P=32;STEP=267;TB=1024
-WIDTHS=(2,4,8,16,32);PARITIES=(0,1)
+WIDTHS=(2,4,8,16,32,64);PARITIES=(0,1)
 Z=zstd.ZstdCompressor(level=19);ZD=zstd.ZstdDecompressor()
 
 def geometry(parity,width):
@@ -82,6 +82,6 @@ def main(path):
         cab,_,_,Kd=h.arithmetic(K);cab+=best['model_bytes']+2;Rd=decode_codec(Kd,ar,B,order,feats);me=float(np.max(np.abs(X-Rd.astype(np.float64))))
         if not np.array_equal(Kd,K) or not np.array_equal(Rd,R) or me>eps*(1+1e-12):raise RuntimeError(('final decode',me,eps))
         final={'parity':best['parity'],'width':best['width'],'bytes':int(cab),'bps':8*cab/X.size,'model_bytes':best['model_bytes'],'gain_vs_step267':float(base_arith/cab),'gain_vs_sz3':float(sz/cab),'ratio_to_2x':float(cab/(sz/2)),'k_zero':float(np.mean(K==0)),'maxerr':me}
-        out={'eps':eps,'region':region,'samples':int(X.size),'step267_bytes':int(base_arith),'step267_bps':8*base_arith/X.size,'sz3_bytes':int(sz),'sz3_bps':8*sz/X.size,'best':final,'candidates':cand,'scope':'Deployable wide symmetric parity spatial predictor on easy Imperial. One sensor parity is decoded first at each time using the incumbent Huber AR32 temporal predictor. Every opposite-parity sensor is then predicted from the nearest 2/4/8/16/32 already decoded anchor-parity reconstructed temporal residuals on both sides, with a prefix-only per-channel ridge linear model. Float32 model bytes are Zstd-compressed, byte-decoded and charged; one decoder-real redesign round is performed. The exact step267 K stream is independently cold-start-arithmetic decoded in natural order before source replay, so entropy coding is unchanged. Full source regeneration and max-error verification are mandatory. This is the implementable broad two-sided linear approximation to the positive all-neighbor easy-region oracle in PR #437. No AI. Draft/do not merge.'}
+        out={'eps':eps,'region':region,'samples':int(X.size),'step267_bytes':int(base_arith),'step267_bps':8*base_arith/X.size,'sz3_bytes':int(sz),'sz3_bps':8*sz/X.size,'best':final,'candidates':cand,'scope':'Deployable wide symmetric parity spatial predictor on easy Imperial. One sensor parity is decoded first at each time using the incumbent Huber AR32 temporal predictor. Every opposite-parity sensor is then predicted from the nearest 2/4/8/16/32 or all 64 already decoded anchor-parity reconstructed temporal residuals on both sides, with a prefix-only per-channel ridge linear model. Float32 model bytes are Zstd-compressed, byte-decoded and charged; one decoder-real redesign round is performed. The exact step267 K stream is independently cold-start-arithmetic decoded in natural order before source replay, so entropy coding is unchanged. Full source regeneration and max-error verification are mandatory. The width-64 candidate is the closest implementable parity approximation to the positive broad all-neighbor easy-region oracle in PR #437. No AI. Draft/do not merge.'}
         print(json.dumps({'summary':out},indent=2),flush=True);json.dump(out,open('imperial_ar32_wide_checkerboard_spatial.json','w'),indent=2)
 if __name__=='__main__':main(sys.argv[1])
