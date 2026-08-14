@@ -11,7 +11,7 @@ def activity_from_sum(sumabs,count):
     out=np.full(sumabs.shape,5,np.int8)
     for i,q in reversed(list(enumerate((1,3,7,15,31)))):
         out[z<=q*count]=i
-    out[count<=0]=0
+    out=np.where(count>0,out,0).astype(np.int8)
     return out
 
 def activity_matrix(K,W):
