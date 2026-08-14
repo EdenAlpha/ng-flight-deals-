@@ -26,22 +26,19 @@
       "public": true
     },
     {
-      "id": "land_stratton_3d",
+      "id": "land_teapot_dome_3d",
       "category": "land-reflection",
-      "name": "Stratton 3D South Texas prestack CMP gathers",
-      "source_size_gb": 6.0,
+      "name": "Teapot Dome 3D raw unprocessed field shot gathers",
+      "source_size_gb": 8.0,
       "format": "SEG-Y",
-      "source": "explicit public open.source.geoscience objects",
+      "source": "explicit public Teapot Dome S3 object",
       "objects": [
-        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_2-80.sgy",
-        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_82-140.sgy",
-        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_142-200.sgy",
-        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_202-290.sgy",
-        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_290-310.sgy",
-        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_601-630.sgy"
+        "s3://teapot/npr3_field.sgy"
       ],
-      "test_policy": "complete prestack CMP gathers",
-      "public": true
+      "test_policy": "complete raw unprocessed field SEG-Y",
+      "public": true,
+      "replacement_for": "land_stratton_3d",
+      "replacement_reason": "The exact complete public Stratton prestack CMP payload resolves to 4.29691644 GB, below the benchmark's preregistered 5 GB minimum. Teapot Dome was a predeclared reserve candidate and is substituted before any generalization compression result was observed."
     },
     {
       "id": "land_san_emidio_2021",
@@ -185,11 +182,11 @@
   ],
   "accessibility_revision": {
     "date": "2026-08-14",
-    "reason": "First CI preflight occurred before any generalization compression results. It exposed one non-listable public S3 prefix and five descriptive/non-machine-fetchable marine entries. Exact object paths were frozen for Stratton/Waka/Parihaka/Opunake; Penobscot and Tiber were replaced by predeclared reserve marine surveys Tui and Kahu solely for reproducible CI accessibility.",
+    "reason": "Preflight occurred before any generalization compression results. It exposed non-machine-fetchable marine entries and showed that the complete accessible Stratton prestack payload is only 4.29691644 GB, below the frozen 5 GB minimum. Exact object paths were frozen for Waka/Parihaka/Opunake; Penobscot and Tiber were replaced by predeclared reserve marine surveys Tui and Kahu; Stratton was replaced by the predeclared Teapot Dome raw/prestack land reserve. All substitutions are solely for reproducible CI accessibility/size compliance and occurred before any generalization compression result was observed.",
     "compression_results_seen_before_revision": false
   },
   "reserve_candidates": [
-    "Teapot Dome 3D raw/prestack land survey (add after exact downloadable payload size is audited)",
+    "Stratton 3D South Texas prestack CMP gathers (4.29691644 GB; below frozen primary minimum)",
     "Penobscot 3D prestack (101 GB; public torrent/OpendTect distribution, reserve if CI-safe endpoint is established)",
     "BP Tiber WATS decimated raw (130 GB; no free online copy currently maintained according to SEG)"
   ]
