@@ -40,8 +40,9 @@ jobs:
           C0: ${{ matrix.c0 }}
         run: |
           python - <<'PY'
-          import os
-          import research.imperial_ar32_nonlocal_bayesian_fourregions as q
+          import os,sys
+          sys.path.insert(0,'research')
+          import imperial_ar32_nonlocal_bayesian_fourregions as q
           q.REGIONS=((os.environ['REGION'],int(os.environ['C0'])),)
           q.main('imperial.h5')
           PY
