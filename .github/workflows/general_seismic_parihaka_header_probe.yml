@@ -1,0 +1,58 @@
+name: General seismic Parihaka SEG-Y framing probe
+
+on:
+  pull_request:
+    branches: [ general-seismic-benchmark-v1 ]
+  workflow_dispatch:
+
+permissions: {contents: read}
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet boto3
+      - name: Inspect binary header and candidate trace strides
+        run: |
+          python - <<'PY'
+          import boto3,struct,json
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          bucket='open.source.geoscience';prefix='open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/'
+          keys=['Parihaka_PSTM_full_angle.sgy','Parihaka_PSTM_near_stack.sgy','Parihaka_PSTM_mid_stack.sgy','Parihaka_PSTM_far_stack.sgy']
+          bpsmap={1:4,2:4,3:2,5:4,6:8,7:3,8:1,9:8,10:4,11:2,12:8,16:1}
+          out=[]
+          for name in keys:
+              k=prefix+name;size=int(s3.head_object(Bucket=bucket,Key=k)['ContentLength'])
+              head=s3.get_object(Bucket=bucket,Key=k,Range='bytes=0-1048575')['Body'].read()
+              bh=head[3200:3600]
+              def u16(x,e):return struct.unpack(e+'H',x)[0]
+              def i16(x,e):return struct.unpack(e+'h',x)[0]
+              cand=[]
+              for e in ('>','<'):
+                  ns=u16(bh[20:22],e);fmt=u16(bh[24:26],e);rev=u16(bh[300:302],e);fixed=u16(bh[302:304],e);ext=i16(bh[304:306],e)
+                  if fmt not in bpsmap:continue
+                  starts=[]
+                  for ext_eff in sorted(set([0,max(0,ext)])):
+                      start=3600+3200*ext_eff;stride=240+ns*bpsmap[fmt]
+                      if start+240<=len(head):
+                          vals=[]
+                          ok=True
+                          for j in range(10):
+                              p=start+j*stride
+                              if p+240>len(head):break
+                              th=head[p:p+240];tns=u16(th[114:116],e);si=u16(th[116:118],e)
+                              vals.append((tns,si,th[:4].hex()))
+                          rem=(size-start)%stride if stride else None
+                          starts.append({'ext_eff':ext_eff,'trace_start':start,'stride_binary_ns':stride,'file_remainder':rem,'first10_trace_ns_si':vals})
+                  cand.append({'endian':e,'binary_ns':ns,'format':fmt,'revision_raw':rev,'fixed':fixed,'ext_raw':ext,'candidates':starts})
+              row={'key':k,'size':size,'candidates':cand};out.append(row);print(json.dumps(row,indent=2))
+          json.dump(out,open('parihaka_header_probe.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with: {name: parihaka-header-probe, path: parihaka_header_probe.json, retention-days: 14}
