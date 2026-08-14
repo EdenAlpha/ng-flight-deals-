@@ -1,0 +1,45 @@
+name: Imperial AR32 conditional mode recenter
+
+on:
+  pull_request:
+    paths:
+      - 'research/imperial_ar32_conditional_mode_recenter.py'
+      - '.github/workflows/imperial_ar32_conditional_mode_recenter.yml'
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run conditional mode recenter gate
+        run: python research/imperial_ar32_conditional_mode_recenter.py imperial.h5
+      - name: Surface compact result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_ar32_conditional_mode_recenter.json'))
+          for r in d['rows']:
+              b=r['best'];level='notice' if b['gain_vs_activity_control']>1 else 'warning'
+              print(f"::{level} title=K-mode-recenter {r['region']}::{b['mode_context']} bps={b['bps']:.5f}, activity={r['activity_control_bps']:.5f}, baseline={r['baseline_bps']:.5f}, gainAct={b['gain_vs_activity_control']:.6f}, Jzero={b['j_zero_fraction_tail']:.5f}, Kzero={b['k_zero_fraction_tail']:.5f}")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-ar32-conditional-mode-recenter
+          path: imperial_ar32_conditional_mode_recenter.json
+          retention-days: 7
