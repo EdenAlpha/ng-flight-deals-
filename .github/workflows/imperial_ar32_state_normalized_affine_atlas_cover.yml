@@ -1,0 +1,44 @@
+name: Imperial AR32 state-normalized affine atlas cover
+on:
+  pull_request:
+    branches: [imperial-ar32-state-normalized-residual-support]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy h5py pysz boto3 zstandard
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Build state-normalized procedural affine atlas
+        run: python research/imperial_ar32_state_normalized_affine_atlas_cover.py imperial.h5
+      - name: Surface compact result
+        if: always()
+        run: |
+          if [ -f imperial_ar32_state_normalized_affine_atlas_cover.json ]; then
+            python - <<'PY'
+          import json
+          d=json.load(open('imperial_ar32_state_normalized_affine_atlas_cover.json'))
+          keep=['atlas_coverage_fraction_exact_eps','direct_normalized_prefix_coverage_exact_eps','nominal_index_bps','two_x_target_bps','minimum_atlas_coverage_to_beat_2x_if_escapes_cost_sz3','nearest_exact_linf_median']
+          print(json.dumps({k:d.get(k) for k in keep},indent=2))
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-ar32-state-normalized-affine-atlas-cover
+          path: imperial_ar32_state_normalized_affine_atlas_cover.json
+          if-no-files-found: ignore
+          retention-days: 7
