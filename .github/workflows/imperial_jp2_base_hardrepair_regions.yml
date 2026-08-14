@@ -15,7 +15,19 @@ jobs:
       - name: Download Imperial
         run: python -c "import boto3;from botocore import UNSIGNED;from botocore.config import Config;boto3.client('s3',config=Config(signature_version=UNSIGNED)).download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')"
       - name: Run dense base plus hard repair
-        run: python research/imperial_jp2_base_hardrepair_regions.py imperial.h5
+        run: |
+          set +e
+          python research/imperial_jp2_base_hardrepair_regions.py imperial.h5 2>jp2_error.txt
+          rc=$?
+          if [ $rc -ne 0 ]; then
+            python - <<'PY'
+          import pathlib
+          s=pathlib.Path('jp2_error.txt').read_text(errors='replace').strip().splitlines()
+          msg=' | '.join(s[-8:]).replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+          print(f'::error title=JP2 repair traceback::{msg[:7000]}')
+          PY
+            exit $rc
+          fi
       - name: Surface compact result
         run: |
           python - <<'PY'
@@ -25,7 +37,11 @@ jobs:
             print(f"::notice title=JP2-repair {r['region']}::bytes={r['jp2_repair_bytes']}, bps={r['jp2_repair_bps']:.5f}, AR={r['arithmetic_bps']:.5f}, gainAR={r['gain_vs_arithmetic']:.6f}, gainSZ3={r['gain_vs_sz3']:.6f}, repair_density={r['mean_correction_density']:.5f}, base_fraction={r['base_byte_fraction']:.4f}, repair_fraction={r['correction_byte_fraction']:.4f}, rates={r['ratio_counts']}")
           PY
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: imperial-jp2-base-hardrepair-regions
-          path: imperial_jp2_base_hardrepair_regions.json
+          path: |
+            imperial_jp2_base_hardrepair_regions.json
+            jp2_error.txt
+          if-no-files-found: ignore
           retention-days: 7
