@@ -23,8 +23,23 @@ jobs:
           PY
       - name: Run exact stateful hybrid gate
         run: python research/imperial_stateful_hybrid_ar_hardbox_regions.py imperial.h5
+      - name: Surface compact hybrid result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_stateful_hybrid_ar_hardbox_regions.json'))
+          for r in d['rows']:
+              h=r['stateful_hybrid']; b=r['huber_full_arithmetic']
+              msg=(f"hybrid={h['bytes']} bytes ({h['bps']:.4f} bps), "
+                   f"huber={b['bytes']} bytes, gain_vs_huber={h['gain_vs_huber']:.6f}, "
+                   f"gain_vs_sz3={h['gain_vs_sz3']:.6f}, scalar_tiles={h['scalar_tiles']}, ar_tiles={h['ar_tiles']}")
+              print(f"::notice title=hybrid {r['region']}::{msg}")
+          PY
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: imperial-stateful-hybrid-ar-hardbox-regions
           path: imperial_stateful_hybrid_ar_hardbox_regions.json
+          if-no-files-found: ignore
           retention-days: 7
