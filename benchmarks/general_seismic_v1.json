@@ -1,0 +1,192 @@
+{
+  "name": "general-seismic-benchmark-v1",
+  "frozen": true,
+  "purpose": "Test whether the codec has a general, statistically significant advantage across independent large seismic surveys rather than favorable small patches.",
+  "selection_policy": {
+    "minimum_primary_test_size_gb": 5,
+    "whole_survey_threshold_gb": 25,
+    "large_survey_sampling": "For seismic payloads >25 GB, sort eligible seismic objects deterministically by canonical object/path name, form cumulative payload bytes, and select three disjoint complete-file spans centered near 10%, 50%, and 90% of cumulative bytes. Grow each span using complete files until it reaches at least 10 GB. Never choose spans using compression results, signal statistics, or visual inspection.",
+    "small_survey_sampling": "For seismic payloads <=25 GB and >=5 GB, use the complete seismic payload.",
+    "unit_weighting": "Each independent survey counts once in headline win-rate/median-gain statistics regardless of byte size. Also report a separate byte-weighted aggregate.",
+    "error_contract": "For each survey benchmark unit, epsilon = 0.10 * global standard deviation of all selected numeric seismic samples. Require max absolute reconstruction error <= epsilon for every sample.",
+    "payload_contract": "Benchmark numeric seismic amplitudes. File/container headers and acquisition metadata are excluded identically from all lossy codec byte counts; any codec-specific model/framing/selector bytes are counted.",
+    "no_retuning": "Codec design and global hyperparameter menu must be frozen before headline test results are examined. Dataset-specific model fitting is allowed only when the decoder can reproduce it from transmitted or already-decoded information and all required bytes are charged.",
+    "primary_metric": "baseline_compressed_bytes / our_compressed_bytes",
+    "headline_statistics": ["survey win rate", "median gain", "bootstrap 95% CI of median gain", "10th percentile gain", "byte-weighted gain"]
+  },
+  "datasets": [
+    {
+      "id": "land_soda_lake_2010",
+      "category": "land-reflection",
+      "name": "Soda Lake Geothermal Raw 3D and 3C Seismic Reflection Survey 2010",
+      "source_size_gb": 171.04,
+      "format": "SEG-Y",
+      "source": "s3://gdr-data-lake/soda_lake/raw_seismic/2010/v1.0.0/",
+      "test_policy": "3x >=10GB deterministic spans",
+      "public": true
+    },
+    {
+      "id": "land_teapot_dome_3d",
+      "category": "land-reflection",
+      "name": "Teapot Dome 3D raw unprocessed field shot gathers",
+      "source_size_gb": 8.0,
+      "format": "SEG-Y",
+      "source": "explicit public Teapot Dome S3 object",
+      "objects": ["s3://teapot/npr3_field.sgy"],
+      "test_policy": "complete raw unprocessed field SEG-Y",
+      "public": true,
+      "replacement_for": "land_stratton_3d",
+      "replacement_reason": "The exact complete public Stratton prestack CMP payload resolves to 4.29691644 GB, below the preregistered 5 GB minimum. Teapot Dome was a predeclared reserve candidate and was substituted before any generalization compression result was observed."
+    },
+    {
+      "id": "land_san_emidio_2021",
+      "category": "land-passive-nodal",
+      "name": "WHOLESCALE San Emidio Nevada 2021 raw level-0",
+      "source_size_gb": 466.0,
+      "format": "DLD/DataCube raw",
+      "source": "s3://gdr-data-lake/wholescale/2021_seismic/",
+      "include_regex": "(?i)level0",
+      "exclude_regex": "(?i)(gps|metadata|readme)",
+      "test_policy": "3x >=10GB deterministic spans from level-0 SmartSolo/DataCube raw data only",
+      "public": true,
+      "note": "Official OEDI/GDR description: level 0 contains 353 GB SmartSolo native DLD plus 113 GB DataCube native raw data; level1 SAC is processed and is explicitly excluded."
+    },
+    {
+      "id": "land_crescent_valley_2016",
+      "category": "land-passive-nodal",
+      "name": "Crescent Valley Nevada 2016",
+      "source_size_gb": 469.57,
+      "format": "SEGD",
+      "source": "s3://gdr-data-lake/wholescale/subter_seismic/crescent_valley/",
+      "test_policy": "3x >=10GB deterministic spans",
+      "public": true
+    },
+    {
+      "id": "marine_waka_3d",
+      "category": "marine-reflection",
+      "name": "Waka 3D New Zealand final migrated stack",
+      "source_size_gb": 24.0,
+      "format": "SEG-Y",
+      "source": "explicit public open.source.geoscience objects",
+      "objects": [
+        "s3://open.source.geoscience/open_data/newzealand/Cantebury_Basin/WAKA-3D/BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy.partaa",
+        "s3://open.source.geoscience/open_data/newzealand/Cantebury_Basin/WAKA-3D/BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy.partab",
+        "s3://open.source.geoscience/open_data/newzealand/Cantebury_Basin/WAKA-3D/BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy.partac",
+        "s3://open.source.geoscience/open_data/newzealand/Cantebury_Basin/WAKA-3D/BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy.partad",
+        "s3://open.source.geoscience/open_data/newzealand/Cantebury_Basin/WAKA-3D/BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy.partae"
+      ],
+      "assembly": "concatenate objects in listed order before SEG-Y parsing",
+      "test_policy": "complete volume",
+      "public": true
+    },
+    {
+      "id": "marine_parihaka_3d",
+      "category": "marine-reflection",
+      "name": "Parihaka 3D New Zealand full/near/mid/far PSTM stacks",
+      "source_size_gb": 18.8,
+      "format": "SEG-Y",
+      "source": "explicit public open.source.geoscience objects",
+      "objects": [
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_full_angle.sgy",
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_near_stack.sgy",
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_mid_stack.sgy",
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_far_stack.sgy"
+      ],
+      "test_policy": "all four complete PSTM volumes",
+      "public": true
+    },
+    {
+      "id": "marine_opunake_3d",
+      "category": "marine-reflection",
+      "name": "Opunake 3D New Zealand final stack",
+      "source_size_gb": 10.0,
+      "format": "SEG-Y",
+      "source": "explicit public open.source.geoscience object",
+      "objects": ["s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/OPUNAKE-3D/OPUNAKE3D-PR3461-FS.3D.Final_Stack.sgy"],
+      "test_policy": "complete volume",
+      "public": true
+    },
+    {
+      "id": "marine_tui_3d",
+      "category": "marine-reflection",
+      "name": "Tui 3D New Zealand migrated volume",
+      "source_size_gb": 9.0,
+      "format": "SEG-Y",
+      "source": "explicit public open.source.geoscience objects",
+      "objects": [
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/TUI3D-PR2830-MIG/PEP38460_SUBLINE-3751-4050_XLINES-756-3230_3D_MIGRATION_TVF.SGY",
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/TUI3D-PR2830-MIG/PEP38460_SUBLINE-4051-4500_XLINES-756-3230_3D_MIGRATION_TVF.SGY"
+      ],
+      "test_policy": "complete published migrated volume",
+      "public": true,
+      "replacement_for": "marine_penobscot_prestack"
+    },
+    {
+      "id": "marine_kahu_3d",
+      "category": "marine-reflection",
+      "name": "Kahu 3D New Zealand final migration",
+      "source_size_gb": 6.2,
+      "format": "SEG-Y",
+      "source": "explicit public open.source.geoscience object",
+      "objects": ["s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/KAHU-3D/KAHU-3D-PR3177-FM.3D.Final_Migration.sgy"],
+      "test_policy": "complete volume",
+      "public": true,
+      "replacement_for": "marine_bp_tiber_wats_decimated_raw"
+    },
+    {
+      "id": "das_imperial_valley_2020",
+      "category": "DAS-dark-fiber",
+      "name": "Imperial Valley Dark Fiber Continuous DAS",
+      "source_size_gb": 1090.0,
+      "format": "HDF5",
+      "source": "s3://gdr-data-lake/imperialvalleydas/",
+      "test_policy": "3x >=10GB deterministic temporal spans across the two-day acquisition",
+      "public": true
+    },
+    {
+      "id": "das_porotomo_brady_dash",
+      "category": "DAS-surface-geothermal",
+      "name": "PoroTomo Brady Horizontal DAS raw SEG-Y",
+      "source_size_gb": 46400.0,
+      "format": "SEG-Y",
+      "source": "s3://nrel-pds-porotomo/DAS/SEG-Y/DASH/",
+      "test_policy": "3x >=10GB deterministic temporal spans",
+      "public": true
+    },
+    {
+      "id": "das_forge_neubrex_2024",
+      "category": "DAS-downhole-geothermal",
+      "name": "Utah FORGE Neubrex Well 16B Continuous DAS April 2024",
+      "source_size_gb": 97480.0,
+      "format": "HDF5",
+      "source": "s3://gdr-data-lake/FORGE/DAS/april_2024/Neubrex/16b_continuous/",
+      "test_policy": "3x >=10GB deterministic temporal spans",
+      "public": true
+    },
+    {
+      "id": "das_egs_collab_exp2",
+      "category": "DAS-borehole-experimental",
+      "name": "EGS Collab Experiment 2 Distributed Fiber Optic Acoustic Data",
+      "source_size_gb": 212200.0,
+      "format": "HDF5/TDMS",
+      "source": "s3://gdr-data-lake/egs_collab/experiment_2/DAS/",
+      "test_policy": "3x >=10GB deterministic spans, stratified across interrogator subfolders",
+      "public": true
+    }
+  ],
+  "accessibility_revision": {
+    "date": "2026-08-14",
+    "reason": "Preflight before any generalization compression results exposed non-machine-fetchable marine entries and an undersized Stratton payload. Waka/Parihaka/Opunake were frozen to exact public objects; Penobscot/Tiber were replaced by predeclared Tui/Kahu reserves; Stratton was replaced by predeclared Teapot Dome reserve.",
+    "compression_results_seen_before_revision": false
+  },
+  "raw_payload_revision": {
+    "date": "2026-08-14",
+    "reason": "Audit of the successful preflight artifact showed San Emidio's broad prefix allowed processed level1 SAC objects into deterministic spans despite the manifest declaring raw level0. Before any generalization compression result, the manifest was corrected to include only level0 and exclude GPS/metadata. This enforces the originally stated raw-data contract rather than changing it.",
+    "compression_results_seen_before_revision": false
+  },
+  "reserve_candidates": [
+    "Stratton 3D South Texas prestack CMP gathers (4.29691644 GB; below frozen primary minimum)",
+    "Penobscot 3D prestack (101 GB; public torrent/OpendTect distribution, reserve if CI-safe endpoint is established)",
+    "BP Tiber WATS decimated raw (130 GB; no free online copy currently maintained according to SEG)"
+  ]
+}
