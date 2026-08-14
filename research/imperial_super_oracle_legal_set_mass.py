@@ -114,7 +114,11 @@ def region(region,c0,d,eps):
         rows.append(rr);print(json.dumps({'region':region,'candidate':rr},indent=2),flush=True)
 
     _,K,R,_,_,_=supero.oracle_k(Xfull);K=K[:C];R=R[:C]
-    ob,_,_,Kd=a.arithmetic(K)
+    oldc=getattr(a,'C',128);a.C=C
+    try:
+        ob,_,_,Kd=a.arithmetic(K)
+    finally:
+        a.C=oldc
     if not np.array_equal(Kd,K):raise RuntimeError((region,'oracle K decode'))
     me=float(np.max(np.abs(X-R)))
     if me>eps*(1+1e-12):raise RuntimeError((region,'oracle hard',me,eps))
