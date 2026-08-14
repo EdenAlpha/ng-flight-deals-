@@ -4,11 +4,14 @@
   "benchmark_manifest": "benchmarks/general_seismic_v1.json",
   "panel_contract": {
     "channels_per_panel": 128,
+    "time_samples_per_panel": 8192,
     "orientation": "channels_x_time",
+    "partition_rule": "Within each selected logical seismic file/member, preserve source trace/channel order. Split consecutive channels into groups of up to 128 and consecutive time samples into non-overlapping groups of up to 8192. Partial final channel/time groups are retained; no sample is dropped or duplicated.",
     "dtype": "preserve source integer/float semantics; engines may internally use float32/float64",
     "epsilon": "0.10 * global standard deviation of all selected numeric samples in the survey",
     "selector_scope": "per panel",
-    "selector_bytes": 1
+    "selector_bytes": 1,
+    "fair_baseline_rule": "Our portfolio and SZ3 receive exactly the same numeric panel partition and the same survey-global epsilon."
   },
   "selector": {
     "screen_samples": 4096,
@@ -18,83 +21,15 @@
     "note": "Land/marine/DAS labels never select a codec. The decoder receives the selected candidate id in the charged portfolio header."
   },
   "candidates": [
-    {
-      "id": 0,
-      "engine": "ar32_zsm",
-      "name": "Huber AR32 + zero/sign/Elias-gamma adaptive arithmetic",
-      "ar_order": 32,
-      "train_samples": 1024,
-      "huber_iterations": 6,
-      "zsm_window": 4,
-      "quantizer": "integer source: floor(2*epsilon) integer step and integer-rounded predictor; float source: nextafter(2*epsilon,0) floating step"
-    },
-    {
-      "id": 1,
-      "engine": "ar32_zsm",
-      "name": "Huber AR32 + zero/sign/Elias-gamma adaptive arithmetic",
-      "ar_order": 32,
-      "train_samples": 1024,
-      "huber_iterations": 6,
-      "zsm_window": 8,
-      "quantizer": "same as candidate 0"
-    },
-    {
-      "id": 2,
-      "engine": "ar32_zsm",
-      "name": "Huber AR32 + zero/sign/Elias-gamma adaptive arithmetic",
-      "ar_order": 32,
-      "train_samples": 1024,
-      "huber_iterations": 6,
-      "zsm_window": 64,
-      "quantizer": "same as candidate 0"
-    },
-    {
-      "id": 3,
-      "engine": "spectral_topn",
-      "name": "2D spectral Top-N + exact hard-bound correction",
-      "time_block": 512,
-      "fraction": 0.002
-    },
-    {
-      "id": 4,
-      "engine": "spectral_topn",
-      "name": "2D spectral Top-N + exact hard-bound correction",
-      "time_block": 512,
-      "fraction": 0.008
-    },
-    {
-      "id": 5,
-      "engine": "spectral_topn",
-      "name": "2D spectral Top-N + exact hard-bound correction",
-      "time_block": 1024,
-      "fraction": 0.004
-    },
-    {
-      "id": 6,
-      "engine": "spectral_topn",
-      "name": "2D spectral Top-N + exact hard-bound correction",
-      "time_block": 1024,
-      "fraction": 0.016
-    },
-    {
-      "id": 7,
-      "engine": "spectral_topn",
-      "name": "2D spectral Top-N + exact hard-bound correction",
-      "time_block": 2048,
-      "fraction": 0.008
-    }
+    {"id":0,"engine":"ar32_zsm","name":"Huber AR32 + zero/sign/Elias-gamma adaptive arithmetic","ar_order":32,"train_samples":1024,"huber_iterations":6,"zsm_window":4,"quantizer":"integer source: floor(2*epsilon) integer step and integer-rounded predictor; float source: nextafter(2*epsilon,0) floating step"},
+    {"id":1,"engine":"ar32_zsm","name":"Huber AR32 + zero/sign/Elias-gamma adaptive arithmetic","ar_order":32,"train_samples":1024,"huber_iterations":6,"zsm_window":8,"quantizer":"same as candidate 0"},
+    {"id":2,"engine":"ar32_zsm","name":"Huber AR32 + zero/sign/Elias-gamma adaptive arithmetic","ar_order":32,"train_samples":1024,"huber_iterations":6,"zsm_window":64,"quantizer":"same as candidate 0"},
+    {"id":3,"engine":"spectral_topn","name":"2D spectral Top-N + exact hard-bound correction","time_block":512,"fraction":0.002},
+    {"id":4,"engine":"spectral_topn","name":"2D spectral Top-N + exact hard-bound correction","time_block":512,"fraction":0.008},
+    {"id":5,"engine":"spectral_topn","name":"2D spectral Top-N + exact hard-bound correction","time_block":1024,"fraction":0.004},
+    {"id":6,"engine":"spectral_topn","name":"2D spectral Top-N + exact hard-bound correction","time_block":1024,"fraction":0.016},
+    {"id":7,"engine":"spectral_topn","name":"2D spectral Top-N + exact hard-bound correction","time_block":2048,"fraction":0.008}
   ],
-  "baseline": {
-    "primary": "SZ3 absolute-error mode",
-    "same_numeric_panels": true,
-    "same_epsilon": true
-  },
-  "validity": {
-    "required": [
-      "decode selected bitstream",
-      "reconstruct all numeric samples",
-      "max(abs(source-reconstruction)) <= epsilon",
-      "charge codec header/model/selector bytes"
-    ]
-  }
+  "baseline": {"primary":"SZ3 absolute-error mode","same_numeric_panels":true,"same_epsilon":true},
+  "validity": {"required":["decode selected bitstream","reconstruct all numeric samples","max(abs(source-reconstruction)) <= epsilon","charge codec header/model/selector bytes"]}
 }
