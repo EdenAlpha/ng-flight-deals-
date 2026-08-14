@@ -1,0 +1,155 @@
+{
+  "name": "general-seismic-benchmark-v1",
+  "frozen": true,
+  "purpose": "Test whether the codec has a general, statistically significant advantage across independent large seismic surveys rather than favorable small patches.",
+  "selection_policy": {
+    "minimum_primary_test_size_gb": 5,
+    "whole_survey_threshold_gb": 25,
+    "large_survey_sampling": "For seismic payloads >25 GB, sort eligible seismic objects deterministically by canonical object/path name, form cumulative payload bytes, and select three disjoint complete-file spans centered near 10%, 50%, and 90% of cumulative bytes. Grow each span using complete files until it reaches at least 10 GB. Never choose spans using compression results, signal statistics, or visual inspection.",
+    "small_survey_sampling": "For seismic payloads <=25 GB and >=5 GB, use the complete seismic payload.",
+    "unit_weighting": "Each independent survey counts once in headline win-rate/median-gain statistics regardless of byte size. Also report a separate byte-weighted aggregate.",
+    "error_contract": "For each survey benchmark unit, epsilon = 0.10 * global standard deviation of all selected numeric seismic samples. Require max absolute reconstruction error <= epsilon for every sample.",
+    "payload_contract": "Benchmark numeric seismic amplitudes. File/container headers and acquisition metadata are excluded identically from all lossy codec byte counts; any codec-specific model/framing/selector bytes are counted.",
+    "no_retuning": "Codec design and global hyperparameter menu must be frozen before headline test results are examined. Dataset-specific model fitting is allowed only when the decoder can reproduce it from transmitted or already-decoded information and all required bytes are charged.",
+    "primary_metric": "baseline_compressed_bytes / our_compressed_bytes",
+    "headline_statistics": ["survey win rate", "median gain", "bootstrap 95% CI of median gain", "10th percentile gain", "byte-weighted gain"]
+  },
+  "datasets": [
+    {
+      "id": "land_soda_lake_2010",
+      "category": "land-reflection",
+      "name": "Soda Lake Geothermal Raw 3D and 3C Seismic Reflection Survey 2010",
+      "source_size_gb": 171.04,
+      "format": "SEG-Y",
+      "source": "s3://gdr-data-lake/soda_lake/raw_seismic/2010/v1.0.0/",
+      "test_policy": "3x >=10GB deterministic spans",
+      "public": true
+    },
+    {
+      "id": "land_stratton_3d",
+      "category": "land-reflection",
+      "name": "Stratton 3D South Texas",
+      "source_size_gb": 6.0,
+      "format": "SEG-Y",
+      "source": "s3://open.source.geoscience/open_data/stratton/",
+      "test_policy": "complete prestack gathers",
+      "public": true
+    },
+    {
+      "id": "land_san_emidio_2021",
+      "category": "land-passive-nodal",
+      "name": "WHOLESCALE San Emidio Nevada 2021",
+      "source_size_gb": 466.0,
+      "format": "DLD/DataCube raw",
+      "source": "s3://gdr-data-lake/wholescale/2021_seismic/",
+      "test_policy": "3x >=10GB deterministic raw-data spans",
+      "public": true,
+      "note": "353 GB SmartSolo + 113 GB DataCube raw seismic; processed SAC is not used for primary raw benchmark."
+    },
+    {
+      "id": "land_crescent_valley_2016",
+      "category": "land-passive-nodal",
+      "name": "Crescent Valley Nevada 2016",
+      "source_size_gb": 469.57,
+      "format": "SEGD",
+      "source": "s3://gdr-data-lake/wholescale/subter_seismic/crescent_valley/",
+      "test_policy": "3x >=10GB deterministic spans",
+      "public": true
+    },
+    {
+      "id": "marine_waka_3d",
+      "category": "marine-reflection",
+      "name": "Waka 3D New Zealand",
+      "source_size_gb": 24.0,
+      "format": "SEG-Y",
+      "source": "open.source.geoscience WAKA-3D final stack",
+      "test_policy": "complete volume",
+      "public": true
+    },
+    {
+      "id": "marine_parihaka_3d",
+      "category": "marine-reflection",
+      "name": "Parihaka 3D New Zealand full/near/mid/far PSTM stacks",
+      "source_size_gb": 18.8,
+      "format": "SEG-Y",
+      "source": "open.source.geoscience PARIHAKA-3D",
+      "test_policy": "all four 4.7GB volumes",
+      "public": true
+    },
+    {
+      "id": "marine_opunake_3d",
+      "category": "marine-reflection",
+      "name": "Opunake 3D New Zealand",
+      "source_size_gb": 10.0,
+      "format": "SEG-Y",
+      "source": "open.source.geoscience OPUNAKE-3D",
+      "test_policy": "complete volume",
+      "public": true
+    },
+    {
+      "id": "marine_penobscot_prestack",
+      "category": "marine-reflection-prestack",
+      "name": "Penobscot 3D Prestack Nova Scotia",
+      "source_size_gb": 101.0,
+      "format": "SEG-Y/Open Seismic Repository",
+      "source": "dGB Open Seismic Repository Penobscot prestack",
+      "test_policy": "3x >=10GB deterministic spans",
+      "public": true
+    },
+    {
+      "id": "marine_bp_tiber_wats_decimated_raw",
+      "category": "marine-reflection-raw",
+      "name": "BP 2010 Tiber WATS decimated small-area raw dataset",
+      "source_size_gb": 130.0,
+      "format": "seismic survey files",
+      "source": "SEG open-data Tiber WATS distribution",
+      "test_policy": "3x >=10GB deterministic spans",
+      "public": true
+    },
+    {
+      "id": "das_imperial_valley_2020",
+      "category": "DAS-dark-fiber",
+      "name": "Imperial Valley Dark Fiber Continuous DAS",
+      "source_size_gb": 1090.0,
+      "format": "HDF5",
+      "source": "s3://gdr-data-lake/imperialvalleydas/",
+      "test_policy": "3x >=10GB deterministic temporal spans across the two-day acquisition",
+      "public": true
+    },
+    {
+      "id": "das_porotomo_brady_dash",
+      "category": "DAS-surface-geothermal",
+      "name": "PoroTomo Brady Horizontal DAS raw SEG-Y",
+      "source_size_gb": 46400.0,
+      "format": "SEG-Y",
+      "source": "s3://nrel-pds-porotomo/DAS/SEG-Y/DASH/",
+      "test_policy": "3x >=10GB deterministic temporal spans",
+      "public": true
+    },
+    {
+      "id": "das_forge_neubrex_2024",
+      "category": "DAS-downhole-geothermal",
+      "name": "Utah FORGE Neubrex Well 16B Continuous DAS April 2024",
+      "source_size_gb": 97480.0,
+      "format": "HDF5",
+      "source": "s3://gdr-data-lake/FORGE/DAS/april_2024/Neubrex/16b_continuous/",
+      "test_policy": "3x >=10GB deterministic temporal spans",
+      "public": true
+    },
+    {
+      "id": "das_egs_collab_exp2",
+      "category": "DAS-borehole-experimental",
+      "name": "EGS Collab Experiment 2 Distributed Fiber Optic Acoustic Data",
+      "source_size_gb": 212200.0,
+      "format": "HDF5/TDMS",
+      "source": "s3://gdr-data-lake/egs_collab/experiment_2/DAS/",
+      "test_policy": "3x >=10GB deterministic spans, stratified across interrogator subfolders",
+      "public": true
+    }
+  ],
+  "reserve_candidates": [
+    "Teapot Dome 3D raw/prestack land survey (add after exact downloadable payload size is audited)",
+    "Tui 3D marine full volume (~9 GB)",
+    "Kahu 3D marine full volume (6.2 GB)"
+  ]
+}
