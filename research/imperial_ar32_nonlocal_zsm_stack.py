@@ -91,8 +91,6 @@ def main(path):
             if not np.array_equal(s.decode_model(Knd,hu,ids,co,strength),R) or not np.array_equal(s.decode_model(Kmd,hu,ids,co,strength),R):raise RuntimeError((region,'existing replay'))
             zc=[]
             for W in WINDOWS:
-                bb,nbit=encode_zsm(K);Kd=decode_zsm(bb,nbit,W) if False else None
-                # Encode/decode again with the selected W; explicit form avoids any hidden state.
                 bb,nbit=encode_zsm(K,W);Kd=decode_zsm(bb,nbit,W)
                 if not np.array_equal(Kd,K):raise RuntimeError((region,W,'zsm K'))
                 Rd=s.decode_model(Kd,hu,ids,co,strength)
