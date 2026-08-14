@@ -1,0 +1,45 @@
+name: Imperial AR32 nonlocal ZSM stack
+
+on:
+  pull_request:
+    paths:
+      - 'research/imperial_ar32_nonlocal_zsm_stack.py'
+      - '.github/workflows/imperial_ar32_nonlocal_zsm_stack.yml'
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run nonlocal ZSM stack
+        run: python research/imperial_ar32_nonlocal_zsm_stack.py imperial.h5
+      - name: Surface compact result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_ar32_nonlocal_zsm_stack.json'))
+          for r in d['rows']:
+              b=r['nonlocal_zsm'];level='notice' if r['gain_zsm_vs_mixer']>1 else 'warning'
+              print(f"::{level} title=nonlocal+ZSM {r['region']}::zsm={b['bps']:.5f} W={b['window']}, mixer={r['nonlocal_mixer_bps']:.5f}, nonlocal={r['nonlocal_normal_bps']:.5f}, baseline={r['baseline_bps']:.5f}, SZ3={r['sz3_bps']:.5f}, gainMixer={r['gain_zsm_vs_mixer']:.6f}, gainBase={r['gain_zsm_vs_baseline']:.6f}")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-ar32-nonlocal-zsm-stack
+          path: imperial_ar32_nonlocal_zsm_stack.json
+          retention-days: 7
