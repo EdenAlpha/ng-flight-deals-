@@ -1,0 +1,31 @@
+name: Imperial AR32 nonlocal activity stack
+on:
+  pull_request:
+    branches: [imperial-huber-ar32-coldstart-arithmetic-regions]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: python -c "import boto3;from botocore import UNSIGNED;from botocore.config import Config;boto3.client('s3',config=Config(signature_version=UNSIGNED)).download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')"
+      - name: Run proven-mechanism stack
+        run: python research/imperial_ar32_nonlocal_activity_stack.py imperial.h5
+      - name: Surface compact result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_ar32_nonlocal_activity_stack.json'))
+          for r in d['rows']:
+            print(f"::notice title=nonlocal+activity {r['region']}::stack={r['stack_bps']:.5f} bps, base={r['baseline_bps']:.5f}, act={r['baseline_activity_bps']:.5f}, nonlocal={r['nonlocal_normal_bps']:.5f}, SZ3={r['sz3_bps']:.5f}, gainBase={r['gain_stack_vs_baseline']:.6f}, gainSZ3={r['gain_stack_vs_sz3']:.6f}, taps={r['taps']}, strength={r['strength']}")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-ar32-nonlocal-activity-stack
+          path: imperial_ar32_nonlocal_activity_stack.json
+          retention-days: 7
