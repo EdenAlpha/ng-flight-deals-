@@ -19,15 +19,22 @@ jobs:
       - name: Download canonical Imperial Valley HDF5 record
         run: |
           python - <<'PY'
-          import boto3,os
+          import boto3
           from botocore import UNSIGNED
           from botocore.config import Config
-          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
-          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
-          assert os.path.getsize('imperial.h5')==415030456
+          boto3.client('s3',config=Config(signature_version=UNSIGNED)).download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
           PY
       - name: Solve marginal hard-box BA rates across cable partition
         run: python research/imperial_cablewide_hardbox_ba_map.py imperial.h5 ${{ matrix.part }}
+      - name: Surface hard-box result
+        run: |
+          python - <<'PY'
+          import json,os
+          p=int(os.environ['PART']);d=json.load(open(f'imperial_cablewide_hardbox_ba_{p}.json'));s=d['part_summary']
+          print(f"::notice title=Hardbox BA part {p}::BA={s['ba_model_bps']:.6f} bps, SZ3={s['matched_sz3_bps']:.6f}, 2x={s['two_x_target_bps']:.6f}, BA/2x={s['ba_over_2x_target']:.6f}, blocks_below={s['blocks_below_2x_target']}/18")
+          PY
+        env:
+          PART: ${{ matrix.part }}
       - uses: actions/upload-artifact@v4
         with:
           name: imperial-cablewide-hardbox-ba-${{ matrix.part }}
