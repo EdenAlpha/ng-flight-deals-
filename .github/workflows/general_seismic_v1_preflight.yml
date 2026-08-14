@@ -1,0 +1,42 @@
+name: General seismic benchmark v1 preflight
+
+on:
+  pull_request:
+    branches: [ imperial-ar32-nonlocal-zsm-stack ]
+    paths:
+      - 'benchmarks/general_seismic_v1.json'
+      - 'research/general_seismic_v1_preflight.py'
+      - '.github/workflows/general_seismic_v1_preflight.yml'
+  workflow_dispatch:
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install inventory dependency
+        run: pip install --quiet boto3
+      - name: Resolve frozen S3 object spans
+        run: python research/general_seismic_v1_preflight.py benchmarks/general_seismic_v1.json
+      - name: Surface selected GB totals
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          p='general_seismic_v1_preflight.json'
+          if not os.path.exists(p): raise SystemExit('preflight result not created')
+          x=json.load(open(p))
+          for d in x['datasets']:
+              print(f"{d['id']:34s} status={d['status']:26s} eligible_GB={d.get('eligible_gb',0):10.3f} selected_GB={d.get('selected_gb',0):10.3f}")
+          print('TOTAL_SELECTED_GB',sum(d.get('selected_gb',0) for d in x['datasets']))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: general-seismic-v1-preflight
+          path: general_seismic_v1_preflight.json
+          if-no-files-found: error
