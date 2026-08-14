@@ -42,39 +42,43 @@ jobs:
                   if 'segd' in n.lower() or 'trace' in n.lower():
                       x=getattr(m,n)
                       if inspect.isclass(x) or inspect.isfunction(x):
-                          hits.append((mn,n,str(inspect.signature(x)) if callable(x) else ''))
+                          try:sig=str(inspect.signature(x))
+                          except Exception:sig='?'
+                          hits.append((mn,n,sig))
           print('API_HITS',hits)
-          # Try constructor-like candidates deterministically.
           opened=None;errors=[]
-          for mn,n,sig in hits:
-              if n.lower() not in ('segdfile','seg_d_file','read_segd','readsegd','open_segd'):continue
-              try:
-                  x=getattr(importlib.import_module(mn),n)
-                  obj=x('crescent.sgd')
-                  opened=(mn,n,obj);break
-              except Exception as e:errors.append((mn,n,repr(e)))
+          preferred=[h for h in hits if h[1].lower() in ('segdfile','seg_d_file','read_segd','readsegd','open_segd')]
+          for mn,n,sig in preferred:
+              x=getattr(importlib.import_module(mn),n)
+              for args in [('crescent.sgd',), (open('crescent.sgd','rb'),)]:
+                  try:
+                      obj=x(*args);opened=(mn,n,obj);break
+                  except Exception as e:errors.append((mn,n,type(args[0]).__name__,repr(e)))
+              if opened:break
           print('OPEN_ERRORS',errors)
           if opened is None:
-              # Print compact source heads of likely modules for one-step API correction.
               for mn in mods:
-                  if 'segd' in mn.lower() or 'file' in mn.lower():
+                  if mn.endswith('.segdfile'):
                       try:
                           src=inspect.getsource(importlib.import_module(mn))
-                          print('SOURCE',mn,src[:8000])
-                      except Exception:pass
+                          print('SOURCE',mn,src[:16000])
+                      except Exception as e:print('SOURCE_FAIL',mn,repr(e))
               raise SystemExit('no constructor candidate opened Crescent')
           mn,n,obj=opened
           print('OPENED',mn,n,type(obj))
           attrs=[a for a in dir(obj) if not a.startswith('_')]
           print('ATTRS',attrs)
+          found=[]
           for a in attrs:
-              if any(q in a.lower() for q in ('trace','channel','data','revision','format')):
+              if any(q in a.lower() for q in ('trace','channel','data','revision','format','block')):
                   try:
                       v=getattr(obj,a)
-                      if callable(v):continue
-                      print('FIELD',a,type(v),repr(v)[:1000])
+                      if callable(v):
+                          print('METHOD',a)
+                      else:
+                          print('FIELD',a,type(v),repr(v)[:2000]);found.append((a,type(v).__name__,repr(v)[:500]))
                   except Exception as e:print('FIELD_FAIL',a,repr(e))
-          json.dump({'opened_module':mn,'opened_name':n,'attrs':attrs},open('segd_v2_gate.json','w'),indent=2)
+          json.dump({'opened_module':mn,'opened_name':n,'attrs':attrs,'fields':found},open('segd_v2_gate.json','w'),indent=2)
           PY
       - uses: actions/upload-artifact@v4
         if: always()
