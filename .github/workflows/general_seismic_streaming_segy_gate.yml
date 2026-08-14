@@ -1,0 +1,53 @@
+name: General seismic streaming SEG-Y gate
+
+on:
+  pull_request:
+    branches: [ general-seismic-benchmark-v1 ]
+  workflow_dispatch:
+
+permissions: {contents: read}
+
+jobs:
+  streaming-segy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy boto3 segyio
+      - name: Download one real Soda Lake SEG-Y
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          bucket='gdr-data-lake';prefix='soda_lake/raw_seismic/2010/v1.0.0/'
+          objs=[]
+          for p in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix=prefix):
+              for o in p.get('Contents',[]):
+                  k=o['Key'];n=int(o['Size'])
+                  if k.lower().endswith(('.sgy','.segy','.seg')) and n>1_000_000:objs.append((n,k))
+          n,k=min(objs);print('OBJECT',k,n);s3.download_file(bucket,k,'gate.sgy')
+          PY
+      - name: Require exact numeric agreement with segyio
+        env:
+          PYTHONPATH: research
+        run: |
+          python - <<'PY'
+          import json,numpy as np,segyio
+          from general_seismic_streaming_segy import local_panels
+          P,meta=next(local_panels('gate.sgy',channels=128,max_panels=1))
+          with segyio.open('gate.sgy','r',ignore_geometry=True) as f:
+              n=min(128,int(f.tracecount));Q=np.asarray([np.asarray(f.trace[i],dtype=np.float32) for i in range(n)],dtype=np.float32)
+          assert P.shape==Q.shape,(P.shape,Q.shape,meta)
+          d=np.abs(P.astype(np.float64)-Q.astype(np.float64));mx=float(np.nanmax(d));neq=int(np.count_nonzero(P!=Q))
+          print('META',meta);print('SHAPE',P.shape,'MAX_ABS_DIFF',mx,'UNEQUAL',neq)
+          assert np.array_equal(P,Q),{'max_abs_diff':mx,'unequal':neq,'meta':meta}
+          json.dump({'meta':meta,'shape':list(P.shape),'max_abs_diff':mx,'unequal':neq},open('streaming_segy_gate.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: general-seismic-streaming-segy-gate
+          path: streaming_segy_gate.json
