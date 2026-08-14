@@ -23,6 +23,19 @@ jobs:
           PY
       - name: Run trellis/noise-shaping gate
         run: python research/run_imperial_huber_ar32_trellis_debug.py imperial.h5
+      - name: Surface compact trellis result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_huber_ar32_trellis_quantizer.json'))
+          for r in d['rows']:
+              b=r['best']
+              msg=(f"best_step={b['step']}, trellis={b['trellis_bytes']} bytes ({b['trellis_bps']:.4f} bps), "
+                   f"gain_vs_same_step_greedy={b['gain_trellis_vs_same_step_greedy']:.6f}, "
+                   f"gain_vs_step267={b['gain_vs_trellis_step267']:.6f}, gain_vs_sz3={b['gain_trellis_vs_sz3']:.6f}")
+              print(f"::notice title=trellis {r['region']}::{msg}")
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
