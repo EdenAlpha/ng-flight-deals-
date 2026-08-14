@@ -1,0 +1,44 @@
+name: Imperial maximal hardbox interval runs
+on:
+  pull_request:
+    branches: [imperial-huber-ar32-coldstart-arithmetic-regions]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run maximal legal interval segmentation
+        run: python research/imperial_maximal_hardbox_interval_runs.py imperial.h5
+      - name: Surface compact result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_maximal_hardbox_interval_runs.json'))
+          for r in d['rows']:
+              msg=(f"bps={r['bps']:.5f}, step267={r['step267_bps']:.5f}, "
+                   f"gain267={r['gain_vs_step267']:.6f}, gainSZ3={r['gain_vs_sz3']:.6f}, "
+                   f"mean_run={r['mean_run']:.3f}, median={r['median_run']:.1f}, "
+                   f"p90={r['p90_run']:.1f}, p99={r['p99_run']:.1f}, max={r['max_run']}, "
+                   f"ratio2x={r['ratio_to_2x_sz3_target']:.6f}")
+              print(f"::notice title=interval-run {r['region']}::{msg}")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-maximal-hardbox-interval-runs
+          path: imperial_maximal_hardbox_interval_runs.json
+          retention-days: 7
