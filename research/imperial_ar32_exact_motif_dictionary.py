@@ -24,7 +24,9 @@ def variant(K,co,L,M):
  # Decode exact container components.
  dd=np.frombuffer(ZD.decompress(dblob),'<i2').reshape(mm,L).astype(np.int32) if mm else np.empty((0,L),np.int32);ed=np.frombuffer(ZD.decompress(eblob),'<i2').reshape(-1,L).astype(np.int32)
  if method=='arithmetic':
-  if not np.array_equal(Id,ids):raise RuntimeError(('id arithmetic',L,M));ID=Id
+  if not np.array_equal(Id,ids):
+   raise RuntimeError(('id arithmetic',L,M))
+  ID=Id
  elif method=='zstd_channel':ID=np.frombuffer(ZD.decompress(izc),'<u2').reshape(C,nb).astype(np.int32)
  else:ID=np.frombuffer(ZD.decompress(izt),'<u2').reshape(nb,C).T.astype(np.int32)
  if not np.array_equal(ID,ids):raise RuntimeError(('id decode',L,M,method))
