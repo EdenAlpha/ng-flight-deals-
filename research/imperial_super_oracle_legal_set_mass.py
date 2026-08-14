@@ -122,14 +122,20 @@ def region(region,c0,d,eps):
     if not np.array_equal(Kd,K):raise RuntimeError((region,'oracle K decode'))
     me=float(np.max(np.abs(X-R)))
     if me>eps*(1+1e-12):raise RuntimeError((region,'oracle hard',me,eps))
-    sz=0
+
+    # Benchmark against the normal 128-channel shape. The DP models only 8
+    # channels for tractability, but using an 8-channel SZ3 denominator badly
+    # inflates the apparent 2x target with tiny-shape overhead.
+    sz128=0
     for t0 in range(0,NT,TB):
-        n,_=a.m.szrun(X[:,t0:min(t0+TB,NT)],eps);sz+=int(n)
-    target_bps=(8*sz/X.size)/2.0
-    for r in rows:r['ratio_to_local_2x_target']=float(r['legal_set_mass_bps']/target_bps)
+        n,_=a.m.szrun(Xfull[:,t0:min(t0+TB,NT)],eps);sz128+=int(n)
+    sz128_bps=8*sz128/Xfull.size
+    target_bps=sz128_bps/2.0
+    for r in rows:r['ratio_to_128ch_2x_target']=float(r['legal_set_mass_bps']/target_bps)
     best=min(rows,key=lambda r:r['legal_set_mass_bps'])
-    return {'region':region,'c0':c0,'channels':C,'samples':int(X.size),'eps':float(eps),'sz3_bps':8*sz/X.size,'local_2x_target_bps':target_bps,
-            'super_oracle_step267_bps':8*ob/X.size,'super_oracle_maxerr':me,'best':best,'candidates':rows}
+    return {'region':region,'c0':c0,'modeled_channels':C,'benchmark_channels':128,'modeled_samples':int(X.size),'eps':float(eps),
+            'sz3_128ch_bps':sz128_bps,'target_2x_128ch_bps':target_bps,
+            'super_oracle_step267_8ch_bps':8*ob/X.size,'super_oracle_maxerr':me,'best':best,'candidates':rows}
 
 
 def main(path):
@@ -137,6 +143,6 @@ def main(path):
         d=f['Acoustic'];_,gstd=a.m.stats(d);eps=.1*gstd
         rows=[region(name,c0,d,eps) for name,c0 in REGIONS]
     for r in rows:print(json.dumps({'summary':r},indent=2),flush=True)
-    json.dump({'rows':rows,'scope':'Extremely generous legal-set probability-mass ceiling. The predictor is the impossible PR469 true-past/true-future/all-other-sensors target-fitted predictor and is supplied free. For each dense reconstruction lattice step, a per-channel order-2 categorical backoff prior is trained on the COMPLETE target nearest-K sequence and supplied free. Exact forward dynamic programming sums the probability of EVERY K sequence whose reconstruction lies in every unchanged +/-epsilon interval. This is an existence-rate ceiling, not a constructive byte codec. If even this target-trained free-model/free-predictor set mass stays above local 2x SZ3 on hard Imperial, ordinary dense-lattice legal-set coding cannot supply the missing factor. No AI. Draft/do not merge.'},open('imperial_super_oracle_legal_set_mass.json','w'),indent=2)
+    json.dump({'rows':rows,'scope':'Extremely generous legal-set probability-mass ceiling. The predictor is the impossible PR469 true-past/true-future/all-other-sensors target-fitted predictor and is supplied free. Exact DP is run on 8 channels for tractability, but all 2x comparisons use matched 128-channel SZ3 to avoid tiny-shape overhead bias. For each dense reconstruction lattice step, a per-channel order-2 categorical backoff prior is trained on the COMPLETE target nearest-K sequence and supplied free. Exact forward dynamic programming sums the probability of EVERY legal K sequence whose reconstruction lies in every unchanged +/-epsilon interval. This is an existence-rate ceiling, not a constructive byte codec. No AI. Draft/do not merge.'},open('imperial_super_oracle_legal_set_mass.json','w'),indent=2)
 
 if __name__=='__main__':main(sys.argv[1])
