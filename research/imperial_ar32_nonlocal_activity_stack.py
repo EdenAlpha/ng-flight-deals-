@@ -4,7 +4,7 @@ import imperial_huber_ar32_coldstart_arithmetic_regions as a
 import imperial_ar32_nonlocal_residual_stencil as s
 
 C=128;NT=8192;TB=1024;W=8
-REGIONS=(('hard',512),('easy',2304))
+REGIONS=(('hard',512),('easy',2304),('medium',4608),('far',6784))
 
 def activity(sumabs,count):
     if count<=0:return 0
@@ -59,5 +59,5 @@ def main(path):
             sz=0
             for t0 in range(0,NT,TB):z,_=a.m.szrun(X[:,t0:t0+TB],eps);sz+=int(z)
             row={'region':region,'c0':c0,'samples':int(X.size),'sz3_bytes':sz,'sz3_bps':8*sz/X.size,'baseline_bytes':int(base),'baseline_bps':8*base/X.size,'baseline_activity_bytes':int(base_act),'baseline_activity_bps':8*base_act/X.size,'nonlocal_normal_bytes':int(normal),'nonlocal_normal_bps':8*normal/X.size,'stack_bytes':int(activity_bytes),'stack_bps':8*activity_bytes/X.size,'gain_stack_vs_baseline':base/activity_bytes,'gain_stack_vs_nonlocal':normal/activity_bytes,'gain_stack_vs_activity_only':base_act/activity_bytes,'gain_stack_vs_sz3':sz/activity_bytes,'taps':int(len(ids)),'strength':float(strength),'tap_ids':[int(i) for i in ids],'tap_offsets':[list(s.BANK[int(i)]) for i in ids],'train_rmse_k':float(trmse),'k_zero_fraction':float(np.mean(K==0)),'k_std':float(K.std()),'maxerr':me};rows.append(row);print(json.dumps(row,indent=2),flush=True)
-        json.dump({'global_std':gstd,'eps':eps,'rows':rows,'scope':'Direct stack of two independently positive mechanisms on hard/easy Imperial: the stabilized prefix-trained bounded nonlocal residual stencil from PR #432 and the decoder-known rolling 8-sample activity6 arithmetic context from PR #434. The nonlocal model is selected only by the same exact incumbent backend screen used in #432, preventing activity-context overfitting. Its exact K is then encoded both with ordinary cold-start arithmetic and activity6 arithmetic. All nonlocal tap IDs/float32 coefficients/framing are charged, exact K is decoded, the full recursive source is regenerated, and unchanged max error is verified. Baseline AR32, activity-only, nonlocal-only, combined stack and matched SZ3 are all reported. No AI.'},open('imperial_ar32_nonlocal_activity_stack.json','w'),indent=2)
+        json.dump({'global_std':gstd,'eps':eps,'rows':rows,'scope':'Four-regime promotion of the two independently positive mechanisms proven in PR #442: stabilized prefix-trained bounded nonlocal residual stencil plus decoder-known rolling 8-sample activity6 arithmetic. Hard/easy/medium/far 128x8192 regions are run identically. The nonlocal model is selected only by the exact incumbent-backend screen, then exact K is encoded with ordinary and activity-conditioned cold-start arithmetic. All tap IDs/float32 coefficients/framing are charged; exact K is decoded, full recursive source replay and unchanged max-error verification are mandatory, with matched SZ3 and activity-only/nonlocal-only controls. No AI.'},open('imperial_ar32_nonlocal_activity_stack.json','w'),indent=2)
 if __name__=='__main__':main(sys.argv[1])
