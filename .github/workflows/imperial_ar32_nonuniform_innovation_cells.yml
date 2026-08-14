@@ -1,0 +1,48 @@
+name: Imperial AR32 nonuniform innovation cells
+on:
+  pull_request:
+    branches: [imperial-huber-ar32-coldstart-arithmetic-regions]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run executable nonuniform-cell gate
+        run: python research/imperial_ar32_nonuniform_innovation_cells.py imperial.h5
+      - name: Surface compact result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_ar32_nonuniform_innovation_cells.json'))
+          for r in d['rows']:
+              b=r['best'];msg=(f"best={b['label']}, nonuniform={b['bytes']} bytes ({b['bps']:.5f} bps), "
+                   f"step267={r['step267_arithmetic_bps']:.5f} bps, SZ3={r['sz3_bps']:.5f} bps, "
+                   f"gain267={b['gain_vs_step267_arithmetic']:.6f}, gainSZ3={b['gain_vs_sz3']:.6f}, "
+                   f"ratio2x={b['ratio_to_2x_sz3_target']:.6f}, model={b['partition_model_bytes']} bytes, H0={b['symbol_h0_bps']:.5f}")
+              level='notice' if b['gain_vs_step267_arithmetic']>1 else 'warning'
+              print(f"::{level} title=nonuniform innovation {r['region']}::{msg}")
+              for c in r['candidates']:
+                  print(f"::notice title={r['region']} {c['label']}::bps={c['bps']:.5f}, gain267={c['gain_vs_step267_arithmetic']:.6f}, H0={c['symbol_h0_bps']:.5f}, model={c['partition_model_bytes']}")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-ar32-nonuniform-innovation-cells
+          path: imperial_ar32_nonuniform_innovation_cells.json
+          if-no-files-found: ignore
+          retention-days: 7
