@@ -1,0 +1,45 @@
+name: Imperial AR32 PPMd backend
+on:
+  pull_request:
+    branches: [imperial-huber-ar32-coldstart-arithmetic-regions]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install PPMd-capable 7z and Python deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+          pip install --quiet numpy h5py zstandard pysz boto3
+          7z i | head -20
+      - name: Fetch Imperial
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run PPMd backend gate
+        run: python research/imperial_ar32_ppmd_backend.py imperial.h5
+      - name: Surface result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_ar32_ppmd_backend.json'))
+          for r in d['rows']:
+            b=r['best']
+            print(f"::notice title=PPMd {r['region']}::{b['layout']}, bps={b['bps']:.5f}, step267={r['step267_bps']:.5f}, gain={b['gain_vs_step267']:.6f}, gainSZ3={b['gain_vs_sz3']:.6f}, ratio2x={b['ratio_to_2x']:.6f}")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-ar32-ppmd-backend
+          path: imperial_ar32_ppmd_backend.json
+          retention-days: 7
