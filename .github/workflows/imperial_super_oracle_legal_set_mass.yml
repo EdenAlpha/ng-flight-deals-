@@ -36,7 +36,7 @@ jobs:
           d=json.load(open('imperial_super_oracle_legal_set_mass.json'))
           for r in d['rows']:
               b=r['best']
-              print(f"::notice title=legal-set super ceiling {r['region']}::step={b['step']}, setMass={b['legal_set_mass_bps']:.5f} bps, nearestModel={b['nearest_model_bps']:.5f}, MAP={b['map_model_bps']:.5f}, super267={r['super_oracle_step267_bps']:.5f}, target2x={r['local_2x_target_bps']:.5f}, ratio2x={b['ratio_to_local_2x_target']:.5f}, legalMean={b['mean_legal_states']:.3f}, multi={b['multi_fraction']:.3f}")
+              print(f"::notice title=legal-set super ceiling {r['region']}::step={b['step']}, setMass={b['legal_set_mass_bps']:.5f} bps, nearestModel={b['nearest_model_bps']:.5f}, MAP={b['map_model_bps']:.5f}, super267={r['super_oracle_step267_8ch_bps']:.5f}, target2x128={r['target_2x_128ch_bps']:.5f}, ratio2x128={b['ratio_to_128ch_2x_target']:.5f}, legalMean={b['mean_legal_states']:.3f}, multi={b['multi_fraction']:.3f}")
           PY
       - uses: actions/upload-artifact@v4
         with:
