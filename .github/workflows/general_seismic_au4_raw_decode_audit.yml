@@ -1,0 +1,113 @@
+name: General seismic AU4 raw decode audit
+
+on:
+  pull_request:
+    branches: [ general-seismic-benchmark-v1 ]
+  workflow_dispatch:
+
+permissions: {contents: read}
+
+jobs:
+  au4-decode:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - run: pip install --quiet boto3 obspy numpy
+      - name: Install official GIPPtools
+        run: |
+          curl -fL --retry 4 -o gipptools.tar.gz https://media.gfz.de/gfz/sec22/gipptools/gipptools-2026.167-unix.tar.gz
+          mkdir gipptools; tar -xzf gipptools.tar.gz -C gipptools --strip-components=1
+          CUBE2MSEED=$(find "$PWD/gipptools" -type f -name cube2mseed | head -1)
+          test -n "$CUBE2MSEED"; chmod +x "$CUBE2MSEED"; echo "CUBE2MSEED=$CUBE2MSEED" >> "$GITHUB_ENV"
+          "$CUBE2MSEED" --help > cube2mseed_help.txt 2>&1 || true
+          grep -Ei 'resampl|fringe|encoding' cube2mseed_help.txt || true
+      - name: Extract one public AU4 member without reading any benchmark result
+        run: |
+          python - <<'PY'
+          import boto3,re,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED,retries={'max_attempts':10}))
+          b='gdr-data-lake';p='wholescale/2021_seismic/'
+          keys=[];tok=None
+          while True:
+              kw={'Bucket':b,'Prefix':p,'MaxKeys':1000}
+              if tok:kw['ContinuationToken']=tok
+              r=s3.list_objects_v2(**kw);keys += [o['Key'] for o in r.get('Contents',[]) if 'datacube' in o['Key'].lower() and o['Key'].lower().endswith('.tar')]
+              if not r.get('IsTruncated'):break
+              tok=r['NextContinuationToken']
+          keys=sorted(keys);assert keys,keys
+          def octal(x):
+              x=x.rstrip(b'\0 ').strip();return int(x,8) if x else 0
+          chosen=None
+          for k in keys:
+              total=int(s3.head_object(Bucket=b,Key=k)['ContentLength']);pos=0;longname=None
+              while pos+512<=total:
+                  h=s3.get_object(Bucket=b,Key=k,Range=f'bytes={pos}-{pos+511}')['Body'].read()
+                  if len(h)<512 or not h.strip(b'\0'):break
+                  name=h[:100].split(b'\0',1)[0].decode('utf8','replace');prefix=h[345:500].split(b'\0',1)[0].decode('utf8','replace');name=(prefix+'/'+name) if prefix else name
+                  size=octal(h[124:136]);typ=h[156:157];data=pos+512
+                  if typ==b'L':
+                      q=s3.get_object(Bucket=b,Key=k,Range=f'bytes={data}-{data+size-1}')['Body'].read() if size else b'';longname=q.split(b'\0',1)[0].decode('utf8','replace')
+                  elif typ in (b'0',b'\0'):
+                      if longname:name=longname;longname=None
+                      if name.lower().endswith('.au4'):
+                          chosen=(k,name,data,size);break
+                  pos=data+((size+511)//512)*512
+              if chosen:break
+          assert chosen,keys
+          k,name,off,n=chosen;print('AU4',k,name,off,n)
+          body=s3.get_object(Bucket=b,Key=k,Range=f'bytes={off}-{off+n-1}')['Body'];left=n
+          with open('input.AU4','wb') as f:
+              while left:
+                  q=body.read(min(left,8*1024*1024));assert q;f.write(q);left-=len(q)
+          assert os.path.getsize('input.AU4')==n
+          open('au4_source.txt','w').write(f'{k}\n{name}\n{off}\n{n}\n')
+          PY
+      - name: Compare default/raw-count and resampled conversions
+        run: |
+          mkdir default current
+          "$CUBE2MSEED" --output-dir="$PWD/default" --encoding=INT-32 input.AU4 > default.log 2>&1
+          "$CUBE2MSEED" --fringe-samples=NOMINAL --resample=SINC --output-dir="$PWD/current" --encoding=INT-32 input.AU4 > current.log 2>&1
+          python - <<'PY'
+          import glob,json,os,hashlib,numpy as np
+          from obspy import read
+          def load(root):
+              rows=[]
+              for f in sorted(glob.glob(root+'/**/*',recursive=True)):
+                  if not os.path.isfile(f):continue
+                  try:st=read(f)
+                  except Exception:continue
+                  for tr in st:
+                      a=np.asarray(tr.data);assert np.issubdtype(a.dtype,np.integer),(root,tr.id,a.dtype)
+                      rows.append({'id':str(tr.id),'start':round(float(tr.stats.starttime.timestamp),6),'sr':float(tr.stats.sampling_rate),'n':int(a.size),'dtype':str(a.dtype),'sha256':hashlib.sha256(np.ascontiguousarray(a).tobytes()).hexdigest(),'data':a.astype(np.int64,copy=False)})
+              assert rows,root
+              rows.sort(key=lambda x:(x['id'],x['start'],x['n']))
+              return rows
+          a=load('default');b=load('current')
+          same_layout=[(x['id'],x['start'],x['sr'],x['n']) for x in a]==[(x['id'],x['start'],x['sr'],x['n']) for x in b]
+          same_bytes=same_layout and all(x['sha256']==y['sha256'] for x,y in zip(a,b))
+          diffs=[]
+          if same_layout:
+              for x,y in zip(a,b):
+                  d=x['data']-y['data'];diffs.append({'id':x['id'],'max_abs':int(np.max(np.abs(d))) if d.size else 0,'changed':int(np.count_nonzero(d))})
+          out={'default':[ {k:v for k,v in x.items() if k!='data'} for x in a], 'current':[ {k:v for k,v in x.items() if k!='data'} for x in b], 'same_layout':same_layout,'same_integer_samples':same_bytes,'diffs':diffs}
+          json.dump(out,open('au4_decode_audit.json','w'),indent=2);print(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: au4-raw-decode-audit
+          path: |
+            au4_decode_audit.json
+            au4_source.txt
+            cube2mseed_help.txt
+            default.log
+            current.log
+          if-no-files-found: warn
+          retention-days: 14
