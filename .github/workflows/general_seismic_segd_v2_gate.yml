@@ -1,0 +1,84 @@
+name: General seismic SEG-D v2 reader gate
+
+on:
+  pull_request:
+    branches: [ general-seismic-benchmark-v1 ]
+  workflow_dispatch:
+
+permissions: {contents: read}
+
+jobs:
+  segd-v2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy boto3 pysegd
+      - name: Download frozen Crescent SEG-D rev2 example
+        run: |
+          python - <<'PY'
+          import boto3
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s3.download_file('gdr-data-lake','wholescale/subter_seismic/crescent_valley/1359.sgd','crescent.sgd')
+          PY
+      - name: Discover maintained pysegd API and open file
+        run: |
+          python - <<'PY'
+          import importlib,inspect,json,pathlib,pkgutil,pysegd
+          root=pathlib.Path(next(iter(pysegd.__path__)))
+          print('PYSEGD_ROOT',root)
+          mods=[m.name for m in pkgutil.walk_packages(pysegd.__path__,pysegd.__name__+'.')]
+          print('MODULES',mods)
+          hits=[]
+          for mn in mods:
+              try:m=importlib.import_module(mn)
+              except Exception as e:
+                  print('IMPORT_FAIL',mn,repr(e));continue
+              for n in dir(m):
+                  if 'segd' in n.lower() or 'trace' in n.lower():
+                      x=getattr(m,n)
+                      if inspect.isclass(x) or inspect.isfunction(x):
+                          hits.append((mn,n,str(inspect.signature(x)) if callable(x) else ''))
+          print('API_HITS',hits)
+          # Try constructor-like candidates deterministically.
+          opened=None;errors=[]
+          for mn,n,sig in hits:
+              if n.lower() not in ('segdfile','seg_d_file','read_segd','readsegd','open_segd'):continue
+              try:
+                  x=getattr(importlib.import_module(mn),n)
+                  obj=x('crescent.sgd')
+                  opened=(mn,n,obj);break
+              except Exception as e:errors.append((mn,n,repr(e)))
+          print('OPEN_ERRORS',errors)
+          if opened is None:
+              # Print compact source heads of likely modules for one-step API correction.
+              for mn in mods:
+                  if 'segd' in mn.lower() or 'file' in mn.lower():
+                      try:
+                          src=inspect.getsource(importlib.import_module(mn))
+                          print('SOURCE',mn,src[:8000])
+                      except Exception:pass
+              raise SystemExit('no constructor candidate opened Crescent')
+          mn,n,obj=opened
+          print('OPENED',mn,n,type(obj))
+          attrs=[a for a in dir(obj) if not a.startswith('_')]
+          print('ATTRS',attrs)
+          for a in attrs:
+              if any(q in a.lower() for q in ('trace','channel','data','revision','format')):
+                  try:
+                      v=getattr(obj,a)
+                      if callable(v):continue
+                      print('FIELD',a,type(v),repr(v)[:1000])
+                  except Exception as e:print('FIELD_FAIL',a,repr(e))
+          json.dump({'opened_module':mn,'opened_name':n,'attrs':attrs},open('segd_v2_gate.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: general-seismic-segd-v2-gate
+          path: segd_v2_gate.json
+          if-no-files-found: ignore
