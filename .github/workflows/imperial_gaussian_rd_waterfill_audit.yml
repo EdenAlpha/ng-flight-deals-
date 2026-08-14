@@ -23,6 +23,14 @@ jobs:
           PY
       - name: Compute 2D Gaussian reverse-waterfilling rate
         run: python research/imperial_gaussian_rd_waterfill_audit.py imperial.h5
+      - name: Surface Gaussian RD result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_gaussian_rd_waterfill_audit.json'))
+          for r in d['rows']:
+            print(f"::notice title=Gaussian-RD {r['region']}::RD={r['gaussian_2d_mse_RD_bps']:.6f} bps, SZ3={r['matched_sz3_bps']:.6f}, 2x_target={r['two_x_sz3_target_bps']:.6f}, RD/2x={r['gaussian_RD_over_2x_target']:.6f}, flatness={r['spectral_flatness']:.6f}, kurtosis={r['excess_kurtosis']:.3f}")
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: imperial-gaussian-rd-waterfill-audit
