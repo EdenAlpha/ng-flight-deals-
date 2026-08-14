@@ -23,6 +23,15 @@ jobs:
           PY
       - name: Run causal spatial predictor gate
         run: python research/imperial_huber_ar32_causal_spatial_k_predictor.py imperial.h5
+      - name: Surface compact spatial result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_huber_ar32_causal_spatial_k_predictor.json'))
+          for r in d['rows']:
+            q=r['best_spatial_plus_arithmetic']; b=r['huber_ar32_coldstart_arithmetic']
+            print(f"::notice title=spatial {r['region']}::scheme={q['scheme']}, bytes={q['bytes']}, bps={q['bps']:.5f}, baseline_arith={b['bytes']} bytes ({b['bps']:.5f} bps), gain_vs_baseline={q['gain_vs_huber_arithmetic']:.6f}, gain_vs_SZ3={q['gain_vs_sz3']:.6f}")
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: imperial-huber-ar32-causal-spatial-k-predictor
