@@ -1,4 +1,4 @@
-import json, sys
+import json, re, sys
 from urllib.parse import urlparse
 
 import boto3
@@ -40,6 +40,17 @@ def list_objects(uri):
     return out
 
 def eligible(ds, objs):
+    # Dataset-specific inclusion/exclusion rules are part of the frozen manifest.
+    # They exist only to keep raw-vs-processed payload definitions exact; they may
+    # never depend on signal statistics or compression results.
+    inc=ds.get('include_regex')
+    exc=ds.get('exclude_regex')
+    if inc:
+        rx=re.compile(inc)
+        objs=[o for o in objs if rx.search(o['key'])]
+    if exc:
+        rx=re.compile(exc)
+        objs=[o for o in objs if not rx.search(o['key'])]
     if ds.get('objects'):
         return objs
     fmt=ds.get('format','')
