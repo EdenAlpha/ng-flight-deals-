@@ -78,6 +78,12 @@ def fallback(x,step,a,b,hist0):
  for j in range(L):
   p=arpred(a,b,hist);k=int(np.rint((float(x[j])-p)/step));r=p+step*k;K[j]=k;R[j]=r;hist[:-1]=hist[1:];hist[-1]=r
  return K,R
+@njit(cache=True)
+def replay_kblock(K,step,a,b,hist0):
+ hist=hist0.copy();R=np.empty(L,np.int32)
+ for j in range(L):
+  p=arpred(a,b,hist);r=p+step*int(K[j]);R[j]=r;hist[:-1]=hist[1:];hist[-1]=r
+ return R
 
 def seedbase(rid,step,c,bno):
  x=(0xA0761D6478BD642F ^ ((rid+1)*0xE7037ED1A0B428DB) ^ ((step+1)*0x8EBC6AF09C88C6E3) ^ ((c+1)*0x589965CC75374CC3) ^ ((bno+1)*0x1D8E4E27C47D124F))
@@ -137,13 +143,11 @@ def run_setcode(X,co,step,eps,rid):
    t1=t0+L;k=kval(score);idx=br.rice(k);score=upd(score,idx);di.append(int(idx));hist=RD[c,t0-P:t0].astype(np.int32);left=KD[c-1,t0:t1].astype(np.int16) if c else np.zeros(L,np.int16);pk=int(KD[c,t0-1])
    if idx==MAX_TRIES:
     if fp+L>len(fbd):raise RuntimeError(('fallback eof',step))
-    K=fbd[fp:fp+L];fp+=L
-    R=np.empty(L,np.int32);hh=hist.copy()
-    for j in range(L):
-     p=int(np.rint(a+float(np.dot(b,hh[::-1].astype(np.float32)))));R[j]=p+step*int(K[j]);hh[:-1]=hh[1:];hh[-1]=R[j]
+    K=fbd[fp:fp+L];fp+=L;R=replay_kblock(K,step,a,b,hist)
    else:K,R=candidate(int(idx),seedbase(rid,step,c,bno),step,a,b,hist,pk,left,kmin,cdf,tot)
    KD[c,t0:t1]=K.astype(np.int32);RD[c,t0:t1]=R
- if fp!=len(fbd) or br.i!=nbit or di!=indices or not np.array_equal(KD,KE) or not np.array_equal(RD,RE):raise RuntimeError(('set container decode',step,fp,len(fbd),br.i,nbit))
+ if fp!=len(fbd) or br.i!=nbit or di!=indices or not np.array_equal(KD,KE) or not np.array_equal(RD,RE):
+  raise RuntimeError(('set container decode',step,fp,len(fbd),br.i,nbit,int(np.count_nonzero(KD!=KE)),int(np.count_nonzero(RD!=RE))))
  me=float(np.max(np.abs(X-RD.astype(np.float64))))
  if me>eps*(1+1e-12):raise RuntimeError(('set hard',step,me,eps))
  return {'bytes':total_bytes,'bps':8*total_bytes/X.size,'prefix_bytes':int(pn)+MODEL_BYTES,'prefix_rep':prep,'rice_bytes':len(rice),'rice_bits':int(nbit),'fallback_bytes':len(fbs),'escape_blocks':esc,'blocks':C*((NT-TRAIN)//L),'success_fraction':1-esc/(C*((NT-TRAIN)//L)),'mean_hit_index':float(np.mean(hits)) if hits else None,'median_hit_index':float(np.median(hits)) if hits else None,'maxerr':me}
@@ -164,5 +168,5 @@ def main(path):
     sc=run_setcode(X,co,step,eps,rid);sc.update({'step':step,'greedy_bytes':gb,'greedy_bps':8*gb/X.size,'gain_set_vs_same_step_greedy':gb/sc['bytes'],'gain_set_vs_step267':b267/sc['bytes'],'gain_set_vs_sz3':sz/sc['bytes'],'ratio_to_2x_sz3_target':sc['bytes']/(sz/2),'greedy_rep':repg});steps.append(sc)
    best=min(steps,key=lambda x:x['bytes']);row={'region':region,'c0':c0,'shape':[C,NT],'sz3_bytes':sz,'sz3_bps':8*sz/X.size,'step267_bytes':b267,'step267_bps':8*b267/X.size,'step267_rep':rep267,'step267_maxerr':e267,'best':best,'steps':steps}
    rows.append(row);print(json.dumps({'region':region,'sz3_bytes':sz,'step267_bytes':b267,'best':best},indent=2),flush=True)
-  out={'global_std':gstd,'eps':eps,'block_length':L,'max_tries':MAX_TRIES,'steps':list(STEPS),'rows':rows,'scope':'Constructive decoder-real dense-lattice AR32 random-covering gate. Two contiguous channels from hard/easy/medium/far are fit with one transmitted float32 Huber AR32+intercept from t<1024. For each step 256/224/192 the greedy prefix K is exactly encoded and decoded, then deterministically defines a smoothed contextual P(K|clipped previous K,current-left K). On every held-out six-sample block encoder and decoder share a public stochastic K codebook. Each candidate is recursively reconstructed through the exact AR32 decoder state; encoder chooses the first trajectory whose every source reconstruction satisfies the unchanged hard-error epsilon and transmits only its adaptive-Rice index. Decoder regenerates it without source intervals. Search failure at 2^16 is a real escape with exact fallback K appended to a Zstd stream. Model, prefix, Rice, fallback and framing bytes are charged; the entire trajectory is replayed and source hard error verified. Same-step exact-K, step267 exact-K and matched SZ3 controls are rerun. This specifically tests whether the extra legal-path branching created by a denser-than-267 reconstruction lattice can be exploited as probability-mass coding rather than paid as exact K symbols. No AI. Draft/do not merge.'};json.dump(out,open('imperial_ar_dense_lattice_random_covering.json','w'),indent=2)
+  out={'global_std':gstd,'eps':eps,'block_length':L,'max_tries':MAX_TRIES,'steps':list(STEPS),'rows':rows,'scope':'Constructive decoder-real dense-lattice AR32 random-covering gate. Two contiguous channels from hard/easy/medium/far are fit with one transmitted float32 Huber AR32+intercept from t<1024. For each step 256/224/192 the greedy prefix K is exactly encoded and decoded, then deterministically defines a smoothed contextual P(K|clipped previous K,current-left K). On every held-out six-sample block encoder and decoder share a public stochastic K codebook. Each candidate is recursively reconstructed through the exact AR32 decoder state; encoder chooses the first trajectory whose every source reconstruction satisfies the unchanged hard-error epsilon and transmits only its adaptive-Rice index. Decoder regenerates it without source intervals. Search failure at 2^16 is a real escape with exact fallback K appended to a Zstd stream. Model, prefix, Rice, fallback and framing bytes are charged; the entire trajectory is replayed with the identical Numba AR recurrence and source hard error verified. Same-step exact-K, step267 exact-K and matched SZ3 controls are rerun. This specifically tests whether the extra legal-path branching created by a denser-than-267 reconstruction lattice can be exploited as probability-mass coding rather than paid as exact K symbols. No AI. Draft/do not merge.'};json.dump(out,open('imperial_ar_dense_lattice_random_covering.json','w'),indent=2)
 if __name__=='__main__':main(sys.argv[1])
