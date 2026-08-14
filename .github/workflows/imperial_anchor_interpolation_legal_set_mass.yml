@@ -1,0 +1,45 @@
+name: Imperial anchor interpolation legal-set mass
+
+on:
+  pull_request:
+    paths:
+      - 'research/imperial_anchor_interpolation_legal_set_mass.py'
+      - '.github/workflows/imperial_anchor_interpolation_legal_set_mass.yml'
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run paid-anchor legal-set gate
+        run: python research/imperial_anchor_interpolation_legal_set_mass.py imperial.h5
+      - name: Surface compact result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_anchor_interpolation_legal_set_mass.json'))
+          for r in d['rows']:
+              b=r['best_mass'];m=r['best_map']
+              print(f"::notice title=anchor legal-set {r['region']}::mass={b['legal_set_mass_total_bps']:.5f} spacing={b['spacing']} step={b['step']}, MAP={m['map_total_bps']:.5f}, SZ3={r['sz3_bps']:.5f}, target2x={r['local_2x_target_bps']:.5f}, massRatio={b['mass_ratio_to_2x_target']:.5f}, anchorBps={b['anchor_bps']:.5f}, prefixBps={b['prefix_bps']:.5f}")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-anchor-interpolation-legal-set-mass
+          path: imperial_anchor_interpolation_legal_set_mass.json
+          retention-days: 7
