@@ -29,8 +29,26 @@ jobs:
           PY
       - name: Synthesize target legal paths under decoder-known prior
         run: python research/imperial_probability_shaped_legal_paths.py r0.h5 r1.h5 r2.h5
+      - name: Surface legal-set rates
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_probability_shaped_legal_paths.json'));a=d['aggregate']
+          msg=(f"nearest={a['nearest_model_bps']:.6f} bps, MAP={a['map_legal_path_bps']:.6f} bps, "
+               f"SET_MASS={a['legal_path_mass_bps']:.6f} bps, MAP_gain_vs_SZ3={a['map_gain_vs_fullfile_sz3']:.6f}, "
+               f"SET_gain_vs_SZ3={a['mass_gain_vs_fullfile_sz3']:.6f}, SET_ratio_to_2x_target={a['mass_ratio_to_2x_target']:.6f}")
+          print(f"::notice title=legal-set aggregate::{msg}")
+          for r in d['rows']:
+              if r.get('aggregate'):
+                  msg=(f"MAP={r['map_legal_path_bps']:.6f} bps, SET_MASS={r['legal_path_mass_bps']:.6f} bps, "
+                       f"MAP_gain_vs_SZ3={r['map_gain_vs_fullfile_sz3_bps']:.6f}, SET_gain_vs_SZ3={r['mass_gain_vs_fullfile_sz3_bps']:.6f}")
+                  print(f"::notice title=legal-set region {r['region_c0']}::{msg}")
+          PY
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: imperial-probability-shaped-legal-paths
           path: imperial_probability_shaped_legal_paths.json
+          if-no-files-found: ignore
           retention-days: 7
