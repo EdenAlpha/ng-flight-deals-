@@ -7,7 +7,6 @@ REGIONS=(('hard',512),('easy',2304),('medium',4608),('far',6784))
 C=2;NT=4096;TRAIN=1024;P=32;L=6;MAX_TRIES=1<<16;STEPS=(256,224,192);TB=1024;MODEL_BYTES=177
 Z=zstd.ZstdCompressor(level=19);ZD=zstd.ZstdDecompressor()
 
-# ---- robust source predictor, transmitted as float32 ----
 def fit_huber(X):
  n=C*(TRAIN-P);A=np.empty((n,P+1),np.float64);y=np.empty(n,np.float64);j=0
  for c in range(C):
@@ -16,8 +15,7 @@ def fit_huber(X):
  co=np.linalg.lstsq(A,y,rcond=None)[0]
  for _ in range(6):
   r=y-A@co;w=np.minimum(1.,267./np.maximum(np.abs(r),1e-12));sw=np.sqrt(w);co=np.linalg.lstsq(A*sw[:,None],y*sw,rcond=None)[0]
- raw=np.asarray(co,np.float32).astype('<f4').tobytes();dec=np.frombuffer(raw,'<f4').astype(np.float32)
- return dec
+ raw=np.asarray(co,np.float32).astype('<f4').tobytes();return np.frombuffer(raw,'<f4').astype(np.float32)
 
 def greedy(X,co,step,end=NT):
  R=np.zeros((C,end),np.int32);K=np.zeros((C,end),np.int32);a=float(co[0]);b=np.asarray(co[1:],np.float32)
@@ -35,14 +33,13 @@ def decode(K,co,step):
    R[c,t]=p+step*int(K[c,t])
  return R
 
-# Prefix exact K defines a decoder-known contextual probability table. Observations get weight 32 and every K gets unit smoothing.
 def build_cdf(K):
  kmin=int(K.min())-8;kmax=int(K.max())+8;A=kmax-kmin+1;cnt=np.ones((81,A),np.int64)
  for c in range(C):
   for t in range(TRAIN):
    pv=int(K[c,t-1]) if t else 0;lf=int(K[c-1,t]) if c else 0;ctx=(max(-4,min(4,pv))+4)*9+(max(-4,min(4,lf))+4);kk=int(K[c,t])-kmin
    if 0<=kk<A:cnt[ctx,kk]+=32
- cdf=np.cumsum(cnt,axis=1,dtype=np.int64);tot=cdf[:,-1].copy();return kmin,cdf,tot
+ cdf=np.cumsum(cnt,axis=1,dtype=np.int64);return kmin,cdf,cdf[:,-1].copy()
 
 @njit(cache=True)
 def next_u64(x):
@@ -134,16 +131,16 @@ def run_setcode(X,co,step,eps,rid):
    else:hits.append(int(idx))
    KE[c,t0:t1]=K.astype(np.int32);RE[c,t0:t1]=R
  rice,nbit=bw.finish();fb=np.asarray(fallback_k,np.int16);fbs=Z.compress(fb.astype('<i2').tobytes());total_bytes=MODEL_BYTES+int(pn)+len(rice)+len(fbs)+64
- # Decoder replays exact prefix, indices and fallback K.
  fbd=np.frombuffer(ZD.decompress(fbs),'<i2').astype(np.int16);fp=0;KD=np.zeros_like(KE);RD=np.zeros_like(RE);KD[:,:TRAIN]=Kpd;RD[:,:TRAIN]=Rpd;br=BR(rice,nbit);score=12*256;di=[]
  for c in range(C):
   for bno,t0 in enumerate(range(TRAIN,NT,L)):
    t1=t0+L;k=kval(score);idx=br.rice(k);score=upd(score,idx);di.append(int(idx));hist=RD[c,t0-P:t0].astype(np.int32);left=KD[c-1,t0:t1].astype(np.int16) if c else np.zeros(L,np.int16);pk=int(KD[c,t0-1])
    if idx==MAX_TRIES:
-    if fp+L>len(fbd):raise RuntimeError(('fallback eof',step));K=fbd[fp:fp+L];fp+=L
-    # reconstruct from transmitted K
+    if fp+L>len(fbd):raise RuntimeError(('fallback eof',step))
+    K=fbd[fp:fp+L];fp+=L
     R=np.empty(L,np.int32);hh=hist.copy()
-    for j in range(L):p=int(np.rint(a+float(np.dot(b,hh[::-1].astype(np.float32)))));R[j]=p+step*int(K[j]);hh[:-1]=hh[1:];hh[-1]=R[j]
+    for j in range(L):
+     p=int(np.rint(a+float(np.dot(b,hh[::-1].astype(np.float32)))));R[j]=p+step*int(K[j]);hh[:-1]=hh[1:];hh[-1]=R[j]
    else:K,R=candidate(int(idx),seedbase(rid,step,c,bno),step,a,b,hist,pk,left,kmin,cdf,tot)
    KD[c,t0:t1]=K.astype(np.int32);RD[c,t0:t1]=R
  if fp!=len(fbd) or br.i!=nbit or di!=indices or not np.array_equal(KD,KE) or not np.array_equal(RD,RE):raise RuntimeError(('set container decode',step,fp,len(fbd),br.i,nbit))
@@ -158,9 +155,7 @@ def main(path):
    X=np.asarray(d[:NT,c0:c0+C],np.float64).T;co=fit_huber(X)
    sz=0
    for t0 in range(0,NT,TB):n,_=m.szrun(X[:,t0:min(t0+TB,NT)],eps);sz+=int(n)
-   # ordinary exact-path step267 control on the same tiny region
-   R267,K267=greedy(X,co,267);n267,rep267,D267=m.encode_k(K267);R267d=decode(D267,co,267);b267=MODEL_BYTES+int(n267)
-   e267=float(np.max(np.abs(X-R267d.astype(np.float64))))
+   R267,K267=greedy(X,co,267);n267,rep267,D267=m.encode_k(K267);R267d=decode(D267,co,267);b267=MODEL_BYTES+int(n267);e267=float(np.max(np.abs(X-R267d.astype(np.float64))))
    if not np.array_equal(D267,K267) or e267>eps*(1+1e-12):raise RuntimeError((region,'267 control'))
    steps=[]
    for step in STEPS:
