@@ -112,11 +112,30 @@ class SegySequential:
         self.binary=bh;self.binary_ns=int(ns);self.format_code=int(fmt);self.revision_raw=int(rev);self.fixed_length_flag=int(fixed);self.ext_text_count=max(0,int(ext))
         if self.ext_text_count:reader.read(TEXT*self.ext_text_count)
         self.trace_start=reader.tell();self.trace_index=0
+
+        # Some otherwise regular legacy/vendor SEG-Y files carry stale per-trace
+        # sample-count words.  Do not guess from signal values.  Instead prove a
+        # fixed layout from headers + exact logical file size: if the full trace
+        # area is tiled exactly by (240-byte header + binary_ns samples), use the
+        # binary-header count for every trace.  This is also the authoritative
+        # interpretation when the SEG-Y fixed-length flag is set and the tiling
+        # proof succeeds.  Truly variable-length files fall back to trace ns.
+        bps,_=sample_info(self.format_code,self.endian)
+        self.binary_stride=(TRACE_HEADER+self.binary_ns*int(bps)) if bps and self.binary_ns>0 else 0
+        self.trace_area_bytes=int(self.r.size-self.trace_start)
+        self.binary_stride_exact=bool(self.binary_stride>TRACE_HEADER and self.trace_area_bytes>=self.binary_stride and self.trace_area_bytes%self.binary_stride==0)
+        self.ns_policy='binary_exact_file_stride' if self.binary_stride_exact else 'trace_header_with_binary_fallback'
+        if self.fixed_length_flag==1 and not self.binary_stride_exact:
+            # A declared fixed-length file whose binary stride cannot tile the
+            # trace area is structurally inconsistent.  Refuse to silently drift.
+            raise RuntimeError(('SEG-Y fixed-length framing mismatch',self.r.size,self.trace_start,self.binary_ns,self.format_code,self.binary_stride,self.trace_area_bytes%self.binary_stride if self.binary_stride else None))
     def next_trace(self):
         if self.r.tell()>=self.r.size:return None
         th=self.r.read(TRACE_HEADER)
         if len(th)!=TRACE_HEADER:raise RuntimeError(('truncated SEG-Y trace header',self.trace_index,len(th)))
-        ns=_u16(th[114:116],self.endian) or self.binary_ns;bps,_=sample_info(self.format_code,self.endian)
+        trace_ns=_u16(th[114:116],self.endian)
+        ns=self.binary_ns if self.binary_stride_exact else (trace_ns or self.binary_ns)
+        bps,_=sample_info(self.format_code,self.endian)
         if bps is None:raise RuntimeError(('unsupported sample format',self.format_code))
         raw=self.r.read(int(ns)*int(bps));a=decode_samples(raw,self.format_code,self.endian)
         if a.size!=ns:raise RuntimeError(('decoded sample mismatch',a.size,ns))
@@ -141,7 +160,7 @@ class SegySequential:
                     rows=[]
                 if q is None:break
     def _meta(self,P,t0):
-        return {'format':'SEG-Y','format_code':self.format_code,'endian':self.endian,'binary_ns':self.binary_ns,'revision_raw':self.revision_raw,'fixed_length_flag':self.fixed_length_flag,'trace_count':int(P.shape[0]),'samples_per_trace':int(P.shape[1]),'time0':int(t0),'source_integer':self.format_code in (2,3,7,8,9,10,11,12,16),'source_dtype':'decoded_float32','logical_size':int(self.r.size)}
+        return {'format':'SEG-Y','format_code':self.format_code,'endian':self.endian,'binary_ns':self.binary_ns,'revision_raw':self.revision_raw,'fixed_length_flag':self.fixed_length_flag,'trace_count':int(P.shape[0]),'samples_per_trace':int(P.shape[1]),'time0':int(t0),'source_integer':self.format_code in (2,3,7,8,9,10,11,12,16),'source_dtype':'decoded_float32','logical_size':int(self.r.size),'ns_policy':self.ns_policy,'binary_stride':int(self.binary_stride),'binary_stride_exact':bool(self.binary_stride_exact)}
 
 def local_panels(path,**kw):
     r=LocalSequential(path)
