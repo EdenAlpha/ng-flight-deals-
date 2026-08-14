@@ -1,30 +1,26 @@
-import json, os
+import json
 import numpy as np
 
 
-def _panelize_rows(X, channels=128, time_limit=None):
-    X=np.asarray(X)
-    if X.ndim!=2: raise ValueError(('need 2D numeric array',X.shape))
-    if time_limit is not None: X=X[:,:int(time_limit)]
-    for c0 in range(0,X.shape[0],int(channels)):
-        P=np.ascontiguousarray(X[c0:min(c0+int(channels),X.shape[0])])
-        if P.shape[0] and P.shape[1]: yield P,c0
+def _time_ranges(nt,time_samples=8192,time_limit=None):
+    nt=int(nt);limit=nt if time_limit is None else min(nt,int(time_limit));step=limit if time_samples is None else int(time_samples)
+    if step<=0:raise ValueError(step)
+    for t0 in range(0,limit,step):yield t0,min(t0+step,limit)
 
 
-def segy_panels(path, channels=128, time_limit=None, max_panels=None):
+def segy_panels(path, channels=128, time_samples=8192, time_limit=None, max_panels=None):
     import segyio
+    integer_codes={2,3,7,8,9,10,11,12,16}
     with segyio.open(path,'r',ignore_geometry=True) as f:
-        ntr=int(f.tracecount)
-        ns=int(len(f.samples))
-        nout=0
+        ntr=int(f.tracecount);ns=int(len(f.samples));fmt=int(f.bin[segyio.BinField.Format]);isint=fmt in integer_codes;nout=0
         for c0 in range(0,ntr,int(channels)):
-            ids=range(c0,min(c0+int(channels),ntr))
-            P=np.asarray([np.asarray(f.trace[i],dtype=np.float32) for i in ids],dtype=np.float32)
-            if time_limit is not None:P=P[:,:int(time_limit)]
-            if P.size:
-                yield np.ascontiguousarray(P),{'format':'SEG-Y','trace0':c0,'trace_count':int(P.shape[0]),'samples_per_trace':int(P.shape[1]),'source_integer':False,'source_dtype':'float32(segy-decoded)','file_trace_count':ntr,'file_samples_per_trace':ns}
-                nout+=1
-                if max_panels is not None and nout>=int(max_panels):break
+            ids=range(c0,min(c0+int(channels),ntr));rows=np.asarray([np.asarray(f.trace[i],dtype=np.float32) for i in ids],dtype=np.float32)
+            for t0,t1 in _time_ranges(ns,time_samples,time_limit):
+                P=np.ascontiguousarray(rows[:,t0:t1])
+                if P.size:
+                    yield P,{'format':'SEG-Y','trace0':c0,'time0':t0,'trace_count':int(P.shape[0]),'samples_per_trace':int(P.shape[1]),'source_integer':isint,'source_dtype':'float32(segy-decoded)','sample_format_code':fmt,'file_trace_count':ntr,'file_samples_per_trace':ns}
+                    nout+=1
+                    if max_panels is not None and nout>=int(max_panels):return
 
 
 def _numeric_h5_datasets(group,prefix=''):
@@ -32,58 +28,71 @@ def _numeric_h5_datasets(group,prefix=''):
     out=[]
     for k,v in group.items():
         p=f'{prefix}/{k}' if prefix else f'/{k}'
-        if isinstance(v,h5py.Dataset) and np.issubdtype(v.dtype,np.number) and v.ndim>=2:
-            out.append((p,v))
+        if isinstance(v,h5py.Dataset) and np.issubdtype(v.dtype,np.number) and v.ndim>=2:out.append((p,v))
         elif isinstance(v,h5py.Group):out.extend(_numeric_h5_datasets(v,p))
     return out
 
 
-def choose_h5_dataset(f, dataset=None):
+def choose_h5_dataset(f,dataset=None):
     if dataset:
         d=f[dataset]
         if not np.issubdtype(d.dtype,np.number) or d.ndim<2:raise ValueError(('not numeric 2D+',dataset,d.dtype,d.shape))
         return dataset,d
     cands=_numeric_h5_datasets(f)
     if not cands:raise RuntimeError('no numeric >=2D HDF5 dataset')
-    # Deterministic schema discovery only: prefer common seismic names, then largest dataset.
     names=('acoustic','data','strain','strain_rate','raw','samples','das')
     def score(q):
-        p,d=q;low=p.lower();name_rank=min([i for i,n in enumerate(names) if n in low] or [len(names)])
-        return (name_rank,-int(np.prod(d.shape)),p)
+        p,d=q;low=p.lower();rank=min([i for i,n in enumerate(names) if n in low] or [len(names)])
+        return (rank,-int(np.prod(d.shape)),p)
     return min(cands,key=score)
 
 
-def hdf5_panels(path, channels=128, time_limit=None, max_panels=None, dataset=None, orientation='auto'):
+def _hdf5_panels_open(f,channels=128,time_samples=8192,time_limit=None,max_panels=None,dataset=None,orientation='auto'):
+    dpath,d=choose_h5_dataset(f,dataset)
+    if d.ndim!=2:raise ValueError(('HDF5 reader requires 2D seismic dataset',dpath,d.shape))
+    shape=tuple(map(int,d.shape));isint=bool(np.issubdtype(d.dtype,np.integer));nout=0
+    tc=orientation=='time_channels' or (orientation=='auto' and shape[0]>=shape[1])
+    if tc:
+        nt,nc=shape
+        for c0 in range(0,nc,int(channels)):
+            for t0,t1 in _time_ranges(nt,time_samples,time_limit):
+                P=np.ascontiguousarray(np.asarray(d[t0:t1,c0:min(c0+int(channels),nc)]).T)
+                if P.size:
+                    yield P,{'format':'HDF5','dataset':dpath,'orientation':'time_channels','channel0':c0,'time0':t0,'trace_count':int(P.shape[0]),'samples_per_trace':int(P.shape[1]),'source_integer':isint,'source_dtype':str(d.dtype),'dataset_shape':list(shape)}
+                    nout+=1
+                    if max_panels is not None and nout>=int(max_panels):return
+    else:
+        nc,nt=shape
+        for c0 in range(0,nc,int(channels)):
+            for t0,t1 in _time_ranges(nt,time_samples,time_limit):
+                P=np.ascontiguousarray(np.asarray(d[c0:min(c0+int(channels),nc),t0:t1]))
+                if P.size:
+                    yield P,{'format':'HDF5','dataset':dpath,'orientation':'channels_time','channel0':c0,'time0':t0,'trace_count':int(P.shape[0]),'samples_per_trace':int(P.shape[1]),'source_integer':isint,'source_dtype':str(d.dtype),'dataset_shape':list(shape)}
+                    nout+=1
+                    if max_panels is not None and nout>=int(max_panels):return
+
+
+def hdf5_panels(path,**kw):
     import h5py
-    with h5py.File(path,'r') as f:
-        dpath,d=choose_h5_dataset(f,dataset)
-        if d.ndim!=2:raise ValueError(('current HDF5 reader requires 2D seismic dataset',dpath,d.shape))
-        shape=tuple(map(int,d.shape));isint=bool(np.issubdtype(d.dtype,np.integer))
-        if orientation=='time_channels' or (orientation=='auto' and shape[0]>=shape[1]):
-            nt,nc=shape;nout=0
-            for c0 in range(0,nc,int(channels)):
-                t1=nt if time_limit is None else min(nt,int(time_limit));P=np.asarray(d[:t1,c0:min(c0+int(channels),nc)]).T
-                if P.size:
-                    yield np.ascontiguousarray(P),{'format':'HDF5','dataset':dpath,'orientation':'time_channels','channel0':c0,'trace_count':int(P.shape[0]),'samples_per_trace':int(P.shape[1]),'source_integer':isint,'source_dtype':str(d.dtype),'dataset_shape':list(shape)}
-                    nout+=1
-                    if max_panels is not None and nout>=int(max_panels):break
-        else:
-            nc,nt=shape;nout=0
-            for c0 in range(0,nc,int(channels)):
-                t1=nt if time_limit is None else min(nt,int(time_limit));P=np.asarray(d[c0:min(c0+int(channels),nc),:t1])
-                if P.size:
-                    yield np.ascontiguousarray(P),{'format':'HDF5','dataset':dpath,'orientation':'channels_time','channel0':c0,'trace_count':int(P.shape[0]),'samples_per_trace':int(P.shape[1]),'source_integer':isint,'source_dtype':str(d.dtype),'dataset_shape':list(shape)}
-                    nout+=1
-                    if max_panels is not None and nout>=int(max_panels):break
+    with h5py.File(path,'r') as f:yield from _hdf5_panels_open(f,**kw)
+
+
+def hdf5_s3_panels(bucket,key,**kw):
+    import h5py,s3fs
+    fs=s3fs.S3FileSystem(anon=True)
+    with fs.open(f'{bucket}/{key}','rb',block_size=16*1024*1024) as fh:
+        with h5py.File(fh,'r') as f:yield from _hdf5_panels_open(f,**kw)
 
 
 def matched_sz3(X,eps):
     from pysz import sz,szConfig,szErrorBoundMode
     X=np.ascontiguousarray(X)
-    # SZ3/pysz operates on float32 here so both codecs see identical numeric values.
-    A=np.ascontiguousarray(X.astype(np.float32,copy=False))
+    # Preserve raw integer counts exactly when needed: SZ3 accepts float64, while
+    # float32 is the natural common representation for floating seismic payloads.
+    if np.issubdtype(X.dtype,np.integer):A=np.ascontiguousarray(X.astype(np.float64))
+    else:A=np.ascontiguousarray(X.astype(np.float32,copy=False))
     cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(eps)
-    bb,_=sz.compress(A,cfg);R,_=sz.decompress(bb,np.float32,A.shape)
+    bb,_=sz.compress(A,cfg);R,_=sz.decompress(bb,A.dtype,A.shape)
     me=float(np.max(np.abs(A.astype(np.float64)-R.astype(np.float64))))
     if me>float(eps)*(1+3e-6):raise RuntimeError(('SZ3 hard bound',me,float(eps)))
     return int(bb.size),me
@@ -94,14 +103,14 @@ def gate_panel(X,meta,portfolio_config):
     cfg=load_config(portfolio_config);A=np.asarray(X);eps=.1*float(A.astype(np.float64).std())
     if not np.isfinite(eps) or eps<=0:raise RuntimeError(('bad epsilon',eps))
     blob,pm=encode_portfolio(A,eps,cfg,bool(meta.get('source_integer',False)));R=decode_portfolio(blob);pme=float(np.max(np.abs(A.astype(np.float64)-np.asarray(R,np.float64))));szb,szme=matched_sz3(A,eps)
-    return {'meta':meta,'shape':list(A.shape),'samples':int(A.size),'std':eps*10.,'eps':eps,'portfolio_bytes':len(blob),'portfolio_bps':8.*len(blob)/A.size,'selected_id':int(pm['selected_id']),'selected_engine':pm['selected_engine'],'portfolio_maxerr':pme,'sz3_bytes':int(szb),'sz3_bps':8.*szb/A.size,'sz3_maxerr':szme,'gain_sz3_over_portfolio':float(szb/len(blob)),'scope':'real-data mechanics gate only; epsilon is local to this gate slice and is NOT a headline benchmark result'}
+    return {'meta':meta,'shape':list(A.shape),'samples':int(A.size),'std':eps*10.,'eps':eps,'portfolio_bytes':len(blob),'portfolio_bps':8.*len(blob)/A.size,'selected_id':int(pm['selected_id']),'selected_engine':pm['selected_engine'],'portfolio_maxerr':pme,'sz3_bytes':int(szb),'sz3_bps':8.*szb/A.size,'sz3_maxerr':szme,'gain_sz3_over_portfolio':float(szb/len(blob)),'scope':'real-data mechanics gate only; local epsilon, not headline'}
 
 
 def run_gate(segy_path,h5_path,portfolio_config,h5_dataset='Acoustic'):
     rows=[]
-    P,m=next(segy_panels(segy_path,time_limit=4096,max_panels=1));rows.append(gate_panel(P,m,portfolio_config))
-    P,m=next(hdf5_panels(h5_path,time_limit=4096,max_panels=1,dataset=h5_dataset,orientation='time_channels'));rows.append(gate_panel(P,m,portfolio_config))
-    return {'rows':rows,'scope':'Real SEG-Y + HDF5 reader/portfolio/SZ3 correctness gate. Not part of frozen headline survey statistics.'}
+    P,m=next(segy_panels(segy_path,time_samples=4096,time_limit=4096,max_panels=1));rows.append(gate_panel(P,m,portfolio_config))
+    P,m=next(hdf5_panels(h5_path,time_samples=4096,time_limit=4096,max_panels=1,dataset=h5_dataset,orientation='time_channels'));rows.append(gate_panel(P,m,portfolio_config))
+    return {'rows':rows,'scope':'Real SEG-Y + HDF5 mechanics gate; not frozen headline statistics.'}
 
 if __name__=='__main__':
  import argparse
