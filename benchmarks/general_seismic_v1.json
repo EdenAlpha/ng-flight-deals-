@@ -28,11 +28,19 @@
     {
       "id": "land_stratton_3d",
       "category": "land-reflection",
-      "name": "Stratton 3D South Texas",
+      "name": "Stratton 3D South Texas prestack CMP gathers",
       "source_size_gb": 6.0,
       "format": "SEG-Y",
-      "source": "s3://open.source.geoscience/open_data/stratton/",
-      "test_policy": "complete prestack gathers",
+      "source": "explicit public open.source.geoscience objects",
+      "objects": [
+        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_2-80.sgy",
+        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_82-140.sgy",
+        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_142-200.sgy",
+        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_202-290.sgy",
+        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_290-310.sgy",
+        "s3://open.source.geoscience/open_data/stratton/segy/cdp_gathers/cdpgathers_601-630.sgy"
+      ],
+      "test_policy": "complete prestack CMP gathers",
       "public": true
     },
     {
@@ -59,10 +67,18 @@
     {
       "id": "marine_waka_3d",
       "category": "marine-reflection",
-      "name": "Waka 3D New Zealand",
+      "name": "Waka 3D New Zealand final migrated stack",
       "source_size_gb": 24.0,
       "format": "SEG-Y",
-      "source": "open.source.geoscience WAKA-3D final stack",
+      "source": "explicit public open.source.geoscience objects",
+      "objects": [
+        "s3://open.source.geoscience/open_data/newzealand/Cantebury_Basin/WAKA-3D/BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy.partaa",
+        "s3://open.source.geoscience/open_data/newzealand/Cantebury_Basin/WAKA-3D/BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy.partab",
+        "s3://open.source.geoscience/open_data/newzealand/Cantebury_Basin/WAKA-3D/BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy.partac",
+        "s3://open.source.geoscience/open_data/newzealand/Cantebury_Basin/WAKA-3D/BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy.partad",
+        "s3://open.source.geoscience/open_data/newzealand/Cantebury_Basin/WAKA-3D/BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy.partae"
+      ],
+      "assembly": "concatenate objects in listed order before SEG-Y parsing",
       "test_policy": "complete volume",
       "public": true
     },
@@ -72,39 +88,59 @@
       "name": "Parihaka 3D New Zealand full/near/mid/far PSTM stacks",
       "source_size_gb": 18.8,
       "format": "SEG-Y",
-      "source": "open.source.geoscience PARIHAKA-3D",
-      "test_policy": "all four 4.7GB volumes",
+      "source": "explicit public open.source.geoscience objects",
+      "objects": [
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_full_angle.sgy",
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_near_stack.sgy",
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_mid_stack.sgy",
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_far_stack.sgy"
+      ],
+      "test_policy": "all four complete PSTM volumes",
       "public": true
     },
     {
       "id": "marine_opunake_3d",
       "category": "marine-reflection",
-      "name": "Opunake 3D New Zealand",
+      "name": "Opunake 3D New Zealand final stack",
       "source_size_gb": 10.0,
       "format": "SEG-Y",
-      "source": "open.source.geoscience OPUNAKE-3D",
+      "source": "explicit public open.source.geoscience object",
+      "objects": [
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/OPUNAKE-3D/OPUNAKE3D-PR3461-FS.3D.Final_Stack.sgy"
+      ],
       "test_policy": "complete volume",
       "public": true
     },
     {
-      "id": "marine_penobscot_prestack",
-      "category": "marine-reflection-prestack",
-      "name": "Penobscot 3D Prestack Nova Scotia",
-      "source_size_gb": 101.0,
-      "format": "SEG-Y/Open Seismic Repository",
-      "source": "dGB Open Seismic Repository Penobscot prestack",
-      "test_policy": "3x >=10GB deterministic spans",
-      "public": true
+      "id": "marine_tui_3d",
+      "category": "marine-reflection",
+      "name": "Tui 3D New Zealand migrated volume",
+      "source_size_gb": 9.0,
+      "format": "SEG-Y",
+      "source": "explicit public open.source.geoscience objects",
+      "objects": [
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/TUI3D-PR2830-MIG/PEP38460_SUBLINE-3751-4050_XLINES-756-3230_3D_MIGRATION_TVF.SGY",
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/TUI3D-PR2830-MIG/PEP38460_SUBLINE-4051-4500_XLINES-756-3230_3D_MIGRATION_TVF.SGY"
+      ],
+      "test_policy": "complete published migrated volume",
+      "public": true,
+      "replacement_for": "marine_penobscot_prestack",
+      "replacement_reason": "Penobscot public distribution is torrent/OpendTect based and not reliably machine-fetchable in CI. Replacement chosen before any compression result was observed."
     },
     {
-      "id": "marine_bp_tiber_wats_decimated_raw",
-      "category": "marine-reflection-raw",
-      "name": "BP 2010 Tiber WATS decimated small-area raw dataset",
-      "source_size_gb": 130.0,
-      "format": "seismic survey files",
-      "source": "SEG open-data Tiber WATS distribution",
-      "test_policy": "3x >=10GB deterministic spans",
-      "public": true
+      "id": "marine_kahu_3d",
+      "category": "marine-reflection",
+      "name": "Kahu 3D New Zealand final migration",
+      "source_size_gb": 6.2,
+      "format": "SEG-Y",
+      "source": "explicit public open.source.geoscience object",
+      "objects": [
+        "s3://open.source.geoscience/open_data/newzealand/Taranaiki_Basin/KAHU-3D/KAHU-3D-PR3177-FM.3D.Final_Migration.sgy"
+      ],
+      "test_policy": "complete volume",
+      "public": true,
+      "replacement_for": "marine_bp_tiber_wats_decimated_raw",
+      "replacement_reason": "SEG states that no free online copy of the Tiber distribution is currently maintained. Replacement chosen before any compression result was observed."
     },
     {
       "id": "das_imperial_valley_2020",
@@ -147,9 +183,14 @@
       "public": true
     }
   ],
+  "accessibility_revision": {
+    "date": "2026-08-14",
+    "reason": "First CI preflight occurred before any generalization compression results. It exposed one non-listable public S3 prefix and five descriptive/non-machine-fetchable marine entries. Exact object paths were frozen for Stratton/Waka/Parihaka/Opunake; Penobscot and Tiber were replaced by predeclared reserve marine surveys Tui and Kahu solely for reproducible CI accessibility.",
+    "compression_results_seen_before_revision": false
+  },
   "reserve_candidates": [
     "Teapot Dome 3D raw/prestack land survey (add after exact downloadable payload size is audited)",
-    "Tui 3D marine full volume (~9 GB)",
-    "Kahu 3D marine full volume (6.2 GB)"
+    "Penobscot 3D prestack (101 GB; public torrent/OpendTect distribution, reserve if CI-safe endpoint is established)",
+    "BP Tiber WATS decimated raw (130 GB; no free online copy currently maintained according to SEG)"
   ]
 }
