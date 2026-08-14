@@ -22,7 +22,7 @@ jobs:
           assert os.path.getsize('imperial.h5')==415030456
           PY
       - name: Run constructive covering code
-        run: python research/imperial_constructive_random_covering_setcode.py imperial.h5
+        run: python research/run_imperial_constructive_random_covering_setcode.py imperial.h5
       - name: Surface covering-code results
         if: success()
         run: |
