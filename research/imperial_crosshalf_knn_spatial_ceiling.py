@@ -17,17 +17,16 @@ def true_history_prediction(X,co):
     return out
 
 def neighbor_order(E,features):
-    T=E[features,:TRAIN].T.astype(np.float64)
-    Q=E[features,TRAIN:].T.astype(np.float64)
-    s=T.std(axis=0);s[s<1e-6]=1.0
-    T=(T-T.mean(axis=0))/s;Q=(Q-T.mean(axis=0))/s  # centering Q offset is irrelevant only if same mean; fix below
-    # Recompute with the actual training mean for both sets.
     rawT=E[features,:TRAIN].T.astype(np.float64);rawQ=E[features,TRAIN:].T.astype(np.float64)
     mu=rawT.mean(axis=0);sd=rawT.std(axis=0);sd[sd<1e-6]=1.0
     T=(rawT-mu)/sd;Q=(rawQ-mu)/sd
     qn=np.sum(Q*Q,axis=1)[:,None];tn=np.sum(T*T,axis=1)[None,:]
     D=qn+tn-2.0*(Q@T.T);np.maximum(D,0,out=D)
-    return np.argpartition(D,max(KS)-1,axis=1)[:,:max(KS)],D
+    kk=max(KS)
+    cand=np.argpartition(D,kk-1,axis=1)[:,:kk]
+    cd=np.take_along_axis(D,cand,axis=1)
+    ord2=np.argsort(cd,axis=1)
+    return np.take_along_axis(cand,ord2,axis=1),D
 
 def predict_half(E,features,targets,order,k):
     # Oracle database (including target residual values on TRAIN) is free side information.
