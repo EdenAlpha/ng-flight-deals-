@@ -1,0 +1,44 @@
+name: Imperial AR32 L1 trajectory optimization
+on:
+  pull_request:
+    branches: [imperial-ar32-interval-projection-corrections]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Optimize legal AR32 trajectories
+        run: python research/imperial_ar32_l1_trajectory_optimization.py imperial.h5
+      - name: Surface compact result
+        if: always()
+        run: |
+          if [ -f imperial_ar32_l1_trajectory_optimization.json ]; then
+            python - <<'PY'
+          import json
+          d=json.load(open('imperial_ar32_l1_trajectory_optimization.json'))
+          for r in d['rows']:
+              print(r['region'], {'step267':r['step267']['bps'],'greedy':r['greedy_interval']['bps'],'lp':r['l1_optimized_trajectory']['bps'],'gain_lp':r['gain_lp_vs_step267'],'zero_lp':r['l1_optimized_trajectory']['zero_fraction'],'sz3':r['matched_sz3_bps']})
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-ar32-l1-trajectory-optimization
+          path: imperial_ar32_l1_trajectory_optimization.json
+          if-no-files-found: ignore
+          retention-days: 7
