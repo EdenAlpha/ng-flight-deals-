@@ -1,0 +1,43 @@
+name: Imperial exact acquisition determinism audit
+
+on:
+  pull_request:
+    paths:
+      - 'research/imperial_exact_acquisition_determinism_audit.py'
+      - '.github/workflows/imperial_exact_acquisition_determinism_audit.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy h5py boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run exact acquisition determinism audit
+        run: python research/imperial_exact_acquisition_determinism_audit.py imperial.h5
+      - name: Surface compact result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_exact_acquisition_determinism_audit.json'))
+          print(f"::notice title=exact acquisition audit::dtype={d['dtype']}, values={d['unique_raw_values']}, Hraw={d['raw_value_entropy_bits']:.4f}, gcd={d['raw_value_gcd']}, gcdDt={d['temporal_difference_gcd']}, repeatT={d['exact_temporal_repeat_fraction']:.6f}, equalSpace={d['exact_adjacent_channel_equal_fraction']:.6f}, constants={d['constant_channel_count']}, duplicateGroups={d['exact_duplicate_channel_group_count']}, mod256Occupied={d['residue_classes']['256']['occupied']}, mod256H={d['residue_classes']['256']['entropy_bits']:.4f}")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-exact-acquisition-determinism-audit
+          path: imperial_exact_acquisition_determinism_audit.json
+          retention-days: 7
