@@ -5,6 +5,7 @@ on:
     branches: [ imperial-ar32-nonlocal-zsm-stack ]
     paths:
       - 'benchmarks/general_seismic_v1.json'
+      - 'benchmarks/general_seismic_v1_execution_amendments.json'
       - 'research/general_seismic_v1_preflight.py'
       - '.github/workflows/general_seismic_v1_preflight.yml'
   workflow_dispatch:
@@ -20,8 +21,22 @@ jobs:
           python-version: '3.12'
       - name: Install inventory dependency
         run: pip install --quiet boto3
+      - name: Materialize frozen manifest with pre-result execution amendments
+        run: |
+          python - <<'PY'
+          import json
+          m=json.load(open('benchmarks/general_seismic_v1.json'))
+          a=json.load(open('benchmarks/general_seismic_v1_execution_amendments.json'))
+          ov=a.get('dataset_overrides',{})
+          for d in m['datasets']:
+              if d['id'] in ov:
+                  d.update(ov[d['id']])
+          m['execution_amendment']=a
+          json.dump(m,open('general_seismic_v1_effective_manifest.json','w'),indent=2)
+          print('APPLIED_OVERRIDES',sorted(ov))
+          PY
       - name: Resolve frozen S3 object spans
-        run: python research/general_seismic_v1_preflight.py benchmarks/general_seismic_v1.json
+        run: python research/general_seismic_v1_preflight.py general_seismic_v1_effective_manifest.json
       - name: Surface selected GB totals
         if: always()
         run: |
@@ -38,5 +53,7 @@ jobs:
         if: always()
         with:
           name: general-seismic-v1-preflight
-          path: general_seismic_v1_preflight.json
+          path: |
+            general_seismic_v1_effective_manifest.json
+            general_seismic_v1_preflight.json
           if-no-files-found: error
