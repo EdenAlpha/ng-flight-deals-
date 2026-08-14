@@ -17,6 +17,7 @@
     "screen_samples": 4096,
     "method": "actual prefix bitstream size",
     "rule": "screen every frozen candidate on the same prefix; choose the candidate with the fewest charged bytes per sample; encode the complete panel only with that candidate; ties use the lower candidate id",
+    "short_final_panel_rule": "If a retained final panel has 32 or fewer time samples, candidates whose model cannot be fit are marked invalid and the smallest actual stream among the remaining valid frozen candidates is chosen. No sample is dropped.",
     "no_category_rules": true,
     "note": "Land/marine/DAS labels never select a codec. The decoder receives the selected candidate id in the charged portfolio header."
   },
