@@ -1,0 +1,45 @@
+name: Imperial AR32 prefix motif kNN
+
+on:
+  pull_request:
+    paths:
+      - 'research/imperial_ar32_prefix_motif_knn.py'
+      - '.github/workflows/imperial_ar32_prefix_motif_knn.yml'
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run prefix motif kNN gate
+        run: python research/imperial_ar32_prefix_motif_knn.py imperial.h5
+      - name: Surface compact result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_ar32_prefix_motif_knn.json'))
+          for r in d['rows']:
+              b=r['best'];level='notice' if b['gain_vs_baseline']>1 else 'warning'
+              print(f"::{level} title=motif-kNN {r['region']}::k={b['neighbors']}, strength={b['strength']}, bps={b['bps']:.5f}, baseline={r['baseline_bps']:.5f}, SZ3={r['sz3_bps']:.5f}, gainAR={b['gain_vs_baseline']:.6f}, zero={b['zero_fraction']:.5f}")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-ar32-prefix-motif-knn
+          path: imperial_ar32_prefix_motif_knn.json
+          retention-days: 7
