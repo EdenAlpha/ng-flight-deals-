@@ -23,6 +23,15 @@ jobs:
           PY
       - name: Run exact core-tail factorization gate
         run: python research/imperial_huber_ar32_core_tail_split.py imperial.h5
+      - name: Surface compact core-tail result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_huber_ar32_core_tail_split.json'))
+          for r in d['rows']:
+            q=r['best']; b=r['huber_backend']; a=r['huber_arithmetic']
+            print(f"::notice title=core-tail {r['region']}::T={q['threshold']}, mode={q['mode']}, bytes={q['bytes']}, bps={q['bps']:.5f}, gain_vs_backend={q['gain_vs_huber_backend']:.6f}, gain_vs_arithmetic={q['gain_vs_huber_arithmetic']:.6f}, arithmetic={a['bps']:.5f} bps, gain_vs_SZ3={q['gain_vs_sz3']:.6f}")
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: imperial-huber-ar32-core-tail-split
