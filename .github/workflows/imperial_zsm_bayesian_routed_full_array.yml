@@ -1,0 +1,68 @@
+name: Imperial ZSM Bayesian routed full array
+
+on:
+  pull_request:
+    paths:
+      - 'research/imperial_zsm_bayesian_routed_full_array.py'
+      - '.github/workflows/imperial_zsm_bayesian_routed_full_array.yml'
+  workflow_dispatch:
+
+jobs:
+  blocks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        slot: [0,1,2,3,4,5,6,7,8]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run routed entropy backends
+        run: python research/imperial_zsm_bayesian_routed_full_array.py imperial.h5 ${{ matrix.slot }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-zsm-bayesian-route-${{ matrix.slot }}
+          path: imperial_zsm_bayesian_routed_full_${{ matrix.slot }}.json
+          retention-days: 7
+
+  aggregate:
+    needs: blocks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy h5py zstandard pysz
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: imperial-zsm-bayesian-route-*
+          merge-multiple: true
+      - name: Aggregate full array
+        run: python research/imperial_zsm_bayesian_routed_full_array.py aggregate
+      - name: Surface compact result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_zsm_bayesian_routed_full_aggregate.json'))
+          print(f"::notice title=Routed ZSM/Bayesian full-array::bytes={d['routed_bytes']}, bps={d['routed_bps']:.6f}, savedVsZSM={d['bytes_saved_vs_audited_zsm']}, gainZSM={d['gain_vs_audited_zsm']:.6f}, gainSZ3={d['gain_vs_sz3']:.6f}, backends={d['backend_counts']}, stillNeed={100*d['fraction_reduction_still_needed']:.2f}%")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-zsm-bayesian-route-aggregate
+          path: imperial_zsm_bayesian_routed_full_aggregate.json
+          retention-days: 7
