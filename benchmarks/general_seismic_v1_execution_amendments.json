@@ -1,12 +1,17 @@
 {
   "date": "2026-08-14",
   "compression_results_seen_before_revision": false,
-  "reason": "A schema-only range probe showed that San Emidio level-0 is packaged in large uncompressed TAR objects containing the actual complete native waveform files. Treating a TAR container as one seismic file makes deterministic span size depend on archive packaging rather than the declared numeric seismic payload. Before any frozen headline compression result, selection is therefore refined to complete internal native waveform members only. No waveform values, statistics, or compression outputs are used for this refinement.",
+  "reason": "Pre-headline schema and reader validation showed that San Emidio level-0 is packaged as native DataCube .AU4 and SmartSolo .DLD waveform members. The public DataCube format has a reproducible official command-line decoder (GFZ GIPPtools cube2mseed), and a real San Emidio AU4 member was successfully decoded to raw INT32 counts in CI. The SmartSolo DLD path depends on proprietary SoloLite/DMC software in the authors' documented workflow. To keep the primary benchmark raw, public, automatable, and independently reproducible, San Emidio is frozen to its DataCube level-0 .AU4 subset only. This accessibility decision was made before any frozen headline survey compression result; no headline result was inspected or used.",
   "dataset_overrides": {
     "land_san_emidio_2021": {
+      "name": "WHOLESCALE San Emidio Nevada 2021 DataCube raw level-0",
+      "source_size_gb": 113.0,
       "container_index": "tar",
-      "member_include_regex": "(?i)\\.(AU4|DLD)$",
-      "test_policy": "3x >=10GB deterministic spans over complete native level-0 .AU4/.DLD waveform members inside the public TAR archives"
+      "include_regex": "(?i)datacube",
+      "exclude_regex": "(?i)(gps|metadata|readme)",
+      "member_include_regex": "(?i)\\.AU4$",
+      "test_policy": "3x >=10GB deterministic spans over complete native DataCube level-0 .AU4 waveform members inside the public TAR archive",
+      "note": "Raw DataCube only. SmartSolo DLD is excluded solely because the documented conversion path depends on proprietary vendor tooling; processed SAC is not used."
     }
   }
 }
