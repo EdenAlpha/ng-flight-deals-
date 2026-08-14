@@ -1,8 +1,10 @@
-"""Scalable execution hook for general_seismic_sharded_runner.
+"""Scalable execution hook for the frozen general-seismic benchmark.
 
 Low-file/assembled SEG-Y volumes are partitioned by fixed-layout channel groups.
 SEG-Y surveys with enough independent files retain complete-record sharding.
-All other formats retain the frozen complete-record sharding of v1.
+All other formats retain complete-record sharding.  San Emidio DATA-CUBE files
+are decoded by the official GFZ cube2mseed utility to INT32 counts without an
+explicit waveform resampling request.
 """
 import copy
 import general_seismic_sharded_runner as old
@@ -48,7 +50,35 @@ def iter_panels(ds,row,cfg,tmp,cube2mseed=None):
         for P,m in s3_panels(old.base.S3,[o],**kw):
             m.update(dataset_id=ds['id'],logical_file=o['key']);yield P,m
 
+
+def au4_segments_raw_counts(path,cube2mseed,work):
+    """Decode native DATA-CUBE AU4 to integer counts with no explicit resampling."""
+    from obspy import read
+    b=old.base
+    outdir=b.os.path.join(work,'mseed');b.os.makedirs(outdir,exist_ok=True)
+    b.subprocess.run([cube2mseed,f'--output-dir={outdir}','--encoding=INT-32',path],check=True,stdout=b.subprocess.DEVNULL,stderr=b.subprocess.STDOUT)
+    traces=[]
+    for f in sorted(b.glob.glob(outdir+'/**/*',recursive=True)):
+        if not b.os.path.isfile(f):continue
+        try:st=read(f)
+        except Exception:continue
+        traces.extend(st)
+    if not traces:raise RuntimeError(('cube2mseed produced no readable traces',path))
+    groups=b.defaultdict(list)
+    for tr in traces:
+        key=(round(float(tr.stats.starttime.timestamp),6),int(tr.stats.npts),round(float(tr.stats.sampling_rate),9));groups[key].append(tr)
+    for key in sorted(groups):
+        gg=sorted(groups[key],key=lambda tr:(str(tr.id),str(tr.stats.channel)));A=[]
+        for tr in gg:
+            a=b.np.asarray(tr.data)
+            if not b.np.issubdtype(a.dtype,b.np.integer):raise RuntimeError(('AU4 conversion not integer counts',tr.id,a.dtype))
+            A.append(a.astype(b.np.int32,copy=False))
+        lens={a.size for a in A}
+        if len(lens)!=1:raise RuntimeError(('AU4 aligned segment length mismatch',key,lens))
+        yield b.np.ascontiguousarray(b.np.stack(A)),{'segment_start':key[0],'sampling_rate':key[2],'channel_ids':[str(tr.id) for tr in gg],'conversion':'GFZ cube2mseed INT-32; no explicit resampling'}
+
 old.shard_row=shard_row
 old.base.iter_panels=iter_panels
+old.base.au4_segments=au4_segments_raw_counts
 
 if __name__=='__main__':old.main()
