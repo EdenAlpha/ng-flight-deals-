@@ -22,9 +22,13 @@ jobs:
           assert os.path.getsize('imperial.h5')==415030456
           PY
       - name: Run trellis/noise-shaping gate
-        run: python research/imperial_huber_ar32_trellis_quantizer.py imperial.h5
+        run: python research/run_imperial_huber_ar32_trellis_debug.py imperial.h5
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: imperial-huber-ar32-trellis-quantizer
-          path: imperial_huber_ar32_trellis_quantizer.json
+          path: |
+            imperial_huber_ar32_trellis_quantizer.json
+            imperial_huber_ar32_trellis_error.txt
+          if-no-files-found: ignore
           retention-days: 7
