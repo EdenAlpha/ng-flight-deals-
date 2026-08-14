@@ -1,0 +1,45 @@
+name: Imperial stateful hybrid AR hardbox regions
+on:
+  pull_request:
+    branches: [imperial-huber-ar32-coldstart-arithmetic-full-array]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py pysz boto3 zstandard
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run exact stateful hybrid gate
+        run: python research/imperial_stateful_hybrid_ar_hardbox_regions.py imperial.h5
+      - name: Surface compact hybrid result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_stateful_hybrid_ar_hardbox_regions.json'))
+          for r in d['rows']:
+              h=r['stateful_hybrid']; b=r['huber_full_arithmetic']
+              msg=(f"hybrid={h['bytes']} bytes ({h['bps']:.4f} bps), "
+                   f"huber={b['bytes']} bytes, gain_vs_huber={h['gain_vs_huber']:.6f}, "
+                   f"gain_vs_sz3={h['gain_vs_sz3']:.6f}, scalar_tiles={h['scalar_tiles']}, ar_tiles={h['ar_tiles']}")
+              print(f"::notice title=hybrid {r['region']}::{msg}")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-stateful-hybrid-ar-hardbox-regions
+          path: imperial_stateful_hybrid_ar_hardbox_regions.json
+          if-no-files-found: ignore
+          retention-days: 7
