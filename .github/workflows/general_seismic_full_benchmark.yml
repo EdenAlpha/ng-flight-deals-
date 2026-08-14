@@ -5,37 +5,49 @@ on:
 
 permissions: {contents: read}
 
+env:
+  BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
+
 jobs:
   plan:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install --quiet boto3
-      - name: Materialize pre-result execution amendments
+      - name: Fetch the exact frozen benchmark definition
+        run: |
+          git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_benchmark_manifest.json
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1_execution_amendments.json" > frozen_execution_amendments.json
+          git show "$BENCHMARK_DEFINITION_SHA:research/general_seismic_v1_preflight.py" > frozen_preflight.py
+          echo "PINNED_BENCHMARK_SHA=$BENCHMARK_DEFINITION_SHA"
+      - name: Materialize pinned pre-result execution amendments
         run: |
           python - <<'PY'
-          import json
-          m=json.load(open('benchmarks/general_seismic_v1.json'))
-          a=json.load(open('benchmarks/general_seismic_v1_execution_amendments.json'))
+          import json,os
+          m=json.load(open('frozen_benchmark_manifest.json'))
+          a=json.load(open('frozen_execution_amendments.json'))
           for d in m['datasets']:
               if d['id'] in a.get('dataset_overrides',{}):d.update(a['dataset_overrides'][d['id']])
           m['execution_amendment']=a
+          m['benchmark_definition_sha']=os.environ['BENCHMARK_DEFINITION_SHA']
           json.dump(m,open('general_seismic_v1_effective_manifest.json','w'),indent=2)
           PY
       - name: Resolve exact frozen objects and waveform members
-        run: python research/general_seismic_v1_preflight.py general_seismic_v1_effective_manifest.json
+        run: python frozen_preflight.py general_seismic_v1_effective_manifest.json
       - name: Require all 13 frozen surveys
         run: |
           python - <<'PY'
-          import json
+          import json,os
           x=json.load(open('general_seismic_v1_preflight.json'))
           assert len(x['datasets'])==13,x
           bad=[r for r in x['datasets'] if r['status']!='ok']
           assert not bad,bad
-          print('FROZEN_SURVEYS',len(x['datasets']),'SELECTED_GB',sum(r['selected_gb'] for r in x['datasets']))
+          print('PINNED_SHA',os.environ['BENCHMARK_DEFINITION_SHA'],'FROZEN_SURVEYS',len(x['datasets']),'SELECTED_GB',sum(r['selected_gb'] for r in x['datasets']))
           PY
       - uses: actions/upload-artifact@v4
         with:
