@@ -1,0 +1,39 @@
+name: Imperial Huber AR32 causal spatial K predictor
+on:
+  pull_request:
+    branches: [imperial-huber-ar32-coldstart-arithmetic-regions]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download canonical Imperial Valley record
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          PY
+      - name: Run causal spatial predictor gate
+        run: python research/imperial_huber_ar32_causal_spatial_k_predictor.py imperial.h5
+      - name: Surface compact spatial result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_huber_ar32_causal_spatial_k_predictor.json'))
+          for r in d['rows']:
+            q=r['best_spatial_plus_arithmetic']; b=r['huber_ar32_coldstart_arithmetic']
+            print(f"::notice title=spatial {r['region']}::scheme={q['scheme']}, bytes={q['bytes']}, bps={q['bps']:.5f}, baseline_arith={b['bytes']} bytes ({b['bps']:.5f} bps), gain_vs_baseline={q['gain_vs_huber_arithmetic']:.6f}, gain_vs_SZ3={q['gain_vs_sz3']:.6f}")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-huber-ar32-causal-spatial-k-predictor
+          path: imperial_huber_ar32_causal_spatial_k_predictor.json
+          retention-days: 7
