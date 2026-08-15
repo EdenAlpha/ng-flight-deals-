@@ -1,61 +1,14 @@
 name: Master Portfolio V2 monotonic Soda p45 gate
 
+# Heavy p45 native-vs-frozen-V1 evidence is pinned to the immutable evidence
+# branch in master_portfolio_v2_evidence_monotonic_p45.yml.
 on:
-  pull_request:
-    branches: [ general-seismic-codec-portfolio-v1 ]
-    paths:
-      - 'research/master_portfolio_v2.py'
-      - 'research/master_portfolio_v2_selector.py'
-      - 'research/master_portfolio_v2_panel_fallback.py'
-      - 'research/master_portfolio_v2_compete.py'
-      - 'research/soda_hard4_frozen_record.py'
-      - 'research/general_seismic_codec_portfolio.py'
-      - 'benchmarks/general_seismic_codec_portfolio_v1.json'
-      - '.github/workflows/master_portfolio_v2_monotonic_p45.yml'
   workflow_dispatch:
-
-concurrency:
-  group: master-portfolio-v2-monotonic-p45-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
 
 permissions: {contents: read}
 
 jobs:
-  p45:
+  redirected:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: {python-version: '3.11'}
-      - run: pip install --quiet numpy segyio zstandard pysz brotli boto3
-      - name: Download deterministic historically hard Soda p45 record
-        run: |
-          python - <<'PY'
-          import boto3
-          from botocore import UNSIGNED
-          from botocore.config import Config
-          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED,retries={'max_attempts':8}))
-          s3.download_file('gdr-data-lake','soda_lake/raw_seismic/2010/v1.0.0/F4371R1.SGY','p45.sgy')
-          PY
-      - name: Compete exact recovered native engine against complete frozen V1 fallback
-        env: {PYTHONPATH: research}
-        run: |
-          python research/master_portfolio_v2_compete.py soda \
-            --file p45.sgy \
-            --epsilon 0.0816739073446828 \
-            --out p45_monotonic.json
-          python - <<'PY'
-          import json
-          r=json.load(open('p45_monotonic.json'))
-          assert r['selected_is_no_worse_than_v1'],r
-          assert r['winner_bytes'] <= r['v1_fallback_bytes'],r
-          assert r['contract_id']=='numeric_payload',r
-          assert r['accounting_id']=='numeric_samples_only_shared_file_metadata_excluded',r
-          print('V2_MONOTONIC_P45', 'winner=',r['winner'], 'native=',r['native_bytes'], 'v1=',r['v1_fallback_bytes'], 'native_gain_over_v1=',r['native_gain_over_v1'])
-          PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: master-portfolio-v2-monotonic-p45
-          path: p45_monotonic.json
-          retention-days: 30
+      - run: echo 'Run master_portfolio_v2_evidence_monotonic_p45.yml on the pinned evidence branch'
