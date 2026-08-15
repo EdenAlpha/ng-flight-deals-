@@ -24,3 +24,5 @@ jobs:
         run: python research/master_portfolio_v2_ledger_gate.py
       - name: Verify exact frozen V1 implementation remains the protected floor
         run: python research/master_portfolio_v2_monotonicity_gate.py
+      - name: Verify rejected historical lineages stay rejected unless explicitly re-audited
+        run: python research/master_portfolio_v2_negative_gate.py
