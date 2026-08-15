@@ -1,0 +1,107 @@
+{
+  "name": "seismic-historical-lineage-audit-v2",
+  "created_utc": "2026-08-15",
+  "purpose": "Permanent exact-byte provenance for historical seismic compression lineages considered for Master Portfolio V2. Memory, qualitative descriptions, or raw compression ratio alone are insufficient for promotion.",
+  "promotion_rule": {
+    "required": [
+      "decoder-usable self-contained or fairly charged stream",
+      "strict hard-error verification under the declared epsilon contract",
+      "exact compressed byte count",
+      "matched established comparator byte count on the identical numeric payload and epsilon semantics"
+    ],
+    "winner_rule": "A lineage is portfolio-winner evidence only when it beats the strongest matched established comparator available in the audited experiment."
+  },
+  "audits": [
+    {
+      "lineage": "pulse_v1_stage_ab_pr29",
+      "status": "QUARANTINED_COMPARATOR_PROOF_MISSING",
+      "source": {
+        "pr": 29,
+        "commit": "a53cb731fa24b44b5a3ae872081e07d8cb85ab78",
+        "workflow_job": 93479331960,
+        "dataset": "Brady SEG-Y",
+        "command": "python -m seismic_compressor.cli --preset fast"
+      },
+      "exact_result": {
+        "input_bytes": 123076837,
+        "numeric_data_bytes": 123075600,
+        "output_bytes": 11376848,
+        "ratio_input_over_output": 10.818191231663882,
+        "epsilon": 0.001,
+        "error_mode": "global",
+        "max_abs_error": 0.0,
+        "decode_verify_ok": true
+      },
+      "decision": "Do not promote yet. The surviving CI proves a real decodable byte stream, but does not report a matched SZ3/HPEZ comparator under the same present-day survey-global epsilon contract. Raw 10.818x compression is not itself a state-of-the-art win claim."
+    },
+    {
+      "lineage": "gorilla_xor_backend_pr28",
+      "status": "BACKEND_EVIDENCE_NOT_PORTFOLIO_WINNER",
+      "source": {
+        "pr": 28,
+        "commit": "f14d76840768c67bae1a0b3a029e21a81d1f2a1d",
+        "workflow_job": 93477912595
+      },
+      "exact_results": [
+        {
+          "case": "deterministic random float32",
+          "input_bytes": 24000000,
+          "output_bytes": 26280600,
+          "ratio_input_over_output": 0.9132219203526556,
+          "lossless_bitwise_recovery": true
+        },
+        {
+          "case": "constant float32",
+          "input_bytes": 6000000,
+          "output_bytes": 625531,
+          "ratio_input_over_output": 9.591850125732821,
+          "lossless_bitwise_recovery": true
+        }
+      ],
+      "decision": "PR #28 is a Gorilla/XOR backend test, not the PULSE Stage A/B experiment. It expands incompressible random floats and is strong on constants; neither result is matched seismic portfolio-winner evidence."
+    },
+    {
+      "lineage": "forge_analytic_subband_hpez_pr93",
+      "status": "AUDITED_NOT_STRONGEST_MATCHED_WINNER",
+      "source": {
+        "pr": 93,
+        "commit": "5b37965eae84402caa7a90cef9e46724b54eefca",
+        "workflow_run": 31465986855,
+        "workflow_job": 93698875273,
+        "dataset": "cached Utah FORGE 64x64x512 block"
+      },
+      "best_exact_result": {
+        "raw_numeric_bytes": 8388608,
+        "output_bytes": 263192,
+        "ratio": 31.872579713669108,
+        "core_bytes": 188122,
+        "certificate_bytes": 74974,
+        "container_overhead_bytes": 96,
+        "max_abs_error": 0.03373865783214569,
+        "config": {"lo": 5, "hi": 70, "subbands": 4, "beta": 0.25}
+      },
+      "matched_controls": {
+        "source_pr": 83,
+        "source_commit": "84a841512027e0636b6a9db18a4b6aa73bae55ee",
+        "workflow_run": 31459737741,
+        "workflow_job": 93680697936,
+        "sz3": {
+          "bytes": 266939,
+          "ratio": 31.425187027747914,
+          "max_abs_error": 0.033738717436790466
+        },
+        "official_hpez_best_orientation": {
+          "orientation": "512x64x64",
+          "bytes": 234700,
+          "ratio": 35.741832126118446,
+          "max_abs_error": 0.03373870253562927
+        }
+      },
+      "derived": {
+        "gain_vs_sz3": 1.0142355356083103,
+        "gain_of_best_hpez_over_analytic_subbands": 1.1213966766084365
+      },
+      "decision": "Research-only. The analytic-subband stream narrowly beats matched SZ3 by about 1.4%, but is larger than the best official HPEZ orientation on the identical block and error contract. It therefore cannot be promoted as the strongest applicable recovered engine."
+    }
+  ]
+}
