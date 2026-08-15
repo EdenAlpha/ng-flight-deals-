@@ -67,6 +67,8 @@ def main():
         )
 
     audits = {a["lineage"]: a for a in audit.get("audits", [])}
+
+    # PULSE: exact real stream recovered, but no matched current comparator.
     require("pulse_v1_stage_ab_pr29" in audits, "missing recovered PULSE PR29 audit")
     pulse = audits["pulse_v1_stage_ab_pr29"]
     require(pulse["source"].get("pr") == 29, "PULSE provenance regression: must be PR #29")
@@ -76,6 +78,8 @@ def main():
         "PULSE must remain quarantined until matched comparator proof exists",
     )
 
+    # Analytic subbands: preserve the result but preserve the negative conclusion
+    # too. It beat SZ3 narrowly but lost to the stronger matched HPEZ control.
     require("forge_analytic_subband_hpez_pr93" in audits, "missing analytic-subband audit")
     sub = audits["forge_analytic_subband_hpez_pr93"]
     require(sub["best_exact_result"].get("output_bytes") == 263192, "analytic-subband exact bytes drift")
@@ -91,6 +95,47 @@ def main():
     require(
         by_id.get("forge_analytic_subband_hpez_pr93", {}).get("status") == "AUDITED_RESEARCH_ONLY",
         "analytic subbands cannot become active without an explicit re-audit",
+    )
+
+    # Top-N: freeze both the spectacular Brady win and the transfer failures.
+    # This prevents either side of the evidence from being selectively forgotten.
+    require("spectral_topn_pr56_pr100_pr101" in audits, "missing full Top-N scope audit")
+    topn = audits["spectral_topn_pr56_pr100_pr101"]
+    require(topn["brady_pr56"]["best"].get("output_bytes") == 12025, "Top-N Brady exact bytes drift")
+    require(topn["brady_pr56"]["matched_sz3"].get("bytes") == 28664, "Top-N Brady SZ3 bytes drift")
+    require(topn["brady_pr56"].get("gain_vs_sz3", 0) > 2.0, "Top-N Brady >2x evidence lost")
+    require(topn["forge_pr100"]["best"].get("output_bytes") == 328835, "Top-N FORGE exact bytes drift")
+    require(topn["forge_pr100"]["matched_sz3"].get("bytes") == 266939, "Top-N FORGE SZ3 bytes drift")
+    require(
+        topn["forge_pr100"]["best"]["output_bytes"] > topn["forge_pr100"]["matched_sz3"]["bytes"],
+        "Top-N FORGE classification changed; re-audit required",
+    )
+    soda_topn_rows = topn["soda_pr101"].get("rows", [])
+    require(len(soda_topn_rows) == 3, "Top-N Soda three-shot audit missing")
+    require(any(r["topn_bytes"] > r["sz3_bytes"] for r in soda_topn_rows), "Top-N Soda transfer-loss evidence lost")
+    spectral_ledger = by_id.get("spectral_topn_pr56_pr101", {})
+    require(set(spectral_ledger.get("source", {}).get("prs", [])) == {56, 100, 101}, "Top-N PR56/100/101 provenance incomplete")
+
+    # PR171: whole-file completeness is a distinct invariant from PR169's
+    # numeric-payload dominance. Preserve exact historical bytes and honesty:
+    # it was 1.9923x, not >2x, under the deliberately hostile p75 accounting.
+    require("soda_whole_segy_container_pr171" in audits, "missing PR171 whole-SEG-Y audit")
+    whole = audits["soda_whole_segy_container_pr171"]
+    require(whole["source"].get("pr") == 171, "PR171 whole-file provenance drift")
+    wr = whole["exact_result"]
+    require(wr.get("container_bytes") == 69787, "PR171 whole-file exact bytes drift")
+    require(wr.get("header_blob_bytes") == 5775, "PR171 header bytes drift")
+    require(wr.get("sample_blob_bytes") == 63967, "PR171 sample bytes drift")
+    require(wr.get("headers_bit_exact") is True, "PR171 bit-exact header proof lost")
+    hostile = whole["matched_controls"]["hostile_whole_file_accounting"]
+    require(hostile.get("optimistic_baseline_whole_file_lower_bound_bytes") == 139039, "PR171 hostile baseline bytes drift")
+    require(hostile.get("clears_strict_2x") is False, "PR171 historical result must not be rewritten as strict >2x")
+    require(1.99 < float(hostile.get("gain_vs_ours", 0)) < 2.0, "PR171 historical near-2x evidence drift")
+    whole_ledger = by_id.get("soda_whole_segy_container_pr171", {})
+    require(whole_ledger.get("source", {}).get("pr") == 171, "PR171 missing from active ledger")
+    require(
+        whole_ledger.get("source", {}).get("v2_adapter") == "research/master_portfolio_v2_soda_wholefile.py",
+        "PR171 V2 adapter provenance missing",
     )
 
     governance = ledger.get("governance", {})
