@@ -1,0 +1,37 @@
+name: Fetch real Volve SEG-Y for local research
+
+on:
+  push:
+    branches: [general-seismic-master-portfolio-v2]
+    paths:
+      - '.github/workflows/fetch_real_volve_segy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Sparse checkout public SEGYSak seismic sample
+        uses: actions/checkout@v4
+        with:
+          repository: trhallam/segysak
+          ref: main
+          path: segysak_source
+          sparse-checkout: |
+            examples/data/volve10r12-full-twt-sub3d.sgy
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+      - name: Verify exact file size
+        run: |
+          test "$(stat -c%s segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy)" -eq 44855680
+          sha256sum segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: real-volve10r12-full-twt-sub3d
+          path: segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy
+          compression-level: 0
+          retention-days: 7
