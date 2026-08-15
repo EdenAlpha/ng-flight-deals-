@@ -7,6 +7,10 @@ on:
       - 'scripts/build_clm_general_corpus.py'
       - '.github/workflows/build-clm-general-corpus.yml'
 
+concurrency:
+  group: clm-general-corpus-build
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-slim
