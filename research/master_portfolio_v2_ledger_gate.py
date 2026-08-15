@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LEDGER = ROOT / "benchmarks" / "seismic_master_engine_ledger_v2.json"
 PROTECTED = ROOT / "benchmarks" / "seismic_protected_winners_v2.json"
 AUDIT = ROOT / "benchmarks" / "seismic_historical_lineage_audit_v2.json"
+SUPPLEMENT = ROOT / "benchmarks" / "seismic_lineage_recovery_supplement_v2.json"
 
 ALLOWED_STATUSES = {
     "RECOVERED",
@@ -43,6 +44,7 @@ def main():
     ledger = load(LEDGER)
     protected = load(PROTECTED)
     audit = load(AUDIT)
+    supplement = load(SUPPLEMENT)
 
     engines = ledger.get("engines", [])
     ids = [e.get("id") for e in engines]
@@ -138,6 +140,45 @@ def main():
         "PR171 V2 adapter provenance missing",
     )
 
+    # Supplemental discoveries are deliberately locked before promotion. This
+    # is how a buried lineage can no longer disappear simply because it was
+    # stored under a misleading historical PR title.
+    supplemental = {a["id"]: a for a in supplement.get("lineages", [])}
+
+    require("marine_anchor_carrier_pr6" in supplemental, "buried PR6 marine lineage lost")
+    marine = supplemental["marine_anchor_carrier_pr6"]
+    require(marine["source"].get("pr") == 6, "marine PR6 provenance drift")
+    require(marine.get("status") == "CURRENT_PROTOCOL_RETEST_RUNNING", "marine PR6 must not be silently promoted before current-protocol retest")
+    mr = marine.get("historical_exact_results", [])
+    require(len(mr) == 6, "marine PR6 six matched historical rows missing")
+    mkey = {(r["dataset"], float(r["epsilon"])): r for r in mr}
+    require(mkey[("F1", 1.0)]["carrier_bytes"] == 1368582, "marine F1 epsilon1 carrier bytes drift")
+    require(mkey[("F1", 1.0)]["sz3_bytes"] == 3661279, "marine F1 epsilon1 SZ3 bytes drift")
+    require(mkey[("Tie", 1.0)]["carrier_bytes"] == 1209511, "marine Tie epsilon1 carrier bytes drift")
+    require(mkey[("Tie", 1.0)]["sz3_bytes"] == 3167586, "marine Tie epsilon1 SZ3 bytes drift")
+    require(mkey[("F1", 1.0)]["gain_vs_sz3"] > 2.0 and mkey[("Tie", 1.0)]["gain_vs_sz3"] > 2.0, "marine independent >2x evidence lost")
+    require(mkey[("F1", 2.0)]["gain_vs_sz3"] > 4.0 and mkey[("Tie", 2.0)]["gain_vs_sz3"] > 4.0, "marine independent >4x epsilon2 evidence lost")
+    require(marine["source"].get("v2_recovered_source") == "research/marine_carrier_pr6_v2.py", "marine recovered source pointer lost")
+    require(marine["source"].get("v2_retest_workflow") == ".github/workflows/master_portfolio_v2_marine_pr6.yml", "marine current-protocol gate pointer lost")
+
+    require("forge_critically_sampled_bandcore_pr91" in supplemental, "FORGE band-core audit lost")
+    band = supplemental["forge_critically_sampled_bandcore_pr91"]
+    require(band.get("status") == "AUDITED_RESEARCH_ONLY", "FORGE band-core must remain research-only without re-audit")
+    require(band["best_exact_result"].get("bytes") == 272522, "FORGE band-core exact bytes drift")
+    require(band["matched_controls"].get("sz3_bytes") == 266939, "FORGE band-core SZ3 control drift")
+    require(band["matched_controls"].get("official_hpez_best_orientation_bytes") == 234700, "FORGE band-core HPEZ control drift")
+    require(band["best_exact_result"]["bytes"] > band["matched_controls"]["sz3_bytes"] > band["matched_controls"]["official_hpez_best_orientation_bytes"], "FORGE band-core negative classification changed")
+
+    require("imperial_sparse_causal_law_pr310_pr313" in supplemental, "Imperial causal-law audit lost")
+    causal = supplemental["imperial_sparse_causal_law_pr310_pr313"]
+    require(causal.get("status") == "AUDITED_RESEARCH_ONLY", "Imperial causal law must remain research-only without re-audit")
+    p310 = causal["pr310_four_region_exact_aggregate"]
+    require(p310.get("sparse_stencil_bytes") == 7224950 and p310.get("sz3_bytes") == 7846115, "Imperial PR310 aggregate bytes drift")
+    p313 = causal["pr313_hard_region_exact"]
+    require(p313.get("codelength_shaped_bytes") == 2638815 and p313.get("sz3_bytes") == 2843101, "Imperial PR313 exact bytes drift")
+    require(float(p310["gain_stencil_vs_sz3"]) < float(causal["stronger_active_control"]["gain_vs_sz3"]), "Imperial PR310 unexpectedly overtook active control; re-audit")
+    require(float(p313["gain_codelength_vs_sz3"]) < float(causal["stronger_active_control"]["gain_vs_sz3"]), "Imperial PR313 unexpectedly overtook active control; re-audit")
+
     governance = ledger.get("governance", {})
     require(governance.get("dataset_label_routing_forbidden") is True, "dataset-label routing ban removed")
     require(governance.get("selection_must_be_decoder_visible_and_byte_charged") is True, "byte-charged selection invariant removed")
@@ -150,6 +191,7 @@ def main():
         "protected_winners": protected_ids,
         "quarantined": [e["id"] for e in engines if e["status"] in NON_ACTIVE_STATUSES],
         "audit_entries": sorted(audits),
+        "supplemental_lineages": sorted(supplemental),
     }, indent=2))
 
 
