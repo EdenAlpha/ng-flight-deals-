@@ -9,6 +9,10 @@ on:
       - '.github/workflows/master_portfolio_v2_soda10_global.yml'
   workflow_dispatch:
 
+concurrency:
+  group: master-portfolio-v2-soda10-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions: {contents: read}
 
 jobs:
