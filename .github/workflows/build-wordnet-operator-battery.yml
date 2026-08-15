@@ -1,0 +1,62 @@
+name: Build WordNet operator paraphrase battery
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-wordnet-operator-battery.yml'
+
+concurrency:
+  group: wordnet-operator-battery
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install WordNet
+        run: |
+          pip install nltk
+          python - <<'PY'
+          import nltk
+          nltk.download('wordnet', quiet=True)
+          nltk.download('omw-1.4', quiet=True)
+          PY
+      - name: Export seed verb senses and dictionary synonyms
+        run: |
+          python - <<'PY'
+          import json
+          from nltk.corpus import wordnet as wn
+          seeds={
+            'SET':['moved','journeyed','travelled','went'],
+            'LINK':['got','grabbed','took','picked'],
+            'UNLINK':['left','discarded','dropped','put'],
+            'TRANSFER':['gave','handed','passed'],
+          }
+          out={'source':'Princeton WordNet via NLTK','seeds':seeds,'entries':{}}
+          for cls,words in seeds.items():
+            out['entries'][cls]={}
+            for w in words:
+              rows=[]
+              # Search both the observed form and its morphy lemma.
+              lemma=wn.morphy(w,wn.VERB) or w
+              for s in wn.synsets(lemma,pos=wn.VERB):
+                rows.append({
+                  'synset':s.name(),
+                  'definition':s.definition(),
+                  'examples':s.examples(),
+                  'lemmas':sorted(set(l.name().replace('_',' ') for l in s.lemmas())),
+                })
+              out['entries'][cls][w]={'morphy':lemma,'synsets':rows}
+          with open('wordnet_operator_senses.json','w') as f: json.dump(out,f,indent=2,sort_keys=True)
+          print(json.dumps({c:{w:len(v['synsets']) for w,v in d.items()} for c,d in out['entries'].items()},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wordnet-operator-senses
+          path: wordnet_operator_senses.json
+          retention-days: 7
