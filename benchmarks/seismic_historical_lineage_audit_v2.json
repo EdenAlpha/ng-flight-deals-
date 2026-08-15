@@ -192,6 +192,47 @@
         "decision": "Useful competitor but not the dominant Soda family. One of three shots loses to SZ3 and the two wins are only about 8-10%, whereas the recovered native Soda record/run engine has >2x historical and current global-epsilon evidence."
       },
       "decision": "Keep Top-N as a protected distinct competitor because it is a genuine major Brady winner, but never universalize it into a replacement for native lattice engines. Eligibility and exact bytes must decide per scope."
+    },
+    {
+      "lineage": "soda_whole_segy_container_pr171",
+      "status": "RECOVERED_PRODUCTION_COMPLETE_SCOPE",
+      "source": {
+        "pr": 171,
+        "commit": "9cdba1a051a02b30b5ec4284d639c707e01ea620",
+        "workflow_run": 31593047256,
+        "workflow_job": 94102115136,
+        "dataset": "Soda Lake p75 F6618R1.SGY"
+      },
+      "scope": "real self-describing complete SEG-Y container; global and trace headers lossless, geometry derived from decoded headers, original trace order restored, original IBM/IEEE sample format rewritten and reconstructed file reopened",
+      "exact_result": {
+        "original_file_bytes": 27549920,
+        "numeric_data_bytes": 26744000,
+        "container_bytes": 69787,
+        "whole_file_ratio": 394.7715190508261,
+        "header_blob_bytes": 5775,
+        "sample_blob_bytes": 63967,
+        "sample_format": 1,
+        "epsilon": 0.07150844605649041,
+        "max_abs_error": 0.07150119543075562,
+        "headers_bit_exact": true,
+        "decode_verify_ok": true
+      },
+      "matched_controls": {
+        "sz3_file_best_bytes": 137333,
+        "sz3_geometry_bytes": 133264,
+        "hpez_geometry_bytes": 163297,
+        "strongest_sample_baseline": {
+          "kind": "geometry_hybrid",
+          "bytes": 133219
+        },
+        "hostile_whole_file_accounting": {
+          "rule": "baseline receives the exact same compressed header blob and file framing while paying zero bytes for its sample-container metadata",
+          "optimistic_baseline_whole_file_lower_bound_bytes": 139039,
+          "gain_vs_ours": 1.9923338157536503,
+          "clears_strict_2x": false
+        }
+      },
+      "decision": "Protect as a distinct production-complete lineage. It misses a hostile strict-2x whole-file p75 gate by about 0.38%, so do not rewrite history as a >2x result. Its importance is stronger: it proves the Soda legal-state/run family can be a real independently decodable SEG-Y container rather than only a numeric-payload experiment. V2 must compete this exact complete-file engine under the current survey-global epsilon."
     }
   ]
 }
