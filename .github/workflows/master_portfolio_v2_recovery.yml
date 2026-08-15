@@ -11,6 +11,10 @@ on:
       - '.github/workflows/master_portfolio_v2_recovery.yml'
   workflow_dispatch:
 
+concurrency:
+  group: master-portfolio-v2-recovery-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions: {contents: read}
 
 jobs:
