@@ -1,0 +1,145 @@
+{
+  "name": "seismic-current-protocol-evidence-v2",
+  "created_utc": "2026-08-15",
+  "purpose": "Authoritative correction layer for completed pinned V2 evidence. These results supersede stale text that described the marine and PR171 current-protocol experiments as pending. This is evidence/governance data, never a dataset-label router.",
+  "protocol": {
+    "epsilon_rule": "0.10 * survey-global standard deviation unless explicitly noted",
+    "hard_error_required": true,
+    "decoder_validation_required": true,
+    "winner_rule": "smallest valid fully charged stream inside an identical reconstruction/accounting domain"
+  },
+  "completed_evidence": [
+    {
+      "id": "marine_anchor_carrier_pr6_current_protocol",
+      "status": "CURRENT_PROTOCOL_PROVEN_WINNER",
+      "source_pr": 6,
+      "workflow_run": 31877667477,
+      "workflow_job": 95013274243,
+      "artifact_id": 9248070413,
+      "integration_status": "SCIENTIFICALLY_PROVEN; ACTIVE_ROUTING_REQUIRES_STRUCTURAL_GEOMETRY_AUTODETECTION_INSTEAD_OF_FIXTURE_SHOT_COUNTS",
+      "records": [
+        {
+          "record": "F1",
+          "shape": [246, 48, 2000],
+          "raw_numeric_bytes": 94464000,
+          "std": 20.16968521579257,
+          "epsilon": 2.016968521579257,
+          "M": 64,
+          "ours_bytes": 579217,
+          "anchor_bytes": 180693,
+          "correction_bytes": 398460,
+          "framing_bytes": 64,
+          "max_abs_error": 2.0169687271118164,
+          "matched_sz3_bytes": 2482582,
+          "gain_sz3_over_ours": 4.28610002814144,
+          "best_official_hpez_orientation": [48, 2000, 246],
+          "best_official_hpez_bytes": 1337666,
+          "hpez_max_abs_error": 2.0169668197631836,
+          "gain_hpez_over_ours": 2.3094384315377483,
+          "valid": true
+        },
+        {
+          "record": "Tie",
+          "shape": [247, 48, 2000],
+          "raw_numeric_bytes": 94848000,
+          "std": 17.768961643722292,
+          "epsilon": 1.7768961643722294,
+          "M": 96,
+          "ours_bytes": 586581,
+          "anchor_bytes": 115406,
+          "correction_bytes": 471111,
+          "framing_bytes": 64,
+          "max_abs_error": 1.7768961191177368,
+          "matched_sz3_bytes": 2246513,
+          "gain_sz3_over_ours": 3.8298427668131083,
+          "best_official_hpez_orientation": [48, 2000, 247],
+          "best_official_hpez_bytes": 1201549,
+          "hpez_max_abs_error": 1.7768945693969727,
+          "gain_hpez_over_ours": 2.048393998441818,
+          "valid": true
+        }
+      ],
+      "aggregate": {
+        "minimum_gain_vs_sz3": 3.8298427668131083,
+        "minimum_gain_vs_hpez": 2.048393998441818,
+        "all_hard_error_valid": true,
+        "all_decodes_verified": true,
+        "clears_2x_strongest_matched_baseline_on_both_records": true
+      }
+    },
+    {
+      "id": "soda_whole_segy_container_pr171_current_protocol",
+      "status": "CURRENT_PROTOCOL_PROVEN_WINNER",
+      "source_pr": 171,
+      "workflow_run": 31877667539,
+      "aggregate_workflow_job": 95025988350,
+      "artifact_id": 9248740580,
+      "epsilon": 0.0816739073446828,
+      "comparison": "self-contained whole SEG-Y stream versus deliberately optimistic whole-file SZ3 using identical compressed headers/framing and zero SZ3 sample metadata",
+      "records": [
+        {
+          "shape": [3091, 2000],
+          "original_file_bytes": 25473440,
+          "ours_bytes": 92538,
+          "whole_file_ratio": 275.275,
+          "optimistic_sz3_whole_file_bytes": 188834,
+          "gain_vs_optimistic_sz3_whole_file": 2.0406103438587393,
+          "headers_bit_exact": true,
+          "hard_error_valid": true,
+          "decode_verified": true
+        },
+        {
+          "shape": [3079, 2000],
+          "original_file_bytes": 25374560,
+          "ours_bytes": 54265,
+          "whole_file_ratio": 467.605,
+          "optimistic_sz3_whole_file_bytes": 127540,
+          "gain_vs_optimistic_sz3_whole_file": 2.3503178844559107,
+          "headers_bit_exact": true,
+          "hard_error_valid": true,
+          "decode_verified": true
+        },
+        {
+          "shape": [1936, 2000],
+          "original_file_bytes": 15956240,
+          "ours_bytes": 32801,
+          "whole_file_ratio": 486.456,
+          "optimistic_sz3_whole_file_bytes": 75572,
+          "gain_vs_optimistic_sz3_whole_file": 2.303954147739398,
+          "headers_bit_exact": true,
+          "hard_error_valid": true,
+          "decode_verified": true
+        }
+      ],
+      "aggregate": {
+        "minimum_gain": 2.0406103438587393,
+        "median_gain": 2.303954147739398,
+        "maximum_gain": 2.3503178844559107,
+        "byte_weighted_gain": 2.1822787911182377,
+        "wins_over_2x": 3,
+        "records": 3,
+        "all_headers_bit_exact": true,
+        "all_hard_error_valid": true
+      }
+    },
+    {
+      "id": "soda_record_run_lattice_pr169_vs_frozen_v1_p45",
+      "status": "V2_MONOTONICITY_PROVEN_ON_PINNED_P45",
+      "source_pr": 169,
+      "workflow_run": 31877667518,
+      "workflow_job": 95013557476,
+      "artifact_id": 9247860139,
+      "shape": [3091, 2000],
+      "epsilon": 0.0816739073446828,
+      "native_bytes": 87275,
+      "frozen_v1_fallback_bytes": 169993,
+      "native_gain_over_v1": 1.947785734746491,
+      "native_max_abs_error": 0.0816737711429596,
+      "v1_max_abs_error": 0.08167388485162519,
+      "native_decode_verified": true,
+      "v1_decode_verified": true,
+      "selected_winner": "soda_record_run_lattice_pr169",
+      "selected_is_no_worse_than_v1": true
+    }
+  ]
+}
