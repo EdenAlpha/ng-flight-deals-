@@ -3,6 +3,10 @@ name: Master Portfolio V2 Soda 10-shot global-epsilon gate
 on:
   pull_request:
     branches: [ general-seismic-codec-portfolio-v1 ]
+    paths:
+      - 'research/master_portfolio_v2.py'
+      - 'research/soda_hard4_frozen_record.py'
+      - '.github/workflows/master_portfolio_v2_soda10_global.yml'
   workflow_dispatch:
 
 permissions: {contents: read}
