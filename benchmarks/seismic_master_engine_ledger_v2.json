@@ -20,14 +20,14 @@
     "general_benchmark_v1_soda_epsilon": 0.0816739073446828,
     "general_benchmark_v1_soda_std": 0.816739073446828,
     "general_benchmark_v1_rule": "0.10 * std(all selected numeric Soda samples)",
-    "consequence": "Historical >2x Soda evidence is genuine under its protocol, but V2 must retest the recovered engine with the survey-global epsilon before claiming the same gain in the new benchmark."
+    "consequence": "Historical >2x Soda evidence is genuine under its protocol, but V2 must retest recovered engines with the survey-global epsilon before claiming the same gain in the new benchmark."
   },
   "engines": [
     {
       "id": "soda_record_run_lattice_pr169",
       "family": "legal-state geometry/run lattice",
       "status": "RECOVERED",
-      "native_scope": "complete 3C SEG-Y shot/record",
+      "native_scope": "complete 3C SEG-Y shot/record numeric payload",
       "source": {
         "pr": 169,
         "branch": "soda-record-codec-10shot",
@@ -55,7 +55,50 @@
         "epsilon_rule": "0.10 * each shot std",
         "decode_verified": true
       },
+      "current_v2_evidence": {
+        "epsilon_rule": "0.10 * std(all selected numeric Soda samples)",
+        "epsilon": 0.0816739073446828,
+        "p5_gain_vs_sz3": 2.494,
+        "p45_gain_vs_sz3": 2.104,
+        "p95_gain_vs_sz3": 2.494,
+        "note": "Exact values live in V2 regression artifacts; these rounded values are the already confirmed recovery gate results."
+      },
       "v1_omission": "NOT PRESENT in general-seismic-codec-portfolio-v1"
+    },
+    {
+      "id": "soda_whole_segy_container_pr171",
+      "family": "self-contained whole-SEG-Y wrapper around robust Soda legal-state/run codec",
+      "status": "RECOVERED",
+      "native_scope": "complete SEG-Y file including global header, trace headers, trace order and sample format",
+      "source": {
+        "pr": 171,
+        "branch": "soda-record-standalone-p75",
+        "sha": "9cdba1a051a02b30b5ec4284d639c707e01ea620",
+        "entries": [
+          "research/soda_record_standalone.py",
+          "research/soda_record_standalone_safe.py"
+        ],
+        "v2_adapter": "research/master_portfolio_v2_soda_wholefile.py"
+      },
+      "historical_evidence": {
+        "dataset": "Soda Lake deterministic p75 F6618R1.SGY",
+        "epsilon_rule": "0.10 * shot std with 0.9999 internal safety",
+        "epsilon": 0.07150844605649041,
+        "original_file_bytes": 27549920,
+        "container_bytes": 69787,
+        "whole_file_ratio": 394.7715190508261,
+        "header_blob_bytes": 5775,
+        "sample_blob_bytes": 63967,
+        "sample_format": 1,
+        "max_abs_error": 0.07150119543075562,
+        "headers_bit_exact": true,
+        "strongest_sample_baseline_bytes": 133219,
+        "optimistic_baseline_whole_file_lower_bound_bytes": 139039,
+        "gain_vs_optimistic_whole_file_baseline": 1.9923338157536503,
+        "clears_strict_2x": false,
+        "decode_verified": true
+      },
+      "note": "This is a production-grade completeness lineage, not a >2x historical claim under hostile whole-file accounting. It must remain available because PR169's numeric-payload contract does not itself carry a reconstructable SEG-Y file. V2 now reruns this exact source under the frozen survey-global epsilon."
     },
     {
       "id": "forge_sparse_state_lattice_pr122",
@@ -109,13 +152,31 @@
       "family": "2D spectral Top-N + certified correction",
       "status": "PRESENT_BUT_REDUCED_IN_V1",
       "native_scope": "panel or complete gather",
-      "source": {"prs": [56,101]},
+      "source": {"prs": [56,100,101]},
+      "audited_scope_evidence": {
+        "brady_pr56": {
+          "ours_bytes": 12025,
+          "matched_sz3_bytes": 28664,
+          "gain_vs_sz3": 2.3837006237006237,
+          "max_abs_error": 0.026069296523928642,
+          "result": "major winner on this Brady DAS panel"
+        },
+        "forge_pr100": {
+          "ours_bytes": 328835,
+          "matched_sz3_bytes": 266939,
+          "matched_best_hpez_bytes": 234700,
+          "gain_vs_sz3": 0.8117718612678091,
+          "result": "not a winner on the FORGE block"
+        },
+        "soda_pr101_gain_vs_sz3": [1.099113526600507,0.9618247363512447,1.0807741464305276],
+        "conclusion": "Powerful scope-specific competitor; demonstrably not a universal replacement for the native lattice engines."
+      },
       "important_differences_from_v1": [
         "historical versions included wider block/budget search",
         "historical int8 spectral scale used float16 in key variants",
         "geometry/layout alternatives were explored"
       ],
-      "note": "Keep as a competitor, but do not mistake the reduced V1 version for the entire historical family."
+      "note": "Keep as a protected distinct competitor, but do not mistake the reduced V1 version for the entire historical family or route to it by dataset label."
     },
     {
       "id": "imperial_ar32_zsm_pr482",
