@@ -1,0 +1,86 @@
+name: Temporary Brady channel-frequency phase lattice
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  phase-lattice:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy pysz zstandard
+      - run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Sparse channel-frequency lattice plus certified correction
+        shell: bash
+        run: |
+          cat > lattice.py <<'PY'
+          import os,json,numpy as np,zstandard as zstd
+          from pysz import sz,szConfig,szErrorBoundMode
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');dt=int.from_bytes(h[3216:3218],'big');st=240+4*ns;n=(size-3600)//st
+          mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4)).astype(np.float32,copy=True)
+          gstd=float(X.std());eps=.1*gstd;Z=zstd.ZstdCompressor(level=3);zc=lambda b:Z.compress(b);freq=np.fft.rfftfreq(ns,d=dt/1e6)
+          def compact(A):
+            A=A.astype(np.int32,copy=False);opts={}
+            for order,V in [('C',A),('T',A.T)]:
+              V=np.ascontiguousarray(V);mn,mx=int(V.min()),int(V.max())
+              if mn>=-128 and mx<=127:opts['i8'+order]=len(zc(V.astype(np.int8).tobytes()))
+              if mn>=-32768 and mx<=32767:opts['i16'+order]=len(zc(V.astype(np.int16).tobytes()))
+              opts['i32'+order]=len(zc(V.astype(np.int32).tobytes()))
+              m=V!=0;vv=V[m];mb=len(zc(np.packbits(m.reshape(-1)).tobytes()))
+              if vv.size:
+                if vv.min()>=-128 and vv.max()<=127:vraw=vv.astype(np.int8).tobytes()
+                elif vv.min()>=-32768 and vv.max()<=32767:vraw=vv.astype(np.int16).tobytes()
+                else:vraw=vv.astype(np.int32).tobytes()
+                vb=len(zc(vraw))
+              else:vb=0
+              opts['sparse'+order]=mb+vb
+            k=min(opts,key=opts.get);return int(opts[k]),k
+          def field_code(A):
+            A=A.astype(np.int32,copy=False);V=[('state',A)]
+            if A.shape[1]>1:
+              T=np.empty_like(A);T[:,0]=A[:,0];T[:,1:]=A[:,1:]-A[:,:-1];V.append(('df',T))
+            if A.shape[0]>1:
+              S=np.empty_like(A);S[0]=A[0];S[1:]=A[1:]-A[:-1];V.append(('ds',S))
+            if A.shape[0]>1 and A.shape[1]>1:
+              L=np.empty_like(A);L[0,0]=A[0,0];L[0,1:]=A[0,1:]-A[0,:-1];L[1:,0]=A[1:,0]-A[:-1,0];L[1:,1:]=A[1:,1:]-A[1:,:-1]-A[:-1,1:]+A[:-1,:-1];V.append(('lorenzo',L))
+            best=None
+            for name,B in V:
+              b,m=compact(B);row=(b,name,m,float(np.mean(B==0)))
+              if best is None or b<best[0]:best=row
+            return {'bytes':best[0],'transform':best[1],'mode':best[2],'zero_fraction':best[3]}
+          def interpolate_keys(Zk,ids,N,mode):
+            out=np.empty((N,Zk.shape[1]),np.complex128)
+            for j in range(len(ids)-1):
+              a,b=int(ids[j]),int(ids[j+1]);L=b-a;z0=Zk[j];z1=Zk[j+1]
+              for x in range(L):
+                u=x/L
+                if mode=='complex':out[a+x]=(1-u)*z0+u*z1
+                else:
+                  a0=np.abs(z0);a1=np.abs(z1);phase0=np.angle(z0);dphase=np.angle(z1*np.conj(z0));zp=((1-u)*a0+u*a1)*np.exp(1j*(phase0+u*dphase));weak=(a0<1e-14)|(a1<1e-14);zp[weak]=((1-u)*z0+u*z1)[weak];out[a+x]=zp
+            out[-1]=Zk[-1];return out
+          blocks=[]
+          for lo in [4096,7680]:
+            Y=X[lo:lo+384];F=np.fft.rfft(Y,axis=1);cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps;sb,_=sz.compress(Y,cfg);best=None;trials=[]
+            for cutoff in [40,60]:
+              fi=np.where(freq<=cutoff)[0];G=F[:,fi]/ns
+              for stride in [1,2,3,4,6,8]:
+                ids=np.arange(0,Y.shape[0],stride,dtype=int);ids=np.r_[ids,Y.shape[0]-1] if ids[-1]!=Y.shape[0]-1 else ids
+                for qm in [0.005,0.01,0.02]:
+                  q=eps*qm;Qr=np.rint(G[ids].real/q).astype(np.int32);Qi=np.rint(G[ids].imag/q).astype(np.int32);cr=field_code(Qr);ci=field_code(Qi);Zk=(Qr.astype(np.float64)+1j*Qi.astype(np.float64))*q;carrier=cr['bytes']+ci['bytes']
+                  for mode in ['complex','polar']:
+                    Gh=interpolate_keys(Zk,ids,Y.shape[0],mode);Fq=np.zeros_like(F);Fq[:,fi]=Gh*ns;P=np.fft.irfft(Fq,n=ns,axis=1).astype(np.float32);C=np.rint((Y-P)/(2*eps)).astype(np.int32);cc=field_code(C);R=P+C.astype(np.float32)*(2*eps);total=carrier+cc['bytes']+256;row={'cutoff':cutoff,'stride':stride,'qmul':qm,'interp':mode,'key_channels':int(len(ids)),'carrier_bytes':int(carrier),'carrier_real':cr,'carrier_imag':ci,'correction':cc,'correction_state_zero':float(np.mean(C==0)),'total_bytes':int(total),'ratio':float(Y.nbytes/total),'maxerr':float(np.max(np.abs(Y-R)))};trials.append(row)
+                    if best is None or total<best['total_bytes']:best=row
+            blocks.append({'block':[lo,lo+384],'block_std':float(Y.std()),'epsilon':eps,'sz3_bytes':int(sb.size),'sz3_ratio':float(Y.nbytes/int(sb.size)),'best':best,'trials':trials})
+          out={'global_std':gstd,'epsilon':eps,'blocks':blocks};print(json.dumps(out,indent=2));open('phase_lattice.json','w').write(json.dumps(out,indent=2))
+          PY
+          python lattice.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brady-phase-lattice-results
+          path: phase_lattice.json
+          retention-days: 1
