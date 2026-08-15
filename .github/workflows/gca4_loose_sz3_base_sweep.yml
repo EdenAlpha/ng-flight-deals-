@@ -1,0 +1,99 @@
+name: GCA4 loose SZ3 base plus exact correction sweep
+
+on:
+  push:
+    branches: [general-seismic-master-portfolio-v2]
+    paths:
+      - 'research/gca_factor_context_v4.py'
+      - '.github/workflows/gca4_loose_sz3_base_sweep.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sweep:
+    runs-on: ubuntu-slim
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sparse checkout pinned real Volve SEG-Y
+        uses: actions/checkout@v4
+        with:
+          repository: trhallam/segysak
+          ref: 798307eeaf84b63a71272ba638863c538a814f26
+          path: segysak_source
+          sparse-checkout: |
+            examples/data/volve10r12-full-twt-sub3d.sgy
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy numba pysz
+      - name: Sweep coarse SZ3 error bound plus GCA correction
+        env:
+          PYTHONPATH: research
+        run: |
+          python - <<'PY'
+          import json, math, os
+          from pathlib import Path
+          import numpy as np
+          from pysz import sz,szConfig,szErrorBoundMode
+          import gca_factor_context_v4 as g
+
+          p=Path('segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy')
+          NI,NX,NT=61,202,850
+          X=np.empty((NI,NX,NT),np.float32)
+          with p.open('rb') as f:
+              f.seek(3600)
+              for k in range(NI*NX):
+                  f.read(240)
+                  X.reshape(-1,NT)[k]=np.frombuffer(f.read(4*NT),dtype='>f4').astype(np.float32)
+          std=float(X.astype(np.float64).std());eps=.1*std
+
+          def matched(base_eps):
+              cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=float(base_eps)
+              bb,_=sz.compress(np.ascontiguousarray(X),cfg)
+              B,_=sz.decompress(bb,X.dtype,X.shape)
+              me=float(np.max(np.abs(X.astype(np.float64)-B.astype(np.float64))))
+              if me>base_eps*(1+3e-6):raise RuntimeError(('base hard bound',me,base_eps))
+              return bb,B,me
+
+          direct,_B,dme=matched(eps)
+          rows=[]
+          for mult in [1.10,1.25,1.50,1.75,2.0,2.5,3.0,4.0,6.0,8.0,12.0,16.0]:
+              bb,B,bme=matched(mult*eps)
+              # Largest uniform correction quantum that still guarantees target ABS epsilon.
+              step=2.0*eps
+              K=np.rint((X.astype(np.float64)-B.astype(np.float64))/step).astype(np.int32)
+              Y=B.astype(np.float64)+K.astype(np.float64)*step
+              me=float(np.max(np.abs(X.astype(np.float64)-Y)))
+              if me>eps*(1+3e-7):raise RuntimeError(('corrected hard bound',mult,me,eps))
+              best=None
+              for C in [1,2,3,4,5]:
+                  mb,mbits,MS=g.ac_mag_enc(K,C,max(1024,int(K.size*2)));mbytes=(int(mbits)+7)//8
+                  sb,sbits=g.ac_sign_enc(K,max(1024,int(K.size//2+1024)));sbytes=(int(sbits)+7)//8
+                  tb=int(g.tailbits(K,C));tbytes=(tb+7)//8
+                  corr=64+mbytes+sbytes+tbytes
+                  total=int(bb.size)+corr
+                  row={'multiplier':mult,'base_epsilon':mult*eps,'base_bytes':int(bb.size),'base_maxerr':bme,
+                       'correction_quantum':step,'C':C,'correction_bytes':corr,'mag_bytes':mbytes,'sign_bytes':sbytes,'tail_bytes':tbytes,
+                       'zero_fraction':float(np.mean(K==0)),'abs_le_2_fraction':float(np.mean(np.abs(K.astype(np.int64))<=2)),
+                       'total_bytes':total,'corrected_maxerr':me,'gain_direct_sz3_over_total':float(direct.size/total),
+                       'reduction_percent_vs_direct_sz3':float(100*(1-total/direct.size))}
+                  if best is None or total<best['total_bytes']:best=row
+              rows.append(best);print(json.dumps(best),flush=True)
+          winner=min(rows,key=lambda r:r['total_bytes'])
+          out={'source':'real Volve 61x202x850','numeric_bytes':int(X.nbytes),'std':std,'epsilon':eps,
+               'direct_sz3_bytes':int(direct.size),'direct_sz3_maxerr':dme,'rows':rows,'winner':winner,
+               'winner_gain_direct_sz3':float(direct.size/winner['total_bytes']),
+               'winner_reduction_percent_vs_direct_sz3':float(100*(1-winner['total_bytes']/direct.size)),
+               'target_2x_bytes':float(direct.size/2),'beats_2x_direct_sz3':bool(winner['total_bytes']<=direct.size/2)}
+          Path('gca4_loose_sz3_sweep.json').write_text(json.dumps(out,indent=2));print(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gca4-loose-sz3-sweep
+          path: gca4_loose_sz3_sweep.json
+          retention-days: 30
