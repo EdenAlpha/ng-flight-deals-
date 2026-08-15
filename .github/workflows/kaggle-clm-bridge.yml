@@ -1,0 +1,151 @@
+name: Kaggle CLM remote compute bridge
+
+on:
+  workflow_dispatch:
+    inputs:
+      kaggle_username:
+        description: Kaggle username/owner slug
+        required: true
+        type: string
+      accelerator:
+        description: Kaggle accelerator ID
+        required: true
+        default: NvidiaTeslaT4
+        type: choice
+        options:
+          - NvidiaTeslaT4
+          - NvidiaL4
+          - NvidiaTeslaA100
+          - NvidiaH100
+          - NvidiaRtxPro6000
+      kernel_slug:
+        description: Private Kaggle kernel slug
+        required: true
+        default: clm-nonneural-remote-worker
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  launch-kaggle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+      KAGGLE_USER: ${{ inputs.kaggle_username }}
+      KAGGLE_ACCELERATOR: ${{ inputs.accelerator }}
+      KAGGLE_KERNEL_SLUG: ${{ inputs.kernel_slug }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Require Kaggle secret
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${KAGGLE_API_TOKEN:-}" ]; then
+            echo 'Missing repository Actions secret KAGGLE_API_TOKEN.' >&2
+            exit 2
+          fi
+
+      - name: Install current Kaggle CLI
+        run: python -m pip install --upgrade 'kaggle>=2.0'
+
+      - name: Verify Kaggle authentication
+        shell: bash
+        run: |
+          set -euo pipefail
+          kaggle --version
+          # Authentication test. The token itself is never printed.
+          kaggle kernels list --mine --page-size 1 >/tmp/kaggle-mine.txt
+          echo 'Kaggle authentication succeeded.'
+
+      - name: Build private kernel package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .kaggle-clm-kernel
+          cp kaggle/clm_bridge_probe.py .kaggle-clm-kernel/clm_bridge_probe.py
+          python - <<'PY'
+          import json, os, re
+          user=os.environ['KAGGLE_USER'].strip()
+          slug=os.environ['KAGGLE_KERNEL_SLUG'].strip()
+          valid=re.compile(r'^[A-Za-z0-9_-]+$')
+          if not valid.fullmatch(user): raise SystemExit('Invalid Kaggle username characters')
+          if not valid.fullmatch(slug): raise SystemExit('Invalid kernel slug characters')
+          meta={
+              'id': f'{user}/{slug}',
+              'title': 'CLM non-neural remote worker',
+              'code_file': 'clm_bridge_probe.py',
+              'language': 'python',
+              'kernel_type': 'script',
+              'is_private': True,
+              'enable_gpu': True,
+              'enable_tpu': False,
+              'enable_internet': True,
+              'keywords': [],
+              'dataset_sources': [],
+              'competition_sources': [],
+              'kernel_sources': [],
+              'model_sources': [],
+          }
+          with open('.kaggle-clm-kernel/kernel-metadata.json','w') as f:
+              json.dump(meta,f,indent=2)
+          print('Prepared private kernel', meta['id'])
+          PY
+
+      - name: Push and launch Kaggle kernel
+        shell: bash
+        run: |
+          set -euo pipefail
+          kaggle kernels push -p .kaggle-clm-kernel --accelerator "$KAGGLE_ACCELERATOR" --timeout 600
+
+      - name: Poll Kaggle run
+        shell: bash
+        run: |
+          set -euo pipefail
+          kernel="${KAGGLE_USER}/${KAGGLE_KERNEL_SLUG}"
+          : > kaggle-status.log
+          done_flag=0
+          for i in $(seq 1 50); do
+            text="$(kaggle kernels status "$kernel" 2>&1 || true)"
+            printf '%s\n' "$text" | tee -a kaggle-status.log
+            low="$(printf '%s' "$text" | tr '[:upper:]' '[:lower:]')"
+            if printf '%s' "$low" | grep -Eq 'complete|completed'; then
+              done_flag=1
+              break
+            fi
+            if printf '%s' "$low" | grep -Eq 'error|failed|cancel'; then
+              echo 'Kaggle kernel failed.' >&2
+              exit 3
+            fi
+            sleep 15
+          done
+          if [ "$done_flag" -ne 1 ]; then
+            echo 'Timed out waiting for Kaggle kernel.' >&2
+            exit 4
+          fi
+
+      - name: Pull Kaggle outputs back to GitHub runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          kernel="${KAGGLE_USER}/${KAGGLE_KERNEL_SLUG}"
+          mkdir -p kaggle-output
+          kaggle kernels output "$kernel" -p kaggle-output -o
+          test -f kaggle-output/kaggle_bridge_status.json
+          cat kaggle-output/kaggle_bridge_status.json
+
+      - name: Upload returned Kaggle outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaggle-clm-bridge-output
+          path: |
+            kaggle-output/
+            kaggle-status.log
+          retention-days: 7
