@@ -1,0 +1,143 @@
+name: Master Portfolio V2 Soda whole-SEG-Y gate
+
+on:
+  pull_request:
+    branches: [ general-seismic-codec-portfolio-v1 ]
+    paths:
+      - 'research/master_portfolio_v2_soda_wholefile.py'
+      - 'research/master_portfolio_v2.py'
+      - 'research/soda_record_standalone*.py'
+      - 'research/soda_intergap_*.py'
+      - 'research/soda_hard4_frozen_record.py'
+      - '.github/workflows/master_portfolio_v2_soda_wholefile.yml'
+  workflow_dispatch:
+
+permissions: {contents: read}
+
+jobs:
+  historical-p75:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz brotli boto3
+      - name: Download exact historical PR171 p75 record
+        run: |
+          python - <<'PY'
+          import boto3
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED,retries={'max_attempts':8}))
+          s3.download_file('gdr-data-lake','soda_lake/raw_seismic/2010/v1.0.0/F6618R1.SGY','p75.sgy')
+          PY
+      - name: Reproduce exact historical PR171 whole-file bytes
+        env: {PYTHONPATH: research}
+        run: |
+          python research/master_portfolio_v2_soda_wholefile.py \
+            --historical-per-file-epsilon \
+            --files p75.sgy \
+            --out pr171_historical_p75.json
+          python - <<'PY'
+          import json,math
+          r=json.load(open('pr171_historical_p75.json')); q=r['rows'][0]
+          assert r['all_valid'],r
+          assert q['ours_whole_file_bytes']==69787,q
+          assert q['header_blob_bytes']==5775,q
+          assert q['sample_blob_bytes']==63967,q
+          assert q['sample_format']==1,q
+          assert q['headers_bit_exact'] is True,q
+          assert math.isclose(q['epsilon'],0.07150844605649041,rel_tol=0,abs_tol=1e-15),q
+          assert q['ours_maxerr'] <= q['epsilon']*(1+3e-6),q
+          print('PR171_HISTORICAL_WHOLE_FILE_EXACT',q['ours_whole_file_bytes'],q['ours_maxerr'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-pr171-historical-p75
+          path: pr171_historical_p75.json
+          retention-days: 30
+
+  global-epsilon:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {p: 5,  key: 'soda_lake/raw_seismic/2010/v1.0.0/F1376R1.SGY'}
+          - {p: 45, key: 'soda_lake/raw_seismic/2010/v1.0.0/F4371R1.SGY'}
+          - {p: 95, key: 'soda_lake/raw_seismic/2010/v1.0.0/F8115R1.SGY'}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz brotli boto3
+      - name: Download exact precommitted record
+        env:
+          KEY: '${{ matrix.key }}'
+        run: |
+          python - <<'PY'
+          import boto3,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED,retries={'max_attempts':8}))
+          s3.download_file('gdr-data-lake',os.environ['KEY'],'shot.sgy')
+          PY
+      - name: Run exact PR171 engine under V2 survey-global epsilon
+        env: {PYTHONPATH: research}
+        run: |
+          python research/master_portfolio_v2_soda_wholefile.py \
+            --epsilon 0.0816739073446828 \
+            --files shot.sgy \
+            --out result.json
+          python - <<'PY'
+          import json
+          r=json.load(open('result.json')); q=r['rows'][0]
+          assert r['all_valid'],r
+          assert q['headers_bit_exact'] is True,q
+          assert q['ours_maxerr'] <= q['epsilon']*(1+3e-6),q
+          assert q['matched_sz3_maxerr'] <= q['epsilon']*(1+3e-6),q
+          print('PR171_GLOBAL_EPS percentile=${{ matrix.p }} ours=',q['ours_whole_file_bytes'],' optimistic_sz3_whole=',q['optimistic_sz3_whole_file_bytes'],' gain=',q['gain_optimistic_sz3_whole_over_ours'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-pr171-global-p${{ matrix.p }}
+          path: result.json
+          retention-days: 30
+
+  aggregate-global:
+    needs: global-epsilon
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: soda-pr171-global-p*
+          path: all
+      - name: Aggregate exact whole-file bytes
+        run: |
+          python - <<'PY'
+          import glob,json,statistics
+          rr=[]
+          for p in glob.glob('all/**/result.json',recursive=True): rr += json.load(open(p))['rows']
+          if len(rr)!=3: raise RuntimeError(('expected 3',len(rr)))
+          gains=[r['gain_optimistic_sz3_whole_over_ours'] for r in rr]
+          out={
+            'records':3,
+            'epsilon':0.0816739073446828,
+            'minimum_gain':min(gains),
+            'median_gain':statistics.median(gains),
+            'maximum_gain':max(gains),
+            'byte_weighted_gain':sum(r['optimistic_sz3_whole_file_bytes'] for r in rr)/sum(r['ours_whole_file_bytes'] for r in rr),
+            'wins_over_2x':sum(g>2.0 for g in gains),
+            'all_headers_bit_exact':all(r['headers_bit_exact'] for r in rr),
+            'all_hard_error_valid':all(r['ours_maxerr']<=r['epsilon']*(1+3e-6) and r['matched_sz3_maxerr']<=r['epsilon']*(1+3e-6) for r in rr),
+            'rows':sorted(rr,key=lambda r:r['file'])
+          }
+          print(json.dumps(out,indent=2));json.dump(out,open('soda_pr171_global_summary.json','w'),indent=2)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soda-pr171-global-summary
+          path: soda_pr171_global_summary.json
+          retention-days: 30
