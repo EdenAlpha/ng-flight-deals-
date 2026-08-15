@@ -5,6 +5,10 @@ on:
   push:
     branches: [general-seismic-master-portfolio-v2]
 
+concurrency:
+  group: master-portfolio-v2-ledger-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -18,3 +22,5 @@ jobs:
           python-version: '3.11'
       - name: Verify protected winners and audit classifications
         run: python research/master_portfolio_v2_ledger_gate.py
+      - name: Verify exact frozen V1 implementation remains the protected floor
+        run: python research/master_portfolio_v2_monotonicity_gate.py
