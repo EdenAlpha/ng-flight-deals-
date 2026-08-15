@@ -1,0 +1,54 @@
+name: GCA2 real Volve decoder-valid gate
+
+on:
+  push:
+    branches: [general-seismic-master-portfolio-v2]
+    paths:
+      - 'research/gca_constraint_address_v2.py'
+      - '.github/workflows/gca2_real_volve_gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-volve:
+    runs-on: ubuntu-slim
+    timeout-minutes: 30
+    steps:
+      - name: Checkout GCA2 implementation
+        uses: actions/checkout@v4
+      - name: Sparse checkout public real Volve SEG-Y
+        uses: actions/checkout@v4
+        with:
+          repository: trhallam/segysak
+          ref: main
+          path: segysak_source
+          sparse-checkout: |
+            examples/data/volve10r12-full-twt-sub3d.sgy
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install codec dependencies
+        run: pip install --quiet numpy numba pysz
+      - name: Run independent GCA2 vs matched SZ3 experiment
+        run: |
+          python research/gca_constraint_address_v2.py \
+            segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy \
+            --sz3 \
+            --stream volve_gca2.bin \
+            --json volve_gca2_real_result.json
+      - name: Display exact accounting
+        run: |
+          ls -l volve_gca2.bin volve_gca2_real_result.json
+          cat volve_gca2_real_result.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gca2-real-volve-evidence
+          path: |
+            volve_gca2_real_result.json
+            volve_gca2.bin
+          compression-level: 0
+          retention-days: 30
