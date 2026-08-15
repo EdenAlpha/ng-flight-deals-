@@ -1,0 +1,70 @@
+name: Master Portfolio V2 recovered-winner regression
+
+on:
+  pull_request:
+    branches: [ general-seismic-codec-portfolio-v1 ]
+  workflow_dispatch:
+
+permissions: {contents: read}
+
+jobs:
+  recovered-soda:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy segyio zstandard pysz brotli boto3
+      - name: Download three precommitted independent Soda shots
+        run: |
+          python - <<'PY'
+          import boto3
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s3=boto3.client('s3',config=Config(signature_version=UNSIGNED,retries={'max_attempts':8}))
+          bucket='gdr-data-lake'
+          keys={
+            'p5.sgy':'soda_lake/raw_seismic/2010/v1.0.0/F1376R1.SGY',
+            'p45.sgy':'soda_lake/raw_seismic/2010/v1.0.0/F4371R1.SGY',
+            'p95.sgy':'soda_lake/raw_seismic/2010/v1.0.0/F8115R1.SGY',
+          }
+          for dst,key in keys.items():
+              print('DOWNLOAD',key,flush=True);s3.download_file(bucket,key,dst)
+          PY
+      - name: Reproduce historical recovered engine before changing epsilon protocol
+        env: {PYTHONPATH: research}
+        run: |
+          python research/master_portfolio_v2.py soda-files \
+            --historical-per-file-epsilon \
+            --files p5.sgy p45.sgy p95.sgy \
+            --out soda_v2_historical_regression.json
+          python - <<'PY'
+          import json,math
+          r=json.load(open('soda_v2_historical_regression.json'))
+          exp={
+            'p5.sgy':2.475745852243137,
+            'p45.sgy':2.09439810579562,
+            'p95.sgy':2.5084048430704127,
+          }
+          assert r['all_valid']
+          got={x['file']:x['gain_sz3_over_ours'] for x in r['rows']}
+          for k,v in exp.items():
+              assert math.isclose(got[k],v,rel_tol=0,abs_tol=1e-12),(k,got[k],v)
+          assert min(got.values())>2.0,got
+          print('RECOVERED_HISTORICAL_SODA_EXACT',got)
+          PY
+      - name: Run the same recovered engine under the new survey-global Soda epsilon
+        env: {PYTHONPATH: research}
+        run: |
+          python research/master_portfolio_v2.py soda-files \
+            --epsilon 0.0816739073446828 \
+            --files p5.sgy p45.sgy p95.sgy \
+            --out soda_v2_survey_global_epsilon.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: master-portfolio-v2-soda-recovery
+          path: |
+            soda_v2_historical_regression.json
+            soda_v2_survey_global_epsilon.json
+          retention-days: 30

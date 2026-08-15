@@ -1,0 +1,157 @@
+{
+  "name": "seismic-master-engine-ledger-v2",
+  "created_utc": "2026-08-15",
+  "purpose": "Canonical inventory of compression engines that must not be lost when building a universal seismic compressor.",
+  "governance": {
+    "v1_benchmark_is_immutable": true,
+    "v2_development_branch": "general-seismic-master-portfolio-v2",
+    "never_remove_historical_winner_without_explicit_supersession_evidence": true,
+    "selection_must_be_decoder_visible_and_byte_charged": true,
+    "hard_error_contract": "max(abs(source-reconstruction)) <= epsilon",
+    "v2_router_principle": "hierarchical: whole-record/file engines compete at native scope; panel engines are fallback/competitors",
+    "dataset_label_routing_forbidden": true,
+    "eligibility": "derived only from file format, geometry/schema and signal-independent structural metadata; final winner chosen by actual valid encoded bytes",
+    "metadata_fairness": "Any geometry/header side information used by an engine must be either charged to both methods or declared shared/excluded identically for all compared methods."
+  },
+  "important_protocol_difference": {
+    "historical_soda_pr169_epsilon": "0.10 * std(each individual shot)",
+    "general_benchmark_v1_soda_epsilon": 0.0816739073446828,
+    "general_benchmark_v1_soda_std": 0.816739073446828,
+    "general_benchmark_v1_rule": "0.10 * std(all selected numeric Soda samples)",
+    "consequence": "Historical >2x Soda evidence is genuine under its protocol, but V2 must retest the recovered engine with the survey-global epsilon before claiming the same gain in the new benchmark."
+  },
+  "engines": [
+    {
+      "id": "soda_record_run_lattice_pr169",
+      "family": "legal-state geometry/run lattice",
+      "status": "RECOVERED",
+      "native_scope": "complete 3C SEG-Y shot/record",
+      "source": {
+        "pr": 169,
+        "branch": "soda-record-codec-10shot",
+        "sha": "0eec9459d1d25f7043dd587d28136ba75af7069b",
+        "entry": "research/soda_hard4_frozen_record.py"
+      },
+      "structure": [
+        "receiver geometry -> component/line/station grid",
+        "legal 2*epsilon lattice",
+        "time transition K",
+        "run grammar",
+        "context-conditioned gaps",
+        "Brotli-11/raw frozen backend assignment",
+        "audited outlier codec"
+      ],
+      "historical_evidence": {
+        "dataset": "Soda Lake 2010 raw land seismic",
+        "independent_deterministic_shots": 10,
+        "percentiles": [5,15,25,35,45,55,65,75,85,95],
+        "gain_vs_direct_sz3": [2.475745852243137,2.565373359765883,2.2500426319764184,2.1705043555456918,2.09439810579562,2.7764389998321866,2.7795604605913686,2.148816322698753,2.202895448619408,2.5084048430704127],
+        "minimum_gain": 2.09439810579562,
+        "median_gain": 2.3628942421097774,
+        "byte_weighted_gain": 2.3241371761100007,
+        "all_10_above_2x": true,
+        "epsilon_rule": "0.10 * each shot std",
+        "decode_verified": true
+      },
+      "v1_omission": "NOT PRESENT in general-seismic-codec-portfolio-v1"
+    },
+    {
+      "id": "forge_sparse_state_lattice_pr122",
+      "family": "legal-state sparse temporal lattice",
+      "status": "RECOVERED",
+      "native_scope": "complete SEG-Y gather",
+      "source": {
+        "pr": 122,
+        "branch": "forge-raw-frozen-state",
+        "sha": "1f912f3f086e58c6dd5e859823a8101eb4701c5b",
+        "entry": "research/forge_raw_frozen_state.py"
+      },
+      "historical_evidence": {
+        "dataset": "independent raw Utah FORGE shot",
+        "samples": 27953747,
+        "ours_bytes": 28588,
+        "sz3_bytes": 89075,
+        "gain_vs_sz3": 3.1158178256611166,
+        "K_nonzero_fraction": 0.0014044628793413634,
+        "epsilon_rule": "0.10 * gather std",
+        "decode_verified": true
+      },
+      "note": "This was the frozen Soda sparse-state principle transferred cross-survey without geometry tuning."
+    },
+    {
+      "id": "forge_wholefile_lattice_pr203",
+      "family": "geometry-aware legal-state whole-file lattice",
+      "status": "RECOVERED",
+      "native_scope": "complete SEG-Y gather / whole-file container",
+      "source": {
+        "pr": 203,
+        "branch": "forge-frozen-large12-wholefile",
+        "sha": "e8adbc8bfe95da0199376c862be72a0374e68e1e",
+        "entry": "research/forge_standalone_segc.py"
+      },
+      "historical_evidence": {
+        "dataset": "Utah FORGE 12 deterministic raw gathers",
+        "gathers": 12,
+        "aggregate_ours_bytes": 253924,
+        "aggregate_sz3_bytes": 684510,
+        "aggregate_gain_vs_sz3": 2.6957278555788347,
+        "minimum_member_gain_vs_sz3": 1.9332517955657333,
+        "median_member_gain_vs_sz3": 9.97245179063361,
+        "headers_bit_exact": true,
+        "hard_error_valid": true
+      },
+      "v1_omission": "NOT PRESENT in general-seismic-codec-portfolio-v1"
+    },
+    {
+      "id": "spectral_topn_pr56_pr101",
+      "family": "2D spectral Top-N + certified correction",
+      "status": "PRESENT_BUT_REDUCED_IN_V1",
+      "native_scope": "panel or complete gather",
+      "source": {"prs": [56,101]},
+      "important_differences_from_v1": [
+        "historical versions included wider block/budget search",
+        "historical int8 spectral scale used float16 in key variants",
+        "geometry/layout alternatives were explored"
+      ],
+      "note": "Keep as a competitor, but do not mistake the reduced V1 version for the entire historical family."
+    },
+    {
+      "id": "imperial_ar32_zsm_pr482",
+      "family": "persistent Huber AR32 + ZSM arithmetic",
+      "status": "PRESENT_IN_V1",
+      "native_scope": "DAS cable block/panel",
+      "historical_evidence": {
+        "dataset": "Imperial Valley DAS full file",
+        "ours_bytes": 67818390,
+        "matched_sz3_bytes": 80604844,
+        "gain_vs_sz3": 1.18854,
+        "approx_reduction_percent": 18.85,
+        "decode_verified": true
+      }
+    },
+    {
+      "id": "pulse_carrier_persistent_correction_pr28",
+      "family": "carrier anchors + persistent correction",
+      "status": "RECOVERY_AUDIT_PENDING",
+      "native_scope": "long traces / DAS record",
+      "source": {
+        "pr": 28,
+        "branch": "seismic-pulse-land-exact",
+        "sha": "f14d76840768c67bae1a0b3a029e21a81d1f2a1d"
+      },
+      "note": "Preserve in ledger and extract from embedded benchmark workflow before V2 freeze. Do not claim it is a historical winner until exact artifact results are re-audited."
+    },
+    {
+      "id": "forge_analytic_subband_hpez_pr93",
+      "family": "analytic subbands -> critically sampled baseband -> HPEZ + certificate",
+      "status": "RECOVERY_AUDIT_PENDING",
+      "native_scope": "3D reflection block",
+      "source": {
+        "pr": 93,
+        "branch": "forge-subband-hpez",
+        "sha": "5b37965eae84402caa7a90cef9e46724b54eefca"
+      },
+      "note": "Distinct successful/promising family omitted from V1; exact generalization evidence must be audited before V2 freeze."
+    }
+  ]
+}
