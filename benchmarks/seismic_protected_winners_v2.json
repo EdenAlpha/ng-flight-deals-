@@ -1,8 +1,13 @@
 {
   "name": "seismic-protected-winners-v2",
   "created_utc": "2026-08-15",
-  "purpose": "Fail-closed protection against silently deleting or demoting historically proven compression families and production-complete native-scope lineages during universalization. This file is governance data, not a dataset-label router.",
+  "purpose": "Fail-closed protection against silently deleting or demoting historically proven compression families, production-complete native-scope lineages, or the frozen V1 fallback floor during universalization. This file is governance data, not a dataset-label router.",
   "protected": [
+    {
+      "id": "general_seismic_portfolio_v1_panel_fallback",
+      "protection": "monotonicity floor: the exact frozen V1 portfolio must remain executable over every eligible complete numeric object so V2 cannot regress merely by adding or changing native-scope engines",
+      "source_branch": "general-seismic-codec-portfolio-v1"
+    },
     {
       "id": "soda_record_run_lattice_pr169",
       "protection": "exact historical winner plus current survey-global recovery validation",
