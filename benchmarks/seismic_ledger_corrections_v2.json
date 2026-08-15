@@ -1,0 +1,44 @@
+{
+  "name": "seismic-ledger-corrections-v2",
+  "created_utc": "2026-08-15",
+  "purpose": "Small authoritative overlay for post-audit corrections discovered after the original master ledger was frozen into PR491 history. The ledger gate applies this before validation so stale historical classifications cannot override completed current-protocol evidence.",
+  "overrides": [
+    {
+      "id": "imperial_ar32_zsm_pr482",
+      "source": {
+        "pr": 482,
+        "active_v1_entry": "research/general_seismic_codec_portfolio.py",
+        "note": "Current DAS winner retained in frozen V1; provenance keyed to PR482."
+      }
+    }
+  ],
+  "append_engines": [
+    {
+      "id": "marine_anchor_carrier_pr6",
+      "family": "sparse temporal anchor carrier + legal 2*epsilon correction first-difference stream",
+      "status": "RECOVERED",
+      "native_scope": "complete structurally eligible marine SEG-Y numeric cube with regular receiver-group geometry",
+      "source": {
+        "pr": 6,
+        "branch": "temp-seismic-zfp-bench",
+        "sha": "d62dc02e4a03c0397117eff66654ade190129a61",
+        "historical_workflow_run": 31364080480,
+        "historical_workflow_job": 93378643582,
+        "v2_recovered_source": "research/marine_carrier_pr6_v2.py",
+        "v2_competition_entry": "research/master_portfolio_v2_compete.py",
+        "current_protocol_workflow_run": 31877667477,
+        "current_protocol_workflow_job": 95013274243
+      },
+      "current_protocol_evidence": {
+        "evidence_file": "benchmarks/seismic_current_protocol_evidence_v2.json",
+        "minimum_gain_vs_matched_sz3": 3.8298427668131083,
+        "minimum_gain_vs_best_official_hpez_q4": 2.048393998441818,
+        "independent_records": 2,
+        "all_hard_error_valid": true,
+        "all_stream_decodes_verified": true
+      },
+      "eligibility": "SEG-Y structural geometry only; no dataset filename or known shot count",
+      "integration_status": "active native-vs-frozen-V1 competition wired; structural auto-detection added; real-line auto-detection regression rerun still required before calling universal marine support complete"
+    }
+  ]
+}
