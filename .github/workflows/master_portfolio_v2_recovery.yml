@@ -3,6 +3,12 @@ name: Master Portfolio V2 recovered-winner regression
 on:
   pull_request:
     branches: [ general-seismic-codec-portfolio-v1 ]
+    paths:
+      - 'research/master_portfolio_v2.py'
+      - 'research/soda_hard4_frozen_record.py'
+      - 'research/forge_standalone_segc.py'
+      - 'research/forge_raw_lattice.py'
+      - '.github/workflows/master_portfolio_v2_recovery.yml'
   workflow_dispatch:
 
 permissions: {contents: read}
