@@ -4,11 +4,14 @@
   "purpose": "Canonical inventory of compression engines that must not be lost when building a universal seismic compressor.",
   "governance": {
     "v1_benchmark_is_immutable": true,
+    "v1_panel_portfolio_is_protected_floor": true,
     "v2_development_branch": "general-seismic-master-portfolio-v2",
     "never_remove_historical_winner_without_explicit_supersession_evidence": true,
     "selection_must_be_decoder_visible_and_byte_charged": true,
+    "active_engine_must_materialize_decodable_stream": true,
     "hard_error_contract": "max(abs(source-reconstruction)) <= epsilon",
-    "v2_router_principle": "hierarchical: whole-record/file engines compete at native scope; panel engines are fallback/competitors",
+    "comparison_domain_must_match": ["source_object_identity", "reconstructed_information_contract", "metadata_accounting_policy", "public_epsilon"],
+    "v2_router_principle": "hierarchical: whole-record/file engines compete at native scope; frozen V1 whole-object panel aggregate is always available as fallback; smallest valid stream wins only inside an identical comparison domain",
     "dataset_label_routing_forbidden": true,
     "eligibility": "derived only from file format, geometry/schema and signal-independent structural metadata; final winner chosen by actual valid encoded bytes",
     "metadata_fairness": "Any geometry/header side information used by an engine must be either charged to both methods or declared shared/excluded identically for all compared methods.",
@@ -23,6 +26,27 @@
     "consequence": "Historical >2x Soda evidence is genuine under its protocol, but V2 must retest recovered engines with the survey-global epsilon before claiming the same gain in the new benchmark."
   },
   "engines": [
+    {
+      "id": "general_seismic_portfolio_v1_panel_fallback",
+      "family": "frozen V1 AR32-ZSM + spectral-TopN per-panel portfolio aggregated over the complete numeric object",
+      "status": "PRESENT_IN_V1",
+      "native_scope": "complete numeric object via deterministic consecutive <=128 channel x <=8192 time panel partition",
+      "source": {
+        "branch": "general-seismic-codec-portfolio-v1",
+        "codec": "research/general_seismic_codec_portfolio.py",
+        "frozen_config": "benchmarks/general_seismic_codec_portfolio_v1.json",
+        "v2_adapter": "research/master_portfolio_v2_panel_fallback.py"
+      },
+      "comparison_contract": {
+        "contract_id": "numeric_payload",
+        "accounting_id": "numeric_samples_only_shared_file_metadata_excluded",
+        "object_identity": "SHA-256 over numeric dtype, shape and canonical C-order payload",
+        "epsilon": "identical externally supplied survey-global epsilon for every competing candidate",
+        "aggregate_manifest_bytes": 0,
+        "manifest_reason": "shape and frozen deterministic panel partition are shared decoder-visible metadata; each panel bitstream already charges its one-byte V1 selector"
+      },
+      "monotonicity_role": "protected fallback floor: when V2 runs on a numeric object, this exact frozen V1 portfolio remains an eligible fully decoded candidate, so a native-scope engine can replace it only by producing fewer valid charged bytes in the same comparison domain"
+    },
     {
       "id": "soda_record_run_lattice_pr169",
       "family": "legal-state geometry/run lattice",
