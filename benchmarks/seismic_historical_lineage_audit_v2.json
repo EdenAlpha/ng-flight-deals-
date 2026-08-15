@@ -102,6 +102,96 @@
         "gain_of_best_hpez_over_analytic_subbands": 1.1213966766084365
       },
       "decision": "Research-only. The analytic-subband stream narrowly beats matched SZ3 by about 1.4%, but is larger than the best official HPEZ orientation on the identical block and error contract. It therefore cannot be promoted as the strongest applicable recovered engine."
+    },
+    {
+      "lineage": "spectral_topn_pr56_pr100_pr101",
+      "status": "ACTIVE_COMPETITOR_SCOPE_LIMITED",
+      "principle": "spatial+temporal spectral Top-N model plus decoder-visible quantized coefficients and sovereign 2*epsilon correction lattice",
+      "brady_pr56": {
+        "pr": 56,
+        "commit": "6ad39af94f243df11ea14cc5cb8313ca61a749bb",
+        "workflow_run": 31417742007,
+        "workflow_job": 93550669809,
+        "scope": "128x8192 panel from PoroTomo/Brady DAS; epsilon from complete survey std",
+        "best": {
+          "kind": "topN",
+          "B": 1024,
+          "N": 256,
+          "quantization": "int8 complex with float16 scale",
+          "model_bytes": 6119,
+          "correction_bytes": 5906,
+          "output_bytes": 12025,
+          "ratio": 348.79866943866944,
+          "max_abs_error": 0.026069296523928642
+        },
+        "matched_sz3": {
+          "bytes": 28664,
+          "ratio": 146.32654200390735,
+          "max_abs_error": 0.026069357991218567
+        },
+        "gain_vs_sz3": 2.3837006237006237,
+        "note": "Strong exact-byte matched-SZ3 evidence for the spectral principle on this Brady panel. PR #56 is an optimization pilot rather than the later fully materialized cross-survey container."
+      },
+      "forge_pr100": {
+        "pr": 100,
+        "commit": "e4f3aef4cfb79e3cfb337b00f2bd7745ec677ccf",
+        "workflow_run": 31565565610,
+        "workflow_job": 94016549141,
+        "scope": "cached Utah FORGE 64x64x512 block",
+        "container": "self-contained; model and certificate decoded from bytes",
+        "best": {
+          "B": 512,
+          "fraction": 0.032,
+          "output_bytes": 328835,
+          "ratio": 25.51008256420393,
+          "max_abs_error": 0.033738695085048676,
+          "valid": true
+        },
+        "matched_sz3": {
+          "bytes": 266939,
+          "ratio": 31.425187027747914,
+          "max_abs_error": 0.033738717436790466
+        },
+        "matched_official_hpez_best_bytes": 234700,
+        "gain_vs_sz3": 0.8117718612678091,
+        "gain_vs_best_hpez": 0.7137318107865647,
+        "decision": "Not a winner on FORGE. The exact self-contained transfer is larger than both matched SZ3 and the strongest matched HPEZ orientation."
+      },
+      "soda_pr101": {
+        "pr": 101,
+        "commit": "63052163452e0f3223331499c74c0c8c1585b4cd",
+        "workflow_run": 31566379027,
+        "workflow_job": 94018919181,
+        "scope": "three deterministic complete Soda Lake raw SEG-Y records at 10%, 50%, 90% object positions; per-shot 10%-std epsilon",
+        "rows": [
+          {
+            "file": "F1750R1.SGY",
+            "topn_bytes": 79303,
+            "sz3_bytes": 87163,
+            "gain_vs_sz3": 1.099113526600507,
+            "topn_max_abs_error": 0.09596872329711914,
+            "sz3_max_abs_error": 0.09596865624189377
+          },
+          {
+            "file": "F4746R1.SGY",
+            "topn_bytes": 111512,
+            "sz3_bytes": 107255,
+            "gain_vs_sz3": 0.9618247363512447,
+            "topn_max_abs_error": 0.09282848238945007,
+            "sz3_max_abs_error": 0.09282843768596649
+          },
+          {
+            "file": "F7741R1.SGY",
+            "topn_bytes": 54770,
+            "sz3_bytes": 59194,
+            "gain_vs_sz3": 1.0807741464305276,
+            "topn_max_abs_error": 0.12212986499071121,
+            "sz3_max_abs_error": 0.12213078141212463
+          }
+        ],
+        "decision": "Useful competitor but not the dominant Soda family. One of three shots loses to SZ3 and the two wins are only about 8-10%, whereas the recovered native Soda record/run engine has >2x historical and current global-epsilon evidence."
+      },
+      "decision": "Keep Top-N as a protected distinct competitor because it is a genuine major Brady winner, but never universalize it into a replacement for native lattice engines. Eligibility and exact bytes must decide per scope."
     }
   ]
 }
