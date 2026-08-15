@@ -1,10 +1,10 @@
-name: GCA2 real Volve versus HPEZ QoZ2
+name: GCA4 real Volve versus HPEZ QoZ2
 
 on:
   push:
     branches: [general-seismic-master-portfolio-v2]
     paths:
-      - 'research/gca_constraint_address_v2.py'
+      - 'research/gca_factor_context_v4.py'
       - '.github/workflows/gca2_real_volve_hpez.yml'
   workflow_dispatch:
 
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-slim
     timeout-minutes: 30
     steps:
-      - name: Checkout GCA2 implementation
+      - name: Checkout GCA4 implementation
         uses: actions/checkout@v4
       - name: Checkout official HPEZ QoZ2 source
         uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
           repository: JLiu-1/HPEZ-QoZ2.0
           ref: 291699d06d754f58e074d2b2a3a355f45a239e34
           path: hpez_source
-      - name: Sparse checkout public real Volve SEG-Y
+      - name: Sparse checkout pinned real Volve SEG-Y
         uses: actions/checkout@v4
         with:
           repository: trhallam/segysak
@@ -37,8 +37,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install GCA dependencies
-        run: pip install --quiet numpy numba
+      - name: Install build and codec dependencies
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq cmake make g++ pkg-config
+          pip install --quiet numpy numba
       - name: Build official HPEZ
         run: |
           cmake -S hpez_source -B hpez_source/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PWD/hpez_install"
@@ -48,7 +51,7 @@ jobs:
       - name: Extract exact numeric cube and epsilon
         run: |
           python - <<'PY'
-          import json, numpy as np
+          import numpy as np
           from pathlib import Path
           p=Path('segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy')
           NI,NX,NT=61,202,850
@@ -64,17 +67,17 @@ jobs:
           Path('eps.txt').write_text(repr(eps))
           print({'shape':X.shape,'numeric_bytes':X.nbytes,'epsilon':eps})
           PY
-      - name: Run full paper HPEZ q4 at matched ABS epsilon
+      - name: Run full-paper HPEZ q4 at matched ABS epsilon
         run: |
           EPS="$(cat eps.txt)"
           "$PWD/hpez_install/bin/hpez" -f -i volve_f32.bin -z volve.hpez -3 850 202 61 -M ABS "$EPS" -q 4
           "$PWD/hpez_install/bin/hpez" -f -z volve.hpez -o volve.hpez.out -3 850 202 61 -M ABS "$EPS"
           ls -l volve.hpez volve.hpez.out
-      - name: Run GCA2 and verify both decoded outputs
+      - name: Run GCA4 and verify both decoded outputs
         run: |
-          python research/gca_constraint_address_v2.py \
+          python research/gca_factor_context_v4.py \
             segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy \
-            --stream volve_gca2.bin --json gca2.json
+            --stream volve_gca4.bin --json gca4.json
           python - <<'PY'
           import json, numpy as np, os
           from pathlib import Path
@@ -83,24 +86,20 @@ jobs:
           eps=float(Path('eps.txt').read_text())
           hme=float(np.max(np.abs(X.astype(np.float64)-H.astype(np.float64))))
           if hme > eps*(1+3e-6): raise RuntimeError(('HPEZ hard bound',hme,eps))
-          g=json.loads(Path('gca2.json').read_text())
-          hb=os.path.getsize('volve.hpez'); gb=os.path.getsize('volve_gca2.bin')
+          g=json.loads(Path('gca4.json').read_text())
+          hb=os.path.getsize('volve.hpez'); gb=os.path.getsize('volve_gca4.bin')
           out={
             'source':'trhallam/segysak@798307eeaf84b63a71272ba638863c538a814f26:examples/data/volve10r12-full-twt-sub3d.sgy',
             'hpez_source_commit':'JLiu-1/HPEZ-QoZ2.0@291699d06d754f58e074d2b2a3a355f45a239e34',
-            'hpez_level':4,
-            'shape':[61,202,850],
-            'numeric_bytes':int(X.nbytes),'epsilon':eps,
-            'gca2_bytes':gb,'gca2_maxerr':g['gca2_maxerr'],'gca2_decoder_valid':g['decoder_valid'],
-            'hpez_bytes':hb,'hpez_maxerr':hme,
-            'gain_hpez_over_gca2':hb/gb,
-            'gca2_reduction_percent_vs_hpez':100*(1-gb/hb)
+            'hpez_level':4,'shape':[61,202,850],'numeric_bytes':int(X.nbytes),'epsilon':eps,
+            'gca4_bytes':gb,'gca4_maxerr':g['maxerr'],'gca4_decoder_valid':g['decoder_valid'],
+            'hpez_bytes':hb,'hpez_maxerr':hme,'gain_hpez_over_gca4':hb/gb,
+            'gca4_reduction_percent_vs_hpez':100*(1-gb/hb)
           }
-          Path('volve_gca2_vs_hpez.json').write_text(json.dumps(out,indent=2))
-          print(json.dumps(out,indent=2))
+          Path('volve_gca4_vs_hpez.json').write_text(json.dumps(out,indent=2)); print(json.dumps(out,indent=2))
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: gca2-real-volve-vs-hpez
-          path: volve_gca2_vs_hpez.json
+          name: gca4-real-volve-vs-hpez
+          path: volve_gca4_vs_hpez.json
           retention-days: 30
