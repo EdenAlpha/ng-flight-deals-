@@ -2,6 +2,10 @@ name: Build CLM general-intelligence corpus
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/build_clm_general_corpus.py'
+      - '.github/workflows/build-clm-general-corpus.yml'
 
 jobs:
   build:
@@ -15,14 +19,19 @@ jobs:
       - name: Install dataset tools
         run: |
           python -m pip install --upgrade pip
-          pip install datasets huggingface_hub zstandard sentencepiece
-      - name: Build 200M-token high-quality mixture
+          pip install 'datasets>=3.0' huggingface_hub zstandard 'sentencepiece>=0.2'
+      - name: Build exact 200M-token high-quality mixture
+        env:
+          HF_HUB_ENABLE_HF_TRANSFER: '0'
         run: python scripts/build_clm_general_corpus.py
+      - name: Show manifest
+        if: always()
+        run: |
+          test -f clm_general_200m/manifest.json && cat clm_general_200m/manifest.json || true
       - name: Upload corpus
         uses: actions/upload-artifact@v4
         with:
           name: clm-general-200m
-          path: |
-            clm_general_200m/
+          path: clm_general_200m/
           compression-level: 6
           retention-days: 7
