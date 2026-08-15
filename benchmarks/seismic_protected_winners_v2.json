@@ -1,7 +1,8 @@
 {
   "name": "seismic-protected-winners-v2",
   "created_utc": "2026-08-15",
-  "purpose": "Fail-closed protection against silently deleting or demoting historically proven compression families, production-complete native-scope lineages, or the frozen V1 fallback floor during universalization. This file is governance data, not a dataset-label router.",
+  "purpose": "Fail-closed protection against silently deleting or demoting historically or current-protocol proven compression families, production-complete native-scope lineages, or the frozen V1 fallback floor during universalization. This file is governance data, not a dataset-label router.",
+  "current_protocol_evidence_file": "benchmarks/seismic_current_protocol_evidence_v2.json",
   "protected": [
     {
       "id": "general_seismic_portfolio_v1_panel_fallback",
@@ -10,13 +11,18 @@
     },
     {
       "id": "soda_record_run_lattice_pr169",
-      "protection": "exact historical winner plus current survey-global recovery validation",
+      "protection": "exact historical winner plus current survey-global recovery validation; pinned p45 native stream is 87,275 bytes versus frozen V1 169,993 bytes on the identical object/epsilon/accounting contract",
       "source_pr": 169
     },
     {
       "id": "soda_whole_segy_container_pr171",
-      "protection": "production-complete self-contained SEG-Y lineage with bit-exact non-sample bytes and independently verified hard-error samples; must not be lost merely because the numeric-only PR169 contract is smaller",
+      "protection": "production-complete self-contained SEG-Y lineage with bit-exact non-sample bytes and independently verified hard-error samples; current survey-global evidence clears 2x even versus an intentionally optimistic whole-file SZ3 comparator on all 3 pinned records (minimum 2.04061x, byte-weighted 2.18228x)",
       "source_pr": 171
+    },
+    {
+      "id": "marine_anchor_carrier_pr6",
+      "protection": "current survey-global 10%-std winner on two independent marine lines: 3.82984x-4.28610x versus matched SZ3 and 2.04839x-2.30944x versus strongest official HPEZ q4; hard-error and stream decode validated. Active routing must use structural geometry eligibility rather than fixture identity.",
+      "source_pr": 6
     },
     {
       "id": "forge_sparse_state_lattice_pr122",
