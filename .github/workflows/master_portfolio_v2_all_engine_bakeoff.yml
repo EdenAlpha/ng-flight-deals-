@@ -1,0 +1,143 @@
+name: Master Portfolio V2 all-engine per-file bakeoff
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [general-seismic-master-portfolio-v2]
+    paths:
+      - '.github/workflows/master_portfolio_v2_all_engine_bakeoff.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SOURCE_FROZEN_RUN_ID: '31835067295'
+  SHARD_COUNT: '8'
+  ALL_ENGINE_NATIVE_MAX_OBJECT_BYTES: '805306368'
+
+jobs:
+  bakeoff:
+    name: all-engines (${{ matrix.dataset }}, ${{ matrix.shard }})
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        dataset:
+          - land_soda_lake_2010
+          - land_teapot_dome_3d
+          - land_san_emidio_2021
+          - land_crescent_valley_2016
+          - marine_waka_3d
+          - marine_parihaka_3d
+          - marine_opunake_3d
+          - marine_tui_3d
+          - marine_kahu_3d
+          - das_imperial_valley_2020
+          - das_porotomo_brady_dash
+          - das_forge_neubrex_2024
+          - das_egs_collab_exp2
+        shard: [0,1,2,3,4,5,6,7]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+
+      - name: Reuse exact frozen PR490 plan
+        uses: actions/download-artifact@v4
+        with:
+          name: final-frozen-plan
+          path: frozen_plan
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: ${{ env.SOURCE_FROZEN_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: Reuse exact frozen PR490 survey-global epsilon
+        uses: actions/download-artifact@v4
+        with:
+          name: final-global-epsilon
+          path: epsilon
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: ${{ env.SOURCE_FROZEN_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+
+      - name: Install numeric and codec dependencies
+        run: pip install --quiet numpy zstandard pybind11 boto3 h5py 's3fs<2027' segyio pysz obspy brotli
+
+      - name: Compile bit-exact ZSM backend
+        run: |
+          EXT=$(python3-config --extension-suffix)
+          c++ -O3 -march=x86-64 -shared -std=c++17 -fPIC $(python -m pybind11 --includes) research/general_seismic_fast_zsm.cpp -o research/general_seismic_fast_zsm${EXT}
+
+      - uses: actions/setup-java@v4
+        if: matrix.dataset == 'land_san_emidio_2021'
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install official GFZ DataCube decoder
+        if: matrix.dataset == 'land_san_emidio_2021'
+        run: |
+          curl -fL --retry 4 -o gipptools.tar.gz https://media.gfz.de/gfz/sec22/gipptools/gipptools-2026.167-unix.tar.gz
+          mkdir gipptools
+          tar -xzf gipptools.tar.gz -C gipptools --strip-components=1
+          CUBE2MSEED=$(find "$PWD/gipptools" -type f -name cube2mseed | head -1)
+          test -n "$CUBE2MSEED"
+          chmod +x "$CUBE2MSEED"
+          echo "CUBE2MSEED=$CUBE2MSEED" >> "$GITHUB_ENV"
+
+      - name: Force every executable compressor family on this shard
+        env: {PYTHONPATH: research}
+        run: |
+          mkdir -p results
+          python research/master_portfolio_v2_all_engine_bakeoff.py run-shard \
+            --manifest frozen_plan/general_seismic_v1_effective_manifest.json \
+            --preflight frozen_plan/general_seismic_v1_preflight.json \
+            --config benchmarks/general_seismic_codec_portfolio_v1.json \
+            --epsilon-map epsilon/general_seismic_global_epsilon.json \
+            --dataset '${{ matrix.dataset }}' \
+            --shard-index '${{ matrix.shard }}' \
+            --shard-count "$SHARD_COUNT" \
+            --out 'results/all_${{ matrix.dataset }}_${{ matrix.shard }}.json'
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: all-engine-${{ matrix.dataset }}-${{ matrix.shard }}
+          path: results/all_${{ matrix.dataset }}_${{ matrix.shard }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  aggregate:
+    name: all-engine per-file aggregate
+    needs: bakeoff
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy boto3
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: all-engine-*
+          path: all_results
+          merge-multiple: true
+      - name: Aggregate every file and rank every valid engine
+        env: {PYTHONPATH: research}
+        run: |
+          python research/master_portfolio_v2_all_engine_bakeoff.py aggregate \
+            --results all_results \
+            --out master_portfolio_v2_all_engine_per_file.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: master-portfolio-v2-all-engine-per-file-results
+          path: master_portfolio_v2_all_engine_per_file.json
+          if-no-files-found: warn
+          retention-days: 90
