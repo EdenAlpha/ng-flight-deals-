@@ -11,7 +11,9 @@
     "v2_router_principle": "hierarchical: whole-record/file engines compete at native scope; panel engines are fallback/competitors",
     "dataset_label_routing_forbidden": true,
     "eligibility": "derived only from file format, geometry/schema and signal-independent structural metadata; final winner chosen by actual valid encoded bytes",
-    "metadata_fairness": "Any geometry/header side information used by an engine must be either charged to both methods or declared shared/excluded identically for all compared methods."
+    "metadata_fairness": "Any geometry/header side information used by an engine must be either charged to both methods or declared shared/excluded identically for all compared methods.",
+    "historical_audit_file": "benchmarks/seismic_historical_lineage_audit_v2.json",
+    "promotion_requires_matched_strongest_baseline": true
   },
   "important_protocol_difference": {
     "historical_soda_pr169_epsilon": "0.10 * std(each individual shot)",
@@ -130,28 +132,51 @@
       }
     },
     {
-      "id": "pulse_carrier_persistent_correction_pr28",
-      "family": "carrier anchors + persistent correction",
-      "status": "RECOVERY_AUDIT_PENDING",
-      "native_scope": "long traces / DAS record",
+      "id": "pulse_v1_stage_ab_pr29",
+      "family": "PULSE v1 fast FSE/core pipeline",
+      "status": "QUARANTINED_COMPARATOR_PROOF_MISSING",
+      "native_scope": "complete SEG-Y numeric payload",
       "source": {
-        "pr": 28,
-        "branch": "seismic-pulse-land-exact",
-        "sha": "f14d76840768c67bae1a0b3a029e21a81d1f2a1d"
+        "pr": 29,
+        "branch": "seismic-pulse-v1",
+        "sha": "a53cb731fa24b44b5a3ae872081e07d8cb85ab78",
+        "workflow_job": 93479331960
       },
-      "note": "Preserve in ledger and extract from embedded benchmark workflow before V2 freeze. Do not claim it is a historical winner until exact artifact results are re-audited."
+      "exact_surviving_evidence": {
+        "input_bytes": 123076837,
+        "data_bytes": 123075600,
+        "output_bytes": 11376848,
+        "ratio": 10.818191231663882,
+        "epsilon": 0.001,
+        "error_mode": "global",
+        "max_abs_error": 0.0,
+        "decode_verified": true
+      },
+      "note": "Real historical PULSE byte stream recovered. Do not promote until a matched SZ3/HPEZ result under the identical current survey-global epsilon contract is recovered or rerun. PR #28 was a Gorilla backend experiment and was previously misidentified here as PULSE."
     },
     {
       "id": "forge_analytic_subband_hpez_pr93",
       "family": "analytic subbands -> critically sampled baseband -> HPEZ + certificate",
-      "status": "RECOVERY_AUDIT_PENDING",
+      "status": "AUDITED_RESEARCH_ONLY",
       "native_scope": "3D reflection block",
       "source": {
         "pr": 93,
         "branch": "forge-subband-hpez",
-        "sha": "5b37965eae84402caa7a90cef9e46724b54eefca"
+        "sha": "5b37965eae84402caa7a90cef9e46724b54eefca",
+        "workflow_job": 93698875273
       },
-      "note": "Distinct successful/promising family omitted from V1; exact generalization evidence must be audited before V2 freeze."
+      "audited_evidence": {
+        "raw_bytes": 8388608,
+        "best_bytes": 263192,
+        "best_ratio": 31.872579713669108,
+        "max_abs_error": 0.03373865783214569,
+        "matched_sz3_bytes": 266939,
+        "gain_vs_sz3": 1.0142355356083103,
+        "matched_best_official_hpez_bytes": 234700,
+        "best_official_hpez_ratio": 35.741832126118446,
+        "strongest_baseline_source_pr": 83
+      },
+      "note": "Narrowly beats matched SZ3 on the cached FORGE block but loses to the stronger official HPEZ control on the identical payload/error contract. Preserve for research/composition ideas; do not treat as an active strongest-engine winner."
     }
   ]
 }
