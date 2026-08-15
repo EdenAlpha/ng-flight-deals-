@@ -1,12 +1,17 @@
 {
   "name": "seismic-protected-winners-v2",
   "created_utc": "2026-08-15",
-  "purpose": "Fail-closed protection against silently deleting or demoting historically proven compression families during universalization. This file is governance data, not a dataset-label router.",
+  "purpose": "Fail-closed protection against silently deleting or demoting historically proven compression families and production-complete native-scope lineages during universalization. This file is governance data, not a dataset-label router.",
   "protected": [
     {
       "id": "soda_record_run_lattice_pr169",
       "protection": "exact historical winner plus current survey-global recovery validation",
       "source_pr": 169
+    },
+    {
+      "id": "soda_whole_segy_container_pr171",
+      "protection": "production-complete self-contained SEG-Y lineage with bit-exact non-sample bytes and independently verified hard-error samples; must not be lost merely because the numeric-only PR169 contract is smaller",
+      "source_pr": 171
     },
     {
       "id": "forge_sparse_state_lattice_pr122",
@@ -20,8 +25,8 @@
     },
     {
       "id": "spectral_topn_pr56_pr101",
-      "protection": "historically distinct certified spectral family; must remain available as competitor unless explicitly superseded",
-      "source_prs": [56, 101]
+      "protection": "historically distinct certified spectral family with a >2x Brady matched-SZ3 result; must remain available as competitor unless explicitly superseded",
+      "source_prs": [56, 100, 101]
     },
     {
       "id": "imperial_ar32_zsm_pr482",
