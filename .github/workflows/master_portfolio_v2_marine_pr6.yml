@@ -1,116 +1,16 @@
 name: Master Portfolio V2 marine PR6 recovery gate
 
+# Heavy scientific evidence is executed from the immutable evidence branch by
+# master_portfolio_v2_evidence_marine.yml. Keeping this historical entry point
+# manual prevents ordinary PR bookkeeping/audit commits from repeatedly
+# cancelling and re-queuing the same expensive experiment.
 on:
-  pull_request:
-    branches: [ general-seismic-codec-portfolio-v1 ]
-    paths:
-      - 'research/marine_carrier_pr6_v2.py'
-      - '.github/workflows/master_portfolio_v2_marine_pr6.yml'
   workflow_dispatch:
-
-concurrency:
-  group: master-portfolio-v2-marine-pr6-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
 
 permissions: {contents: read}
 
 jobs:
-  marine:
+  redirected:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: {python-version: '3.11'}
-      - name: Install codecs
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
-          pip install --quiet numpy pysz
-          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
-          cmake -S hpez-src -B hpez-src/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/hpez-install -DCMAKE_CXX_FLAGS="-include cstdint -include array"
-          cmake --build hpez-src/build -j2
-          cmake --install hpez-src/build
-      - name: Download exact two independent PR6 marine lines
-        run: |
-          curl -L --fail --retry 5 --retry-delay 2 -o F1_shots.sgy 'https://zenodo.org/records/18407436/files/F1_shots.sgy?download=1'
-          curl -L --fail --retry 5 --retry-delay 2 -o Tie_shots.sgy 'https://zenodo.org/records/18407436/files/Tie_shots.sgy?download=1'
-          echo 'b706ed4c9b8179660c02b9d8df5f1e86  F1_shots.sgy' | md5sum -c -
-          echo '3ad8937d783a3090dbb73de918282692  Tie_shots.sgy' | md5sum -c -
-      - name: Exact historical PR6 epsilon=1 M=48 reproduction with serialized decode
-        run: |
-          python research/marine_carrier_pr6_v2.py --file F1_shots.sgy --shots 246 --historical-epsilon 1.0 --m-values 48 --out f1_hist.json
-          python research/marine_carrier_pr6_v2.py --file Tie_shots.sgy --shots 247 --historical-epsilon 1.0 --m-values 48 --out tie_hist.json
-          python - <<'PY'
-          import json
-          f=json.load(open('f1_hist.json'));t=json.load(open('tie_hist.json'))
-          assert f['best']['bytes']==1368582,f
-          assert f['best']['anchor_stream_bytes']==297495,f
-          assert f['best']['correction_stream_bytes']==1071023,f
-          assert f['sz3_bytes']==3661279,f
-          assert abs(f['gain_sz3_over_carrier']-2.675235389622251)<1e-12,f
-          assert t['best']['bytes']==1209511,t
-          assert t['best']['anchor_stream_bytes']==238196,t
-          assert t['best']['correction_stream_bytes']==971251,t
-          assert t['sz3_bytes']==3167586,t
-          assert abs(t['gain_sz3_over_carrier']-2.6188980505344723)<1e-12,t
-          assert f['decode_verified_from_stream'] and t['decode_verified_from_stream']
-          print('PR6_HISTORICAL_EXACT_REPRODUCTION_OK')
-          PY
-      - name: Current V2 survey-global epsilon with fixed decoder-visible M menu
-        run: |
-          python research/marine_carrier_pr6_v2.py --file F1_shots.sgy --shots 246 --m-values 16 24 32 40 48 56 64 80 96 128 --out f1_global.json
-          python research/marine_carrier_pr6_v2.py --file Tie_shots.sgy --shots 247 --m-values 16 24 32 40 48 56 64 80 96 128 --out tie_global.json
-      - name: Strongest matched official HPEZ q4 orientation screen at identical global epsilon
-        env:
-          HPEZ_BIN: '${{ github.workspace }}/hpez-install/bin/hpez'
-        run: |
-          python - <<'PY'
-          import itertools,json,os,subprocess,numpy as np
-          from pathlib import Path
-          import sys
-          sys.path.insert(0,'research')
-          import marine_carrier_pr6_v2 as m
-          H=os.environ['HPEZ_BIN']
-          allout={}
-          for name,fn,shots in [('F1','F1_shots.sgy',246),('Tie','Tie_shots.sgy',247)]:
-              r=json.load(open(name.lower()+'_global.json'))
-              eps=float(r['epsilon']); X=m.pr6_load_exact(fn,shots); X.astype('<f4',copy=False).tofile('marine.bin')
-              dims=tuple(map(int,X.shape)); rows=[]
-              for perm in sorted(set(itertools.permutations(dims))):
-                  tag='x'.join(map(str,perm)); cb=f'{name}_{tag}.hpez'; out=f'{name}_{tag}.out'
-                  cmd=[H,'-f','-i','marine.bin','-z',cb,'-3',*map(str,perm),'-M','ABS',str(eps),'-q','4']
-                  subprocess.run(cmd,check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-                  subprocess.run([H,'-f','-z',cb,'-o',out,'-3',*map(str,perm)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-                  Y=np.fromfile(out,'<f4').reshape(X.shape)
-                  me=float(np.max(np.abs(X.astype(np.float64)-Y.astype(np.float64))))
-                  if me > eps*(1+3e-6): raise RuntimeError((name,perm,me,eps))
-                  rows.append({'orientation':list(perm),'bytes':os.path.getsize(cb),'max_abs_error':me})
-                  os.remove(cb);os.remove(out)
-              best=min(rows,key=lambda q:q['bytes'])
-              allout[name]={'epsilon':eps,'best':best,'orientations':rows,'carrier_bytes':r['best']['bytes'],'sz3_bytes':r['sz3_bytes'],'gain_hpez_over_carrier':best['bytes']/r['best']['bytes'],'gain_sz3_over_carrier':r['gain_sz3_over_carrier']}
-              print('MARINE_GLOBAL_STRONGEST',name,json.dumps(allout[name]),flush=True)
-          Path('marine_hpez_global.json').write_text(json.dumps(allout,indent=2))
-          PY
-      - name: Aggregate current-protocol evidence
-        run: |
-          python - <<'PY'
-          import json
-          f=json.load(open('f1_global.json'));t=json.load(open('tie_global.json'));h=json.load(open('marine_hpez_global.json'))
-          rows=[]
-          for name,r in [('F1',f),('Tie',t)]:
-              hb=h[name]['best']['bytes']; cb=r['best']['bytes']; sb=r['sz3_bytes']
-              rows.append({'dataset':name,'std':r['std'],'epsilon':r['epsilon'],'M':r['best']['M'],'carrier_bytes':cb,'carrier_max_abs_error':r['best']['max_abs_error'],'sz3_bytes':sb,'sz3_gain':sb/cb,'hpez_bytes':hb,'hpez_gain':hb/cb,'hpez_orientation':h[name]['best']['orientation'],'hpez_max_abs_error':h[name]['best']['max_abs_error']})
-          out={'kind':'marine-pr6-v2-current-global-epsilon','rows':rows,'minimum_gain_vs_sz3':min(r['sz3_gain'] for r in rows),'minimum_gain_vs_hpez':min(r['hpez_gain'] for r in rows),'all_hard_error_valid':all(r['carrier_max_abs_error']<=r['epsilon']*(1+3e-6) and r['hpez_max_abs_error']<=r['epsilon']*(1+3e-6) for r in rows)}
-          print(json.dumps(out,indent=2));json.dump(out,open('marine_pr6_global_summary.json','w'),indent=2)
-          PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: master-portfolio-v2-marine-pr6
-          path: |
-            f1_hist.json
-            tie_hist.json
-            f1_global.json
-            tie_global.json
-            marine_hpez_global.json
-            marine_pr6_global_summary.json
-          retention-days: 30
+      - run: echo 'Run the pinned evidence-branch workflow master_portfolio_v2_evidence_marine.yml'
