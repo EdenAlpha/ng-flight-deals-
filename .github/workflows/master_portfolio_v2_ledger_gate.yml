@@ -20,8 +20,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Verify protected winners and audit classifications
-        run: python research/master_portfolio_v2_ledger_gate.py
+      - name: Verify protected winners, historical facts, and completed current-protocol evidence
+        run: python research/master_portfolio_v2_current_ledger_gate.py
       - name: Verify exact frozen V1 implementation remains the protected floor
         run: python research/master_portfolio_v2_monotonicity_gate.py
       - name: Verify rejected historical lineages stay rejected unless explicitly re-audited
