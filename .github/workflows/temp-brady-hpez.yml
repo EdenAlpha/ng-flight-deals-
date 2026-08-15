@@ -1,0 +1,67 @@
+name: Temporary Brady HPEZ matched benchmark
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  hpez:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Build HPEZ QoZ2
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/JLiu-1/HPEZ-QoZ2.0.git hpez-src
+          cmake -S hpez-src -B hpez-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PWD/hpez-install"
+          cmake --build hpez-build -j2
+          cmake --install hpez-build
+          "$PWD/hpez-install/bin/hpez" -h | head -80 || true
+      - name: Download genuine land DAS record
+        run: curl -L --fail --retry 5 --retry-delay 2 -o land.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+      - name: Extract exact benchmark blocks
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os,numpy as np,json
+          f='land.sgy';size=os.path.getsize(f);h=open(f,'rb').read(3600);ns=int.from_bytes(h[3220:3222],'big');st=240+4*ns;n=(size-3600)//st;mm=np.memmap(f,np.uint8,'r');X=np.ndarray((n,ns),dtype='>f4',buffer=mm,offset=3840,strides=(st,4));
+          # derive the same global epsilon used in PULSE/SZ3 tests
+          s1=s2=0.0;cnt=0
+          for a in range(0,n,256):
+            A=X[a:min(a+256,n)].astype(np.float64);s1+=A.sum();s2+=np.square(A).sum();cnt+=A.size
+          mean=s1/cnt;std=((s2/cnt)-mean*mean)**0.5;eps=.1*std
+          meta={'ntr':n,'ns':ns,'std':std,'epsilon':eps,'blocks':[]}
+          for lo in [4096,7680]:
+            B=np.ascontiguousarray(X[lo:lo+384].astype('<f4'));fn=f'block_{lo}.bin';B.tofile(fn);meta['blocks'].append({'lo':lo,'shape':[384,ns],'bytes':B.nbytes,'file':fn})
+          open('meta.json','w').write(json.dumps(meta,indent=2));print(json.dumps(meta,indent=2))
+          PY
+      - name: Run HPEZ q4 at identical absolute error
+        shell: bash
+        run: |
+          set -euo pipefail
+          H="$PWD/hpez-install/bin/hpez"
+          EPS=$(python -c "import json; print(json.load(open('meta.json'))['epsilon'])")
+          for LO in 4096 7680; do
+            "$H" -f -i "block_${LO}.bin" -z "block_${LO}.hpez" -2 30000 384 -M ABS "$EPS" -q 4 | tee "compress_${LO}.log"
+            "$H" -f -z "block_${LO}.hpez" -o "block_${LO}.out" -2 30000 384 -M ABS "$EPS" -a | tee "decompress_${LO}.log"
+          done
+          python - <<'PY'
+          import json,os,numpy as np,re
+          m=json.load(open('meta.json'));out={'std':m['std'],'epsilon':m['epsilon'],'blocks':[]}
+          for b in m['blocks']:
+            lo=b['lo'];a=np.fromfile(b['file'],dtype='<f4');d=np.fromfile(f'block_{lo}.out',dtype='<f4');cb=os.path.getsize(f'block_{lo}.hpez');out['blocks'].append({'lo':lo,'raw_bytes':b['bytes'],'hpez_bytes':cb,'hpez_ratio':b['bytes']/cb,'maxerr':float(np.max(np.abs(a-d)))})
+          open('hpez_results.json','w').write(json.dumps(out,indent=2));print(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brady-hpez-results
+          path: |
+            hpez_results.json
+            compress_*.log
+            decompress_*.log
+          retention-days: 1
