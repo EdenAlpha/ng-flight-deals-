@@ -1,0 +1,50 @@
+name: Imperial level-delta Markov legal-path codec
+on:
+  pull_request:
+    branches: [imperial-markov-map-legal-codec]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download two previous Imperial records and canonical target
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';prefix='imperialvalleydas/v1.0.0/';target=prefix+'DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));rows=[]
+          for pg in s.get_paginator('list_objects_v2').paginate(Bucket=b,Prefix=prefix):
+            for o in pg.get('Contents',[]):
+              if o['Key'].endswith('.h5'):rows.append((o['Key'],int(o['Size'])))
+          rows.sort();keys=[k for k,_ in rows];i=keys.index(target);sel=rows[i-2:i+1]
+          assert len(sel)==3,sel
+          print('records',sel,flush=True)
+          for j,(k,n) in enumerate(sel):
+            s.download_file(b,k,f'r{j}.h5');assert os.path.getsize(f'r{j}.h5')==n
+          assert os.path.getsize('r2.h5')==415030456
+          assert hashlib.md5(open('r2.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Search all legal level-delta paths and encode the MAP path
+        run: python research/imperial_markov_level_delta_legal_codec.py r0.h5 r1.h5 r2.h5
+      - name: Surface conditional result without standalone promotion
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_markov_level_delta_legal_codec.json'));b=d['best']
+          print(f"::notice title=CONDITIONAL level-delta MAP::bytes={b['bytes']} B h/eps={b['h_over_eps_approx']}, bps={b['bps']:.4f}, SZ3={d['sz3']['bytes']} B, standaloneHybrid={d['standalone_hybrid_bytes']} B, MAPnll={b['mean_map_nll_bps']:.4f}, legalMassDiagnostic={b['mean_legal_mass_bps']:.4f}, gap={b['mean_map_mass_gap_bps']:.4f}, levelB={b['mean_level_bytes']:.1f}, deltaB={b['mean_delta_bytes']:.1f}")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-markov-level-delta-legal-codec
+          path: imperial_markov_level_delta_legal_codec.json
+          if-no-files-found: ignore
+          retention-days: 7
