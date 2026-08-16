@@ -24,7 +24,7 @@ jobs:
           h=hashlib.md5(open('imperial.h5','rb').read()).hexdigest();assert h=='8cb7ea8466ab48880f876fc43cb5ce75',h
           PY
       - name: Choose exact Zstd or combinatorial rank per bitplane
-        run: python research/imperial_ar32_hybrid_bitplane_rank.py imperial.h5
+        run: python research/imperial_ar32_hybrid_bitplane_rank_v2.py imperial.h5
       - name: Surface exact result
         if: success()
         run: |
