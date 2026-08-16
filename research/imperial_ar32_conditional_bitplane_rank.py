@@ -4,15 +4,15 @@ import imperial_dyadic_shared_resonator as ar
 import imperial_decoder_phase_automaton as m
 import imperial_persistent_ar32_full_array_jit as aj
 import imperial_ar32_hybrid_bitplane_rank as h
+import imperial_ar32_hybrid_bitplane_rank_v2  # patches h.decode_hybrid parser only
 
 T0=14488; C0=512; C=32; T=4096; TRAIN=1024; P=32; STEP=267; CHARGE=32
 DEPTHS=(1,2,3,4,99); MAGIC=b'CBR1'
 aj.m.P=32; aj.m.m.STEP=STEP
 
 def keys(U,b,d):
-    x=(U>>(b+1)).ravel(); avail=max(0,int(U.max()).bit_length()-b-1)
-    if avail<=0:return np.zeros(x.size,np.uint64)
-    if d==99 or d>=avail:return x
+    x=(U>>(b+1)).ravel()
+    if d==99:return x
     return x & np.uint64((1<<d)-1)
 
 def cenc(B,U,b,d):
@@ -43,7 +43,8 @@ def encode(K):
         raw.append(tag); raw+=h.uvar(len(body)); raw+=body
         info.append({'bit':b,'mode':kind,'detail':detail,'bytes':size,'zstd':next(x[0] for x in r if x[3]=='zstd'),'enum':next(x[0] for x in r if x[3]=='enum'),'best_cond':min(x[0] for x in r if x[3]=='conditional')})
     raw=bytes(raw); z=m.Z.compress(raw)
-    return ((b'\x01'+z,'zstd') if len(z)<len(raw) else (b'\x00'+raw,'raw'))+(info,)
+    if len(z)<len(raw):return b'\x01'+z,'zstd',info
+    return b'\x00'+raw,'raw',info
 
 def decode(buf):
     raw=m.D.decompress(buf[1:]) if buf[0] else bytes(buf[1:])
@@ -58,7 +59,8 @@ def decode(buf):
         elif 64<=tag<64+len(DEPTHS):
             B,p=cdec(raw,pos,U,b,DEPTHS[tag-64])
         else:raise RuntimeError(('tag',tag,b))
-        if p!=end:raise RuntimeError(('frame',b,p,end)); pos=end
+        if p!=end:raise RuntimeError(('frame',b,p,end))
+        pos=end
         U|=B.astype(np.uint64)<<b
     if pos!=len(raw):raise RuntimeError(('trailing',pos,len(raw)))
     return m.unzig(U).reshape(cc,tt)
@@ -68,7 +70,9 @@ def main(path):
         d=f['Acoustic']; _,sd=m.stats(d); eps=.1*sd; X=np.asarray(d[T0:T0+T,C0:C0+C],np.float64).T
     co=ar.fit_shared(X[:,:TRAIN],P); mb,cd=ar.model_frame(co); R,K=aj.build(X,cd); fr=m.encode_k(K)
     base=int(mb)+int(fr[0])+CHARGE; sz,_=m.szrun(X,eps)
-    old,_,_=h.build_hybrid(K); oldn=int(mb)+len(old)+CHARGE
+    old,_=h.build_hybrid(K); oldK=h.decode_hybrid(old)
+    if not np.array_equal(oldK,K):raise RuntimeError('hybrid comparator mismatch')
+    oldn=int(mb)+len(old)+CHARGE
     buf,outer,planes=encode(K); KD=decode(buf)
     if not np.array_equal(KD,K):raise RuntimeError('K mismatch')
     RD=aj.decode(KD,cd)
