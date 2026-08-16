@@ -3,7 +3,7 @@ import h5py,numpy as np
 import imperial_hard_adaptive_gps_plane_address as a
 import imperial_decoder_phase_automaton as m
 
-T0=14488
+T0=0
 C0=512
 C=128
 T=30000
