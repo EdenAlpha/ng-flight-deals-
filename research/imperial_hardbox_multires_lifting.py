@@ -93,7 +93,6 @@ def encode(X,eps,name,sched):
   fr=m.encode_k(E);Kd=np.asarray(fr[2],np.int32);frames.append((axis,Kd));total+=int(fr[0])
   level.append({'level':k,'axis':axis,'shape':list(E.shape),'bytes':int(fr[0]),'bps_global':8*int(fr[0])/X.size,'zero_fraction':float(np.mean(E==0)),'abs1_fraction':float(np.mean(np.abs(E)==1)),'std':float(E.std()),'rep':fr[1]})
  if len(ca)!=C or len(ta)!=NT:raise RuntimeError(('incomplete encoder grid',len(ca),len(ta),name,sched))
- # Full independent decoder replay from only decoded seed + decoded level correction frames.
  Rd=np.zeros_like(R);Rd[0,0]=sd[0,0];Rd[0,-1]=sd[0,1];Rd[-1,0]=sd[1,0];Rd[-1,-1]=sd[1,1]
  ca=[0,C-1];ta=[0,NT-1]
  for axis,Kd in frames:ca,ta=refine_decoder(Rd,ca,ta,axis,Kd)
@@ -111,7 +110,7 @@ def main(path):
    X=np.asarray(d[:NT,c0:c0+C],np.float64).T;rr=[]
    for name,sched in schedules().items():
     r=encode(X,eps,name,sched);r.update({'region':region,'c0':c0,'ar32_bytes':BASE[region]['ar32_bytes'],'sz3_bytes':BASE[region]['sz3_bytes'],'gain_vs_ar32':BASE[region]['ar32_bytes']/r['bytes'],'gain_vs_sz3':BASE[region]['sz3_bytes']/r['bytes']});rr.append(r)
-    print(json.dumps({k:v for k,v in r.items() if k!='levels'},flush=True))
+    print(json.dumps({k:v for k,v in r.items() if k!='levels'}),flush=True)
    best=min(rr,key=lambda x:x['bytes']);rows.append({'region':region,'best':best,'all':rr})
   out={'global_std':gstd,'eps':eps,'shape':[C,NT],'schedules':schedules(),'header_bytes':HEADER,'controls':'Pinned exact PR420 run 31788514939 on identical canonical 128x8192 regions and global epsilon. Every lifting correction frame is independently materialized and byte-decoded through the existing exact representation menu before full decoder replay.','rows':rows,'scope':'Hard-box multiresolution lifting codec. Four exact corner samples seed a decoder-known dyadic grid. A fixed schedule refines time and/or channel axes. Every newly introduced midpoint is linearly interpolated from its two already-decoded bracketing samples; if that prediction lies inside the source sample hard-error interval it emits correction zero, otherwise the encoder moves only to the nearest legal integer boundary and transmits that minimum correction. Each level correction field is a real raw/delta/Lorenzo/zigzag/XOR/Gray/bitplane Zstd frame, immediately byte-decoded. The final decoder starts from decoded corners and decoded level frames only, reproduces every sample, and verifies the unchanged source-domain max error. No post-hoc repair, target-trained model, ideal rate, or hidden state.'}
   json.dump(out,open('imperial_hardbox_multires_lifting.json','w'),indent=2)
