@@ -33,8 +33,7 @@ def pair_search(Q,lo,hi,D,dts,dcs,co,intercept,scale,logc,nbits,passes):
     ac=np.empty(maxa,np.int32);at=np.empty(maxa,np.int32)
     oldv=np.empty(maxa,np.int32);newv=np.empty(maxa,np.int32)
     trial=np.empty(nbits,np.int64)
-    changes=0;tested=0
-    # temporal, spatial, and one causal diagonal family
+    changes=0;tested=0;rejected_exact=0
     for ps in range(passes):
         changed=0
         for direction in range(3):
@@ -77,13 +76,18 @@ def pair_search(Q,lo,hi,D,dts,dcs,co,intercept,scale,logc,nbits,passes):
                             Q[c1,t1]=q10;Q[c2,t2]=q20
                     if bq1!=q10 or bq2!=q20:
                         Q[c1,t1]=bq1;Q[c2,t2]=bq2
-                        for z in range(na):
-                            nv=g._defect(Q,ac[z],at[z],dts,dcs,co,intercept,scale);D[ac[z],at[z]]=nv
-                            u0=a.zigscalar(int(oldv[z]));u1=a.zigscalar(int(nv))
-                            for b in range(nbits):counts[b]+=((u1>>b)&1)-((u0>>b)&1)
-                        changes+=1;changed+=1
+                        # Safety rule: an approximate local affected-set screen may nominate a pair,
+                        # but the pair is accepted only after a complete defect recomputation proves
+                        # that the exact global combinatorial address objective really decreases.
+                        Dfull=g._all_defects(Q,dts,dcs,co,intercept,scale)
+                        cfull=a.init_counts(Dfull,nbits)
+                        exact=a.total_cost(cfull,logc)
+                        if exact<base-1e-10:
+                            D[:,:]=Dfull;counts[:]=cfull;changes+=1;changed+=1
+                        else:
+                            Q[c1,t1]=q10;Q[c2,t2]=q20;rejected_exact+=1
         if changed==0:break
-    return Q,D,counts,changes,tested
+    return Q,D,counts,changes,tested,rejected_exact
 
 def main(path):
     with h5py.File(path,'r') as f:
@@ -96,16 +100,16 @@ def main(path):
     rb1,_,RE1,detail1=rr.restricted_rank_frame(D)
     single=c.validate(X,eps,h,Q,RE1,dts,dcs,co,intercept,rb1,'single_address_search',detail1)
     before_pair_obj=float(a.total_cost(counts1,logc))
-    Q2,D2,counts2,pair_changes,tested=pair_search(np.ascontiguousarray(Q.copy()),lo,hi,np.ascontiguousarray(D.copy()),dts,dcs,co,intercept,g.SCALE,logc,NBITS,PAIR_PASSES)
+    Q2,D2,counts2,pair_changes,tested,rejected=pair_search(np.ascontiguousarray(Q.copy()),lo,hi,np.ascontiguousarray(D.copy()),dts,dcs,co,intercept,g.SCALE,logc,NBITS,PAIR_PASSES)
     Dr=g._all_defects(Q2,dts,dcs,co,intercept,g.SCALE)
-    if not np.array_equal(Dr,D2):raise RuntimeError('pair incremental defect mismatch')
+    if not np.array_equal(Dr,D2):raise RuntimeError('pair exact defect mismatch')
     rb2,_,RE2,detail2=rr.restricted_rank_frame(D2)
     pair=c.validate(X,eps,h,Q2,RE2,dts,dcs,co,intercept,rb2,'pair_address_search',detail2)
     for r in (single,pair):
         r['gain_vs_sz3']=szb/r['bytes'];r['gain_vs_ar32']=arb['bytes']/r['bytes']
         print(json.dumps({k:v for k,v in r.items() if k!='detail'},indent=2),flush=True)
-    out={'region':'hard','shape':[g.C,g.T],'global_std':std,'eps':eps,'h':h,'sz3':{'bytes':int(szb),'orientation':ori},'ar32':arb,'single':single,'pair':pair,'search':{'base_projection_changes':int(base_changes),'single_changes':int(single_changes),'pair_changes':int(pair_changes),'pair_candidates_tested':int(tested),'before_pair_global_rank_bits':before_pair_obj,'after_pair_global_rank_bits':float(a.total_cost(counts2,logc)),'before_pair_counts':[int(x) for x in counts1],'after_pair_counts':[int(x) for x in counts2]},'scope':'Decoder-real second-order NOVA address search. It reproduces PR518 single-sample address-aware legal search, then searches coordinated pairs of hard-error-legal reconstruction states along temporal, spatial and causal-diagonal neighborhoods. A pair is accepted only when the global combinatorial bitplane address objective decreases after accounting for every causal learned-law defect affected by both changes jointly. This permits moves that single-coordinate descent cannot cross. No search path is transmitted. Final compression is counted only from the physically serialized PR512 restricted-rank defect stream plus the charged learned generator, followed by exact defect/Q replay and unchanged source-domain hard-error validation.'}
+    out={'region':'hard','shape':[g.C,g.T],'global_std':std,'eps':eps,'h':h,'sz3':{'bytes':int(szb),'orientation':ori},'ar32':arb,'single':single,'pair':pair,'search':{'base_projection_changes':int(base_changes),'single_changes':int(single_changes),'pair_changes':int(pair_changes),'pair_candidates_tested':int(tested),'pair_nominations_rejected_by_full_exact_check':int(rejected),'before_pair_global_rank_bits':before_pair_obj,'after_pair_global_rank_bits':float(a.total_cost(counts2,logc)),'before_pair_counts':[int(x) for x in counts1],'after_pair_counts':[int(x) for x in counts2]},'scope':'Decoder-real second-order NOVA address search. It reproduces PR518 single-sample address-aware legal search, then searches coordinated pairs of hard-error-legal reconstruction states along temporal, spatial and causal-diagonal neighborhoods. Local affected-set scoring is only a fast nomination screen. Every nominated pair is accepted only after a complete learned-law defect recomputation and an exact decrease in the global combinatorial bitplane objective. No search path is transmitted. Final compression is counted only from the physically serialized PR512 restricted-rank defect stream plus the charged learned generator, followed by exact defect/Q replay and unchanged source-domain hard-error validation.'}
     json.dump(out,open('imperial_address_aware_pair_search.json','w'),indent=2)
-    print(json.dumps({'summary':{'single':single['bytes'],'pair':pair['bytes'],'ar32':arb['bytes'],'sz3':int(szb),'pair_changes':int(pair_changes),'tested':int(tested),'gain_vs_single':single['bytes']/pair['bytes'],'gain_vs_ar32':arb['bytes']/pair['bytes']}},indent=2),flush=True)
+    print(json.dumps({'summary':{'single':single['bytes'],'pair':pair['bytes'],'ar32':arb['bytes'],'sz3':int(szb),'pair_changes':int(pair_changes),'tested':int(tested),'rejected_exact':int(rejected),'gain_vs_single':single['bytes']/pair['bytes'],'gain_vs_ar32':arb['bytes']/pair['bytes']}},indent=2),flush=True)
 
 if __name__=='__main__':main(sys.argv[1])
