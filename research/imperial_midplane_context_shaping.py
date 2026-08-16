@@ -130,7 +130,7 @@ def main(path):
             Dr=g._all_defects(Q,dts,dcs,co,intercept,g.SCALE)
             if not np.array_equal(Dr,D):raise RuntimeError(('defect mismatch',bit,fam))
             U0=m.zig(D0).astype(np.uint64);U1=m.zig(D).astype(np.uint64)
-            if np.any((U0>>(bit+1))!=(U1>>(bit+1)):raise RuntimeError(('higher bits changed',bit,fam))
+            if np.any((U0>>(bit+1))!=(U1>>(bit+1))):raise RuntimeError(('higher bits changed',bit,fam))
             rb,_,RE,detail=rr.restricted_rank_frame(D)
             row=c.validate(X,eps,h,Q,RE,dts,dcs,co,intercept,rb,f'bit{bit}_shape_{fam}',detail)
             row['gain_vs_sz3']=szb/row['bytes'];row['gain_vs_ar32']=arb['bytes']/row['bytes'];rows.append(row)
