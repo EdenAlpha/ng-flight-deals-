@@ -1,0 +1,42 @@
+name: Imperial spacetime predictive quantizer
+on:
+  pull_request:
+    branches: [imperial-causal-aware-rich-compact]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Compare full-target spacetime generator to AR32 under identical predictive quantization and rich coding
+        run: python research/imperial_spacetime_predictive_quantizer.py imperial.h5
+      - name: Surface generator result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_spacetime_predictive_quantizer.json'));n=d['spacetime_nova'];a=d['ar32'];level='notice' if n['bytes']<a['bytes'] else 'warning'
+          print(f"::{level} title=spacetime-generator hard::NOVA={n['bytes']} B, AR32={a['bytes']} B, delta={n['delta_vs_ar32']} B, NOVAfield={n['field_bytes']} B, ARfield={a['field_bytes']} B")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-spacetime-predictive-quantizer
+          path: imperial_spacetime_predictive_quantizer.json
+          if-no-files-found: ignore
+          retention-days: 7
