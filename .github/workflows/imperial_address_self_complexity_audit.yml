@@ -27,7 +27,13 @@ jobs:
           assert h.hexdigest() == '8cb7ea8466ab48880f876fc43cb5ce75'
           PY
       - name: Run exact recursive-address audit
-        run: python research/imperial_address_self_complexity_audit.py imperial.h5
+        run: |
+          PYTHONPATH=research python - <<'PY'
+          import imperial_decoder_phase_automaton as m
+          m.STEP = 267
+          import imperial_address_self_complexity_audit as a
+          a.main('imperial.h5')
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: imperial-address-self-complexity-audit
