@@ -1,0 +1,37 @@
+name: Imperial ZSM evidence recovery
+on:
+  pull_request:
+    branches: [imperial-zsm-full-array]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz
+      - name: Download exact successful PR482 block artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: imperial-zsm-full-*
+          merge-multiple: true
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: 31799419247
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Aggregate recovered full-array evidence
+        run: python research/imperial_zsm_full_array.py aggregate
+      - name: Surface recovered budget
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_zsm_full_aggregate.json'))
+          print(json.dumps(d,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-zsm-full-recovered-aggregate
+          path: imperial_zsm_full_aggregate.json
+          retention-days: 7
