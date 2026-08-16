@@ -23,6 +23,7 @@ jobs:
           assert os.path.getsize('imperial.h5')==415030456
           assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
           PY
+      # Wrapper replaces the original decoder with the corrected independently replayed implementation.
       - name: Recursively restrict and rank the learned-law defect universe
         run: python research/imperial_defect_recursive_restriction_fix.py imperial.h5
       - name: Surface exact result
