@@ -1,0 +1,38 @@
+name: Imperial edge spacing benchmark
+on:
+  pull_request:
+    branches: [imperial-near-2eps-resonance-sweep]
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Fetch benchmark dataset
+        run: |
+          python - <<'PY'
+          import boto3, os, hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          bucket='gdr-data-lake'
+          key='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file(bucket,key,'imperial.h5')
+          assert os.path.getsize('imperial.h5') == 415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest() == '8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Run benchmark
+        run: python research/imperial_ultraclose_2eps_edge.py imperial.h5
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-edge-spacing
+          path: imperial_ultraclose_2eps_edge.json
+          if-no-files-found: ignore
+          retention-days: 7
