@@ -1,0 +1,42 @@
+name: Imperial wavefront shear codec
+on:
+  pull_request:
+    branches: [imperial-information-floor-audit]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Search reversible shear transforms
+        run: python research/imperial_wavefront_shear_codec.py imperial.h5
+      - name: Surface exact result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_wavefront_shear_codec.json')); b=d['best']
+          print(f"::notice title=Imperial shear codec::{b['kind']} total={b['total_bytes']} B current=2468803 B gain={2468803/b['total_bytes']:.6f}x")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-wavefront-shear-codec
+          path: imperial_wavefront_shear_codec.json
+          if-no-files-found: ignore
+          retention-days: 7
