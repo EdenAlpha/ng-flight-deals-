@@ -43,7 +43,7 @@ def main(path):
             r=one(X,eps,p,train)
             if r is None:continue
             r['gain_vs_old_ar32']=old['bytes']/r['bytes'];r['gain_vs_sz3']=szb/r['bytes'];rows.append(r)
-            print(json.dumps({k:v for k,v in r.items() if k!='detail'},flush=True),flush=True)
+            print(json.dumps({k:v for k,v in r.items() if k!='detail'}),flush=True)
     rows.sort(key=lambda r:r['bytes']);best=rows[0]
     out={'region':'hard','shape':[g.C,g.T],'global_std':std,'eps':eps,'step':STEP,'orders':list(ORDERS),'trains':list(TRAINS),'old_ar32':old,'sz3':{'bytes':int(szb),'orientation':ori},'rows':rows,'best':best,'scope':'Fine NOVA coordinate-system search around the AR8 restricted-address breakthrough. The source object, step267, hard-error contract, exact PR512 address and accounting remain fixed. Only public shared AR order 1..16 and prefix training length are searched. Every candidate fits only from its declared prefix, serializes/decodes and fully charges the AR model, physically restricted-ranks and independently decodes the complete K field, causally replays the identical reconstruction, and verifies the original source hard error. One byte selects the public (order,training-length) configuration. No ideal rate or uncharged model selection.'}
     json.dump(out,open('imperial_nova_fine_ar_neighborhood.json','w'),indent=2)
