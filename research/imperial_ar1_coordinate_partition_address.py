@@ -25,22 +25,22 @@ def partition_akey(known,B,bit,c,t,fam):
     if fam in BASE:
         return OLD_AKEY(known,B,bit,c,t,fam)
     nc,nt=B.shape
-    if fam.startswith('coord_t'):
-        k=int(fam[7:]);return min(k-1,t*k//nt)
-    if fam.startswith('coord_c'):
-        k=int(fam[7:]);return min(k-1,c*k//nc)
     if fam.startswith('coord_tc'):
         q=fam[8:];kt,kc=(int(x) for x in q.split('x'))
         return (min(kt-1,t*kt//nt),min(kc-1,c*kc//nc))
     if fam.startswith('coord_scan'):
         k=int(fam[10:]);i=t*nc+c;n=nc*nt
         return min(k-1,i*k//n)
+    if fam.startswith('coord_t'):
+        k=int(fam[7:]);return min(k-1,t*k//nt)
+    if fam.startswith('coord_c'):
+        k=int(fam[7:]);return min(k-1,c*k//nc)
+    if fam.startswith('phase_tc'):
+        k=int(fam[8:]);return (t%k,c%k)
     if fam.startswith('phase_t'):
         k=int(fam[7:]);return t%k
     if fam.startswith('phase_c'):
         k=int(fam[7:]);return c%k
-    if fam.startswith('phase_tc'):
-        k=int(fam[8:]);return (t%k,c%k)
     raise ValueError(fam)
 
 a.akey=partition_akey
