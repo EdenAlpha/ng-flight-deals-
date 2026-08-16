@@ -31,13 +31,16 @@ def val(X,c,t,f):
 
 def fit(X,features,train):
     nt=min(train,X.shape[1]);rows=[];yy=[]
+    # t=0 is a public cold start and is not predicted from the model.
     for c in range(X.shape[0]):
-        for t in range(nt):
+        for t in range(1,nt):
             rows.append([val(X,c,t,f) for f in features]+[1.0]);yy.append(float(X[c,t]))
     M=np.asarray(rows,np.float64);Y=np.asarray(yy,np.float64)
     return np.linalg.lstsq(M,Y,rcond=1e-8)[0].astype(np.float32)
 
 def pred(R,c,t,co,features):
+    # Match the incumbent AR family exactly: t=0 is a zero predictor/cold start.
+    if t==0:return 0
     s=float(co[-1])
     for j,f in enumerate(features):s+=float(co[j])*float(val(R,c,t,f))
     if not math.isfinite(s):raise RuntimeError('nonfinite')
@@ -67,8 +70,10 @@ def main(path):
     with h5py.File(path,'r') as f:
         ds=f['Acoustic'];_,std=m.stats(ds);eps=.1*std;X=np.asarray(ds[g.T0:g.T0+g.T,g.C0:g.C0+g.C],np.float64).T
     szb,ori=m.szrun(X,eps);screen=[];cache={}
-    # exact incumbent is kept as a forced candidate
+    # Exact incumbent is a forced candidate and must reproduce PR630 K exactly.
     baseco=np.asarray(fair.fit(X,1,'prefix64'),np.float32);basebuf,basename,basecod=model_rt(baseco);baseR,baseK=build(X,basecod,CONFIGS['t1'])
+    refR,refK=fair.build(X,1,basecod)
+    if not np.array_equal(baseK,refK) or not np.array_equal(baseR,refR):raise RuntimeError('incumbent cold-start mismatch')
     cache[('t1',64)]=(basecod,baseK,baseR,basebuf,basename)
     for name,features in CONFIGS.items():
         for tr in TRAINS:
@@ -91,7 +96,7 @@ def main(path):
     rows.sort(key=lambda r:r['bytes']);best=rows[0];base=next(r for r in rows if r['model']=='t1' and r['train']==64)
     out={'region':'hard','shape':[g.C,g.T],'global_std':std,'eps':eps,'step':STEP,'configs':{k:list(v) for k,v in CONFIGS.items()},'trains':list(TRAINS),'exact_top':EXACT_TOP,
          'screen':screen,'selected_exact':[list(x) for x in sorted(selected)],'rows':rows,'baseline':base,'best':best,'sz3':{'bytes':int(szb),'orientation':ori},
-         'scope':'Current-address retest of tiny learned 2-D causal predictors. Candidate float32 models use temporal reconstructed history plus already reconstructed previous-channel and diagonal states in a decoder-valid channel-major order. Coefficients are fitted from declared source prefixes and fully serialized/decoded; step267 guarantees the unchanged hard error after nearest innovation correction. A cheap legacy-codec screen only allocates exact current-address evaluations. Exact finalists materialize/decode the full coarse-prefix+mixture K stream and causally replay the source with identical 32-byte header + one-byte public model selector accounting.'}
+         'scope':'Current-address retest of tiny learned 2-D causal predictors. All models use the same public zero predictor at t=0 as the strict incumbent. Candidate float32 models use temporal reconstructed history plus already reconstructed previous-channel and diagonal states in a decoder-valid channel-major order. Coefficients are fitted only on t>=1 from declared source prefixes and fully serialized/decoded; step267 preserves the unchanged hard error after nearest innovation correction. A cheap legacy-codec screen only allocates exact current-address evaluations. Exact finalists materialize/decode the full coarse-prefix+mixture K stream and causally replay the source with identical 32-byte header + one-byte public model selector accounting.'}
     json.dump(out,open('imperial_2d_causal_current_address.json','w'),indent=2)
     print(json.dumps({'summary':{'baseline':base['bytes'],'best':best['bytes'],'delta':best['bytes']-base['bytes'],'model':best['model'],'train':best['train'],'model_bytes':best['model_bytes'],'field_bytes':best['field_bytes'],'sz3':int(szb),'gain_vs_sz3':szb/best['bytes']}},indent=2),flush=True)
 if __name__=='__main__':main(sys.argv[1])
