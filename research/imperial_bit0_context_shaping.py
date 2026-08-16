@@ -86,7 +86,7 @@ def bit0_context_search(Q,lo,hi,D,dts,dcs,co,intercept,scale,gid,gn,gk,lf,passes
 
 def group_map(D,family):
     U=m.zig(np.asarray(D,np.int32)).astype(np.uint64)
-    known=U & np.uint64(~1)
+    known=U & np.uint64(0xFFFFFFFFFFFFFFFE)
     keys=rr.context_keys(known,0,family)
     _,inv=np.unique(keys,return_inverse=True)
     gid=inv.reshape(D.shape).astype(np.int32)
