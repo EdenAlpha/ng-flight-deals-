@@ -25,6 +25,8 @@ jobs:
           PY
       - name: Measure information floor diagnostics
         run: python research/imperial_information_floor_audit.py imperial.h5
+      - name: Measure held-out quantized context rate
+        run: python research/imperial_quantized_context_floor.py imperial.h5
       - name: Surface audit summary
         if: success()
         run: |
@@ -35,12 +37,16 @@ jobs:
           q=s['best_actual_scalar_quantized_zstd']
           c=s['best_causal_residual_h0']
           o=s['noncausal_oracle_residual_h0']
-          print(f"::notice title=Imperial information-floor audit::current={s['current_bps']:.4f} bps target2x={s['target_2x_bps']:.4f} bps scalar_actual={q['zstd_bps']:.4f} bps causal_H0={c['residual_h0_bps']:.4f} oracle_H0={o['residual_h0_bps']:.4f}")
+          e=json.load(open('imperial_quantized_context_floor.json'))
+          bc=e['best_causal']; bo=e['best_oracle']
+          print(f"::notice title=Imperial information-floor audit::current={s['current_bps']:.4f} bps target2x={s['target_2x_bps']:.4f} bps scalar_actual={q['zstd_bps']:.4f} bps causal_H0={c['residual_h0_bps']:.4f} oracle_H0={o['residual_h0_bps']:.4f} ctx_causal={bc['heldout_bps']:.4f} ctx_oracle={bo['heldout_bps']:.4f}")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: imperial-information-floor-audit
-          path: imperial_information_floor_audit.json
+          path: |
+            imperial_information_floor_audit.json
+            imperial_quantized_context_floor.json
           if-no-files-found: ignore
           retention-days: 7
