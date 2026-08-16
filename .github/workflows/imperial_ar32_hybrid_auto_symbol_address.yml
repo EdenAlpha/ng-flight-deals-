@@ -1,0 +1,41 @@
+name: Imperial AR32 hybrid AUTO-symbol address
+on:
+  pull_request:
+    branches: [imperial-ar32-autocomplexity-address]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Keep AUTO high planes and finish stubborn low bits symbol-major
+        run: python research/imperial_ar32_hybrid_auto_symbol_address.py imperial.h5
+      - name: Surface exact result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_ar32_hybrid_auto_symbol_address.json'));b=d['best'];a=d['auto_incumbent']
+          print(f"::notice title=AR32 hybrid address::best={b['bytes']} B cut={b['cut']} family={b['family']}, AUTO={a['bytes']} B, SZ3={d['sz3']['bytes']} B, gainAUTO={a['bytes']/b['bytes']:.6f}x, gainSZ3={d['sz3']['bytes']/b['bytes']:.6f}x")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-ar32-hybrid-auto-symbol-address
+          path: imperial_ar32_hybrid_auto_symbol_address.json
+          if-no-files-found: ignore
+          retention-days: 7
