@@ -50,7 +50,7 @@ def _make_frame(a,tid):
   b=_zz(d);dt=_udtype(b)
  else:raise ValueError(tid)
  raw=np.ascontiguousarray(b.astype(dt)).tobytes();z=ZC.compress(raw)
- head=struct.pack('<4sBBII',b'TRJ1',tid,DTID[dt],a.size,len(z))
+ head=struct.pack('<4sBBII',b'TRJ1',tid,DTID[dt.str],a.size,len(z))
  return head+z
 
 def _decode_frame(buf):
@@ -71,7 +71,6 @@ def frame(a):
  return best
 
 def legal_intervals(x,eps):
- # Integer reconstruction states entirely inside the unchanged continuous hard boxes.
  lo=np.ceil(np.asarray(x,np.float64)-eps).astype(np.int64)
  hi=np.floor(np.asarray(x,np.float64)+eps).astype(np.int64)
  if np.any(lo>hi):raise RuntimeError('empty integer box')
@@ -116,12 +115,11 @@ def linear_segments(x,eps,S):
  return np.asarray(lens,np.int64),np.asarray(anchors,np.int64),np.asarray(slopes,np.int64)
 
 def const_stream(X,eps):
- counts=[];lens=[];first=[];dv=[];allvals=[]
+ counts=[];lens=[];first=[];dv=[]
  for c in range(X.shape[0]):
-  L,V=const_segments(X[c],eps);counts.append(len(L));lens.extend(L.tolist());first.append(int(V[0]));allvals.extend(V.tolist())
+  L,V=const_segments(X[c],eps);counts.append(len(L));lens.extend(L.tolist());first.append(int(V[0]))
   if len(V)>1:dv.extend(np.diff(V).tolist())
  fs=[frame(counts),frame(lens),frame(first),frame(dv)];stream=struct.pack('<4sBIII',b'CTR1',0,X.shape[0],X.shape[1],len(fs))+b''.join(struct.pack('<I',len(q))+q for q in fs)
- # Decoder-real replay.
  off=17;arr=[]
  for _ in range(4):L=struct.unpack_from('<I',stream,off)[0];off+=4;arr.append(_decode_frame(stream[off:off+L]));off+=L
  if off!=len(stream):raise RuntimeError('const trailing')
@@ -152,7 +150,7 @@ def linear_stream(X,eps,S):
  if off!=len(stream):raise RuntimeError('linear trailing')
  dc,dl,dfa,dfq,dda,ddq=arr;R=np.empty(X.shape,np.float64);li=di=0
  for c in range(X.shape[0]):
-  ns=int(dc[c]);a=int(dfa[c]);q=int(dfq[c]);t=0
+  ns=int(dc[c]);a=int(dfa[c]);q=int(dfq[c]);t=0;prevn=0
   for j in range(ns):
    n=int(dl[li]);li+=1
    if j>0:
