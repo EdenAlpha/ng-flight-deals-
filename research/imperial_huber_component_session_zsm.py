@@ -30,7 +30,7 @@ def encode_tb(K,tb):
             stream.extend(struct.pack('<BQI',sid,int(nb),len(bb)));stream.extend(bb)
             detail[comp]={'grammar':gr,'W':W,'selector':sid,'bits':int(nb),'payload_bytes':len(bb),'screens':screens}
         blocks.append({'t0':t0,'t1':t1,'component_detail':detail})
-        print(json.dumps({'tb':tb,'block':[t0,t1],'bytes_so_far':len(stream),'chosen':{k:{'grammar':v['grammar'],'W':v['W'],'payload_bytes':v['payload_bytes']} for k,v in detail.items()}},flush=True))
+        print(json.dumps({'tb':tb,'block':[t0,t1],'bytes_so_far':len(stream),'chosen':{k:{'grammar':v['grammar'],'W':v['W'],'payload_bytes':v['payload_bytes']} for k,v in detail.items()}}),flush=True)
     return bytes(stream),blocks
 
 
