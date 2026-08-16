@@ -4,9 +4,14 @@ on:
     branches: [imperial-causal-aware-rich-compact]
 permissions: {contents: read}
 jobs:
-  gate:
+  candidate:
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: [prefix256, full]
+        order: [8, 16, 24, 32, 48, 64, 96]
     runs-on: ubuntu-24.04
-    timeout-minutes: 50
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,20 +28,12 @@ jobs:
           assert os.path.getsize('imperial.h5')==415030456
           assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
           PY
-      - name: Search full-tile and prefix-fit shared AR orders with rich causal coding
-        run: python research/imperial_strong_ar_family_audit.py imperial.h5
-      - name: Surface strongest AR incumbent
-        if: success()
-        run: |
-          python - <<'PY'
-          import json
-          d=json.load(open('imperial_strong_ar_family_audit.json'));b=d['best']
-          print(f"::notice title=strong-AR hard::bytes={b['bytes']} B, order={b['order']}, fit={b['fit_scope']}, model={b['model_bytes']} B, field={b['field_bytes']} B")
-          PY
+      - name: Materialize exact AR candidate
+        run: python research/imperial_strong_ar_one.py imperial.h5 ${{ matrix.order }} ${{ matrix.scope }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: imperial-strong-ar-family-audit
-          path: imperial_strong_ar_family_audit.json
+          name: strong-ar-${{ matrix.scope }}-p${{ matrix.order }}
+          path: imperial_strong_ar_${{ matrix.scope }}_p${{ matrix.order }}.json
           if-no-files-found: ignore
           retention-days: 7
