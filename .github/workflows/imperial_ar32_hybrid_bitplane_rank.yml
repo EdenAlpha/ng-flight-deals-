@@ -1,0 +1,44 @@
+name: Imperial AR32 hybrid bitplane rank
+on:
+  pull_request:
+    branches: [imperial-persistent-ar32-step267-full-array]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          h=hashlib.md5(open('imperial.h5','rb').read()).hexdigest();assert h=='8cb7ea8466ab48880f876fc43cb5ce75',h
+          PY
+      - name: Choose exact Zstd or combinatorial rank per bitplane
+        run: python research/imperial_ar32_hybrid_bitplane_rank.py imperial.h5
+      - name: Surface exact result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_ar32_hybrid_bitplane_rank.json'));h=d['hybrid'];level='notice' if h['gain_vs_ar32']>1 else 'warning'
+          print(f"::{level} title=hybrid-bitplane hard::hybrid={h['bytes']} B, AR32={d['ar32']['bytes']} B, SZ3={d['sz3']['bytes']} B, gainAR={h['gain_vs_ar32']:.6f}x, gainSZ3={h['gain_vs_sz3']:.6f}x, address={h['address_bytes']} B, outer={h['outer_rep']}")
+          for p in d['planes']:
+            print(f"::notice title=plane {p['bit']}::{p['selected_mode']} {p['selected_partition']}, frame={p['frame_bytes']} B, zstd={p['zstd_frame_bytes']} B, best_enum={p['best_enum_frame_bytes']} B")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-ar32-hybrid-bitplane-rank
+          path: imperial_ar32_hybrid_bitplane_rank.json
+          if-no-files-found: ignore
+          retention-days: 7
