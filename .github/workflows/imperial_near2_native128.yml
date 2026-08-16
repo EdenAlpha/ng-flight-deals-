@@ -1,0 +1,33 @@
+name: Imperial near2 native128
+on:
+  pull_request:
+    branches: [imperial-address-lattice-boundary]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Run native 128x1024 codec and matched comparators
+        run: python research/imperial_near2_native128.py imperial.h5
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-near2-native128
+          path: imperial_near2_native128.json
+          if-no-files-found: ignore
+          retention-days: 7
