@@ -1,0 +1,42 @@
+name: Imperial AR32 restricted address generalization
+on:
+  pull_request:
+    branches: [imperial-ar32-restricted-address-sweep]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Transfer exact restricted addressing across 128-channel regimes
+        run: python research/imperial_ar32_restricted_address_generalization.py imperial.h5
+      - name: Surface aggregate result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          a=json.load(open('imperial_ar32_restricted_address_generalization.json'))['aggregate']
+          print(f"::notice title=AR32 restricted transfer::restricted={a['restricted_bytes']} B, legacy={a['legacy_bytes']} B, SZ3={a['sz3_bytes']} B, gainLegacy={a['restricted_gain_vs_legacy']:.6f}x, gainSZ3={a['restricted_gain_vs_sz3']:.6f}x")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-ar32-restricted-address-generalization
+          path: imperial_ar32_restricted_address_generalization.json
+          if-no-files-found: ignore
+          retention-days: 7
