@@ -5,7 +5,6 @@ import imperial_decoder_phase_automaton as m
 SPECS=(('hard',512),('easy',2304),('medium',4608),('far',6784))
 C=128;NT=8192
 SCALES=(64,256,1024,4096)
-# Pinned, same-object/same-epsilon controls from PR420 run 31788514939.
 BASE={
  'hard':{'ar32_bytes':661373,'sz3_bytes':754436},
  'easy':{'ar32_bytes':237943,'sz3_bytes':282633},
@@ -102,10 +101,10 @@ def linear_segments(x,eps,S):
    qlo=-(1<<62);qhi=(1<<62);e=s+1
    while e<n:
     d=e-s
-    qlo=max(qlo,ceildiv((int(lo[e])-a)*S,d))
-    qhi=min(qhi,((int(hi[e])-a)*S)//d)
-    if qlo>qhi:break
-    e+=1
+    nqlo=max(qlo,ceildiv((int(lo[e])-a)*S,d))
+    nqhi=min(qhi,((int(hi[e])-a)*S)//d)
+    if nqlo>nqhi:break
+    qlo,qhi=nqlo,nqhi;e+=1
    if e==s+1:q=prev_q
    else:q=max(qlo,min(qhi,prev_q))
    key=(e-s,-abs(q-prev_q),-abs(a-pred))
