@@ -174,7 +174,7 @@ def main(path):
             finals.sort(key=lambda z:(z['bytes'],z['proxy_bytes']))
             best=finals[0]
             h=eps;nearest=np.rint(X/h).astype(np.int32);nfr=m.encode_k(nearest.reshape(1,-1))
-            if not np.array_equal(np.asarray(nfr[2],np.int32),nearest):raise RuntimeError('nearest stream')
+            if not np.array_equal(np.asarray(nfr[2],np.int32).ravel(),nearest.ravel()):raise RuntimeError('nearest stream')
             nme=float(np.max(np.abs(X-nearest.astype(np.float64)*h)))
             near={'bytes':int(nfr[0])+HEADER_BYTES,'payload_bytes':int(nfr[0]),'rep':nfr[1],'maxerr':nme}
             for z in (best,near,base):
