@@ -1,4 +1,4 @@
-import json,sys
+import json,sys,math
 import h5py,numpy as np,zstandard as zstd
 import imperial_decoder_phase_automaton as m
 import imperial_dyadic_shared_resonator as ar
@@ -23,7 +23,7 @@ def chunks(b,n=8192):
 def get_address(path,region,c0,target=False):
     with h5py.File(path,'r') as f:
         d=f['Acoustic'];_,std=m.stats(d);eps=.1*std;X=np.asarray(d[T0:T0+NT,c0:c0+C],np.float64).T
-    step=TARGET_STEP if target else int(round(2*eps));old=m.STEP;m.STEP=step
+    step=TARGET_STEP if target else int(math.floor(2*eps));old=m.STEP;m.STEP=step
     try:
         co=ar.fit_shared(X[:,:TRAIN],P);mb,cd=ar.model_frame(co);R,K=inc.build(X,cd)
         me=float(np.max(np.abs(X-R.astype(np.float64))))
@@ -48,7 +48,7 @@ def main(p0,p1,pt):
     dicts=[]
     for ds in DICT_SIZES:
         try:
-            dd=zstd.train_dictionary(ds,train);dicts.append((ds,dd));
+            dd=zstd.train_dictionary(ds,train);dicts.append((ds,dd))
         except Exception as e:print('dict_skip',ds,repr(e),flush=True)
     if not dicts:raise RuntimeError('no dictionary trained')
     rows=[]
