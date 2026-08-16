@@ -1,0 +1,44 @@
+name: Imperial global hard-box resonance defect address
+on:
+  pull_request:
+    branches: [imperial-persistent-ar32-step267-full-array]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          h=hashlib.md5(open('imperial.h5','rb').read()).hexdigest();assert h=='8cb7ea8466ab48880f876fc43cb5ce75',h
+          PY
+      - name: Run global reconstruction resonance search
+        run: python research/imperial_resonant_global_defect_address.py imperial.h5
+      - name: Surface exact results
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_resonant_global_defect_address.json'))
+          for r in d['rows']:
+            b=r['best'];level='notice' if b['gain_vs_ar32']>1 else 'warning'
+            print(f"::{level} title=global-resonance {r['region']}::bytes={b['bytes']}, AR32={r['ar32']['bytes']}, SZ3={r['sz3']['bytes']}, gainAR={b['gain_vs_ar32']:.6f}x, gainSZ3={b['gain_vs_sz3']:.6f}x, law={b['law']}, h/eps={b['hfac']}, shared={b['shared_forcing']}, defect0={b['defect_zero_fraction']:.5f}")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-resonant-global-defect-address
+          path: imperial_resonant_global_defect_address.json
+          if-no-files-found: ignore
+          retention-days: 7
