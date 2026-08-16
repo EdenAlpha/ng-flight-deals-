@@ -47,7 +47,6 @@ def main(path):
         blocks.append({'block':bi,'t0':t0,'t1':t1,'selector':sid,'grammar':gr,'W':W,'payload_bytes':nbyte,'entry_bytes':len(entry),'bits':nb,'candidates':rows})
         print(json.dumps({'block':bi,'t0':t0,'t1':t1,'winner':gr,'W':W,'payload_bytes':nbyte,'entry_bytes':len(entry)}),flush=True)
     outer=outer_header();container=outer+model+bytes(stream)
-    # Parse the literal container and independently decode every session.
     if len(container)<OUTER_BYTES+MODEL_BYTES:raise RuntimeError('container short')
     magic,tb=struct.unpack_from('<4sH',container,0)
     if magic!=b'SZP1' or tb!=TB:raise RuntimeError(('outer replay',magic,tb))
@@ -55,8 +54,11 @@ def main(path):
     if not np.array_equal(cod2.view(np.uint32),cod.view(np.uint32)):raise RuntimeError('container model replay')
     off=OUTER_BYTES+MODEL_BYTES;Kd=np.empty_like(K)
     for bi,t0 in enumerate(range(0,NT,TB)):
-        t1=min(NT,t0+TB);sid,nb,L=struct.unpack_from('<BQI',container,off);off+=13
-        if sid>=len(MENU):raise RuntimeError(('selector',sid));bb=container[off:off+L];off+=L
+        t1=min(NT,t0+TB)
+        sid,nb,L=struct.unpack_from('<BQI',container,off);off+=13
+        if sid>=len(MENU):raise RuntimeError(('selector',sid))
+        bb=container[off:off+L];off+=L
+        if len(bb)!=L:raise RuntimeError(('payload eof',bi,L,len(bb)))
         gr,W=MENU[sid];Kb=fz.decode(bb,int(nb),W,(C,t1-t0),gr);Kd[:,t0:t1]=Kb
     if off!=len(container):raise RuntimeError(('trailing',off,len(container)))
     if not np.array_equal(Kd,K):raise RuntimeError('full K replay')
