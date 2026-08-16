@@ -24,7 +24,7 @@ jobs:
           assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
           PY
       - name: Search raw, restricted and adaptive decision-tree address per plane
-        run: python research/imperial_hard_adaptive_gps_plane_address.py imperial.h5
+        run: python research/imperial_hard_adaptive_gps_plane_address_fix.py imperial.h5
       - name: Surface exact result
         if: success()
         run: |
