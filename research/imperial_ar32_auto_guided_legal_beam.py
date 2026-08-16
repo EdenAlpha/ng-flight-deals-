@@ -9,8 +9,8 @@ STEPS=(262,263,264,265,266)
 BEAM=64
 SELECTOR_BYTES=3
 ALPHA=0.5
-# Families that actually won the current exact AUTO stream on this hard tile.
-WINNER=('lu','global','global','global','lu','lud_hi1','lud_hi1','lud_hi1','global')
+# bit0..bit7 winners from the current exact AR32 AUTO stream.
+WINNER=('lu','global','global','global','lu','lud_hi1','lud_hi1','lud_hi1')
 
 def zz(v):return 2*int(v) if v>=0 else -2*int(v)-1
 
@@ -24,7 +24,7 @@ def state_for(bit,fam,k,pk,lk,dk):
     raise ValueError(fam)
 
 def build_guide(K):
-    u=m.zig(np.asarray(K,np.int32));nb=max(1,int(u.max()).bit_length());
+    u=m.zig(np.asarray(K,np.int32));nb=max(1,int(u.max()).bit_length())
     if nb!=len(WINNER):raise RuntimeError(('unexpected nbits',nb,len(WINNER)))
     tables=[];globals=[]
     for bit in range(nb):
