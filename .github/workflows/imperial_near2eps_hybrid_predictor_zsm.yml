@@ -24,7 +24,7 @@ jobs:
           assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
           PY
       - name: Route decoder-shared learned and AR predictors then exact ZSM encode
-        run: python research/imperial_near2eps_hybrid_predictor_zsm_fix.py imperial.h5
+        run: python research/imperial_near2eps_hybrid_predictor_zsm_run.py imperial.h5
       - name: Surface result
         if: success()
         run: |
