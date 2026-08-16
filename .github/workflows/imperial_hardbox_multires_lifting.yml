@@ -1,0 +1,44 @@
+name: Imperial hard-box multiresolution lifting
+on:
+  pull_request:
+    branches: [imperial-huber-ar32-coldstart-arithmetic-regions]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          h=hashlib.md5(open('imperial.h5','rb').read()).hexdigest();assert h=='8cb7ea8466ab48880f876fc43cb5ce75',h
+          PY
+      - name: Build and decode hard-box lifting streams
+        run: python research/imperial_hardbox_multires_lifting.py imperial.h5
+      - name: Surface exact winners
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_hardbox_multires_lifting.json'))
+          for x in d['rows']:
+            b=x['best'];level='notice' if b['gain_vs_ar32']>1 else 'warning'
+            print(f"::{level} title=multires-lifting {x['region']}::schedule={b['schedule_name']}, bytes={b['bytes']}, bps={b['bps']:.5f}, AR32={b['ar32_bytes']}, SZ3={b['sz3_bytes']}, gainAR={b['gain_vs_ar32']:.5f}x, gainSZ3={b['gain_vs_sz3']:.5f}x, corrNZ={b['correction_nonzero_fraction']:.4f}, fine4zero={b['fine4_zero_fraction']:.4f}")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-hardbox-multires-lifting
+          path: imperial_hardbox_multires_lifting.json
+          if-no-files-found: ignore
+          retention-days: 7
