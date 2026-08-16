@@ -4,9 +4,19 @@ on:
     branches: [imperial-h2-rich-causal-headtohead]
 permissions: {contents: read}
 jobs:
-  gate:
+  object:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: hard_t2048, t0: 2048, c0: 512}
+          - {name: hard_t8192, t0: 8192, c0: 512}
+          - {name: hard_t14488, t0: 14488, c0: 512}
+          - {name: hard_t22000, t0: 22000, c0: 512}
+          - {name: easy_t14488, t0: 14488, c0: 2304}
+          - {name: far_t14488, t0: 14488, c0: 6784}
     runs-on: ubuntu-24.04
-    timeout-minutes: 50
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,20 +33,12 @@ jobs:
           assert os.path.getsize('imperial.h5')==415030456
           assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
           PY
-      - name: Run precommitted h2 transfer panel
-        run: python research/imperial_h2_rich_transfer_panel.py imperial.h5
-      - name: Surface transfer result
-        if: success()
-        run: |
-          python - <<'PY'
-          import json
-          d=json.load(open('imperial_h2_rich_transfer_panel.json'));s=d['summary'];level='notice' if s['NOVA_total']<s['AR32_total'] else 'warning'
-          print(f"::{level} title=h2 transfer::wins={s['wins_vs_AR32']}/{s['objects']}, NOVA={s['NOVA_total']} B, AR32={s['AR32_total']} B, delta={s['delta_total']} B, aggGain={s['aggregate_gain_vs_AR32']:.6f}x")
-          PY
+      - name: Run one frozen h2 transfer object
+        run: python research/imperial_h2_rich_transfer_one.py imperial.h5 ${{ matrix.name }} ${{ matrix.t0 }} ${{ matrix.c0 }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: imperial-h2-rich-transfer-panel
-          path: imperial_h2_rich_transfer_panel.json
+          name: h2-transfer-${{ matrix.name }}
+          path: imperial_h2_transfer_${{ matrix.name }}.json
           if-no-files-found: ignore
           retention-days: 7
