@@ -1,4 +1,4 @@
-name: Imperial hard-box trajectory codec
+name: Imperial hard-box connected polyline codec
 on:
   pull_request:
     branches: [imperial-huber-ar32-coldstart-arithmetic-regions]
@@ -23,22 +23,22 @@ jobs:
           assert os.path.getsize('imperial.h5')==415030456
           h=hashlib.md5(open('imperial.h5','rb').read()).hexdigest();assert h=='8cb7ea8466ab48880f876fc43cb5ce75',h
           PY
-      - name: Build and decode hard-box trajectories
-        run: python research/imperial_hardbox_trajectory_codec.py imperial.h5
+      - name: Build and decode connected hard-box polylines
+        run: python research/imperial_hardbox_connected_polyline.py imperial.h5
       - name: Surface exact result
         if: success()
         run: |
           python - <<'PY'
           import json
-          d=json.load(open('imperial_hardbox_trajectory_codec.json'))
+          d=json.load(open('imperial_hardbox_connected_polyline.json'))
           for x in d['rows']:
             b=x['best'];level='notice' if b['gain_vs_ar32']>1 else 'warning'
-            print(f"::{level} title=trajectory {x['region']}::kind={b['kind']} scale={b.get('scale')}, bytes={b['bytes']}, bps={b['bps']:.5f}, AR32={b['ar32_bytes']}, SZ3={b['sz3_bytes']}, gainAR={b['gain_vs_ar32']:.5f}x, gainSZ3={b['gain_vs_sz3']:.5f}x, meanSeg={b['mean_segment_len']:.2f}")
+            print(f"::{level} title=connected-polyline {x['region']}::scale={b['scale']}, bytes={b['bytes']}, bps={b['bps']:.5f}, AR32={b['ar32_bytes']}, SZ3={b['sz3_bytes']}, gainAR={b['gain_vs_ar32']:.5f}x, gainSZ3={b['gain_vs_sz3']:.5f}x, meanSpan={b['mean_step_span']:.2f}")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: imperial-hardbox-trajectory-codec
-          path: imperial_hardbox_trajectory_codec.json
+          name: imperial-hardbox-connected-polyline
+          path: imperial_hardbox_connected_polyline.json
           if-no-files-found: ignore
           retention-days: 7
