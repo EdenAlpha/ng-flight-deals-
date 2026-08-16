@@ -1,0 +1,42 @@
+name: Imperial causal restricted address
+on:
+  pull_request:
+    branches: [imperial-address-aware-pair-search]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Encode pair-optimized defect with decoder-shared causal restricted contexts
+        run: python research/imperial_causal_restricted_address.py imperial.h5
+      - name: Surface exact result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_causal_restricted_address.json'));b=d['best']
+          print(f"::notice title=causal-address hard::best={b['rep']} {b['bytes']} B, rank={next(x['bytes'] for x in d['rows'] if x['rep']=='pair_restricted_rank')} B, AR32={d['ar32']['bytes']} B, SZ3={d['sz3']['bytes']} B")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-causal-restricted-address
+          path: imperial_causal_restricted_address.json
+          if-no-files-found: ignore
+          retention-days: 7
