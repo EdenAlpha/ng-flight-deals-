@@ -1,4 +1,4 @@
-name: Fetch real Volve SEG-Y for local research
+name: Fetch real SEG-Y files for local GCA research
 
 on:
   push:
@@ -15,23 +15,28 @@ jobs:
     runs-on: ubuntu-slim
     timeout-minutes: 20
     steps:
-      - name: Sparse checkout public SEGYSak seismic sample
+      - name: Sparse checkout public SEGYSak seismic samples
         uses: actions/checkout@v4
         with:
           repository: trhallam/segysak
           ref: main
           path: segysak_source
           sparse-checkout: |
-            examples/data/volve10r12-full-twt-sub3d.sgy
+            examples/data/3D_gathers_pstm_nmo.sgy
+            examples/data/volve10-migvel-depth-sub3d.sgy
           sparse-checkout-cone-mode: false
           fetch-depth: 1
-      - name: Verify exact file size
+      - name: Verify exact file sizes
         run: |
-          test "$(stat -c%s segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy)" -eq 44855680
-          sha256sum segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy
+          test "$(stat -c%s segysak_source/examples/data/3D_gathers_pstm_nmo.sgy)" -eq 23947564
+          test "$(stat -c%s segysak_source/examples/data/volve10-migvel-depth-sub3d.sgy)" -eq 1074384
+          sha256sum segysak_source/examples/data/3D_gathers_pstm_nmo.sgy
+          sha256sum segysak_source/examples/data/volve10-migvel-depth-sub3d.sgy
       - uses: actions/upload-artifact@v4
         with:
-          name: real-volve10r12-full-twt-sub3d
-          path: segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy
+          name: real-segysak-gather-and-migvel
+          path: |
+            segysak_source/examples/data/3D_gathers_pstm_nmo.sgy
+            segysak_source/examples/data/volve10-migvel-depth-sub3d.sgy
           compression-level: 0
           retention-days: 7
