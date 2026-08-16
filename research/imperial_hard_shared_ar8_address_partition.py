@@ -54,9 +54,8 @@ def encode_partition(K,width,kind):
 
 def main(path):
     with h5py.File(path,'r') as f:
-        d=f['Acoustic'];x=np.asarray(d,dtype=np.float64);std=float(x.std());eps=.1*std;X=np.asarray(d[T0:T0+T,C0:C0+C],np.float64).T
+        d=f['Acoustic'];_,std=m.stats(d);eps=.1*std;X=np.asarray(d[T0:T0+T,C0:C0+C],np.float64).T
     szb,ori=m.szrun(X,eps);mb,coef,R,K,me=build(X,eps)
-    # one-model legacy whole-field floor
     lf=m.encode_k(K);legacy_whole=int(mb)+int(lf[0])+GLOBAL_HEADER
     if not np.array_equal(np.asarray(lf[2],np.int32),K):raise RuntimeError('legacy whole decode')
     rows=[]
