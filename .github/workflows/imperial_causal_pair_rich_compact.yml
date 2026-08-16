@@ -1,0 +1,42 @@
+name: Imperial causal-pair rich compact head-to-head
+on:
+  pull_request:
+    branches: [imperial-causal-aware-rich-compact]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Search causal-objective legal pairs and compare compact streams
+        run: python research/imperial_causal_pair_rich_compact.py imperial.h5
+      - name: Surface exact result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_causal_pair_rich_compact.json'));r=d['pair_compact_rich'];a=d['compact_ar32'];level='notice' if r['bytes']<a['bytes'] else 'warning'
+          print(f"::{level} title=causal-pair rich compact::single={d['single_compact_rich']['bytes']} B, pair={r['bytes']} B, compactAR32={a['bytes']} B, delta={r['delta_vs_compact_ar32']} B, pairChanges={d['pair_search']['changes']}")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-causal-pair-rich-compact
+          path: imperial_causal_pair_rich_compact.json
+          if-no-files-found: ignore
+          retention-days: 7
