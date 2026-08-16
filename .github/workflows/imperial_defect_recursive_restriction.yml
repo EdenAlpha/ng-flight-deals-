@@ -24,7 +24,7 @@ jobs:
           assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
           PY
       - name: Recursively restrict and rank the learned-law defect universe
-        run: python research/imperial_defect_recursive_restriction.py imperial.h5
+        run: python research/imperial_defect_recursive_restriction_fix.py imperial.h5
       - name: Surface exact result
         if: success()
         run: |
