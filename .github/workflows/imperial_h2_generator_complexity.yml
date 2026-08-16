@@ -1,0 +1,42 @@
+name: Imperial h2 generator complexity sweep
+on:
+  pull_request:
+    branches: [imperial-h2-rich-causal-headtohead]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Sweep charged h2 generator tap counts
+        run: python research/imperial_h2_generator_complexity.py imperial.h5
+      - name: Surface exact model winner
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_h2_generator_complexity.json'));b=d['best'];a=d['rich_ar32'];level='notice' if b['bytes']<a['bytes'] else 'warning'
+          print(f"::{level} title=h2-generator hard::taps={b['ntaps']}, NOVA={b['bytes']} B, richAR32={a['bytes']} B, delta={b['delta_vs_rich_ar32']} B, model={b['model_bytes']} B, field={b['field_bytes']} B")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-h2-generator-complexity
+          path: imperial_h2_generator_complexity.json
+          if-no-files-found: ignore
+          retention-days: 7
