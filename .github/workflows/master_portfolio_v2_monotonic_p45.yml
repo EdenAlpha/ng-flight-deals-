@@ -1,0 +1,14 @@
+name: Master Portfolio V2 monotonic Soda p45 gate
+
+# Heavy p45 native-vs-frozen-V1 evidence is pinned to the immutable evidence
+# branch in master_portfolio_v2_evidence_monotonic_p45.yml.
+on:
+  workflow_dispatch:
+
+permissions: {contents: read}
+
+jobs:
+  redirected:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo 'Run master_portfolio_v2_evidence_monotonic_p45.yml on the pinned evidence branch'

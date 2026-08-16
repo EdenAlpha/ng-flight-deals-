@@ -1,0 +1,78 @@
+name: Volve real reconstruction image export
+
+on:
+  push:
+    branches: [general-seismic-master-portfolio-v2]
+    paths:
+      - '.github/workflows/volve_real_reconstruction_images.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-slim
+    timeout-minutes: 20
+    steps:
+      - name: Sparse checkout real Volve SEG-Y
+        uses: actions/checkout@v4
+        with:
+          repository: trhallam/segysak
+          ref: main
+          path: segysak_source
+          sparse-checkout: |
+            examples/data/volve10r12-full-twt-sub3d.sgy
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install exact SZ3 binding and plotting dependencies
+        run: pip install --quiet numpy pysz matplotlib
+      - name: Decode exact matched SZ3 and export actual inline
+        run: |
+          python - <<'PY'
+          import json, numpy as np
+          import matplotlib.pyplot as plt
+          from pathlib import Path
+          from pysz import sz, szConfig, szErrorBoundMode
+
+          p=Path('segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy')
+          NI,NX,NT=61,202,850
+          X=np.empty((NI,NX,NT),dtype=np.float32)
+          with p.open('rb') as f:
+              f.seek(3600)
+              for k in range(NI*NX):
+                  f.read(240)
+                  X.reshape(-1,NT)[k]=np.frombuffer(f.read(4*NT),dtype='>f4').astype(np.float32)
+          eps=0.10*float(X.astype(np.float64).std())
+          cfg=szConfig(); cfg.errorBoundMode=szErrorBoundMode.ABS; cfg.absErrorBound=float(eps)
+          bb,_=sz.compress(np.ascontiguousarray(X),cfg)
+          R,_=sz.decompress(bb,X.dtype,X.shape)
+          maxerr=float(np.max(np.abs(X.astype(np.float64)-R.astype(np.float64))))
+          assert maxerr <= eps*(1+3e-6)
+
+          idx=30
+          sec=R[idx,:,:].T
+          # Save exact numerical section as well as a lossless PNG rendering.
+          np.save('sz3_inline30.npy',sec)
+          np.save('source_inline30.npy',X[idx,:,:].T)
+          clip=float(np.percentile(np.abs(X[idx,:,:].T),99))
+          plt.figure(figsize=(10,6),dpi=200)
+          plt.imshow(sec,cmap='gray',aspect='auto',vmin=-clip,vmax=clip,interpolation='nearest')
+          plt.axis('off'); plt.tight_layout(pad=0)
+          plt.savefig('sz3_inline30.png',bbox_inches='tight',pad_inches=0)
+          plt.close()
+          Path('metrics.json').write_text(json.dumps({'epsilon':eps,'sz3_bytes':int(bb.size),'maxerr':maxerr,'inline':idx,'clip':clip},indent=2))
+          print(Path('metrics.json').read_text())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: volve-real-sz3-reconstruction-inline30
+          path: |
+            sz3_inline30.npy
+            source_inline30.npy
+            sz3_inline30.png
+            metrics.json
+          retention-days: 14

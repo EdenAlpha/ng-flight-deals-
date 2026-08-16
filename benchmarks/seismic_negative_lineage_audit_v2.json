@@ -1,0 +1,89 @@
+{
+  "name": "seismic-negative-lineage-audit-v2",
+  "created_utc": "2026-08-15",
+  "purpose": "Permanent negative evidence for historically interesting seismic compression ideas that were actually benchmarked but did not beat the matched established control. This prevents future recovery work from confusing memorable mechanisms with proven winners.",
+  "lineages": [
+    {
+      "id": "forge_wavelet_surface_annihilator_pr59",
+      "status": "AUDITED_RESEARCH_ONLY",
+      "source": {
+        "pr": 59,
+        "branch": "forge-waveann-fast",
+        "sha": "5d05e8bccea360a49df6a81de663e816aa347fbb",
+        "workflow_run": 31457073336,
+        "workflow_job": 93673033288
+      },
+      "scope": "cached-equivalent 64x64x512 Utah FORGE subcube, epsilon = 0.10 * complete survey std",
+      "matched_sz3": {
+        "bytes": 266939,
+        "ratio": 31.425187027747914,
+        "max_abs_error": 0.033738717436790466
+      },
+      "best_valid": {
+        "P": 1,
+        "alpha": 1.5,
+        "bytes": 478813,
+        "ratio": 17.519591155628607,
+        "syndrome_nonzero_fraction": 0.4497650332148515,
+        "max_abs_error": 0.033738717436790466
+      },
+      "sz3_bytes_over_candidate_bytes": 0.5575033421254628,
+      "candidate_bytes_over_sz3_bytes": 1.7937000520736224,
+      "decision": "Not an active winner. The best valid wavelet/surface annihilator stream is about 1.79x larger than matched SZ3. PR #58's attempted full-volume version was cancelled, so it contributes no stronger exact-byte result."
+    },
+    {
+      "id": "forge_reflector_atlas_pr65",
+      "status": "AUDITED_RESEARCH_ONLY",
+      "source": {
+        "pr": 65,
+        "branch": "forge-reflector-atlas-fast",
+        "sha": "45c45fa81c34550f143c054c51a82caee8ccae12",
+        "workflow_run": 31458008403,
+        "workflow_job": 93675701858
+      },
+      "scope": "64x64x512 Utah FORGE subcube, epsilon = 0.10 * complete survey std",
+      "matched_sz3": {
+        "bytes": 266939,
+        "ratio": 31.425187027747914,
+        "max_abs_error": 0.033738717436790466
+      },
+      "best_valid": {
+        "K": 4,
+        "amplitude_step_over_epsilon": 2.0,
+        "bytes": 519145,
+        "ratio": 16.158506775563666,
+        "model_bytes": 26935,
+        "certificate_bytes": 492210,
+        "certificate_nonzero_fraction": 0.8525295257568359,
+        "max_abs_error": 0.03373868763446808
+      },
+      "sz3_bytes_over_candidate_bytes": 0.5141781205597733,
+      "candidate_bytes_over_sz3_bytes": 1.944808363721151,
+      "decision": "Not an active winner. The shared-wavelet sparse reflector atlas leaves an 85% nonzero hard-error certificate and its best complete charged stream is about 1.94x larger than matched SZ3."
+    },
+    {
+      "id": "forge_multiscale_wavelet_certificate_pr68",
+      "status": "NO_COMPLETED_EXACT_RESULT",
+      "source": {
+        "pr": 68,
+        "branch": "forge-wavelet-certificate-fast",
+        "sha": "ff268e43acab9631b9299aba5aca8c45d6e7838c",
+        "workflow_run": 31458092974,
+        "conclusion": "cancelled"
+      },
+      "decision": "Do not infer either success or failure. Historical run was cancelled; this lineage has no exact completed evidence and therefore cannot be promoted from memory."
+    },
+    {
+      "id": "forge_tracked_reflector_surface_atlas_pr85",
+      "status": "NO_COMPLETED_EXACT_RESULT",
+      "source": {
+        "pr": 85,
+        "branch": "forge-horizon-atlas-fast",
+        "sha": "aacfeda0cf3ba628c9cc72e947fe171f643d7127",
+        "workflow_run": 31460057090,
+        "conclusion": "failure"
+      },
+      "decision": "Do not promote. The historical workflow failed and therefore supplies no complete exact-byte proof."
+    }
+  ]
+}

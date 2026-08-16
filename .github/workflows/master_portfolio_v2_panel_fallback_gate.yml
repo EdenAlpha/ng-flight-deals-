@@ -1,0 +1,33 @@
+name: Master Portfolio V2 panel fallback gate
+
+on:
+  pull_request:
+    branches: [ general-seismic-codec-portfolio-v1 ]
+    paths:
+      - 'research/master_portfolio_v2_selector.py'
+      - 'research/master_portfolio_v2_panel_fallback.py'
+      - 'research/general_seismic_codec_portfolio.py'
+      - 'benchmarks/general_seismic_codec_portfolio_v1.json'
+      - '.github/workflows/master_portfolio_v2_panel_fallback_gate.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: master-portfolio-v2-panel-fallback-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions: {contents: read}
+
+jobs:
+  fallback-gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy zstandard
+      - name: Verify contract-aware selector
+        run: python research/master_portfolio_v2_selector.py
+      - name: Verify frozen V1 panel fallback as a complete numeric-object candidate
+        env: {PYTHONPATH: research}
+        run: python research/master_portfolio_v2_panel_fallback.py

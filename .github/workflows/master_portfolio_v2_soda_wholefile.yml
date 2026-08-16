@@ -1,0 +1,14 @@
+name: Master Portfolio V2 Soda whole-SEG-Y gate
+
+# Heavy PR171 evidence is pinned to the immutable evidence branch in
+# master_portfolio_v2_evidence_soda_wholefile.yml.
+on:
+  workflow_dispatch:
+
+permissions: {contents: read}
+
+jobs:
+  redirected:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo 'Run master_portfolio_v2_evidence_soda_wholefile.yml on the pinned evidence branch'

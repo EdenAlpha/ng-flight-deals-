@@ -1,0 +1,187 @@
+{
+  "name": "seismic-lineage-recovery-supplement-v2",
+  "created_utc": "2026-08-15",
+  "purpose": "Exact historical evidence discovered after the initial V2 ledger repair. Candidate lineages remain quarantined or research-only until their classification rules are satisfied.",
+  "lineages": [
+    {
+      "id": "marine_anchor_carrier_pr6",
+      "status": "CURRENT_PROTOCOL_RETEST_RUNNING",
+      "family": "sparse temporal anchor carrier + legal 2*epsilon correction first-difference stream",
+      "native_scope": "complete marine shot-line numeric cube with repeated receiver-gather geometry",
+      "source": {
+        "pr": 6,
+        "branch": "temp-seismic-zfp-bench",
+        "sha": "d62dc02e4a03c0397117eff66654ade190129a61",
+        "workflow_run": 31364080480,
+        "workflow_job": 93378643582,
+        "v2_recovered_source": "research/marine_carrier_pr6_v2.py",
+        "v2_retest_workflow": ".github/workflows/master_portfolio_v2_marine_pr6.yml"
+      },
+      "historical_protocol": "fixed absolute epsilon values 0.5, 1.0, 2.0; PR6 counted zlib(anchor)+zlib(correction)+64 bytes and verified reconstruction max error",
+      "historical_exact_results": [
+        {
+          "dataset": "F1",
+          "shape": [246,48,2000],
+          "raw_bytes": 94464000,
+          "epsilon": 0.5,
+          "M": 32,
+          "carrier_bytes": 2782564,
+          "anchor_bytes": 542622,
+          "correction_bytes": 2239878,
+          "carrier_max_abs_error": 0.5,
+          "sz3_bytes": 5306244,
+          "sz3_max_abs_error": 0.5,
+          "gain_vs_sz3": 1.9069620680782184
+        },
+        {
+          "dataset": "F1",
+          "shape": [246,48,2000],
+          "raw_bytes": 94464000,
+          "epsilon": 1.0,
+          "M": 48,
+          "carrier_bytes": 1368582,
+          "anchor_bytes": 297495,
+          "correction_bytes": 1071023,
+          "carrier_max_abs_error": 1.0,
+          "sz3_bytes": 3661279,
+          "sz3_max_abs_error": 1.0,
+          "gain_vs_sz3": 2.675235389622251
+        },
+        {
+          "dataset": "F1",
+          "shape": [246,48,2000],
+          "raw_bytes": 94464000,
+          "epsilon": 2.0,
+          "M": 64,
+          "carrier_bytes": 586258,
+          "anchor_bytes": 181528,
+          "correction_bytes": 404666,
+          "carrier_max_abs_error": 2.0,
+          "sz3_bytes": 2499380,
+          "sz3_max_abs_error": 2.0,
+          "gain_vs_sz3": 4.263276577888916
+        },
+        {
+          "dataset": "Tie",
+          "shape": [247,48,2000],
+          "raw_bytes": 94848000,
+          "epsilon": 0.5,
+          "M": 32,
+          "carrier_bytes": 2520609,
+          "anchor_bytes": 442578,
+          "correction_bytes": 2077967,
+          "carrier_max_abs_error": 0.5,
+          "sz3_bytes": 4603653,
+          "sz3_max_abs_error": 0.5,
+          "gain_vs_sz3": 1.826405047351652
+        },
+        {
+          "dataset": "Tie",
+          "shape": [247,48,2000],
+          "raw_bytes": 94848000,
+          "epsilon": 1.0,
+          "M": 48,
+          "carrier_bytes": 1209511,
+          "anchor_bytes": 238196,
+          "correction_bytes": 971251,
+          "carrier_max_abs_error": 1.0,
+          "sz3_bytes": 3167586,
+          "sz3_max_abs_error": 1.0,
+          "gain_vs_sz3": 2.6188980505344723
+        },
+        {
+          "dataset": "Tie",
+          "shape": [247,48,2000],
+          "raw_bytes": 94848000,
+          "epsilon": 2.0,
+          "M": 64,
+          "carrier_bytes": 514166,
+          "anchor_bytes": 142488,
+          "correction_bytes": 371614,
+          "carrier_max_abs_error": 2.0,
+          "sz3_bytes": 2107128,
+          "sz3_max_abs_error": 1.9999998807907104,
+          "gain_vs_sz3": 4.098147290952728
+        }
+      ],
+      "classification": "GENUINE_HISTORICAL_WINNER_BUT_NOT_YET_ACTIVE_V2",
+      "reason": "Two independent marine lines exceed 2x matched SZ3 at epsilon=1 and exceed 4x at epsilon=2, but those are fixed absolute-error protocols. V2 promotion waits for the recovered self-decoding stream to pass the current survey-global 10%-std contract against both matched SZ3 and the strongest matched HPEZ orientation."
+    },
+    {
+      "id": "forge_critically_sampled_bandcore_pr91",
+      "status": "AUDITED_RESEARCH_ONLY",
+      "family": "critically sampled temporal spectral core + official HPEZ q4 + sovereign correction certificate",
+      "native_scope": "3-D conventional reflection block",
+      "source": {
+        "pr": 91,
+        "branch": "forge-bandcore-hpez",
+        "sha": "4c915d0181acad2d37d776b29283080d7a55a7ba",
+        "workflow_run": 31461423090,
+        "workflow_job": 93685508159
+      },
+      "best_exact_result": {
+        "raw_bytes": 8388608,
+        "K": 72,
+        "Nc": 160,
+        "beta": 0.5,
+        "bytes": 272522,
+        "ratio": 30.781397465158776,
+        "core_bytes": 220758,
+        "certificate_bytes": 51700,
+        "certificate_nonzero_fraction": 0.04427337646484375,
+        "max_abs_error": 0.03373870253562927
+      },
+      "matched_controls": {
+        "sz3_bytes": 266939,
+        "official_hpez_best_orientation_bytes": 234700
+      },
+      "decision": "Research-only. Best band-core stream is larger than matched SZ3 and substantially larger than the strongest official HPEZ orientation on the same cached FORGE block/error contract."
+    },
+    {
+      "id": "imperial_sparse_causal_law_pr310_pr313",
+      "status": "AUDITED_RESEARCH_ONLY",
+      "family": "learned sparse causal space-time annihilating law with compressed-codelength shaping",
+      "native_scope": "128-channel complete-minute DAS region",
+      "source": {
+        "prs": [310,313],
+        "pr310_sha": "f5b11231bf247661d2040f800b9fe9c820d29df7",
+        "pr310_workflow_run": 31646862714,
+        "pr310_workflow_job": 94282365567,
+        "pr313_sha": "78bfc8ada75992bb5675dc9b533d659de04e8571",
+        "pr313_workflow_run": 31647534054,
+        "pr313_workflow_job": 94284459222
+      },
+      "pr310_four_region_exact_aggregate": {
+        "samples": 15360000,
+        "sz3_bytes": 7846115,
+        "ar16_bytes": 7347007,
+        "sparse_stencil_bytes": 7224950,
+        "gain_ar16_vs_sz3": 1.06793351361,
+        "gain_stencil_vs_sz3": 1.08597498945,
+        "gain_stencil_vs_ar16": 1.01689381933,
+        "hard_error_limit": 128,
+        "all_valid": true
+      },
+      "pr313_hard_region_exact": {
+        "samples": 3840000,
+        "sz3_bytes": 2843101,
+        "ar16_bytes": 2673015,
+        "omp4096_bytes": 2639886,
+        "omp3072_bytes": 2640020,
+        "codelength_shaped_bytes": 2638815,
+        "gain_ar16_vs_sz3": 1.063630769000548,
+        "gain_omp4096_vs_sz3": 1.0769787028682298,
+        "gain_omp3072_vs_sz3": 1.0769240384542542,
+        "gain_codelength_vs_sz3": 1.077415809747936,
+        "validation_byte_gain_vs_unshaped": 1.0047596935221732,
+        "max_abs_error": 128,
+        "valid": true
+      },
+      "stronger_active_control": {
+        "engine": "imperial_ar32_zsm_pr482",
+        "gain_vs_sz3": 1.18854
+      },
+      "decision": "Preserve as research lineage, not active portfolio winner. The learned causal law is real and byte-decoded but its gains are materially below the current AR32+ZSM Imperial winner; codelength shaping adds only a tiny improvement."
+    }
+  ]
+}

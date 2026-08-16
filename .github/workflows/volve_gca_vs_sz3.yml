@@ -1,0 +1,81 @@
+name: Volve GCA vs SZ3 exact comparator
+
+on:
+  push:
+    branches: [general-seismic-master-portfolio-v2]
+    paths:
+      - '.github/workflows/volve_gca_vs_sz3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-slim
+    timeout-minutes: 20
+    steps:
+      - name: Sparse checkout real Volve SEG-Y
+        uses: actions/checkout@v4
+        with:
+          repository: trhallam/segysak
+          ref: main
+          path: segysak_source
+          sparse-checkout: |
+            examples/data/volve10r12-full-twt-sub3d.sgy
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install exact SZ3 Python binding
+        run: pip install --quiet numpy pysz
+      - name: Run whole-volume matched-ABS SZ3
+        run: |
+          python - <<'PY'
+          import json, numpy as np
+          from pathlib import Path
+          from pysz import sz, szConfig, szErrorBoundMode
+
+          p=Path('segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy')
+          NI,NX,NT=61,202,850
+          trsz=240+4*NT
+          assert p.stat().st_size == 3600 + NI*NX*trsz
+          X=np.empty((NI,NX,NT),dtype=np.float32)
+          with p.open('rb') as f:
+              f.seek(3600)
+              for k in range(NI*NX):
+                  f.read(240)
+                  X.reshape(-1,NT)[k]=np.frombuffer(f.read(4*NT),dtype='>f4').astype(np.float32)
+          std=float(X.astype(np.float64).std())
+          eps=0.10*std
+          cfg=szConfig(); cfg.errorBoundMode=szErrorBoundMode.ABS; cfg.absErrorBound=float(eps)
+          bb,_=sz.compress(np.ascontiguousarray(X),cfg)
+          R,_=sz.decompress(bb,X.dtype,X.shape)
+          maxerr=float(np.max(np.abs(X.astype(np.float64)-R.astype(np.float64))))
+          assert maxerr <= eps*(1+3e-6), (maxerr,eps)
+          out={
+            'source':'trhallam/segysak examples/data/volve10r12-full-twt-sub3d.sgy',
+            'segy_bytes':int(p.stat().st_size),
+            'shape':[NI,NX,NT],
+            'samples':int(X.size),
+            'numeric_bytes':int(X.nbytes),
+            'std':std,
+            'epsilon':eps,
+            'sz3_bytes':int(bb.size),
+            'sz3_bps':float(8*bb.size/X.size),
+            'sz3_numeric_ratio':float(X.nbytes/bb.size),
+            'sz3_maxerr':maxerr,
+            'gca1_local_exact_bytes':1715150,
+            'gain_sz3_over_gca1':float(bb.size/1715150),
+            'gca1_reduction_percent_vs_sz3':float(100*(1-1715150/bb.size)),
+            'note':'GCA1 bytes are the locally materialized full rank/unrank stream on this exact numeric object and epsilon.'
+          }
+          Path('volve_gca_vs_sz3.json').write_text(json.dumps(out,indent=2))
+          print(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: volve-gca-vs-sz3
+          path: volve_gca_vs_sz3.json
+          retention-days: 14

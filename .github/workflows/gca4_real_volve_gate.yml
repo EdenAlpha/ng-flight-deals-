@@ -1,0 +1,71 @@
+name: GCA4 real Volve decoder-valid gate
+
+on:
+  push:
+    branches: [general-seismic-master-portfolio-v2]
+    paths:
+      - 'research/gca_factor_context_v4.py'
+      - '.github/workflows/gca4_real_volve_gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-volve:
+    runs-on: ubuntu-slim
+    timeout-minutes: 30
+    steps:
+      - name: Checkout GCA4 implementation
+        uses: actions/checkout@v4
+      - name: Sparse checkout pinned real Volve SEG-Y
+        uses: actions/checkout@v4
+        with:
+          repository: trhallam/segysak
+          ref: 798307eeaf84b63a71272ba638863c538a814f26
+          path: segysak_source
+          sparse-checkout: |
+            examples/data/volve10r12-full-twt-sub3d.sgy
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install --quiet numpy numba pysz
+      - name: Run GCA4 from source and verify matched SZ3
+        run: |
+          python research/gca_factor_context_v4.py \
+            segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy \
+            --stream volve_gca4.bin --json volve_gca4.json
+          python - <<'PY'
+          import json, numpy as np, os
+          from pathlib import Path
+          from pysz import sz,szConfig,szErrorBoundMode
+          p=Path('segysak_source/examples/data/volve10r12-full-twt-sub3d.sgy')
+          NI,NX,NT=61,202,850
+          X=np.empty((NI,NX,NT),np.float32)
+          with p.open('rb') as f:
+              f.seek(3600)
+              for k in range(NI*NX):
+                  f.read(240)
+                  X.reshape(-1,NT)[k]=np.frombuffer(f.read(4*NT),dtype='>f4').astype(np.float32)
+          g=json.loads(Path('volve_gca4.json').read_text())
+          eps=float(g['epsilon'])
+          cfg=szConfig();cfg.errorBoundMode=szErrorBoundMode.ABS;cfg.absErrorBound=eps
+          bb,_=sz.compress(np.ascontiguousarray(X),cfg);R,_=sz.decompress(bb,X.dtype,X.shape)
+          sme=float(np.max(np.abs(X.astype(np.float64)-R.astype(np.float64))))
+          if sme>eps*(1+3e-6):raise RuntimeError(('SZ3 hard bound',sme,eps))
+          gb=os.path.getsize('volve_gca4.bin');sb=int(bb.size)
+          out={**g,'sz3_bytes':sb,'sz3_maxerr':sme,'gain_sz3_over_gca4':sb/gb,'reduction_percent_vs_sz3':100*(1-gb/sb),
+               'source_commit':'trhallam/segysak@798307eeaf84b63a71272ba638863c538a814f26'}
+          Path('volve_gca4_vs_sz3.json').write_text(json.dumps(out,indent=2));print(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gca4-real-volve-evidence
+          path: |
+            volve_gca4_vs_sz3.json
+            volve_gca4.bin
+          compression-level: 0
+          retention-days: 30

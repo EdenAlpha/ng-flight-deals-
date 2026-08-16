@@ -1,0 +1,267 @@
+{
+  "name": "seismic-master-engine-ledger-v2",
+  "created_utc": "2026-08-15",
+  "purpose": "Canonical inventory of compression engines that must not be lost when building a universal seismic compressor.",
+  "governance": {
+    "v1_benchmark_is_immutable": true,
+    "v1_panel_portfolio_is_protected_floor": true,
+    "v2_development_branch": "general-seismic-master-portfolio-v2",
+    "never_remove_historical_winner_without_explicit_supersession_evidence": true,
+    "selection_must_be_decoder_visible_and_byte_charged": true,
+    "active_engine_must_materialize_decodable_stream": true,
+    "hard_error_contract": "max(abs(source-reconstruction)) <= epsilon",
+    "comparison_domain_must_match": ["source_object_identity", "reconstructed_information_contract", "metadata_accounting_policy", "public_epsilon"],
+    "v2_router_principle": "hierarchical: whole-record/file engines compete at native scope; frozen V1 whole-object panel aggregate is always available as fallback; smallest valid stream wins only inside an identical comparison domain",
+    "dataset_label_routing_forbidden": true,
+    "eligibility": "derived only from file format, geometry/schema and signal-independent structural metadata; final winner chosen by actual valid encoded bytes",
+    "metadata_fairness": "Any geometry/header side information used by an engine must be either charged to both methods or declared shared/excluded identically for all compared methods.",
+    "historical_audit_file": "benchmarks/seismic_historical_lineage_audit_v2.json",
+    "promotion_requires_matched_strongest_baseline": true
+  },
+  "important_protocol_difference": {
+    "historical_soda_pr169_epsilon": "0.10 * std(each individual shot)",
+    "general_benchmark_v1_soda_epsilon": 0.0816739073446828,
+    "general_benchmark_v1_soda_std": 0.816739073446828,
+    "general_benchmark_v1_rule": "0.10 * std(all selected numeric Soda samples)",
+    "consequence": "Historical >2x Soda evidence is genuine under its protocol, but V2 must retest recovered engines with the survey-global epsilon before claiming the same gain in the new benchmark."
+  },
+  "engines": [
+    {
+      "id": "general_seismic_portfolio_v1_panel_fallback",
+      "family": "frozen V1 AR32-ZSM + spectral-TopN per-panel portfolio aggregated over the complete numeric object",
+      "status": "PRESENT_IN_V1",
+      "native_scope": "complete numeric object via deterministic consecutive <=128 channel x <=8192 time panel partition",
+      "source": {
+        "branch": "general-seismic-codec-portfolio-v1",
+        "codec": "research/general_seismic_codec_portfolio.py",
+        "frozen_config": "benchmarks/general_seismic_codec_portfolio_v1.json",
+        "v2_adapter": "research/master_portfolio_v2_panel_fallback.py"
+      },
+      "comparison_contract": {
+        "contract_id": "numeric_payload",
+        "accounting_id": "numeric_samples_only_shared_file_metadata_excluded",
+        "object_identity": "SHA-256 over numeric dtype, shape and canonical C-order payload",
+        "epsilon": "identical externally supplied survey-global epsilon for every competing candidate",
+        "aggregate_manifest_bytes": 0,
+        "manifest_reason": "shape and frozen deterministic panel partition are shared decoder-visible metadata; each panel bitstream already charges its one-byte V1 selector"
+      },
+      "monotonicity_role": "protected fallback floor: when V2 runs on a numeric object, this exact frozen V1 portfolio remains an eligible fully decoded candidate, so a native-scope engine can replace it only by producing fewer valid charged bytes in the same comparison domain"
+    },
+    {
+      "id": "soda_record_run_lattice_pr169",
+      "family": "legal-state geometry/run lattice",
+      "status": "RECOVERED",
+      "native_scope": "complete 3C SEG-Y shot/record numeric payload",
+      "source": {
+        "pr": 169,
+        "branch": "soda-record-codec-10shot",
+        "sha": "0eec9459d1d25f7043dd587d28136ba75af7069b",
+        "entry": "research/soda_hard4_frozen_record.py"
+      },
+      "structure": [
+        "receiver geometry -> component/line/station grid",
+        "legal 2*epsilon lattice",
+        "time transition K",
+        "run grammar",
+        "context-conditioned gaps",
+        "Brotli-11/raw frozen backend assignment",
+        "audited outlier codec"
+      ],
+      "historical_evidence": {
+        "dataset": "Soda Lake 2010 raw land seismic",
+        "independent_deterministic_shots": 10,
+        "percentiles": [5,15,25,35,45,55,65,75,85,95],
+        "gain_vs_direct_sz3": [2.475745852243137,2.565373359765883,2.2500426319764184,2.1705043555456918,2.09439810579562,2.7764389998321866,2.7795604605913686,2.148816322698753,2.202895448619408,2.5084048430704127],
+        "minimum_gain": 2.09439810579562,
+        "median_gain": 2.3628942421097774,
+        "byte_weighted_gain": 2.3241371761100007,
+        "all_10_above_2x": true,
+        "epsilon_rule": "0.10 * each shot std",
+        "decode_verified": true
+      },
+      "current_v2_evidence": {
+        "epsilon_rule": "0.10 * std(all selected numeric Soda samples)",
+        "epsilon": 0.0816739073446828,
+        "p5_gain_vs_sz3": 2.494,
+        "p45_gain_vs_sz3": 2.104,
+        "p95_gain_vs_sz3": 2.494,
+        "note": "Exact values live in V2 regression artifacts; these rounded values are the already confirmed recovery gate results."
+      },
+      "v1_omission": "NOT PRESENT in general-seismic-codec-portfolio-v1"
+    },
+    {
+      "id": "soda_whole_segy_container_pr171",
+      "family": "self-contained whole-SEG-Y wrapper around robust Soda legal-state/run codec",
+      "status": "RECOVERED",
+      "native_scope": "complete SEG-Y file including global header, trace headers, trace order and sample format",
+      "source": {
+        "pr": 171,
+        "branch": "soda-record-standalone-p75",
+        "sha": "9cdba1a051a02b30b5ec4284d639c707e01ea620",
+        "entries": [
+          "research/soda_record_standalone.py",
+          "research/soda_record_standalone_safe.py"
+        ],
+        "v2_adapter": "research/master_portfolio_v2_soda_wholefile.py"
+      },
+      "historical_evidence": {
+        "dataset": "Soda Lake deterministic p75 F6618R1.SGY",
+        "epsilon_rule": "0.10 * shot std with 0.9999 internal safety",
+        "epsilon": 0.07150844605649041,
+        "original_file_bytes": 27549920,
+        "container_bytes": 69787,
+        "whole_file_ratio": 394.7715190508261,
+        "header_blob_bytes": 5775,
+        "sample_blob_bytes": 63967,
+        "sample_format": 1,
+        "max_abs_error": 0.07150119543075562,
+        "headers_bit_exact": true,
+        "strongest_sample_baseline_bytes": 133219,
+        "optimistic_baseline_whole_file_lower_bound_bytes": 139039,
+        "gain_vs_optimistic_whole_file_baseline": 1.9923338157536503,
+        "clears_strict_2x": false,
+        "decode_verified": true
+      },
+      "note": "This is a production-grade completeness lineage, not a >2x historical claim under hostile whole-file accounting. It must remain available because PR169's numeric-payload contract does not itself carry a reconstructable SEG-Y file. V2 now reruns this exact source under the frozen survey-global epsilon."
+    },
+    {
+      "id": "forge_sparse_state_lattice_pr122",
+      "family": "legal-state sparse temporal lattice",
+      "status": "RECOVERED",
+      "native_scope": "complete SEG-Y gather",
+      "source": {
+        "pr": 122,
+        "branch": "forge-raw-frozen-state",
+        "sha": "1f912f3f086e58c6dd5e859823a8101eb4701c5b",
+        "entry": "research/forge_raw_frozen_state.py"
+      },
+      "historical_evidence": {
+        "dataset": "independent raw Utah FORGE shot",
+        "samples": 27953747,
+        "ours_bytes": 28588,
+        "sz3_bytes": 89075,
+        "gain_vs_sz3": 3.1158178256611166,
+        "K_nonzero_fraction": 0.0014044628793413634,
+        "epsilon_rule": "0.10 * gather std",
+        "decode_verified": true
+      },
+      "note": "This was the frozen Soda sparse-state principle transferred cross-survey without geometry tuning."
+    },
+    {
+      "id": "forge_wholefile_lattice_pr203",
+      "family": "geometry-aware legal-state whole-file lattice",
+      "status": "RECOVERED",
+      "native_scope": "complete SEG-Y gather / whole-file container",
+      "source": {
+        "pr": 203,
+        "branch": "forge-frozen-large12-wholefile",
+        "sha": "e8adbc8bfe95da0199376c862be72a0374e68e1e",
+        "entry": "research/forge_standalone_segc.py"
+      },
+      "historical_evidence": {
+        "dataset": "Utah FORGE 12 deterministic raw gathers",
+        "gathers": 12,
+        "aggregate_ours_bytes": 253924,
+        "aggregate_sz3_bytes": 684510,
+        "aggregate_gain_vs_sz3": 2.6957278555788347,
+        "minimum_member_gain_vs_sz3": 1.9332517955657333,
+        "median_member_gain_vs_sz3": 9.97245179063361,
+        "headers_bit_exact": true,
+        "hard_error_valid": true
+      },
+      "v1_omission": "NOT PRESENT in general-seismic-codec-portfolio-v1"
+    },
+    {
+      "id": "spectral_topn_pr56_pr101",
+      "family": "2D spectral Top-N + certified correction",
+      "status": "PRESENT_BUT_REDUCED_IN_V1",
+      "native_scope": "panel or complete gather",
+      "source": {"prs": [56,100,101]},
+      "audited_scope_evidence": {
+        "brady_pr56": {
+          "ours_bytes": 12025,
+          "matched_sz3_bytes": 28664,
+          "gain_vs_sz3": 2.3837006237006237,
+          "max_abs_error": 0.026069296523928642,
+          "result": "major winner on this Brady DAS panel"
+        },
+        "forge_pr100": {
+          "ours_bytes": 328835,
+          "matched_sz3_bytes": 266939,
+          "matched_best_hpez_bytes": 234700,
+          "gain_vs_sz3": 0.8117718612678091,
+          "result": "not a winner on the FORGE block"
+        },
+        "soda_pr101_gain_vs_sz3": [1.099113526600507,0.9618247363512447,1.0807741464305276],
+        "conclusion": "Powerful scope-specific competitor; demonstrably not a universal replacement for the native lattice engines."
+      },
+      "important_differences_from_v1": [
+        "historical versions included wider block/budget search",
+        "historical int8 spectral scale used float16 in key variants",
+        "geometry/layout alternatives were explored"
+      ],
+      "note": "Keep as a protected distinct competitor, but do not mistake the reduced V1 version for the entire historical family or route to it by dataset label."
+    },
+    {
+      "id": "imperial_ar32_zsm_pr482",
+      "family": "persistent Huber AR32 + ZSM arithmetic",
+      "status": "PRESENT_IN_V1",
+      "native_scope": "DAS cable block/panel",
+      "historical_evidence": {
+        "dataset": "Imperial Valley DAS full file",
+        "ours_bytes": 67818390,
+        "matched_sz3_bytes": 80604844,
+        "gain_vs_sz3": 1.18854,
+        "approx_reduction_percent": 18.85,
+        "decode_verified": true
+      }
+    },
+    {
+      "id": "pulse_v1_stage_ab_pr29",
+      "family": "PULSE v1 fast FSE/core pipeline",
+      "status": "QUARANTINED_COMPARATOR_PROOF_MISSING",
+      "native_scope": "complete SEG-Y numeric payload",
+      "source": {
+        "pr": 29,
+        "branch": "seismic-pulse-v1",
+        "sha": "a53cb731fa24b44b5a3ae872081e07d8cb85ab78",
+        "workflow_job": 93479331960
+      },
+      "exact_surviving_evidence": {
+        "input_bytes": 123076837,
+        "data_bytes": 123075600,
+        "output_bytes": 11376848,
+        "ratio": 10.818191231663882,
+        "epsilon": 0.001,
+        "error_mode": "global",
+        "max_abs_error": 0.0,
+        "decode_verified": true
+      },
+      "note": "Real historical PULSE byte stream recovered. Do not promote until a matched SZ3/HPEZ result under the identical current survey-global epsilon contract is recovered or rerun. PR #28 was a Gorilla backend experiment and was previously misidentified here as PULSE."
+    },
+    {
+      "id": "forge_analytic_subband_hpez_pr93",
+      "family": "analytic subbands -> critically sampled baseband -> HPEZ + certificate",
+      "status": "AUDITED_RESEARCH_ONLY",
+      "native_scope": "3D reflection block",
+      "source": {
+        "pr": 93,
+        "branch": "forge-subband-hpez",
+        "sha": "5b37965eae84402caa7a90cef9e46724b54eefca",
+        "workflow_job": 93698875273
+      },
+      "audited_evidence": {
+        "raw_bytes": 8388608,
+        "best_bytes": 263192,
+        "best_ratio": 31.872579713669108,
+        "max_abs_error": 0.03373865783214569,
+        "matched_sz3_bytes": 266939,
+        "gain_vs_sz3": 1.0142355356083103,
+        "matched_best_official_hpez_bytes": 234700,
+        "best_official_hpez_ratio": 35.741832126118446,
+        "strongest_baseline_source_pr": 83
+      },
+      "note": "Narrowly beats matched SZ3 on the cached FORGE block but loses to the stronger official HPEZ control on the identical payload/error contract. Preserve for research/composition ideas; do not treat as an active strongest-engine winner."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+name: Master Portfolio V2 marine PR6 recovery gate
+
+# Heavy scientific evidence is executed from the immutable evidence branch by
+# master_portfolio_v2_evidence_marine.yml. Keeping this historical entry point
+# manual prevents ordinary PR bookkeeping/audit commits from repeatedly
+# cancelling and re-queuing the same expensive experiment.
+on:
+  workflow_dispatch:
+
+permissions: {contents: read}
+
+jobs:
+  redirected:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo 'Run the pinned evidence-branch workflow master_portfolio_v2_evidence_marine.yml'
