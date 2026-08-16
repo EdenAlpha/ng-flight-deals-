@@ -1,0 +1,46 @@
+name: Imperial corrected GCA address surface execution
+on:
+  pull_request:
+    branches: [imperial-gca-corrected-address-fastgate]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          h=hashlib.md5(open('imperial.h5','rb').read()).hexdigest();assert h=='8cb7ea8466ab48880f876fc43cb5ce75',h
+          PY
+      - name: Enumerate corrected GCA legal path address surface
+        run: python research/imperial_gca_address_surface_fastgate.py imperial.h5
+      - name: Surface actual and ideal-set winners
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_gca_address_surface_fastgate.json'))
+          for region in ('hard','easy'):
+            rr=[x for x in d['rows'] if x['region']==region]
+            a=min(rr,key=lambda x:x['actual_map_bytes']);s=min(rr,key=lambda x:x['ideal_set_bytes'])
+            print(f"::notice title=GCA {region} actual::step={a['step']} L={a['L']} actual={a['actual_map_bytes']} B ({a['actual_map_bps']:.4f} bps), SZ3={a['sz3_bytes']} B, gain={a['gain_actual_vs_sz3']:.4f}x")
+            print(f"::notice title=GCA {region} ideal-set diagnostic::step={s['step']} L={s['L']} ideal={s['ideal_set_bytes']} B ({s['ideal_set_bps']:.4f} bps), SZ3={s['sz3_bytes']} B, gain={s['gain_ideal_set_vs_sz3']:.4f}x, heldout_mass={s['heldout_set_mass_bps']:.4f} bps")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-gca-address-surface
+          path: imperial_gca_address_surface_fastgate.json
+          if-no-files-found: ignore
+          retention-days: 7
