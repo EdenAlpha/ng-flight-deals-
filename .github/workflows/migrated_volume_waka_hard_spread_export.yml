@@ -9,4 +9,30 @@ on:
 permissions: {contents: read}
 env:
   BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
-jobS: {}
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy zstandard brotli boto3 pysz
+      - name: Materialize exact frozen survey manifest
+        run: |
+          git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_manifest.json
+      - name: Export exact Waka 5-percent losing spread tile
+        env: {PYTHONPATH: research}
+        run: |
+          python research/migrated_volume_3d_spread_tile_export.py \
+            --manifest frozen_manifest.json \
+            --eps benchmarks/migrated_volume_global_eps_v1.json \
+            --dataset marine_waka_3d --window-index 0 \
+            --out waka_hard_spread_tile.npz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: waka-hard-spread-tile
+          path: waka_hard_spread_tile.npz
+          retention-days: 30
