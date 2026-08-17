@@ -24,7 +24,7 @@ jobs:
           assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
           PY
       - name: Search channel-major transfer generators
-        run: PYTHONPATH=research python research/imperial_channel_transfer_generator.py imperial.h5
+        run: PYTHONPATH=research python research/imperial_channel_transfer_generator_fixed.py imperial.h5
       - name: Surface exact result
         if: success()
         run: |
