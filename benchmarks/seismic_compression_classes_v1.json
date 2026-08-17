@@ -1,0 +1,51 @@
+{
+  "version": "seismic-compression-classes-v1",
+  "principle": "Classify by array organization and processing state that determine compressibility, never by land/marine label alone.",
+  "score_contract": {
+    "gain_vs_sz3": "matched SZ3 bytes / our fully charged bytes",
+    "marginal_below": 1.20,
+    "progress_from": 1.20,
+    "strong_from": 1.50,
+    "class_target_from": 2.00,
+    "class_target_rule": "A class is not solved unless it transfers across multiple independent datasets/positions with hard-error-valid decoding; >=2x is the primary performance target."
+  },
+  "classes": [
+    {
+      "id": "acquisition_prestack_gather",
+      "shape_examples": ["shot x receiver/channel x time", "source x receiver x time"],
+      "description": "Raw or early active-seismic acquisition gathers. Land/marine is metadata, not a codec class.",
+      "current_evidence": ["historical Marine Carrier F1/Tie fixtures"],
+      "status": "strong historical evidence; needs broader frozen multi-survey coverage"
+    },
+    {
+      "id": "processed_prestack_gather",
+      "shape_examples": ["CMP x offset x time", "CRP x offset/angle x time/depth", "image-gather x angle x depth"],
+      "description": "Processed but still gather-structured prestack data.",
+      "current_evidence": [],
+      "status": "coverage gap"
+    },
+    {
+      "id": "migrated_poststack_3d",
+      "shape_examples": ["inline x crossline x time", "inline x crossline x depth"],
+      "description": "Poststack/final migrated seismic images and dense 3-D volumes; native spatial geometry must be preserved.",
+      "current_datasets": ["marine_waka_3d", "marine_opunake_3d", "marine_tui_3d", "marine_kahu_3d"],
+      "quarantined": ["marine_parihaka_3d: parser/sample-format plausibility failure until corrected"],
+      "status": "active research; small native tiles transfer, large-block 2x target not yet reached"
+    },
+    {
+      "id": "das_space_time",
+      "shape_examples": ["channel x time", "fiber-position x time"],
+      "description": "Dense distributed-acoustic-sensing wavefields with very high spatial sampling.",
+      "current_datasets": ["das_imperial_valley_2020", "das_porotomo_brady_dash", "das_forge_neubrex_2024", "das_egs_collab_exp2"],
+      "status": "mixed; Imperial remains the hard case"
+    },
+    {
+      "id": "passive_continuous_waveform",
+      "shape_examples": ["station x component x time", "continuous trace collections"],
+      "description": "Passive earthquake/microseismic/continuous network waveforms. Kept separate from active gathers and DAS because station sparsity and event structure differ.",
+      "current_evidence": [],
+      "status": "future coverage gap"
+    }
+  ],
+  "routing_rule": "Production routing must infer structure from headers/geometry/statistics; dataset id, survey name, and land/marine labels may not select codec parameters."
+}
