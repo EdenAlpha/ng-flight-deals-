@@ -4,6 +4,7 @@ on:
     branches: [migrated-volume-geometry-engine-v1]
     paths:
       - 'research/migrated_volume_3d_predictive_v5.py'
+      - 'research/migrated_volume_3d_context_entropy_v5.py'
       - 'research/migrated_volume_3d_runner_v5.py'
       - '.github/workflows/migrated_volume_native_3d_v5.yml'
   workflow_dispatch:
@@ -29,7 +30,7 @@ jobs:
         run: |
           git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
           git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_manifest.json
-      - name: Split-symbol predictive v5 versus matched SZ3 on native geometry
+      - name: Combined native 3D v5 portfolio versus matched SZ3
         env: {PYTHONPATH: research}
         run: |
           mkdir -p results
