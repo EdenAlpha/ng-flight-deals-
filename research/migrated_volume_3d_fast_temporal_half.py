@@ -31,24 +31,24 @@ def forward(Q):
     if Q.ndim!=3: raise ValueError(Q.shape)
     ny,nx,nt=Q.shape
     R=np.empty_like(Q)
+    lo=np.iinfo(np.int32).min; hi=np.iinfo(np.int32).max
     for y in range(ny):
         # First trace is ordinary temporal DPCM so no raw trace is paid.
         R[y,0,0]=Q[y,0,0]
         if nt>1:
             d=Q[y,0,1:].astype(np.int64)-Q[y,0,:-1].astype(np.int64)
-            if np.any((d<np.iinfo(np.int32).min)|(d>np.iinfo(np.int32).max)):
-                raise OverflowError('ft-half first-trace residual')
+            if np.any((d<lo)|(d>hi)): raise OverflowError('ft-half first-trace residual')
             R[y,0,1:]=d.astype(np.int32)
         for x in range(1,nx):
-            R[y,x,0]=np.int32(np.int64(Q[y,x,0])-np.int64(Q[y,x-1,0]))
+            d0=np.int64(Q[y,x,0])-np.int64(Q[y,x-1,0])
+            if d0<lo or d0>hi: raise OverflowError('ft-half t0 residual')
+            R[y,x,0]=np.int32(d0)
             if nt>1:
                 mismatch=Q[y,x,:-1].astype(np.int64)-Q[y,x-1,:-1].astype(np.int64)
                 pred=Q[y,x-1,1:].astype(np.int64)+(mismatch//2)
                 d=Q[y,x,1:].astype(np.int64)-pred
-                if np.any((pred<np.iinfo(np.int32).min)|(pred>np.iinfo(np.int32).max)):
-                    raise OverflowError('ft-half predictor')
-                if np.any((d<np.iinfo(np.int32).min)|(d>np.iinfo(np.int32).max)):
-                    raise OverflowError('ft-half residual')
+                if np.any((pred<lo)|(pred>hi)): raise OverflowError('ft-half predictor')
+                if np.any((d<lo)|(d>hi)): raise OverflowError('ft-half residual')
                 R[y,x,1:]=d.astype(np.int32)
     return R
 
@@ -57,22 +57,23 @@ def inverse(R):
     R=np.asarray(R,np.int32)
     if R.ndim!=3: raise ValueError(R.shape)
     ny,nx,nt=R.shape
-    Q=np.empty_like(R)
+    Q=np.empty_like(R); lo=np.iinfo(np.int32).min; hi=np.iinfo(np.int32).max
     for y in range(ny):
         Q[y,0,0]=R[y,0,0]
         for t in range(1,nt):
             v=np.int64(R[y,0,t])+np.int64(Q[y,0,t-1])
-            if v<np.iinfo(np.int32).min or v>np.iinfo(np.int32).max: raise OverflowError('ft-half inverse first trace')
+            if v<lo or v>hi: raise OverflowError('ft-half inverse first trace')
             Q[y,0,t]=np.int32(v)
         for x in range(1,nx):
             v=np.int64(R[y,x,0])+np.int64(Q[y,x-1,0])
-            if v<np.iinfo(np.int32).min or v>np.iinfo(np.int32).max: raise OverflowError('ft-half inverse t0')
+            if v<lo or v>hi: raise OverflowError('ft-half inverse t0')
             Q[y,x,0]=np.int32(v)
             for t in range(1,nt):
                 mismatch=np.int64(Q[y,x,t-1])-np.int64(Q[y,x-1,t-1])
                 pred=np.int64(Q[y,x-1,t])+(mismatch//2)
                 v=np.int64(R[y,x,t])+pred
-                if v<np.iinfo(np.int32).min or v>np.iinfo(np.int32).max: raise OverflowError('ft-half inverse')
+                if pred<lo or pred>hi: raise OverflowError('ft-half inverse predictor')
+                if v<lo or v>hi: raise OverflowError('ft-half inverse')
                 Q[y,x,t]=np.int32(v)
     return Q
 
@@ -108,8 +109,7 @@ def install():
     if _installed:return
     _old_encode=c.encode; _old_decode=c.decode
     c.NAMES[TID]=NAME
-    def enc(X,eps,tid):
-        return encode_new(X,eps) if int(tid)==TID else _old_encode(X,eps,tid)
+    def enc(X,eps,tid): return encode_new(X,eps) if int(tid)==TID else _old_encode(X,eps,tid)
     def dec(blob):
         if len(blob)>=c.HSZ:
             tid=struct.unpack(c.HDR,blob[:c.HSZ])[6]
