@@ -1,0 +1,48 @@
+name: Imperial hard-box rate distortion
+on:
+  pull_request:
+    branches: [imperial-information-floor-audit]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Export research code
+        uses: actions/upload-artifact@v4
+        with:
+          name: imperial-research-code
+          path: research/
+          compression-level: 6
+          retention-days: 1
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py boto3 zstandard
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Upload canonical Imperial record
+        uses: actions/upload-artifact@v4
+        with:
+          name: imperial-canonical-h5
+          path: imperial.h5
+          compression-level: 0
+          retention-days: 1
+      - name: Solve hard-box rate-distortion problem
+        run: PYTHONPATH=research python research/imperial_hardbox_rate_distortion.py imperial.h5
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-hardbox-rate-distortion
+          path: imperial_hardbox_rate_distortion.json
+          if-no-files-found: ignore
+          retention-days: 7
