@@ -24,19 +24,19 @@ jobs:
           assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
           PY
       - name: Search residue-class legal reconstructions
-        run: PYTHONPATH=research python research/imperial_gca_residue_codebook.py imperial.h5
+        run: PYTHONPATH=research python research/imperial_gca_residue_codebook_fast.py imperial.h5
       - name: Surface result
         if: success()
         run: |
           python - <<'PY'
           import json
-          d=json.load(open('imperial_gca_residue_codebook.json'))
+          d=json.load(open('imperial_gca_residue_codebook_fast.json'))
           print(f"::notice title=GCA residue codebook::winner={d['winner']} bytes={d['bytes']} incumbent=2468803")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: imperial-gca-residue-codebook
-          path: imperial_gca_residue_codebook.json
+          name: imperial-gca-residue-codebook-fast
+          path: imperial_gca_residue_codebook_fast.json
           if-no-files-found: ignore
           retention-days: 7
