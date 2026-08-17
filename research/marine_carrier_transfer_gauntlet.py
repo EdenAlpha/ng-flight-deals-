@@ -3,9 +3,10 @@
 
 Uses exactly the same deterministic reservoir panels and survey-global epsilon as
 General Seismic All-Engines Gauntlet V1, but evaluates the recovered Marine
-Carrier directly. The historical frozen M menu {32,48,64} is retained. Every
-stream is self-contained, decoded independently, hard-bound checked, and
-compared with matched SZ3 on the same panel.
+Carrier directly. The exact current-protocol M menu from pinned winning run
+31877667477 is retained: {16,24,32,40,48,56,64,80,96,128}. Every stream is
+self-contained, decoded independently, hard-bound checked, and compared with
+matched SZ3 on the same panel.
 """
 
 from __future__ import annotations
@@ -23,7 +24,9 @@ import general_seismic_all_engines_gauntlet as gg
 import marine_carrier_pr6_v2 as mc
 from general_seismic_numeric_io import matched_sz3
 
-M_VALUES = (32, 48, 64)
+# Exact fixed candidate menu used by the pinned current-protocol marine winner
+# (run 31877667477): F1 selected M=64 and Tie selected M=96.
+M_VALUES = (16, 24, 32, 40, 48, 56, 64, 80, 96, 128)
 
 
 def hard_error(a, b):
@@ -100,7 +103,7 @@ def run_survey(args):
         print("MARINE_CARRIER_PANEL", ds["id"], source_panel_index, "SZ3", int(sb), "CARRIER", cb, "M", int(best["M"]), "GAIN", float(sb / cb), flush=True)
 
     result = {
-        "kind": "marine-carrier-transfer-gauntlet-v1",
+        "kind": "marine-carrier-transfer-gauntlet-v2-exact-menu",
         "dataset_id": ds["id"],
         "epsilon": float(eps),
         "std": float(st["std"]),
@@ -116,7 +119,8 @@ def run_survey(args):
         "maxerr": float(maxerr),
         "sz3_maxerr": float(sz3_maxerr),
         "winner_M_counts": winner_m,
-        "historical_frozen_M_menu": list(M_VALUES),
+        "exact_current_protocol_M_menu": list(M_VALUES),
+        "reference_winning_run": 31877667477,
         "same_reservoir_seed_as_all_engines_gauntlet": True,
         "all_streams_materialized_and_decoded": True,
         "panels": panel_rows,
@@ -130,7 +134,7 @@ def aggregate(args):
     for p in sorted(Path(args.results).glob("*.json")):
         rows.append(json.loads(p.read_text()))
     out = {
-        "kind": "marine-carrier-transfer-headline-v1",
+        "kind": "marine-carrier-transfer-headline-v2-exact-menu",
         "surveys": [
             {
                 "dataset_id": r["dataset_id"],
@@ -146,6 +150,8 @@ def aggregate(args):
         "complete_surveys": len(rows),
         "median_gain": float(np.median([r["gain_vs_sz3"] for r in rows])) if rows else None,
         "byte_weighted_gain": float(sum(r["sz3_bytes"] for r in rows) / sum(r["carrier_bytes"] for r in rows)) if rows else None,
+        "exact_current_protocol_M_menu": list(M_VALUES),
+        "reference_winning_run": 31877667477,
     }
     Path(args.out).write_text(json.dumps(out, indent=2))
     print(json.dumps(out, indent=2))
