@@ -1,12 +1,20 @@
 import json, math, sys
 import h5py
 import numpy as np
-import imperial_decoder_phase_automaton as m
 
 C=128; NT=30000; C0=512; RAD=133
 INC=2464819
 MATCHED_SZ3=2767977
 TARGET=MATCHED_SZ3/2.0
+
+
+def stats(d):
+    s=ss=0.0; n=0
+    for i in range(0,d.shape[0],2048):
+        x=np.asarray(d[i:min(i+2048,d.shape[0])],np.float64)
+        s+=float(x.sum()); ss+=float((x*x).sum()); n+=x.size
+    mean=s/n
+    return mean,float(np.sqrt(max(0.0,ss/n-mean*mean)))
 
 
 def win_sum(a,w):
@@ -19,15 +27,12 @@ def hardbox_rd_from_values(v,rad=RAD,max_iter=1000,tol=1e-12):
     lo=int(v.min());hi=int(v.max());L=hi-lo+1;W=2*rad+1
     h=np.bincount((v-lo).astype(np.int64),minlength=L).astype(np.float64)
     p=h/h.sum();active=p>0
-    # reproduction alphabet y in [lo-rad, hi+rad]; for source index i, legal y indices are i..i+2rad
     q=np.full(L+2*rad,1.0/(L+2*rad),np.float64)
-    prevI=None
-    converged=False
+    prevI=None; converged=False
     for it in range(max_iter):
         Z=win_sum(q,W)
         if np.any(Z[active]<=0):raise RuntimeError('zero legal mass')
         f=np.zeros(L,np.float64);f[active]=p[active]/Z[active]
-        # M[j] = sum_i f[i] over i in [j-2rad, j]
         pf=np.empty(L+1,np.float64);pf[0]=0.0;np.cumsum(f,out=pf[1:])
         j=np.arange(L+2*rad,dtype=np.int64)
         a=np.maximum(0,j-2*rad);b=np.minimum(L,j+1)
@@ -47,13 +52,12 @@ def hardbox_rd_from_values(v,rad=RAD,max_iter=1000,tol=1e-12):
 
 def main(path):
     with h5py.File(path,'r') as hf:
-        d=hf['Acoustic'];_,std=m.stats(d);eps=.1*std;X=np.asarray(d[:,C0:C0+C],np.float64).T
+        d=hf['Acoustic'];_,std=stats(d);eps=.1*std;X=np.asarray(d[:,C0:C0+C],np.float64).T
     Xi=np.rint(X).astype(np.int64)
     if np.max(np.abs(X-Xi))>1e-6:raise RuntimeError('noninteger source')
     if int(math.floor(eps))!=RAD:raise RuntimeError(('unexpected eps',eps))
     g=hardbox_rd_from_values(Xi)
     print(json.dumps({'global':g}),flush=True)
-    # Decoder knows channel number for free, so conditional per-channel RD is a stronger scalar-codebook diagnostic.
     ch=[]
     for c in range(C):
         r=hardbox_rd_from_values(Xi[c],max_iter=600,tol=2e-11);r['channel']=c;ch.append(r)
