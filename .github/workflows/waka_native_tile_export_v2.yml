@@ -1,0 +1,33 @@
+name: Waka exact native tile export v2
+on:
+  push:
+    branches: [migrated-volume-geometry-engine-v1]
+    paths:
+      - 'research/waka_native_tile_export_v2.py'
+      - '.github/workflows/waka_native_tile_export_v2.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+env:
+  BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy boto3 zstandard pysz
+      - name: Materialize exact frozen manifest
+        run: |
+          git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_manifest.json
+      - name: Export exact current Waka native tiles
+        env: {PYTHONPATH: research}
+        run: python research/waka_native_tile_export_v2.py --manifest frozen_manifest.json --eps benchmarks/migrated_volume_global_eps_v1.json --out waka_native_tiles_v2.npz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: waka-native-rd-tiles-v2
+          path: waka_native_tiles_v2.npz
+          retention-days: 30
