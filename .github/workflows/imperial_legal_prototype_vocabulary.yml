@@ -1,7 +1,7 @@
 name: Imperial legal prototype vocabulary
 on:
   pull_request:
-    branches: [imperial-huber-ar32-coldstart-arithmetic]
+    branches: [imperial-huber-ar32-coldstart-arithmetic-full-array]
 permissions: {contents: read}
 jobs:
   vocab:
