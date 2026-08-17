@@ -23,7 +23,7 @@ jobs:
         with: {fetch-depth: 1}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install --quiet numpy boto3 pysz
+      - run: pip install --quiet numpy zstandard boto3 pysz
       - name: Materialize exact frozen survey manifest
         run: |
           git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
