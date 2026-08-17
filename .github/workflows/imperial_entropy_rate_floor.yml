@@ -31,8 +31,11 @@ jobs:
           python - <<'PY'
           import json
           d=json.load(open('imperial_entropy_rate_floor.json'))
-          for z in d['blocks']:
-            print(f"B={z['B']} hardbox268={z['mean_hardbox_268_diagnostic_bps']:.6f} bps corrected_h={z['mean_corrected_hper']:.6f}")
+          for z in d['scan_blocks']:
+            print(f"scan B={z['B']} hardbox268={z['mean_hardbox_268_diagnostic_bps']:.6f} bps corrected_h={z['mean_corrected_hper']:.6f}")
+          for z in d['rectangles']:
+            h,w=z['shape']
+            print(f"rect {h}x{w} B={z['B']} hardbox268={z['mean_hardbox_268_diagnostic_bps']:.6f} bps corrected_h={z['mean_corrected_hper']:.6f}")
           print(f"incumbent={d['current_exact_bps']:.6f} target={d['two_x_target_bps']:.6f}")
           PY
       - uses: actions/upload-artifact@v4
