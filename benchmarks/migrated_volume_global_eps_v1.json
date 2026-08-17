@@ -1,0 +1,13 @@
+{
+  "kind": "migrated-volume-global-epsilon-v1",
+  "definition": "epsilon = 0.10 * exact survey-global sample standard deviation on the frozen General Seismic Benchmark v1 objects",
+  "benchmark_definition_sha": "9b304e262182caa29a2c93e7e74e09ccb5715e92",
+  "provenance_run": 32045222422,
+  "datasets": {
+    "marine_waka_3d": {"std": 1175.2927445809353, "epsilon": 117.52927445809354},
+    "marine_opunake_3d": {"std": 12471.975360533273, "epsilon": 1247.1975360533274},
+    "marine_tui_3d": {"std": 872.0793863986921, "epsilon": 87.20793863986921},
+    "marine_kahu_3d": {"std": 1470.2702738624619, "epsilon": 147.0270273862462}
+  },
+  "note": "These are benchmark contract values only. Dataset identity is not available to codec transform selection."
+}
