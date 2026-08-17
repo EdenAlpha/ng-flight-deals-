@@ -1,0 +1,48 @@
+{
+  "kind": "migrated-volume-native-3d-v4-protected-screen-evidence",
+  "status": "protected_research_screen",
+  "scope": "deterministic native-geometry SEG-Y tile screen; not a whole-volume production benchmark",
+  "workflow_run_id": 32060955228,
+  "head_sha": "85112c3634fbcb05475b4b0fa559dca75545c0cc",
+  "benchmark_definition_sha": "9b304e262182caa29a2c93e7e74e09ccb5715e92",
+  "error_contract": "survey-global absolute epsilon = 0.10 * survey standard deviation; every accepted stream independently decoded and hard-bound checked",
+  "routing": "geometry and candidate selection are structural; survey/dataset identity does not choose codec",
+  "all_valid": true,
+  "wins_vs_matched_sz3": 4,
+  "surveys_tested": 4,
+  "rows": [
+    {
+      "dataset_id": "marine_waka_3d",
+      "ours_bytes": 153829,
+      "sz3_bytes": 161900,
+      "gain_vs_sz3": 1.0524673501095372,
+      "tile_gains": [1.0513963918051168, 1.0535830424337347],
+      "dominant_winner": "adaptive_block64_context2_arith"
+    },
+    {
+      "dataset_id": "marine_kahu_3d",
+      "ours_bytes": 196136,
+      "sz3_bytes": 230433,
+      "gain_vs_sz3": 1.1748633601174696,
+      "tile_gains": [1.2282032400589102, 1.124698246863746],
+      "dominant_winner": "adaptive_block128_l1_context2_arith"
+    },
+    {
+      "dataset_id": "marine_tui_3d",
+      "ours_bytes": 236305,
+      "sz3_bytes": 355248,
+      "gain_vs_sz3": 1.5033452529569835,
+      "tile_gains": [1.4854417586823245, 1.4418012181336572, 1.5147706614459515, 1.5711522105298268],
+      "dominant_winner": "adaptive_block64_context2_arith"
+    },
+    {
+      "dataset_id": "marine_opunake_3d",
+      "ours_bytes": 79185,
+      "sz3_bytes": 151663,
+      "gain_vs_sz3": 1.9152996148260404,
+      "tile_gains": [3.5625213821416355, 1.6299468092987421],
+      "dominant_winner": "mixed: adaptive_block128_l1 + adaptive_block64_context2_arith"
+    }
+  ],
+  "interpretation": "This is the first protected same-family migrated-volume screen in this project where Waka, Kahu, Tui, and Opunake all beat matched SZ3 under the same hard-error contract. It does not establish whole-volume or all-seismic universality."
+}
