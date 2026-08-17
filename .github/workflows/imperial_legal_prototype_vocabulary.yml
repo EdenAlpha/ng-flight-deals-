@@ -1,0 +1,36 @@
+name: Imperial legal prototype vocabulary
+on:
+  pull_request:
+    branches: [imperial-huber-ar32-coldstart-arithmetic-full-array]
+permissions: {contents: read}
+jobs:
+  vocab:
+    strategy:
+      fail-fast: false
+      matrix:
+        cb: [2,4,10,14,20]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy scipy h5py boto3 zstandard pysz
+      - name: Download canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','das.h5')
+          assert os.path.getsize('das.h5')==415030456
+          assert hashlib.md5(open('das.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Measure decoder-known legal prototype concentration
+        run: PYTHONPATH=research python research/imperial_legal_prototype_vocabulary.py das.h5 ${{ matrix.cb }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-legal-prototype-vocab-cb${{ matrix.cb }}
+          path: imperial_legal_prototype_vocab_cb${{ matrix.cb }}.json
+          retention-days: 7
