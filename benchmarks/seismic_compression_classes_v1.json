@@ -14,15 +14,17 @@
       "id": "acquisition_prestack_gather",
       "shape_examples": ["shot x receiver/channel x time", "source x receiver x time"],
       "description": "Raw or early active-seismic acquisition gathers. Land/marine is metadata, not a codec class.",
-      "current_evidence": ["historical Marine Carrier F1/Tie fixtures"],
-      "status": "strong historical evidence; needs broader frozen multi-survey coverage"
+      "current_datasets": ["land_soda_lake_2010", "land_teapot_dome_3d"],
+      "additional_evidence": ["historical Marine Carrier F1/Tie fixtures"],
+      "status": "strong evidence exists, but the frozen raw multi-survey class still needs a single audited class-level result"
     },
     {
       "id": "processed_prestack_gather",
       "shape_examples": ["CMP x offset x time", "CRP x offset/angle x time/depth", "image-gather x angle x depth"],
       "description": "Processed but still gather-structured prestack data.",
-      "current_evidence": [],
-      "status": "coverage gap"
+      "current_datasets": [],
+      "reserve_candidates": ["Stratton 3D South Texas prestack CMP gathers", "Penobscot 3D prestack"],
+      "status": "primary coverage gap"
     },
     {
       "id": "migrated_poststack_3d",
@@ -30,7 +32,7 @@
       "description": "Poststack/final migrated seismic images and dense 3-D volumes; native spatial geometry must be preserved.",
       "current_datasets": ["marine_waka_3d", "marine_opunake_3d", "marine_tui_3d", "marine_kahu_3d"],
       "quarantined": ["marine_parihaka_3d: parser/sample-format plausibility failure until corrected"],
-      "status": "active research; small native tiles transfer, large-block 2x target not yet reached"
+      "status": "active research; local native geometry transfers, large-block >=2x target not yet reached"
     },
     {
       "id": "das_space_time",
@@ -41,11 +43,17 @@
     },
     {
       "id": "passive_continuous_waveform",
-      "shape_examples": ["station x component x time", "continuous trace collections"],
-      "description": "Passive earthquake/microseismic/continuous network waveforms. Kept separate from active gathers and DAS because station sparsity and event structure differ.",
-      "current_evidence": [],
-      "status": "future coverage gap"
+      "shape_examples": ["station x component x time", "continuous nodal trace collections"],
+      "description": "Passive nodal/earthquake/microseismic/continuous network waveforms, separate from active gathers and DAS because station sparsity and event structure differ.",
+      "current_datasets": ["land_san_emidio_2021", "land_crescent_valley_2016"],
+      "status": "frozen benchmark coverage exists; class-specific engine/result still needs to be established"
     }
   ],
+  "frozen_primary_dataset_coverage": {
+    "mapped_count": 12,
+    "quarantined_count": 1,
+    "unmapped_count": 0,
+    "note": "All 13 frozen surveys are structurally accounted for: 12 mapped to active benchmark classes and Parihaka quarantined pending correct SEG-Y numeric parsing."
+  },
   "routing_rule": "Production routing must infer structure from headers/geometry/statistics; dataset id, survey name, and land/marine labels may not select codec parameters."
 }
