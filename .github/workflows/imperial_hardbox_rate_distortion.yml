@@ -23,6 +23,13 @@ jobs:
           assert os.path.getsize('imperial.h5')==415030456
           assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
           PY
+      - name: Upload canonical Imperial record
+        uses: actions/upload-artifact@v4
+        with:
+          name: imperial-canonical-h5
+          path: imperial.h5
+          compression-level: 0
+          retention-days: 1
       - name: Solve hard-box rate-distortion problem
         run: PYTHONPATH=research python research/imperial_hardbox_rate_distortion.py imperial.h5
       - uses: actions/upload-artifact@v4
