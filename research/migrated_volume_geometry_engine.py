@@ -25,15 +25,12 @@ from pathlib import Path
 import numpy as np
 import zstandard as zstd
 
-import general_seismic_benchmark_runner as br
-import general_seismic_all_engines_gauntlet as gg
-from general_seismic_numeric_io import matched_sz3
-
 MAGIC = b"MVGEO1\0\0"
 HDR = "<8sddIIHHII"
 HSZ = struct.calcsize(HDR)
 INTERNAL_MARGIN = 1.0 - 1e-4
 
+# transform ids
 T_RAW = 0
 T_TIME1 = 1
 T_TRACE1 = 2
@@ -77,6 +74,7 @@ def hard_error(a, b):
 
 
 def _shift_block(row, start, end, lag):
+    """Return row[t+lag] on [start,end), zero outside row."""
     n = int(end - start)
     out = np.zeros(n, dtype=np.int32)
     s0 = max(start, -lag)
@@ -202,11 +200,12 @@ def _block_lag_forward(Q, block, radius, adaptive=False):
             e = min(nt, s + block)
             cur = Q[i, s:e]
             best = None
+            # shifted spatial / plane predictors
             for lag in range(-radius, radius+1):
                 p1 = _shift_block(Q[i-1], s, e, lag)
                 d1 = cur.astype(np.int64) - p1.astype(np.int64)
                 score1 = int(np.abs(d1).sum())
-                code1 = int(lag + radius)
+                code1 = int(lag + radius)  # mode 0
                 key1 = (score1, 0, abs(lag), lag)
                 if best is None or key1 < best[0]:
                     best = (key1, code1, p1)
@@ -214,14 +213,16 @@ def _block_lag_forward(Q, block, radius, adaptive=False):
                     p2a = p1.astype(np.int64)
                     p2b = _shift_block(Q[i-2], s, e, 2*lag).astype(np.int64)
                     pp = 2 * p2a - p2b
+                    # avoid int32 overflow in pathological panels
                     if np.all(pp >= np.iinfo(np.int32).min) and np.all(pp <= np.iinfo(np.int32).max):
                         pp32 = pp.astype(np.int32)
                         score2 = int(np.abs(cur.astype(np.int64) - pp).sum())
-                        code2 = 32 + int(lag + radius)
+                        code2 = 32 + int(lag + radius)  # mode 1
                         key2 = (score2, 1, abs(lag), lag)
                         if key2 < best[0]:
                             best = (key2, code2, pp32)
             if adaptive:
+                # temporal predictor inside current row
                 pt = np.zeros(e-s, dtype=np.int32)
                 if s == 0:
                     if e-s > 1:
@@ -231,11 +232,11 @@ def _block_lag_forward(Q, block, radius, adaptive=False):
                 scoret = int(np.abs(cur.astype(np.int64) - pt.astype(np.int64)).sum())
                 keyt = (scoret, 2, 0, 0)
                 if keyt < best[0]:
-                    best = (keyt, 64, pt)
+                    best = (keyt, 64, pt)  # mode 2
                 scorez = int(np.abs(cur.astype(np.int64)).sum())
                 keyz = (scorez, 3, 0, 0)
                 if keyz < best[0]:
-                    best = (keyz, 96, np.zeros(e-s, dtype=np.int32))
+                    best = (keyz, 96, np.zeros(e-s, dtype=np.int32))  # mode 3
             code, pred = best[1], best[2]
             codes[i-1, b] = np.uint8(code)
             R[i, s:e] = cur - pred
@@ -353,7 +354,8 @@ def encode_residual(R):
     mn = int(flat.min()) if flat.size else 0
     mx = int(flat.max()) if flat.size else 0
     if -128 <= mn and mx <= 127:
-        raw = flat.astype(np.int8).tobytes(); c = CCTX.compress(raw)
+        raw = flat.astype(np.int8).tobytes()
+        c = CCTX.compress(raw)
         trials.append((len(c), 0, c))
     if -32768 <= mn and mx <= 32767:
         a = flat.astype("<i2")
@@ -386,9 +388,11 @@ def decode_residual(pid, body, shape):
     elif pid == 4:
         a = _unshuffle_bytes(raw, "<i4", n).astype(np.int32)
     elif pid == 5:
-        z = _unshuffle_bytes(raw, "<u2", n).astype(np.uint32); a = _unzigzag32(z)
+        z = _unshuffle_bytes(raw, "<u2", n).astype(np.uint32)
+        a = _unzigzag32(z)
     elif pid == 6:
-        z = _unshuffle_bytes(raw, "<u4", n).astype(np.uint32); a = _unzigzag32(z)
+        z = _unshuffle_bytes(raw, "<u4", n).astype(np.uint32)
+        a = _unzigzag32(z)
     else:
         raise RuntimeError(("bad pack id", pid))
     if a.size != n:
@@ -406,9 +410,18 @@ def encode_candidate(P, eps, tid):
     R, side_raw = forward_transform(Q, tid)
     side_blob = CCTX.compress(side_raw) if side_raw else b""
     pid, payload = encode_residual(R)
-    hdr = struct.pack(HDR, MAGIC, float(eps), internal, int(P.shape[0]), int(P.shape[1]), int(tid), int(pid), len(side_blob), len(payload))
+    hdr = struct.pack(HDR, MAGIC, float(eps), internal, int(P.shape[0]), int(P.shape[1]),
+                      int(tid), int(pid), len(side_blob), len(payload))
     blob = hdr + side_blob + payload
-    diag = {"transform": TRANSFORM_NAMES[tid], "pack_id": int(pid), "residual_nonzero_fraction": float(np.mean(R != 0)), "residual_mean_abs": float(np.mean(np.abs(R.astype(np.int64)))), "side_bytes": int(len(side_blob)), "payload_bytes": int(len(payload)), "stream_bytes": int(len(blob))}
+    diag = {
+        "transform": TRANSFORM_NAMES[tid],
+        "pack_id": int(pid),
+        "residual_nonzero_fraction": float(np.mean(R != 0)),
+        "residual_mean_abs": float(np.mean(np.abs(R.astype(np.int64)))),
+        "side_bytes": int(len(side_blob)),
+        "payload_bytes": int(len(payload)),
+        "stream_bytes": int(len(blob)),
+    }
     return blob, diag
 
 
@@ -427,7 +440,9 @@ def decode_stream(blob):
     R = decode_residual(int(pid), payload, (int(nr), int(nt)))
     Q = inverse_transform(R, int(tid), side_raw)
     X = Q.astype(np.float64) * (2.0 * float(internal))
-    return X, {"public_eps": float(public_eps), "internal_eps": float(internal), "shape": [int(nr), int(nt)], "transform_id": int(tid), "transform": TRANSFORM_NAMES[int(tid)], "pack_id": int(pid)}
+    return X, {"public_eps": float(public_eps), "internal_eps": float(internal),
+               "shape": [int(nr), int(nt)], "transform_id": int(tid),
+               "transform": TRANSFORM_NAMES[int(tid)], "pack_id": int(pid)}
 
 
 def compete(P, eps):
@@ -459,57 +474,123 @@ def sanity():
 
 
 def reservoir(ds, row, cfg, sample_panels, seed):
+    import general_seismic_all_engines_gauntlet as gg
     with tempfile.TemporaryDirectory(prefix="migrated_volume_") as tmp:
         return gg.reservoir_stats_and_panels(ds, row, cfg, tmp, None, int(sample_panels), int(seed))
 
 
 def run_survey(args):
-    manifest = br.load_json(args.manifest); pre = br.load_json(args.preflight); cfg = br.load_json(args.config)
-    ds = br.dataset_def(manifest, args.dataset); row = br.dataset_row(pre, args.dataset)
+    import general_seismic_benchmark_runner as br
+    from general_seismic_numeric_io import matched_sz3
+    manifest = br.load_json(args.manifest)
+    pre = br.load_json(args.preflight)
+    cfg = br.load_json(args.config)
+    ds = br.dataset_def(manifest, args.dataset)
+    row = br.dataset_row(pre, args.dataset)
     seed = int.from_bytes(hashlib.sha256(("GAUNTLET-V1:" + ds["id"]).encode()).digest()[:8], "little")
     st, panels = reservoir(ds, row, cfg, args.sample_panels, seed)
     eps = 0.10 * float(st["std"])
     if not np.isfinite(eps) or eps <= 0 or eps > 1e12:
         raise RuntimeError(("implausible epsilon", ds["id"], st["std"], eps))
     print("MV_EPSILON", ds["id"], st["std"], eps, "sampled", len(panels), "of", st["panels"], flush=True)
+
     total_mv = total_sz3 = total_samples = 0
     maxerr = sz3_maxerr = 0.0
     winners = Counter()
     transform_totals = {TRANSFORM_NAMES[k]: {"bytes": 0, "wins": 0} for k in TRANSFORM_NAMES}
     rows_out = []
+
     for rank, (source_panel_index, P, meta) in enumerate(panels):
         sb, sme = matched_sz3(P, eps)
         best, candidates = compete(P, eps)
         for c in candidates:
             transform_totals[TRANSFORM_NAMES[c["tid"]]]["bytes"] += int(c["bytes"])
         winner = TRANSFORM_NAMES[best["tid"]]
-        transform_totals[winner]["wins"] += 1; winners[winner] += 1
-        Y, decoded = decode_stream(best["blob"]); me = hard_error(P, Y); nb = int(best["bytes"])
+        transform_totals[winner]["wins"] += 1
+        winners[winner] += 1
+        Y, decoded = decode_stream(best["blob"])
+        me = hard_error(P, Y)
+        nb = int(best["bytes"])
         total_mv += nb; total_sz3 += int(sb); total_samples += int(P.size)
         maxerr = max(maxerr, me); sz3_maxerr = max(sz3_maxerr, float(sme))
-        cand_out = [{"transform": TRANSFORM_NAMES[c["tid"]], "bytes": int(c["bytes"]), "gain_vs_sz3": float(sb / c["bytes"]), "maxerr": float(c["maxerr"]), **c["diag"]} for c in candidates]
-        po = {"sample_rank": int(rank), "source_panel_index": int(source_panel_index), "shape": list(map(int, P.shape)), "samples": int(P.size), "sz3_bytes": int(sb), "mv_bytes": nb, "gain_vs_sz3": float(sb / nb), "winner": winner, "maxerr": float(me), "sz3_maxerr": float(sme), "meta": meta, "decoded": decoded, "candidates": cand_out}
+        cand_out = [{
+            "transform": TRANSFORM_NAMES[c["tid"]],
+            "bytes": int(c["bytes"]),
+            "gain_vs_sz3": float(sb / c["bytes"]),
+            "maxerr": float(c["maxerr"]),
+            **c["diag"],
+        } for c in candidates]
+        po = {
+            "sample_rank": int(rank), "source_panel_index": int(source_panel_index),
+            "shape": list(map(int, P.shape)), "samples": int(P.size),
+            "sz3_bytes": int(sb), "mv_bytes": nb, "gain_vs_sz3": float(sb / nb),
+            "winner": winner, "maxerr": float(me), "sz3_maxerr": float(sme),
+            "meta": meta, "decoded": decoded, "candidates": cand_out,
+        }
         rows_out.append(po)
-        print("MV_PANEL", ds["id"], source_panel_index, "SZ3", sb, "MV", nb, "GAIN", float(sb/nb), "WINNER", winner, flush=True)
-    result = {"kind": "migrated-volume-geometry-engine-v1", "dataset_id": ds["id"], "std": float(st["std"]), "epsilon": float(eps), "sampled_panels": len(panels), "total_source_panels": int(st["panels"]), "samples": int(total_samples), "mv_bytes": int(total_mv), "sz3_bytes": int(total_sz3), "gain_vs_sz3": float(total_sz3 / total_mv), "reduction_percent_vs_sz3": float(100.0 * (1.0 - total_mv / total_sz3)), "mv_bps": float(8.0 * total_mv / total_samples), "sz3_bps": float(8.0 * total_sz3 / total_samples), "maxerr": float(maxerr), "sz3_maxerr": float(sz3_maxerr), "winner_counts": dict(winners), "transform_totals": transform_totals, "same_reservoir_seed_as_all_engines_gauntlet": True, "no_dataset_label_routing": True, "all_selected_streams_materialized_and_decoded": True, "panels": rows_out}
+        print("MV_PANEL", ds["id"], source_panel_index, "SZ3", sb, "MV", nb,
+              "GAIN", float(sb/nb), "WINNER", winner, flush=True)
+
+    result = {
+        "kind": "migrated-volume-geometry-engine-v1",
+        "dataset_id": ds["id"], "std": float(st["std"]), "epsilon": float(eps),
+        "sampled_panels": len(panels), "total_source_panels": int(st["panels"]),
+        "samples": int(total_samples), "mv_bytes": int(total_mv), "sz3_bytes": int(total_sz3),
+        "gain_vs_sz3": float(total_sz3 / total_mv),
+        "reduction_percent_vs_sz3": float(100.0 * (1.0 - total_mv / total_sz3)),
+        "mv_bps": float(8.0 * total_mv / total_samples),
+        "sz3_bps": float(8.0 * total_sz3 / total_samples),
+        "maxerr": float(maxerr), "sz3_maxerr": float(sz3_maxerr),
+        "winner_counts": dict(winners), "transform_totals": transform_totals,
+        "same_reservoir_seed_as_all_engines_gauntlet": True,
+        "no_dataset_label_routing": True,
+        "all_selected_streams_materialized_and_decoded": True,
+        "panels": rows_out,
+    }
     Path(args.out).write_text(json.dumps(result, indent=2))
     print(json.dumps({k:v for k,v in result.items() if k != "panels"}, indent=2), flush=True)
 
 
 def aggregate(args):
     rows = [json.loads(p.read_text()) for p in sorted(Path(args.results).glob("*.json"))]
-    out = {"kind": "migrated-volume-geometry-headline-v1", "surveys": [{"dataset_id": r["dataset_id"], "gain_vs_sz3": r["gain_vs_sz3"], "reduction_percent_vs_sz3": r["reduction_percent_vs_sz3"], "mv_bps": r["mv_bps"], "sz3_bps": r["sz3_bps"], "winner_counts": r["winner_counts"]} for r in rows], "wins": sum(r["gain_vs_sz3"] > 1.0 for r in rows), "complete_surveys": len(rows), "median_gain": float(np.median([r["gain_vs_sz3"] for r in rows])) if rows else None, "byte_weighted_gain": float(sum(r["sz3_bytes"] for r in rows) / sum(r["mv_bytes"] for r in rows)) if rows else None}
-    Path(args.out).write_text(json.dumps(out, indent=2)); print(json.dumps(out, indent=2))
+    out = {
+        "kind": "migrated-volume-geometry-headline-v1",
+        "surveys": [{
+            "dataset_id": r["dataset_id"], "gain_vs_sz3": r["gain_vs_sz3"],
+            "reduction_percent_vs_sz3": r["reduction_percent_vs_sz3"],
+            "mv_bps": r["mv_bps"], "sz3_bps": r["sz3_bps"],
+            "winner_counts": r["winner_counts"],
+        } for r in rows],
+        "wins": sum(r["gain_vs_sz3"] > 1.0 for r in rows),
+        "complete_surveys": len(rows),
+        "median_gain": float(np.median([r["gain_vs_sz3"] for r in rows])) if rows else None,
+        "byte_weighted_gain": float(sum(r["sz3_bytes"] for r in rows) / sum(r["mv_bytes"] for r in rows)) if rows else None,
+    }
+    Path(args.out).write_text(json.dumps(out, indent=2))
+    print(json.dumps(out, indent=2))
 
 
 def main():
-    ap = argparse.ArgumentParser(); sp = ap.add_subparsers(dest="cmd", required=True); sp.add_parser("sanity")
-    s = sp.add_parser("survey"); s.add_argument("--manifest", required=True); s.add_argument("--preflight", required=True); s.add_argument("--config", required=True); s.add_argument("--dataset", required=True); s.add_argument("--sample-panels", type=int, default=16); s.add_argument("--out", required=True)
-    a = sp.add_parser("aggregate"); a.add_argument("--results", required=True); a.add_argument("--out", required=True)
+    ap = argparse.ArgumentParser()
+    sp = ap.add_subparsers(dest="cmd", required=True)
+    sp.add_parser("sanity")
+    s = sp.add_parser("survey")
+    s.add_argument("--manifest", required=True)
+    s.add_argument("--preflight", required=True)
+    s.add_argument("--config", required=True)
+    s.add_argument("--dataset", required=True)
+    s.add_argument("--sample-panels", type=int, default=16)
+    s.add_argument("--out", required=True)
+    a = sp.add_parser("aggregate")
+    a.add_argument("--results", required=True)
+    a.add_argument("--out", required=True)
     args = ap.parse_args()
-    if args.cmd == "sanity": sanity()
-    elif args.cmd == "survey": run_survey(args)
-    else: aggregate(args)
+    if args.cmd == "sanity":
+        sanity()
+    elif args.cmd == "survey":
+        run_survey(args)
+    else:
+        aggregate(args)
 
 
 if __name__ == "__main__":
