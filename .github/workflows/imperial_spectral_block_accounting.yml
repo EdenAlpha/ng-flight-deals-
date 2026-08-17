@@ -1,0 +1,32 @@
+name: Imperial spectral block accounting
+on:
+  pull_request:
+    branches: [imperial-valley-das-large3-screen]
+permissions: {contents: read}
+jobs:
+  account:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy h5py zstandard boto3
+      - name: Download canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','das.h5')
+          assert os.path.getsize('das.h5')==415030456
+          assert hashlib.md5(open('das.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Regroup exact PR206 bytes by cable block
+        run: PYTHONPATH=research python research/imperial_spectral_block_accounting.py das.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-spectral-block-accounting
+          path: imperial_spectral_block_accounting.json
+          retention-days: 7
