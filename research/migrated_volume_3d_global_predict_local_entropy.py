@@ -20,7 +20,7 @@ import migrated_volume_3d_context_entropy_v4 as ctx2
 ctx2.install()
 
 MAGIC=b'MVGPLOCAL'
-HDR='<9sddIIIHHHII'
+HDR='<9sddIIIHHHHII'
 HSZ=struct.calcsize(HDR)
 CELL='<III';CSZ=struct.calcsize(CELL)
 CONFIGS=((64,'bits'),(128,'l1'))
