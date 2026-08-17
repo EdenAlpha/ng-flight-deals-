@@ -6,65 +6,72 @@ import imperial_decoder_phase_automaton as m
 import imperial_huber_ar32_coldstart_arithmetic_regions as ah
 import imperial_huber_ar32_component_zsm_gps as cg
 
-C=128;NT=30000;C0=512;STEP=267;RAD=133;INC=2468803;TARGET=2767977/2
+C=128;NT=30000;C0=512;STEP=267;RAD=133;INC=2465652;TARGET=2767977/2
 CONFIGS={'zero':('base',64),'sign':('richall',4),'pref':('richmag',4),'suff':('richmag',4)}
 
 
 def h0(a):
     _,n=np.unique(np.asarray(a).reshape(-1),return_counts=True);p=n/n.sum();return float(-(p*np.log2(p)).sum())
-
-def gamma_cost(k):
-    a=np.abs(np.asarray(k,dtype=np.int64));z=np.ones(a.shape,np.float64);nz=a>0
-    if np.any(nz):z[nz]+=2+2*np.floor(np.log2(a[nz]))
-    return z
-
+def gcost(k):
+    a=abs(int(k));return 1.0 if a==0 else 3.0+2.0*math.floor(math.log2(a))
 def encode_k(K):
-    payload=0;rows={}
+    stream=bytearray();entries={};rows={}
     for comp in cg.COMPONENTS:
-        gr,W=CONFIGS[comp];bb,nb=cg.encode_component(K,comp,W,NT,gr);payload+=len(bb)+13;rows[comp]={'payload_bytes':len(bb),'bits':int(nb),'grammar':gr,'W':W}
-    return payload,rows
-
-def bit_context_stats(B,K0):
-    # Physical-ish upper diagnostics: H(B), H(B|prev B), H(B|channel group, clipped prev K, left sign).
+        gr,W=CONFIGS[comp];bb,nb=cg.encode_component(K,comp,W,NT,gr);sid=cg.config_id(gr,W)
+        stream.extend(struct.pack('<BQI',sid,int(nb),len(bb)));stream.extend(bb);entries[comp]=(sid,int(nb),bb)
+        rows[comp]={'payload_bytes':len(bb),'bits':int(nb),'grammar':gr,'W':W}
+    return bytes(stream),entries,rows
+def bit_context_stats(B,K):
     B=np.asarray(B,np.uint8);rows={'h0':h0(B)}
     x=B[:,1:].reshape(-1);p=B[:,:-1].reshape(-1);joint=(p.astype(np.uint16)<<1)|x;rows['h_given_prevB']=h0(joint)-h0(p)
     counts={}
     for c in range(C):
       g=c//16
       for t in range(NT):
-        pk=int(K0[c,t-1]) if t else 0;pk=max(-4,min(4,pk))+4;left=int(K0[c-1,t]) if c else 0;ls=0 if left<0 else (2 if left>0 else 1);ctx=(g*9+pk)*3+ls;b=int(B[c,t]);counts.setdefault(ctx,[0,0])[b]+=1
+        pk=int(K[c,t-1]) if t else 0;pk=max(-4,min(4,pk))+4;left=int(K[c-1,t]) if c else 0;ls=0 if left<0 else (2 if left>0 else 1);ctx=(g*9+pk)*3+ls;b=int(B[c,t]);counts.setdefault(ctx,[0,0])[b]+=1
     num=0.0;den=B.size
     for n0,n1 in counts.values():
       n=n0+n1
       if n0:num-=n0*math.log2(n0/n)
       if n1:num-=n1*math.log2(n1/n)
-    rows['h_given_gpl']=num/den;rows['gpl_contexts']=len(counts)
-    return rows
-
+    rows['h_given_gpl']=num/den;rows['gpl_contexts']=len(counts);return rows
+def build_oracle(X,co):
+    Xi=np.rint(X).astype(np.int64);R=np.zeros((C,NT),np.int32);K=np.zeros((C,NT),np.int32);B=np.zeros((C,NT),np.uint8);a=float(co[0]);w=np.asarray(co[1:],np.float32)
+    for c in range(C):
+      for t in range(NT):
+        p=0 if t<ah.P else int(np.rint(a+float(np.dot(w,R[c,t-ah.P:t][::-1].astype(np.float32)))))
+        e=int(Xi[c,t])-p;flo=e//STEP;cei=flo+1;vf=abs(e-STEP*flo)<=266;vc=abs(e-STEP*cei)<=266
+        if not (vf or vc):raise RuntimeError(('no legal branch',c,t,e))
+        usec=bool(vc and ((not vf) or gcost(cei)<gcost(flo)));k=cei if usec else flo;d=-RAD if usec else RAD;r=p+d+STEP*k
+        if abs(int(Xi[c,t])-r)>RAD:raise RuntimeError(('hard-local',c,t,e,k,d,r))
+        B[c,t]=1 if usec else 0;K[c,t]=k;R[c,t]=r
+    return R,K,B
+def replay(K,B,co):
+    R=np.zeros(K.shape,np.int32);a=float(co[0]);w=np.asarray(co[1:],np.float32)
+    for c in range(C):
+      for t in range(NT):
+        p=0 if t<ah.P else int(np.rint(a+float(np.dot(w,R[c,t-ah.P:t][::-1].astype(np.float32)))))
+        d=-RAD if int(B[c,t]) else RAD;R[c,t]=p+d+STEP*int(K[c,t])
+    return R
 def main(path):
     with h5py.File(path,'r') as hf:
       d=hf['Acoustic'];_,std=m.stats(d);eps=.1*std;X=np.asarray(d[:,C0:C0+C],np.float64).T
-    _,co=ah.fits(X);model,cod=cg.model_frame(co);R0,K0=ah.run_ar(X,cod);P=R0.astype(np.int64)-STEP*K0.astype(np.int64);Xi=np.rint(X).astype(np.int64);E=Xi-P
-    flo=np.floor_divide(E,STEP);cei=flo+1
-    vf=np.abs(E-STEP*flo)<=266;vc=np.abs(E-STEP*cei)<=266
-    if not np.all(vf|vc):raise RuntimeError('no oracle choice')
-    cf=gamma_cost(flo);cc=gamma_cost(cei)
-    # Choose lower surrogate address cost; deterministic tie keeps the baseline-nearer sign stable.
-    choose_ceil=vc & (~vf | (cc<cf))
-    K=np.where(choose_ceil,cei,flo).astype(np.int32)
-    D=np.where(choose_ceil,-RAD,RAD).astype(np.int16)
-    R=(P+D.astype(np.int64)+STEP*K.astype(np.int64)).astype(np.int32)
-    me=float(np.max(np.abs(X-R.astype(np.float64))))
+    _,co=ah.fits(X);model,cod=cg.model_frame(co);R0,K0=ah.run_ar(X,cod);base_stream,base_entries,baserows=encode_k(K0)
+    R,K,B=build_oracle(X,cod);me=float(np.max(np.abs(X-R.astype(np.float64))))
     if me>eps*(1+5e-6):raise RuntimeError(('hard',me,eps))
-    kbytes,krows=encode_k(K);basebytes,baserows=encode_k(K0)
-    bits=choose_ceil.astype(np.uint8);packed=np.packbits(bits.reshape(-1));zchoice=len(zstd.ZstdCompressor(level=19).compress(packed.tobytes()))
-    st=bit_context_stats(bits,K0)
-    # K-only oracle excludes phase side information on purpose. The naive-real column adds raw packed choice bits.
-    framing=34+len(model)
-    k_total=framing+kbytes
-    raw_choice_total=k_total+len(packed)
-    zstd_choice_total=k_total+zchoice
-    n=C*NT
-    out={'shape':[C,NT],'samples':n,'eps':eps,'maxerr':me,'incumbent_bytes':INC,'target_2x_bytes':TARGET,'baseline_reencoded_bytes':framing+basebytes,'oracle_k_only_bytes':k_total,'oracle_k_only_bps':8*k_total/n,'oracle_k_only_delta_vs_incumbent':k_total-INC,'choice_fraction_ceil':float(bits.mean()),'choice_h0_bps':st['h0'],'choice_context_diagnostics':st,'choice_raw_packed_bytes':len(packed),'choice_zstd_bytes':zchoice,'oracle_k_plus_raw_choice_bytes':raw_choice_total,'oracle_k_plus_zstd_choice_bytes':zstd_choice_total,'component_rows':krows,'baseline_component_rows':baserows,'scope':'Oracle headroom audit, NOT a codec claim for K-only bytes. At each sample, source-aware oracle chooses between floor lattice address with public phase +133 and ceiling address with phase -133, both guaranteed legal whenever selected. K is physically encoded with frozen incumbent component coders. The phase choice field is separately measured raw, zstd, and by conditional entropy. K-only bytes omit the source-dependent phase field and therefore are an optimistic ceiling; K+choice totals show simple explicit-side-information costs.'}
+    kstream,entries,krows=encode_k(K);Kd=cg.decode_components(entries,K.shape)
+    if not np.array_equal(Kd,K):raise RuntimeError('K replay')
+    packed=np.packbits(B.reshape(-1));zc=zstd.ZstdCompressor(level=19).compress(packed.tobytes());packed2=zstd.ZstdDecompressor().decompress(zc,max_output_size=len(packed))
+    Bd=np.unpackbits(np.frombuffer(packed2,dtype=np.uint8))[:C*NT].reshape(C,NT).astype(np.uint8)
+    if not np.array_equal(Bd,B):raise RuntimeError('choice replay')
+    Rd=replay(Kd,Bd,cod)
+    if not np.array_equal(Rd,R):raise RuntimeError('source replay')
+    st=bit_context_stats(B,K);n=C*NT
+    baseline_total=cg.OUTER_BYTES+len(model)+len(base_stream)
+    k_only=cg.OUTER_BYTES+len(model)+len(kstream)
+    choice_header=8
+    exact_zstd_total=cg.OUTER_BYTES+len(model)+choice_header+len(zc)+len(kstream)
+    raw_total=cg.OUTER_BYTES+len(model)+choice_header+len(packed)+len(kstream)
+    out={'shape':[C,NT],'samples':n,'eps':eps,'maxerr':me,'incumbent_bytes':INC,'target_2x_bytes':TARGET,'baseline_reencoded_bytes':baseline_total,'oracle_k_only_bytes':k_only,'oracle_k_only_bps':8*k_only/n,'oracle_k_only_delta_vs_incumbent':k_only-INC,'choice_fraction_ceil':float(B.mean()),'choice_h0_bps':st['h0'],'choice_context_diagnostics':st,'choice_raw_packed_bytes':len(packed),'choice_zstd_bytes':len(zc),'exact_k_plus_raw_choice_bytes':raw_total,'exact_k_plus_zstd_choice_bytes':exact_zstd_total,'exact_zstd_delta_vs_incumbent':exact_zstd_total-INC,'component_rows':krows,'baseline_component_rows':baserows,'scope':'Recursive binary legal-phase headroom audit. At every sample a source-aware encoder chooses floor address with phase +133 or ceiling address with phase -133 using a gamma-like K cost; the resulting reconstruction changes all future AR32 predictions. K is physically encoded with frozen incumbent component coders. The binary phase field is explicitly materialized as packed bits and zstd, independently decoded, and together with K reproduces the exact recursive reconstruction under the unchanged hard error. K-only bytes deliberately omit the required choice stream and are an optimistic headroom diagnostic, not a codec. K+choice totals are fully replayable physical upper bounds.'}
     json.dump(out,open('imperial_gca_binary_phase_oracle.json','w'),indent=2);print(json.dumps({'summary':out},indent=2),flush=True)
 if __name__=='__main__':main(sys.argv[1])
