@@ -1,0 +1,1 @@
+This is an entropy screen, not a byte-result claim. A candidate advances only if selector-plus-value conditional entropy improves materially while every recursively reconstructed sample remains inside the unchanged Imperial hard-error interval.
