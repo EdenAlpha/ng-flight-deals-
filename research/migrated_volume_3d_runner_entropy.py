@@ -31,19 +31,22 @@ codec.NAMES[1128]='block_causal_b128'
 codec.NAMES[1256]='block_causal_b256'
 codec.compete=lambda X,eps: block.compete_with_base(X,eps,_frozen_base_compete)
 
-# Independently framed bitplane streams. Both are exact and are admitted only
+# Independently framed bitplane streams. They are exact and are admitted only
 # when their actual serialized bytes beat the protected base/block portfolio.
 import migrated_volume_3d_brotli_bitplanes as brbp
 import migrated_volume_3d_ft_half_brotli as fthb
+import migrated_volume_3d_ft_half3d_brotli as fth3
 _block_compete=codec.compete
 codec.NAMES[brbp.TID]='fast_delta_brotli_multitraversal'
 codec.NAMES[fthb.TID]=fthb.NAME
+codec.NAMES[fth3.TID]=fth3.NAME
 
 def _all_compete(X,eps):
     best,rows=_block_compete(X,eps)
     c1=brbp.candidate(X,eps)
     c2=fthb.candidate(X,eps)
-    rows=list(rows)+[c1,c2]
+    c3=fth3.candidate(X,eps)
+    rows=list(rows)+[c1,c2,c3]
     return min(rows,key=lambda r:(r['bytes'],r['tid'])),rows
 codec.compete=_all_compete
 
@@ -59,4 +62,5 @@ if __name__=='__main__':
     block.sanity()
     brbp.sanity()
     fthb.sanity()
+    fth3.sanity()
     runner.main()
