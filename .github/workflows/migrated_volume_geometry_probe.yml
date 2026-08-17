@@ -1,0 +1,31 @@
+name: Migrated volume geometry probe
+
+on:
+  push:
+    branches: [migrated-volume-geometry-engine-v1]
+    paths:
+      - 'research/migrated_volume_geometry_probe.py'
+      - '.github/workflows/migrated_volume_geometry_probe.yml'
+  workflow_dispatch:
+
+permissions: {contents: read}
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy boto3
+      - name: Probe standard SEG-Y inline/crossline geometry
+        env: {PYTHONPATH: research}
+        run: python research/migrated_volume_geometry_probe.py --out migrated_volume_geometry_probe.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: migrated-volume-geometry-probe
+          path: migrated_volume_geometry_probe.json
+          if-no-files-found: warn
+          retention-days: 30
