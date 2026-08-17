@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
 import migrated_volume_3d_codec as codec
-import migrated_volume_3d_entropy as entropy
+
+# Strongest exact residual backend: context entropy always retains the ordinary
+# entropy packer as a byte-count fallback, so enabling it cannot enlarge a
+# selected stream.
+import migrated_volume_3d_context_entropy as entropy
 codec.pack=entropy.pack
 codec.unpack=entropy.unpack
+
+# Install the zero-side-information causal fast/temporal correction before the
+# base transform table is frozen for the block-codec wrapper.
+import migrated_volume_3d_fast_temporal_half as ft_half
+ft_half.install()
 
 import migrated_volume_3d_block_fix as block_fix
 block=block_fix.install()
@@ -22,9 +31,8 @@ codec.NAMES[1128]='block_causal_b128'
 codec.NAMES[1256]='block_causal_b256'
 codec.compete=lambda X,eps: block.compete_with_base(X,eps,_frozen_base_compete)
 
-# Add the independently verified fast-delta / multi-traversal Brotli stream only
-# after freezing the legacy transform table, so it cannot leak into the old
-# encoder's transform iteration.
+# Independently framed fast-delta / multi-traversal Brotli stream remains a
+# candidate. Final selection is solely actual serialized bytes.
 import migrated_volume_3d_brotli_bitplanes as brbp
 _block_compete=codec.compete
 codec.NAMES[brbp.TID]='fast_delta_brotli_multitraversal'
@@ -43,6 +51,7 @@ runner.geometry_candidates=lambda A: geometry_v2.geometry_candidates(_base_geome
 
 if __name__=='__main__':
     entropy.sanity()
+    ft_half.sanity()
     block.sanity()
     brbp.sanity()
     runner.main()
