@@ -2,14 +2,13 @@
 """Additional generic geometry inference for serpentine SEG-Y trace ordering."""
 import numpy as np
 
-def geometry_candidates(base,A):
- out=list(base.geometry_candidates(A));n=A.shape[0];names=list(base.FIELDS)
+def geometry_candidates(base_fn,base,A):
+ out=list(base_fn(A));n=A.shape[0];names=list(base.FIELDS)
  for j,name in enumerate(names):
   x=A[:,j].astype(np.int64);d=np.diff(x)
   # Coordinate fields often traverse one line forward and the next backward.
   # Ignore zeros, then flag boundaries where the sign of the local step reverses.
   s=np.sign(d).astype(np.int8)
-  # Carry nearest nonzero direction through short plateaus.
   last=0
   for i in range(s.size):
    if s[i]!=0:last=int(s[i])
