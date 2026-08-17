@@ -4,6 +4,9 @@ import migrated_volume_3d_entropy as entropy
 codec.pack=entropy.pack
 codec.unpack=entropy.unpack
 import migrated_volume_3d_runner as runner
+import migrated_volume_3d_geometry_v2 as geometry_v2
+runner.SCAN=40000
+runner.geometry_candidates=lambda A: geometry_v2.geometry_candidates(runner,A)
 if __name__=='__main__':
  entropy.sanity()
  runner.main()
