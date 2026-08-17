@@ -4,6 +4,14 @@ on:
     branches: [migrated-volume-geometry-engine-v1]
     paths:
       - 'research/migrated_volume_3d_spread_screen.py'
+      - 'research/migrated_volume_3d_runner_entropy.py'
+      - 'research/migrated_volume_3d_fast_temporal_half.py'
+      - 'research/migrated_volume_3d_context_entropy.py'
+      - 'research/migrated_volume_3d_brotli_bitplanes.py'
+      - 'research/migrated_volume_3d_block_codec.py'
+      - 'research/migrated_volume_3d_block_fix.py'
+      - 'research/migrated_volume_3d_codec.py'
+      - 'research/migrated_volume_3d_geometry_v2.py'
       - '.github/workflows/migrated_volume_native_3d_spread.yml'
   workflow_dispatch:
 permissions: {contents: read}
