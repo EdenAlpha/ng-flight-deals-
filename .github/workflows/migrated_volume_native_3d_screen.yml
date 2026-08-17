@@ -4,7 +4,9 @@ on:
     branches: [migrated-volume-geometry-engine-v1]
     paths:
       - 'research/migrated_volume_3d_codec.py'
+      - 'research/migrated_volume_3d_entropy.py'
       - 'research/migrated_volume_3d_runner.py'
+      - 'research/migrated_volume_3d_runner_entropy.py'
       - 'benchmarks/migrated_volume_global_eps_v1.json'
       - '.github/workflows/migrated_volume_native_3d_screen.yml'
   workflow_dispatch:
@@ -34,7 +36,7 @@ jobs:
         env: {PYTHONPATH: research}
         run: |
           mkdir -p results
-          python research/migrated_volume_3d_runner.py \
+          python research/migrated_volume_3d_runner_entropy.py \
             --manifest frozen_manifest.json \
             --eps benchmarks/migrated_volume_global_eps_v1.json \
             --dataset '${{ matrix.dataset }}' --max-tiles 2 \
