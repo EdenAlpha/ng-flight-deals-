@@ -1,0 +1,12 @@
+name: Waka hard spread tile export
+on:
+  push:
+    branches: [migrated-volume-geometry-engine-v1]
+    paths:
+      - 'research/migrated_volume_3d_spread_tile_export.py'
+      - '.github/workflows/migrated_volume_waka_hard_spread_export.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+env:
+  BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
+jobS: {}
