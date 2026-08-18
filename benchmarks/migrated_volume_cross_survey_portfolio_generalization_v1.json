@@ -1,0 +1,92 @@
+{
+  "kind": "migrated-volume-cross-survey-portfolio-generalization-v1",
+  "status": "validated_from_completed_decoder-valid_exact-hard-error-spread-artifacts",
+  "source_workflow_run": 32060943447,
+  "source_head_sha": "1dcde8da0e6a6cf1a57cd2618f3cb495b9ade560",
+  "surveys": [
+    "marine_kahu_3d",
+    "marine_opunake_3d",
+    "marine_tui_3d",
+    "marine_waka_3d"
+  ],
+  "positions_total": 25,
+  "selection_rule": "For each leave-one-survey-out split, choose the 3-candidate subset minimizing fully charged training-survey bytes; on held-out tiles run only that frozen subset and select smallest serialized stream. One conservative selector byte charged per tile. No survey identity used for candidate selection at encode time.",
+  "leave_one_survey_out": [
+    {
+      "held_out_dataset": "marine_opunake_3d",
+      "selected_on_other_three": [
+        "block_causal_b128",
+        "fast_delta_brotli_multitraversal",
+        "fast_temporal_half_3d_boundary_brotli"
+      ],
+      "heldout_positions": 5,
+      "heldout_wins_vs_sz3": 5,
+      "heldout_min_gain_vs_sz3": 1.4311058545239503,
+      "heldout_median_gain_vs_sz3": 1.4532192644602748,
+      "heldout_byte_weighted_gain_vs_sz3": 1.49307826649854
+    },
+    {
+      "held_out_dataset": "marine_kahu_3d",
+      "selected_on_other_three": [
+        "block_causal_b128",
+        "fast_delta_brotli_multitraversal",
+        "fast_temporal_half_3d_boundary_brotli"
+      ],
+      "heldout_positions": 5,
+      "heldout_wins_vs_sz3": 5,
+      "heldout_min_gain_vs_sz3": 1.0842323242283798,
+      "heldout_median_gain_vs_sz3": 1.133840583918995,
+      "heldout_byte_weighted_gain_vs_sz3": 1.12541616346248
+    },
+    {
+      "held_out_dataset": "marine_tui_3d",
+      "selected_on_other_three": [
+        "block_causal_b128",
+        "fast_delta_brotli_multitraversal",
+        "fast_temporal_half_3d_boundary_brotli"
+      ],
+      "heldout_positions": 10,
+      "heldout_wins_vs_sz3": 10,
+      "heldout_min_gain_vs_sz3": 1.3821382989167785,
+      "heldout_median_gain_vs_sz3": 1.4934578289914469,
+      "heldout_byte_weighted_gain_vs_sz3": 1.48460454684542
+    },
+    {
+      "held_out_dataset": "marine_waka_3d",
+      "selected_on_other_three": [
+        "block_causal_b128",
+        "fast_delta_brotli_multitraversal",
+        "fast_temporal_half_3d_boundary_brotli"
+      ],
+      "heldout_positions": 5,
+      "heldout_wins_vs_sz3": 5,
+      "heldout_min_gain_vs_sz3": 1.0233985929224527,
+      "heldout_median_gain_vs_sz3": 1.0725811017380966,
+      "heldout_byte_weighted_gain_vs_sz3": 1.0666081845204836
+    }
+  ],
+  "stable_three_mode_portfolio": [
+    "block_causal_b128",
+    "fast_delta_brotli_multitraversal",
+    "fast_temporal_half_3d_boundary_brotli"
+  ],
+  "same_three_modes_selected_in_all_loso_splits": true,
+  "stable_portfolio_all_positions_wins_vs_sz3": 25,
+  "stable_portfolio_all_positions_min_gain_vs_sz3": 1.0233985929224527,
+  "stable_portfolio_all_positions_median_gain_vs_sz3": 1.4479608948513933,
+  "stable_portfolio_byte_weighted_gain_vs_sz3": 1.2988196771070706,
+  "single_fixed_mode": {
+    "name": "fast_temporal_half_3d_boundary_brotli",
+    "uses_selector": false,
+    "all_positions_wins_vs_sz3": 25,
+    "all_positions_min_gain_vs_sz3": 1.023425559947299,
+    "all_positions_median_gain_vs_sz3": 1.3021806853582554,
+    "survey_weighted_gains": {
+      "marine_opunake_3d": 1.3384006286266925,
+      "marine_kahu_3d": 1.1164290137572905,
+      "marine_tui_3d": 1.3403857421726761,
+      "marine_waka_3d": 1.0666379835388646
+    }
+  },
+  "interpretation": "The existing migrated-volume mechanism family generalizes robustly across these four independent migrated surveys: failure is insufficient margin on hard Waka, not collapse below SZ3. This is not a 2x claim."
+}
