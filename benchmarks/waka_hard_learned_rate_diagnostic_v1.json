@@ -1,0 +1,56 @@
+{
+  "kind": "waka-hard-learned-rate-diagnostic-v1",
+  "status": "diagnostic_only_not_production_codec",
+  "dataset_id": "marine_waka_3d",
+  "tile": {
+    "window_fraction": 0.05,
+    "trace_first": 192810,
+    "trace_last": 210109,
+    "shape": [4, 32, 1500],
+    "samples": 192000,
+    "epsilon": 117.52927445809354,
+    "matched_sz3_bytes": 38839,
+    "matched_sz3_bps": 1.6182916666666666,
+    "two_x_target_bps": 0.8091458333333333
+  },
+  "corrected_full_tile_online_probability": {
+    "training": "two deterministic different Waka positions only; no future target samples",
+    "adaptation": "causal decoder-reproducible online adaptation after decoded chunks",
+    "all_samples_charged": true,
+    "ideal_bps": 0.9502750405396185,
+    "equivalent_gain_vs_matched_sz3": 1.7029718740668087,
+    "note": "Ideal probability-rate diagnostic, not a materialized arithmetic stream; fixed learned model bytes are not serialized here."
+  },
+  "topology_boundary_diagnostic": {
+    "structural_heads": ["origin_y0x0", "first_column_y_gt_0", "temporal_edges_x_gt_0"],
+    "routing_uses_dataset_identity": false,
+    "boundary_samples": 8604,
+    "boundary_bps_per_boundary_sample": 1.5199478987148893,
+    "boundary_contribution_bps_all_samples": 0.06811266521116098,
+    "combined_with_existing_interior_ideal_bps_estimate": 0.9199613984773557,
+    "combined_equivalent_gain_vs_matched_sz3_estimate": 1.7590864892213192,
+    "note": "Combination estimate only; not yet one integrated serialized codec."
+  },
+  "strict_bilateral_hierarchy_diagnostic": {
+    "anchor_spacing_traces": 2,
+    "overall_modeled_bps_reported": 0.9644688579143724,
+    "anchor_level_fraction": 0.5,
+    "anchor_level_bps": 1.3226847888275302,
+    "bilateral_refinement_fraction": 0.5,
+    "bilateral_refinement_bps": 0.6062529270012149,
+    "interpretation": "Bilateral refinement is extremely cheap, but the coarse anchor half dominates total cost."
+  },
+  "learned_phase_diagnostic": {
+    "oracle_base_residual_entropy_bps": 1.8500398577322255,
+    "oracle_ternary_phase_entropy_bps": 1.1213244532064077,
+    "oracle_phase_values_lattice_steps": [-0.5, 0.0, 0.5],
+    "learned_offline_phase_base_entropy_bps": 1.829906618493803,
+    "learned_offline_phase_entropy_bps": 1.6845726600617312,
+    "linear_recursive_phase_entropy_bps": 1.8081105628959333,
+    "interpretation": "Large oracle headroom exists, but most of it disappears when phase must be predicted causally and fed back into reconstruction."
+  },
+  "invalidated_or_superseded": {
+    "post_warmup_approximately_0_879_bps": "Not a whole-tile rate; warm-up/boundary samples were excluded from the denominator. Do not present as whole-tile 1.84x.",
+    "approximately_0_798_to_0_803_bps_hierarchy": "Invalid due future-information leakage. Discarded."
+  }
+}
