@@ -1,3 +1,4 @@
+# Isolated CI probe for causal warp v2
 name: Migrated volume causal warp breakthrough screen
 on:
   push:
@@ -8,7 +9,7 @@ on:
       - 'research/migrated_volume_large_causal_warp_screen.py'
       - '.github/workflows/migrated_volume_causal_warp.yml'
   pull_request:
-    branches: [main]
+    branches: [main, migrated-volume-geometry-engine-v1]
     paths:
       - 'research/migrated_volume_3d_causal_warp.py'
       - 'research/migrated_volume_3d_fractional_warp.py'
