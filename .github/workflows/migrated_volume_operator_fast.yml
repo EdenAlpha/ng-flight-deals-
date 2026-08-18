@@ -13,7 +13,7 @@ jobs:
       max-parallel: 4
       matrix:
         dataset: [marine_waka_3d, marine_kahu_3d, marine_opunake_3d, marine_tui_3d]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
