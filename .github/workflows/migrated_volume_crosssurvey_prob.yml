@@ -1,0 +1,50 @@
+name: Migrated volume leave-Waka-out learned entropy screen
+on:
+  push:
+    branches: [migrated-volume-geometry-engine-v1]
+    paths:
+      - 'research/migrated_volume_crosssurvey_prob_screen.py'
+      - '.github/workflows/migrated_volume_crosssurvey_prob.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'research/migrated_volume_crosssurvey_prob_screen.py'
+      - '.github/workflows/migrated_volume_crosssurvey_prob.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+env:
+  BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
+concurrency:
+  group: migrated-crosssurvey-prob-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  leave-waka-out:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install dependencies
+        run: |
+          pip install --quiet numpy boto3 pysz zstandard brotli
+          pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Materialize frozen survey manifest
+        run: |
+          git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_manifest.json
+      - name: Train without Waka and score Waka
+        env: {PYTHONPATH: research}
+        run: |
+          python research/migrated_volume_crosssurvey_prob_screen.py \
+            --manifest frozen_manifest.json \
+            --eps benchmarks/migrated_volume_global_eps_v1.json \
+            --out crosssurvey_prob.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: migrated-crosssurvey-prob
+          path: crosssurvey_prob.json
+          if-no-files-found: warn
+          retention-days: 30
