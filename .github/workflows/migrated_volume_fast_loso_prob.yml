@@ -1,0 +1,48 @@
+name: Fast migrated four-survey leave-one-out gate
+on:
+  push:
+    branches: [migrated-volume-geometry-engine-v1]
+    paths:
+      - 'research/migrated_volume_fast_loso_prob.py'
+      - '.github/workflows/migrated_volume_fast_loso_prob.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
+jobs:
+  fast-loso:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: migrated-volume-geometry-engine-v1
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install dependencies
+        run: |
+          pip install --quiet numpy boto3 pysz zstandard brotli
+          pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Materialize frozen manifest
+        run: |
+          git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_manifest.json
+      - name: Run four-survey leave-one-out gate
+        env: {PYTHONPATH: research}
+        run: |
+          python research/migrated_volume_fast_loso_prob.py \
+            --manifest frozen_manifest.json \
+            --eps benchmarks/migrated_volume_global_eps_v1.json \
+            --out fast_loso_prob_latest.json
+      - name: Commit compact result back to branch
+        run: |
+          mkdir -p benchmarks
+          cp fast_loso_prob_latest.json benchmarks/fast_loso_prob_latest.json
+          git config user.name 'seismic-benchmark-bot'
+          git config user.email 'seismic-benchmark-bot@users.noreply.github.com'
+          git add benchmarks/fast_loso_prob_latest.json
+          git commit -m 'Record fast four-survey leave-one-out result' || exit 0
+          git pull --rebase origin migrated-volume-geometry-engine-v1
+          git push origin HEAD:migrated-volume-geometry-engine-v1
