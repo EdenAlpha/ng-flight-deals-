@@ -5,6 +5,11 @@ on:
     paths:
       - 'research/migrated_volume_fast_loso_prob.py'
       - '.github/workflows/migrated_volume_fast_loso_prob.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'research/migrated_volume_fast_loso_prob.py'
+      - '.github/workflows/migrated_volume_fast_loso_prob.yml'
   workflow_dispatch:
 permissions:
   contents: write
@@ -36,7 +41,16 @@ jobs:
             --manifest frozen_manifest.json \
             --eps benchmarks/migrated_volume_global_eps_v1.json \
             --out fast_loso_prob_latest.json
+      - name: Upload leave-one-out result
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fast-four-survey-loso
+          path: fast_loso_prob_latest.json
+          if-no-files-found: warn
+          retention-days: 30
       - name: Commit compact result back to branch
+        if: github.event_name == 'push'
         run: |
           mkdir -p benchmarks
           cp fast_loso_prob_latest.json benchmarks/fast_loso_prob_latest.json
