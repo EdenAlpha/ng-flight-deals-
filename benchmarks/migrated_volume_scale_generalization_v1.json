@@ -1,0 +1,58 @@
+{
+  "kind": "migrated-volume-scale-generalization-v1",
+  "status": "validated_from_completed_exact-hard-error-workflow-artifacts",
+  "small_native_reference_run": 32060943447,
+  "large_native_run": 32061653114,
+  "sz3_scale_response_run": 32066098238,
+  "large_architecture_runs": {
+    "hierarchical_4x64": 32065689108,
+    "monolithic_context_v4": 32065812386,
+    "global_predict_local_entropy": 32066514747,
+    "spatial_cdf53": 32066783589
+  },
+  "large_native_weighted_gain_vs_sz3": {
+    "marine_waka_3d": 1.01545,
+    "marine_kahu_3d": 0.98214,
+    "marine_opunake_3d": 0.97347,
+    "marine_tui_3d": 0.86818
+  },
+  "fixed_fh3_large_weighted_gain_vs_sz3": {
+    "marine_waka_3d": 1.0154,
+    "marine_kahu_3d": 0.9821,
+    "marine_opunake_3d": 0.8598,
+    "marine_tui_3d": 0.7627
+  },
+  "matched_sz3_whole_block_advantage_over_sum_4x64_cells": {
+    "marine_waka_3d": 1.0820798,
+    "marine_kahu_3d": 1.1628820,
+    "marine_opunake_3d": 1.6349619,
+    "marine_tui_3d": 1.8100765
+  },
+  "completed_long_range_architecture_weighted_gain_vs_sz3": {
+    "hierarchical_4x64": {
+      "marine_waka_3d": 0.99610,
+      "marine_kahu_3d": 1.02804,
+      "marine_opunake_3d": 0.94608,
+      "marine_tui_3d": 0.82139
+    },
+    "monolithic_context_v4": {
+      "marine_waka_3d": 1.02399035,
+      "marine_kahu_3d": 1.06969491,
+      "marine_opunake_3d": 0.99263332,
+      "marine_tui_3d": 0.86817639
+    },
+    "global_predict_local_entropy_final_portfolio": {
+      "marine_waka_3d": 1.02399035,
+      "marine_kahu_3d": 1.06969491,
+      "marine_opunake_3d": 0.99263332,
+      "marine_tui_3d": 0.86817639
+    },
+    "spatial_cdf53_final_portfolio": {
+      "marine_waka_3d": 1.02399035,
+      "marine_kahu_3d": 1.06969491,
+      "marine_opunake_3d": 0.99263332,
+      "marine_tui_3d": 0.86817639
+    }
+  },
+  "interpretation": "Cross-survey transfer is robust on small native tiles, but scale transfer is not. Tui and Opunake contain substantial long-range redundancy that matched SZ3 exploits at whole-block scale and the current migrated-volume candidates do not. Waka has a much smaller SZ3 scale benefit, so its weakness remains primarily local information density. None of the four completed long-range experiments closes the scale gap."
+}
