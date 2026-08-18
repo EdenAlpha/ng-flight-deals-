@@ -6,6 +6,12 @@ on:
       - 'research/migrated_volume_3d_causal_warp.py'
       - 'research/migrated_volume_large_causal_warp_screen.py'
       - '.github/workflows/migrated_volume_causal_warp.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'research/migrated_volume_3d_causal_warp.py'
+      - 'research/migrated_volume_large_causal_warp_screen.py'
+      - '.github/workflows/migrated_volume_causal_warp.yml'
   workflow_dispatch:
 permissions: {contents: read}
 env:
