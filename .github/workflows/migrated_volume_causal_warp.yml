@@ -1,40 +1,33 @@
-# Isolated CI probe for causal warp v2
+# Fast CI probe; the previous large run continues independently.
 name: Migrated volume causal warp breakthrough screen
 on:
-  push:
+  pull_request:
     branches: [migrated-volume-geometry-engine-v1]
     paths:
+      - 'research/migrated_volume_warp_fast_diag.py'
       - 'research/migrated_volume_3d_causal_warp.py'
       - 'research/migrated_volume_3d_fractional_warp.py'
-      - 'research/migrated_volume_large_causal_warp_screen.py'
-      - '.github/workflows/migrated_volume_causal_warp.yml'
-  pull_request:
-    branches: [main, migrated-volume-geometry-engine-v1]
-    paths:
-      - 'research/migrated_volume_3d_causal_warp.py'
-      - 'research/migrated_volume_3d_fractional_warp.py'
-      - 'research/migrated_volume_large_causal_warp_screen.py'
       - '.github/workflows/migrated_volume_causal_warp.yml'
   workflow_dispatch:
 permissions: {contents: read}
 env:
   BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
 jobs:
-  warp:
+  fast_warp:
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
         dataset: [marine_waka_3d, marine_kahu_3d, marine_opunake_3d, marine_tui_3d]
     runs-on: ubuntu-24.04
-    timeout-minutes: 300
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 1}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install --quiet numpy zstandard brotli boto3 pysz
-      - name: Unit sanity for self-derived warp decoders
+      - name: Unit sanity for quotient-warp decoders
         env: {PYTHONPATH: research}
         run: |
           python research/migrated_volume_3d_causal_warp.py
@@ -43,19 +36,19 @@ jobs:
         run: |
           git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
           git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_manifest.json
-      - name: Integer and fractional warp versus incumbent and whole-block SZ3
+      - name: Fast native 4x32 warp diagnostic
         env: {PYTHONPATH: research}
         run: |
-          mkdir -p warp_results
-          python research/migrated_volume_large_causal_warp_screen.py \
+          mkdir -p warp_fast_results
+          python research/migrated_volume_warp_fast_diag.py \
             --manifest frozen_manifest.json \
             --eps benchmarks/migrated_volume_global_eps_v1.json \
             --dataset '${{ matrix.dataset }}' \
-            --out 'warp_results/${{ matrix.dataset }}.json'
+            --out 'warp_fast_results/${{ matrix.dataset }}.json'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: causal-warp-${{ matrix.dataset }}
-          path: warp_results/${{ matrix.dataset }}.json
+          name: fast-warp-${{ matrix.dataset }}
+          path: warp_fast_results/${{ matrix.dataset }}.json
           if-no-files-found: warn
           retention-days: 30
