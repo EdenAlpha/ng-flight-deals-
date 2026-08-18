@@ -60,3 +60,4 @@ jobs:
           git commit -m 'Record fast four-survey leave-one-out result' || exit 0
           git pull --rebase origin migrated-volume-geometry-engine-v1
           git push origin HEAD:migrated-volume-geometry-engine-v1
+# Trigger marker: generalization gate visibility v2.
