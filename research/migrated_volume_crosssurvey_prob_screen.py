@@ -7,6 +7,9 @@ statistics, geometry parameters, or model selection. This is an information-
 rate diagnostic, not yet a promoted production codec: it reports ideal coded
 bits under decoder-fixed probabilities plus explicit universal tail costs and
 static boundary costs, then compares against matched whole-tile SZ3.
+
+This file is intentionally deterministic so the leave-one-survey-out gate can
+be reproduced exactly from the frozen benchmark manifest.
 """
 from __future__ import annotations
 import argparse,json,math
@@ -69,7 +72,6 @@ def main(a):
   X,ep,md=extract(ds,m,e,TRAIN_FRAC);A0,T0,I0,R0=build(X,ep);train.append((A0,T0));trainR.append(R0.reshape(-1));md['dataset']=ds;meta.append(md);print('TRAIN_TILE',ds,md,flush=True)
  At=np.concatenate([q[0] for q in train]);Tt=np.concatenate([q[1] for q in train]);fulltrain=np.concatenate(trainR)
  mu=At.mean(0);sd=At.std(0);sd[sd<.1]=1;At=(At-mu)/sd;Yt=cls(Tt)
- # Static boundary class model trained only on non-Waka residuals.
  sh=np.bincount(cls(fulltrain),minlength=NCLASS).astype(np.float64)+1.;sh/=sh.sum();static_cost=-np.log2(sh)
  class M(nn.Module):
   def __init__(self,d):super().__init__();self.net=nn.Sequential(nn.Linear(d,192),nn.SiLU(),nn.LayerNorm(192),nn.Linear(192,144),nn.SiLU(),nn.Linear(144,96),nn.SiLU(),nn.Linear(96,NCLASS))
