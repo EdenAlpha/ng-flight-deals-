@@ -12,6 +12,7 @@ import numpy as np
 import migrated_volume_3d_runner as r
 import migrated_volume_large_native_screen as large
 
+# Fixed before reading any sample values; also serves as the corpus protocol ID.
 FRACTIONS=tuple(np.linspace(.04,.96,16).tolist())
 HEADER_WINDOW=14000
 
