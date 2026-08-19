@@ -1,0 +1,26 @@
+{
+  "kind": "unseen-waka-16x32-stacked-general-v1-summary",
+  "status": "diagnostic_ideal_probability_rate_not_serialized_codec",
+  "source_run": 32274462014,
+  "training_datasets": ["marine_kahu_3d", "marine_opunake_3d", "marine_tui_3d"],
+  "source_training_tiles": 15,
+  "source_training_shape": "4x24 native crop",
+  "source_training_epochs": 10,
+  "hidden": [320, 240, 160],
+  "waka_used_in_base_training": false,
+  "target_shape": "16x32 native",
+  "target_fractions": [0.15, 0.5, 0.85],
+  "target_positions_all_charged": true,
+  "full_model_updates_only_after_scoring_decoded_chunks": true,
+  "replay_uses_only_already_decoded_waka_samples": true,
+  "base_weighted_gain_vs_sz3": 1.6112958695713848,
+  "full_replay_weighted_gain_vs_sz3": 1.9125539732547088,
+  "positions_crossing_2x": 1,
+  "weighted_gap_to_2x_bps": 0.040574652777777775,
+  "adapted_positions": [
+    {"fraction": 0.15, "ideal_bps": 0.9817708333333334, "sz3_bytes": 171662, "gain_vs_sz3": 1.8213474801061007, "last_modeled_chunk_bps": 0.4904987335205078},
+    {"fraction": 0.5, "ideal_bps": 0.8626979166666666, "sz3_bytes": 167948, "gain_vs_sz3": 2.0278921503519722, "last_modeled_chunk_bps": 0.5317858123779297},
+    {"fraction": 0.85, "ideal_bps": 0.9395104166666667, "sz3_bytes": 171543, "gain_vs_sz3": 1.901954697149446, "last_modeled_chunk_bps": 0.5320592498779297}
+  ],
+  "note": "Strongest general unseen-Waka diagnostic to date. Waka is absent from all source fitting and normalization. Every Waka chunk is charged before full-model adaptation; replay uses only already-decoded Waka samples. One of three held-out Waka positions crosses 2x and the weighted three-position result is only ~0.0406 bps above the 2x target. Ideal probability rate only; model weights/static tables are not yet charged and arithmetic serialization is not materialized."
+}

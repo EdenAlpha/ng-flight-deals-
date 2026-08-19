@@ -1,0 +1,21 @@
+{
+  "kind": "four-survey-multisource-capacity-full-replay-loso-v1-summary",
+  "status": "diagnostic_ideal_probability_rate_not_serialized_codec",
+  "source_run": 32273071488,
+  "hidden": [320, 240, 160],
+  "source_tiles_per_loso_split": 9,
+  "source_training_epochs": 8,
+  "max_train_examples": 720000,
+  "held_out_survey_used_in_base_training": false,
+  "test_positions_all_charged": true,
+  "base_overall_byte_weighted_gain_vs_sz3": 1.7461131441206588,
+  "full_replay_overall_byte_weighted_gain_vs_sz3": 1.8635013932427726,
+  "all_full_replay_positions_beat_sz3": true,
+  "targets": {
+    "marine_waka_3d": {"base_gain": 1.4222158264663112, "full_replay_gain": 1.5711273615689687},
+    "marine_kahu_3d": {"base_gain": 1.6306930819701484, "full_replay_gain": 1.7123843292101482},
+    "marine_opunake_3d": {"base_gain": 2.035077608729061, "full_replay_gain": 2.178449516759202},
+    "marine_tui_3d": {"base_gain": 2.060558307068888, "full_replay_gain": 2.1497843447068368}
+  },
+  "note": "Capacity-only scaling from the frozen nine-source 8-epoch gate. The held-out target survey remains absent from fitting/normalization. Every target chunk is charged before adaptation; replay uses only already-decoded target samples. Ideal probability rate only."
+}
