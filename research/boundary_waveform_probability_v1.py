@@ -53,7 +53,7 @@ def features(R):
        w=win(z,t);f.extend((w-z[t]).tolist())
       for z in (lr,ur,ulr):f.extend(win(z,t).tolist())
       x0=1.0 if x==0 else 0.0;st=1.0 if x>0 and t<14 else 0.0;en=1.0 if x>0 and t>=nt-q.b.RAD-1 else 0.0
-      f += [float(cur[t-1]) if t else 0.,float(l[t]),float(u[t]),float(ul[t]),float(cur[t-1]-l[t-1]) if t and x else 0.,float(cur[t-1]-u[t-1]) if t and y else 0.,x0,st,en,t/13.0 if st else 0.0,(t-(nt-q.b.RAD-1))/q.b.RAD if en else 0.0,1.0 if y==0 else 0.0,min(y,15)/15.0]
+      f += [float(cur[t-1]) if t else 0.,float(l[t]),float(u[t]),float(ul[t]),float(cur[t-1]-l[t-1]) if t and x else 0.,float(cur[t-1]-u[t-1]) if t and y else 0.,x0,st,en,t/13.0 if st else 0.0,(t-(nt-q.b.RAD-1))/q.b.RAD if en else 0.0,1.0 if y==0 else 0.0,min(y,15)/15.0,t/float(max(1,nt-1)),x/float(max(1,nx-1))]
       A.append(f);T.append(int(R[y,x,t]))
     return np.asarray(A,np.float32),np.asarray(T,np.int32)
 
