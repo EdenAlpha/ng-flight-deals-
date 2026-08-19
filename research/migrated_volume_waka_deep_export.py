@@ -14,6 +14,7 @@ import migrated_volume_3d_spread_screen as sp
 
 NY=16
 NX=32
+# PR execution marker; does not affect block selection or sample values.
 
 
 def choose_group(segments, target_trace):
@@ -51,7 +52,6 @@ def main():
     rr=r.S3ConcatSequential(r.S3,oo,block_bytes=8*1024*1024)
     try:
         s=r.SegySequential(rr);total=int(s.total_traces);wi=0;frac=float(sp.FRACTIONS[wi]);center=int(round(frac*max(0,total-1)))
-        # Wider header window than the standard fixture so 16 coherent rows are available.
         window=max(int(sp.WINDOW_TRACES),120000);st=max(0,min(total-window,center-window//2)) if total>window else 0;n=min(window,total-st)
         A=sp.read_header_window(rr,s,st,n);geom,ranked=r.choose_geometry(A);segabs=[(x+st,y+st) for x,y in geom['segments']]
         _,gi,block,minlen=choose_group(segabs,center);X,ids=read_deep_tile(rr,s,block,minlen)
