@@ -1,0 +1,20 @@
+{
+  "kind": "four-survey-multisource-causal-full-replay-loso-v1-summary",
+  "status": "diagnostic_ideal_probability_rate_not_serialized_codec",
+  "source_run": 32271123358,
+  "source_tiles_per_loso_split": 9,
+  "source_training_fractions": [0.15, 0.5, 0.85],
+  "max_train_examples": 720000,
+  "held_out_survey_used_in_base_training": false,
+  "test_positions_all_charged": true,
+  "base_overall_byte_weighted_gain_vs_sz3": 1.6711333403613164,
+  "full_replay_overall_byte_weighted_gain_vs_sz3": 1.7702635072815032,
+  "all_full_replay_positions_beat_sz3": true,
+  "targets": {
+    "marine_waka_3d": {"base_gain": 1.3611244001797649, "full_replay_gain": 1.4922913090469834},
+    "marine_kahu_3d": {"base_gain": 1.5881788739412057, "full_replay_gain": 1.6505793255226875},
+    "marine_opunake_3d": {"base_gain": 1.9514432552913221, "full_replay_gain": 2.067930273868317},
+    "marine_tui_3d": {"base_gain": 1.915108515778061, "full_replay_gain": 1.9981939786055927}
+  },
+  "note": "Nine source tiles are all from the other three surveys in each LOSO split. Every held-out chunk is charged before target adaptation; replay uses only already-decoded target samples. Ideal probability rate only."
+}
