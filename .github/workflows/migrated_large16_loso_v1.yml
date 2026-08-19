@@ -1,3 +1,4 @@
+# helper dependencies restored on the PR branch; protocol unchanged
 name: Migrated 16x32 multisource LOSO v1
 on:
   pull_request:
