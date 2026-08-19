@@ -1,0 +1,71 @@
+{
+  "kind": "migrated-universal-causal-adaptation-diagnostic-v1",
+  "status": "diagnostic_ideal_probability_rate_not_serialized_codec",
+  "date": "2026-08-19",
+  "goal": "Test whether a probability model trained only on other migrated surveys can adapt causally to a new Waka stream, while clearly separating later-tile performance from charged startup cost.",
+  "fixed_matched_sz3_hard_waka_bps": 1.6182916666666666,
+  "cross_survey_base": {
+    "training": "Kahu + Opunake only; zero Waka training",
+    "hard_waka_bps": 1.1779977618616218,
+    "equivalent_gain_vs_sz3": 1.3737646361137703
+  },
+  "same_hard_tile_causal_adaptation": {
+    "rule": "score each already-causal trace/chunk before updating; encoder and decoder can reproduce the same updates",
+    "best_trace_level_bps_observed": 1.159564213252206,
+    "equivalent_gain_vs_sz3": 1.3956033207750327,
+    "note": "This uses no earlier Waka tile but only modestly improves transfer."
+  },
+  "broader_universal_model": {
+    "training": "diverse Kahu + Opunake + Tui tiles; zero Waka in pretrained weights",
+    "later_hard_tile_after_two_already_decoded_waka_prefix_tiles": {
+      "best_bps_without_header_charge_in_that_local sweep": 0.9574142899106438,
+      "equivalent_gain_vs_sz3": 1.6902731489601048,
+      "warning": "Later-tile diagnostic only. Do not present as whole-stream rate because the two Waka calibration tiles are not included in this number."
+    }
+  },
+  "charged_three_waka_tile_progressive_stream": {
+    "sz3_bytes": {
+      "early0": 42661,
+      "early1": 41126,
+      "hard": 38839
+    },
+    "all_three_tiles_charged": true,
+    "per_tile_128_byte_header_charged": true,
+    "no_waka_pretraining_before_early0": true,
+    "online_chunk_adaptation_no_replay": {
+      "combined_bps": 1.092898936134224,
+      "combined_gain_vs_sz3": 1.5583681460183236,
+      "tile_bps": {
+        "early0": 1.1758758127586793,
+        "early1": 1.0801398196098932,
+        "hard": 1.0226811760341
+      }
+    },
+    "one_replay_pass_over_already_decoded_prefix": {
+      "combined_bps": 1.0801007797507767,
+      "combined_gain_vs_sz3": 1.576833311130349,
+      "tile_bps": {
+        "early0": 1.1758758127586793,
+        "early1": 1.0640023168629262,
+        "hard": 1.0004242096307248
+      },
+      "hard_tile_gain_vs_sz3": 1.6176054628506125
+    },
+    "two_replay_passes_over_already_decoded_prefix": {
+      "combined_bps": 1.073019892916786,
+      "combined_gain_vs_sz3": 1.5872388761211618,
+      "tile_bps": {
+        "early0": 1.1758758127586793,
+        "early1": 1.0540585636539612,
+        "hard": 0.989125302337718
+      },
+      "hard_tile_gain_vs_sz3": 1.6360835809598284
+    }
+  },
+  "interpretation": "The learned waveform-shape mechanism is substantially cross-survey transferable after decoder-reproducible adaptation. The main remaining penalty is cold-start/startup cost on a new survey, not failure to adapt. The honest three-tile charged diagnostic is currently about 1.59x vs SZ3, while later tiles can reach about 1.64x under the stricter charged-prefix experiment and about 1.69x in a stronger later-tile-only prefix diagnostic. None is a 2x or serialized-codec claim.",
+  "next": [
+    "Reduce cold-start cost with deterministic fast adaptation from the earliest decoded blocks.",
+    "Measure leave-one-survey-out adaptation on Kahu, Opunake and Tui, not just Waka.",
+    "Only after ideal rate is comfortably below the 2x target, materialize the arithmetic stream and benchmark throughput."
+  ]
+}
