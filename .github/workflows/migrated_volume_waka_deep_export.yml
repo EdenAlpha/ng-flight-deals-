@@ -5,6 +5,11 @@ on:
     paths:
       - 'research/migrated_volume_waka_deep_export.py'
       - '.github/workflows/migrated_volume_waka_deep_export.yml'
+  pull_request:
+    branches: [migrated-volume-geometry-engine-v1]
+    paths:
+      - 'research/migrated_volume_waka_deep_export.py'
+      - '.github/workflows/migrated_volume_waka_deep_export.yml'
   workflow_dispatch:
 permissions: {contents: read}
 env:
