@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Paired 4x32 vs 16x32 learned-probability scale diagnostic on Waka.
 
-Uses the same frozen Waka fractions as the companion 4x32-vs-4x128 gate. At
-each location, select a native 16x32 block from SEG-Y header geometry only. The
-4x32 comparison is the exact central four rows of that same block. Two locations
-train the same probability architecture; .05 is held out. Matched SZ3 receives
+At each fixed location, select a native 16x32 block from SEG-Y header geometry
+only. The 4x32 comparison is the exact central four rows of that same block.
+Training fractions .01 and .08 are deliberately far from the held-out .05 region
+so the physically larger 16-row blocks do not overlap. Matched SZ3 receives
 identical samples/epsilon at each shape.
 
 Ideal probability-rate diagnostic only; model weights and arithmetic stream are
@@ -17,7 +17,7 @@ import numpy as np
 import migrated_volume_large_native_screen as large
 import migrated_volume_crosssurvey_prob_screen as b
 from general_seismic_numeric_io import matched_sz3
-DATASET='marine_waka_3d';TRAIN_FRACS=(.01,.025);TEST_FRAC=.05;NY=16;NX=32;SMALL_NY=4;WINDOWS=(60000,120000,240000);MAX_PER_TILE=180000;EPOCHS=7;HEADER_BYTES=128;HIDDEN=(192,144,96);SEED=20260819
+DATASET='marine_waka_3d';TRAIN_FRACS=(.01,.08);TEST_FRAC=.05;NY=16;NX=32;SMALL_NY=4;WINDOWS=(60000,120000,240000);MAX_PER_TILE=180000;EPOCHS=7;HEADER_BYTES=128;HIDDEN=(192,144,96);SEED=20260819
 
 def extract16x32(manifest,epsj,frac):
  r=large.r;ds=next(d for d in manifest['datasets'] if d['id']==DATASET);eps=float(epsj['datasets'][DATASET]['epsilon']);oo=[r.obj(u) for u in ds['objects']];rr=r.S3ConcatSequential(r.S3,oo,block_bytes=8*1024*1024)
@@ -74,6 +74,6 @@ def main(a):
  for i in range(len(ranges)):
   for j in range(i):
    if max(ranges[i][0],ranges[j][0])<=min(ranges[i][1],ranges[j][1]):raise RuntimeError(('training/test trace overlap',i,j,ranges))
- tall=fit_and_score(raw[:2],raw[2],ep,16);small=fit_and_score([crop4(q) for q in raw[:2]],crop4(raw[2]),ep,4);out={'kind':'waka-paired-learned-probability-scale-4rows-vs-16rows-v1','status':'diagnostic_ideal_probability_rate_not_serialized_codec','dataset':DATASET,'epsilon':float(ep),'training_fractions':list(TRAIN_FRACS),'test_fraction':TEST_FRAC,'locations':meta,'same_native_16x32_regions_for_both_shapes':True,'small_is_central_four_row_crop':True,'max_train_examples_per_training_tile':MAX_PER_TILE,'epochs':EPOCHS,'hidden':list(HIDDEN),'rows4':small,'rows16':tall,'gain_ratio_16_over_4':float(tall['gain_vs_sz3_ideal']/small['gain_vs_sz3_ideal']),'bps_reduction_16_vs_4':float(small['ideal_bps']-tall['ideal_bps']),'crosses_2x_at_16':bool(tall['gain_vs_sz3_ideal']>=2.0)};Path(a.out).write_text(json.dumps(out,indent=2));print('TALL_FINAL',json.dumps(out,indent=2),flush=True)
+ tall=fit_and_score(raw[:2],raw[2],ep,16);small=fit_and_score([crop4(q) for q in raw[:2]],crop4(raw[2]),ep,4);out={'kind':'waka-paired-learned-probability-scale-4rows-vs-16rows-v1','status':'diagnostic_ideal_probability_rate_not_serialized_codec','dataset':DATASET,'epsilon':float(ep),'training_fractions':list(TRAIN_FRACS),'test_fraction':TEST_FRAC,'locations':meta,'same_native_16x32_regions_for_both_shapes':True,'small_is_central_four_row_crop':True,'all_regions_nonoverlapping':True,'max_train_examples_per_training_tile':MAX_PER_TILE,'epochs':EPOCHS,'hidden':list(HIDDEN),'rows4':small,'rows16':tall,'gain_ratio_16_over_4':float(tall['gain_vs_sz3_ideal']/small['gain_vs_sz3_ideal']),'bps_reduction_16_vs_4':float(small['ideal_bps']-tall['ideal_bps']),'crosses_2x_at_16':bool(tall['gain_vs_sz3_ideal']>=2.0)};Path(a.out).write_text(json.dumps(out,indent=2));print('TALL_FINAL',json.dumps(out,indent=2),flush=True)
 if __name__=='__main__':
  p=argparse.ArgumentParser();p.add_argument('--manifest',required=True);p.add_argument('--eps',required=True);p.add_argument('--out',required=True);main(p.parse_args())
