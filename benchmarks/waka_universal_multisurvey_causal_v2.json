@@ -1,0 +1,78 @@
+{
+  "kind": "waka-universal-multisurvey-causal-v2",
+  "status": "diagnostic_only_not_serialized_codec",
+  "date": "2026-08-19",
+  "target": {
+    "dataset": "marine_waka_3d",
+    "hard_tile_shape": [4, 32, 1500],
+    "samples": 192000,
+    "matched_sz3_bytes": 38839,
+    "matched_sz3_bps": 1.6182916666666666,
+    "two_x_target_bps": 0.8091458333333333
+  },
+  "initial_training": {
+    "waka_used": false,
+    "surveys": ["marine_kahu_3d", "marine_opunake_3d", "marine_tui_3d"],
+    "expanded_protocol": "16 predetermined/widely distributed native 4x32 regions per training survey; 15000 deterministic feature examples per region",
+    "total_training_regions": 48,
+    "total_feature_examples": 720000,
+    "selection_uses_waka_results": false
+  },
+  "causal_target_information": {
+    "prefix_tiles": 2,
+    "prefix_relationship": "both Waka prefix tiles occur earlier in trace order than the hard target tile",
+    "future_target_samples_used": false,
+    "prefix_adaptation": "decoder-reproducible AdamW passes over already decoded prefix",
+    "within_target_adaptation": "score each completed trace before decoder-reproducible SGD update from that trace"
+  },
+  "results": {
+    "expanded_universal_small_base_unseen_waka": {
+      "ideal_bps": 1.0967726285845534,
+      "equivalent_gain_vs_sz3": 1.4755033308546028
+    },
+    "expanded_universal_small_prefix8_plus_online": {
+      "online_lr": 0.008,
+      "ideal_bps_before_causal_boundary_replacement": 0.9585746031990146,
+      "causal_prefix_topology_boundary_saving_bps": 0.014883403662189095,
+      "combined_ideal_bps_estimate": 0.9436911995368255,
+      "combined_equivalent_gain_vs_sz3_estimate": 1.7148529809973252
+    },
+    "expanded_universal_larger_prefix8_plus_online": {
+      "model": "134-256-192-128-19",
+      "online_lr": 0.008,
+      "ideal_bps_before_causal_boundary_replacement": 0.9574142899106438,
+      "combined_ideal_bps_estimate": 0.9425308862484547,
+      "combined_equivalent_gain_vs_sz3_estimate": 1.7169640701196913,
+      "interpretation": "Increasing model size gives only marginal gain; capacity is not the dominant remaining bottleneck."
+    },
+    "two_model_probability_ensemble": {
+      "models": ["134-192-144-96-19", "134-256-192-128-19"],
+      "mixture": "fixed 50/50 probability average; both models causally adapted",
+      "online_lr": 0.008,
+      "ideal_bps_before_causal_boundary_replacement": 0.9519643724352613,
+      "combined_ideal_bps_estimate": 0.9370809687730722,
+      "combined_equivalent_gain_vs_sz3_estimate": 1.72694966667129,
+      "remaining_bps_to_2x_target": 0.1279351354397389,
+      "additional_fractional_reduction_needed_from_this_estimate": 0.13652516666435496
+    }
+  },
+  "causal_boundary_replacement": {
+    "method": "three topology-specific residual probability tables learned only from earlier decoded Waka prefix tiles: origin, first-column, temporal-edge",
+    "generic_multisurvey_boundary_contribution_bps": 0.10302761820857671,
+    "prefix_topology_boundary_contribution_bps": 0.08814421454638761,
+    "saving_bps": 0.014883403662189095,
+    "requires_neural_training": false
+  },
+  "negative_followups": {
+    "larger_model": "only marginally better than smaller universal model after adaptation",
+    "survey_regime_experts": "prefix identifies Kahu as closest expert, but select-then-adapt is worse than pooled multi-survey model",
+    "tiny_logit_calibration": "cheap correction layer does not match full causal model adaptation"
+  },
+  "interpretation": "Broad independent-survey diversity plus decoder-reproducible learning from the beginning of the target file nearly eliminates the previous same-survey training advantage on hard Waka. The strongest current causal ideal-rate estimate is about 1.727x versus matched SZ3, but it is not a 2x result and not a production codec. The remaining gap is about 0.128 bps, indicating that further progress must primarily reduce interior waveform probability cost rather than startup/boundary overhead or simply increase neural model size.",
+  "limitations": [
+    "Probability rates are ideal code-length diagnostics; an arithmetic/range stream has not been materialized for these learned probabilities.",
+    "Distributed/pretrained model bytes are not charged in these diagnostic rates.",
+    "Some adaptation hyperparameters were screened on the hard Waka diagnostic and therefore must be frozen and revalidated on fresh held-out positions before any headline claim.",
+    "Production speed and memory require a separate optimized implementation benchmark."
+  ]
+}
