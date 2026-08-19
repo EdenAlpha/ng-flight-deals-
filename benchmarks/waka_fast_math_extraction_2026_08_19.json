@@ -1,0 +1,65 @@
+{
+  "kind": "waka-fast-mathematical-extraction-diagnostics-2026-08-19",
+  "status": "diagnostic_only_not_production_codec",
+  "dataset_id": "marine_waka_3d",
+  "hard_tile": {
+    "shape": [4, 32, 1500],
+    "samples": 192000,
+    "epsilon": 117.52927445809354,
+    "matched_sz3_bytes": 38839,
+    "matched_sz3_bps": 1.6182916666666666,
+    "two_x_target_bps": 0.8091458333333333
+  },
+  "existing_block_predictor_reproduction": {
+    "residual_entropy_bps": 1.8815871230612506,
+    "zero_fraction": 0.5773697916666667,
+    "interpretation": "Reproduces the known ~1.85-1.9 bps hard-residual regime before learned probability coding."
+  },
+  "training_free_context_mixer": {
+    "method": "online adaptive causal categorical context tables with lightweight probability mixing; no offline training or transmitted model",
+    "class_rate_bps": 1.4025048850857056,
+    "note": "Class-rate diagnostic only; does not include all tail/framing/selector costs. Not a codec gain claim.",
+    "verdict": "valid direction but insufficient margin for 2x"
+  },
+  "fractional_block_predictor": {
+    "method": "decoder-known blockwise fractional spatial predictors using already reconstructed traces; exact error-bounded recursive reconstruction",
+    "residual_entropy_bps": 1.8017563465363968,
+    "zero_fraction": 0.6068645833333334,
+    "max_error": 117.5175215306476,
+    "verdict": "real raw-residual improvement, but not sufficient alone"
+  },
+  "fractional_predictor_plus_probability_mlp": {
+    "training": "two deterministic different Waka regions; hard tile held out",
+    "all_samples_charged": true,
+    "ideal_bps": 1.1631666666666667,
+    "equivalent_gain_vs_matched_sz3": 1.3912809858145867,
+    "verdict": "worse than original learned probability representation; mechanisms are not complementary"
+  },
+  "waveform_motif_codebook": {
+    "method": "MiniBatchKMeans causal waveform-state codebook plus per-state residual probability table",
+    "best_tested_centroids": 512,
+    "all_sample_ideal_bps": 1.588,
+    "equivalent_gain_vs_matched_sz3": 1.019075356842989,
+    "verdict": "too crude; discard"
+  },
+  "learned_probability_feature_ablation": {
+    "training": "same two different Waka regions; hard tile held out",
+    "local_retrain_full_tile_baseline_ideal_bps": 0.9810833333333333,
+    "local_retrain_equivalent_gain_vs_sz3": 1.6494946063025566,
+    "ablations_full_tile_ideal_bps": {
+      "remove_current_waveform_history": 1.998375,
+      "remove_neighbor_spatial_waveform_windows": 1.8987916666666667,
+      "remove_spatial_residual_windows": 1.1989166666666666,
+      "remove_current_residual_history": 1.1656666666666666,
+      "remove_scalar_waveform_relationships": 1.7160416666666667
+    },
+    "interpretation": "The learned gain is dominated by causal waveform-shape information: current temporal shape, neighboring decoded waveform windows, and relative waveform geometry. Residual-history tables contribute materially but are secondary. The next fast algorithm should target waveform-shape conditional probability rather than more residual-only contexts."
+  },
+  "discarded_in_this_work_block": [
+    "2-D multigrid hierarchy on the 4x32 hard tile: slow-axis interpolation too weak",
+    "waveform-transport predictor from neighbor time increments: no improvement",
+    "hashed nonlinear adaptive contexts: approximately 1.70 bps class rate, insufficient",
+    "simple linear probability model: approximately 1.39 bps on held-out hard region, insufficient"
+  ],
+  "next_research_target": "Derive a compact causal waveform-shape conditional model that approximates the probability MLP without expensive per-file neural training; prioritize analytic/local-template phase-amplitude state representations and preserve the proven non-neural portfolio as a monotonic fallback."
+}
