@@ -17,19 +17,24 @@ import numpy as np
 import migrated_volume_large_native_screen as large
 import migrated_volume_crosssurvey_prob_screen as b
 from general_seismic_numeric_io import matched_sz3
-DATASET='marine_waka_3d';TRAIN_FRACS=(.01,.025);TEST_FRAC=.05;NY=16;NX=32;SMALL_NY=4;WINDOW=60000;MAX_PER_TILE=180000;EPOCHS=7;HEADER_BYTES=128;HIDDEN=(192,144,96);SEED=20260819
+DATASET='marine_waka_3d';TRAIN_FRACS=(.01,.025);TEST_FRAC=.05;NY=16;NX=32;SMALL_NY=4;WINDOWS=(60000,120000,240000);MAX_PER_TILE=180000;EPOCHS=7;HEADER_BYTES=128;HIDDEN=(192,144,96);SEED=20260819
 
 def extract16x32(manifest,epsj,frac):
  r=large.r;ds=next(d for d in manifest['datasets'] if d['id']==DATASET);eps=float(epsj['datasets'][DATASET]['epsilon']);oo=[r.obj(u) for u in ds['objects']];rr=r.S3ConcatSequential(r.S3,oo,block_bytes=8*1024*1024)
  try:
   s=r.SegySequential(rr)
   if not s.binary_stride_exact or s.total_traces is None:raise RuntimeError(('fixed stride required',s.ns_policy))
-  total=int(s.total_traces);center=int(round(float(frac)*max(0,total-1)));st=max(0,min(max(0,total-WINDOW),center-WINDOW//2));n=min(WINDOW,total-st);H=large.read_header_window(rr,s,st,n);geom,_=r.choose_geometry(H);seg=[(a+st,z+st) for a,z in geom['segments']];rows=[q for q in seg if q[1]-q[0]>=NX]
-  if len(rows)<NY:raise RuntimeError(('too few 16x32 rows',frac,geom['mode'],len(rows)))
-  cand=[]
-  for i in range(len(rows)-NY+1):
-   block=rows[i:i+NY];mid=.5*(block[0][0]+block[-1][1]);cand.append((abs(mid-center),i,block))
-  _,gi,block=min(cand,key=lambda q:(q[0],q[1]));minlen=min(z-a for a,z in block);X,ids=large.read_tile(rr,s,block,minlen,NX);md={'fraction':float(frac),'geometry_mode':geom['mode'],'group_index':int(gi),'trace_first':int(ids[0]),'trace_last':int(ids[-1]),'shape':list(map(int,X.shape)),'location_selection_uses_sample_values':False};print('TALL_RAW',json.dumps(md),flush=True);return np.ascontiguousarray(X),eps,md
+  total=int(s.total_traces);center=int(round(float(frac)*max(0,total-1)));chosen=None
+  for window in WINDOWS:
+   st=max(0,min(max(0,total-window),center-window//2));n=min(window,total-st);H=large.read_header_window(rr,s,st,n);geom,_=r.choose_geometry(H);seg=[(a+st,z+st) for a,z in geom['segments']];rows=[q for q in seg if q[1]-q[0]>=NX]
+   if len(rows)<NY:
+    print('TALL_WINDOW_REJECT',frac,window,geom['mode'],len(rows),flush=True);continue
+   cand=[]
+   for i in range(len(rows)-NY+1):
+    block=rows[i:i+NY];mid=.5*(block[0][0]+block[-1][1]);cand.append((abs(mid-center),i,block))
+   _,gi,block=min(cand,key=lambda q:(q[0],q[1]));minlen=min(z-a for a,z in block);chosen=(window,geom,gi,block,minlen,len(rows));break
+  if chosen is None:raise RuntimeError(('too few 16x32 rows after deterministic header expansion',frac,WINDOWS))
+  window,geom,gi,block,minlen,row_count=chosen;X,ids=large.read_tile(rr,s,block,minlen,NX);md={'fraction':float(frac),'geometry_mode':geom['mode'],'group_index':int(gi),'trace_first':int(ids[0]),'trace_last':int(ids[-1]),'shape':list(map(int,X.shape)),'header_window':int(window),'valid_rows_in_window':int(row_count),'location_selection_uses_sample_values':False};print('TALL_RAW',json.dumps(md),flush=True);return np.ascontiguousarray(X),eps,md
  finally:rr.close()
 
 def crop4(X):
@@ -37,7 +42,6 @@ def crop4(X):
 def subsample(A,T,cap):
  if len(T)<=cap:return A,T
  ii=np.linspace(0,len(T)-1,cap,dtype=np.int64);return A[ii],T[ii]
-
 def fit_and_score(train_tiles,test_tile,eps,ny):
  import torch,torch.nn as nn,torch.nn.functional as F
  AA=[];TT=[];RR=[]
