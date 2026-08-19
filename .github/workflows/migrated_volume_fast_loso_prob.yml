@@ -6,7 +6,7 @@ on:
       - 'research/migrated_volume_fast_loso_prob.py'
       - '.github/workflows/migrated_volume_fast_loso_prob.yml'
   pull_request:
-    branches: [main]
+    branches: [main, migrated-volume-geometry-engine-v1]
     paths:
       - 'research/migrated_volume_fast_loso_prob.py'
       - '.github/workflows/migrated_volume_fast_loso_prob.yml'
@@ -60,4 +60,4 @@ jobs:
           git commit -m 'Record fast four-survey leave-one-out result' || exit 0
           git pull --rebase origin migrated-volume-geometry-engine-v1
           git push origin HEAD:migrated-volume-geometry-engine-v1
-# Trigger marker: dedicated LOSO learned-probability PR gate v3.
+# Synchronize marker: dedicated learned-LOSO trusted-base gate v4.
