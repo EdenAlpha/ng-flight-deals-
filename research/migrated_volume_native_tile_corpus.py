@@ -15,6 +15,7 @@ import migrated_volume_large_native_screen as large
 # Fixed before reading any sample values; also serves as the corpus protocol ID.
 FRACTIONS=tuple(np.linspace(.04,.96,16).tolist())
 HEADER_WINDOW=14000
+# PR gate marker: four-survey corpus extraction, 2026-08-19.
 
 
 def extract(objects):
