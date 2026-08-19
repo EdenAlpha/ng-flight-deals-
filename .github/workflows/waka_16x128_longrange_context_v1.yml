@@ -1,0 +1,41 @@
+name: Waka 16x128 long-range context v1
+on:
+  pull_request:
+    branches: [migrated-volume-geometry-engine-v1]
+    paths:
+      - 'research/waka_16x128_longrange_context_v1.py'
+      - '.github/workflows/waka_16x128_longrange_context_v1.yml'
+  workflow_dispatch:
+env:
+  BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
+jobs:
+  longrange:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install dependencies
+        run: |
+          pip install --quiet numpy boto3 pysz zstandard brotli
+          pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Materialize frozen benchmark manifest
+        run: |
+          git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_manifest.json
+      - name: Run long-range causal waveform context gate
+        env: {PYTHONPATH: research}
+        run: |
+          python research/waka_16x128_longrange_context_v1.py \
+            --manifest frozen_manifest.json \
+            --eps benchmarks/migrated_volume_global_eps_v1.json \
+            --out waka_16x128_longrange_context_latest.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: waka-16x128-longrange-context-v1
+          path: waka_16x128_longrange_context_latest.json
+          if-no-files-found: warn
+          retention-days: 30
