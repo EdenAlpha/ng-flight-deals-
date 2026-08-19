@@ -14,6 +14,7 @@ import migrated_volume_crosssurvey_prob_screen as b
 
 NY=4; NX=32
 WINDOWS=(15000, 60000, 120000)
+VERSION='v3-expanding-header-geometry'
 
 
 def _segments(n,bounds):
@@ -32,17 +33,14 @@ def _fallback_geometry(H,r):
     n=len(H);cands=[];names=list(r.FIELDS)
     for j,name in enumerate(names):
         x=np.asarray(H[:,j],dtype=np.int64);d=np.diff(x)
-        # Constant-field rows (inline/ensemble/record style headers).
         seg=_segments(n,np.flatnonzero(d!=0)+1);sc=_score_segments(seg)
         if sc>-1e90:cands.append((sc,'fallback_change:'+name,seg))
         nz=d[d!=0]
         if nz.size<4:continue
         scale=max(1.,float(np.median(np.abs(nz))))
-        # Large coordinate/index reset between rows.
         reset=np.flatnonzero(np.abs(d)>8.*scale)+1
         seg=_segments(n,reset);sc=_score_segments(seg)
         if sc>-1e90:cands.append((sc,'fallback_reset:'+name,seg))
-        # Monotone fast coordinate with an opposite-sign wrap at row boundary.
         sgn=np.sign(nz);dom=1 if np.sum(sgn>0)>=np.sum(sgn<0) else -1
         wrap=np.flatnonzero((np.sign(d)!=0)&(np.sign(d)!=dom)&(np.abs(d)>=scale))+1
         seg=_segments(n,wrap);sc=_score_segments(seg)
@@ -72,7 +70,6 @@ def extract(ds,manifest,epsj,frac):
             if g is None:continue
             long_rows=[(a+st,z+st) for a,z in g['segments'] if z-a>=NX]
             if len(long_rows)<NY:continue
-            # Four ordered valid rows whose midpoint is closest to the fixed target.
             choices=[]
             for i in range(len(long_rows)-NY+1):
                 block=long_rows[i:i+NY];mid=.5*(block[0][0]+block[-1][1]);choices.append((abs(mid-target),i,block))
@@ -82,7 +79,7 @@ def extract(ds,manifest,epsj,frac):
         window,g,long_rows,block,minlen=chosen;X,ids=r.read_tile(rr,s,block,minlen)
         return np.ascontiguousarray(X),eps,{
           'fraction':float(frac),'shape':list(map(int,X.shape)),'trace_first':int(ids[0]),'trace_last':int(ids[-1]),
-          'geometry_mode':g['mode'],'header_window':int(window),'long_rows_available':int(len(long_rows)),
+          'geometry_mode':g['mode'],'header_window':int(window),'extractor_version':VERSION,'long_rows_available':int(len(long_rows)),
           'selection':'fixed fraction; nearest four header-derived rows length >=32; amplitudes unused'}
     finally:rr.close()
 
