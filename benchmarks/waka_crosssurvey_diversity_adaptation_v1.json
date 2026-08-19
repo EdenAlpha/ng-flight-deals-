@@ -1,0 +1,49 @@
+{
+  "kind": "waka-crosssurvey-diversity-causal-adaptation-v1",
+  "status": "diagnostic_only_not_serialized_codec",
+  "date": "2026-08-19",
+  "held_out_target": "marine_waka_3d hard 4x32x1500 tile at fraction 0.05",
+  "waka_used_in_initial_training": false,
+  "initial_training_surveys": ["marine_kahu_3d", "marine_opunake_3d"],
+  "training_protocol": {
+    "regions_per_training_survey": 8,
+    "positions": "widely separated deterministic corpus positions",
+    "examples_per_region": 15000,
+    "total_training_examples": 240000,
+    "probability_model": "134 -> 192 -> 144 -> 96 -> 19 MLP",
+    "target_values_used_for_initial_training_or_normalization": false
+  },
+  "matched_waka_reference": {
+    "samples": 192000,
+    "sz3_bytes": 38839,
+    "sz3_bps": 1.6182916666666666,
+    "two_x_target_bps": 0.8091458333333333
+  },
+  "results": {
+    "few_region_kahu_opunake_to_waka": {
+      "ideal_bps": 1.1779977618616218,
+      "equivalent_gain_vs_sz3": 1.3737646361137703
+    },
+    "diverse_kahu_opunake_to_waka": {
+      "ideal_bps": 1.1449673605970836,
+      "equivalent_gain_vs_sz3": 1.4133954576860177
+    },
+    "diverse_plus_causal_target_adaptation": {
+      "adaptation": "one decoder-reproducible SGD update after each fully decoded trace; no future trace labels; no transmitted target-specific weights",
+      "best_learning_rate_screened": 0.008,
+      "ideal_bps": 1.0909503432325818,
+      "equivalent_gain_vs_sz3": 1.4833779343902365
+    }
+  },
+  "same_survey_reference": {
+    "corrected_full_tile_online_probability_ideal_bps": 0.9502750405396185,
+    "equivalent_gain_vs_sz3": 1.7029718740668087
+  },
+  "interpretation": "The learned waveform-probability mechanism transfers materially across independent migrated surveys and improves with training diversity, so it is not merely a Waka memorization effect. However, a substantial domain-transfer gap remains versus training on other Waka positions. Lightweight causal adaptation recovers part, but not all, of that gap. This supports treating Waka as a representative hard-local-waveform failure class while continuing to broaden training diversity and seek a compact universal representation.",
+  "limitations": [
+    "Tui is not yet included in this local training result; a repaired four-survey corpus extraction gate is running separately.",
+    "Rates are ideal probability-rate diagnostics with explicit boundary/tail charging, not materialized arithmetic streams.",
+    "Model bytes are not charged here; a production claim requires fixed distributed weights or serialized model accounting plus an actual entropy stream.",
+    "The causal adaptation experiment updates neural weights online and is a research diagnostic; production speed must be measured separately."
+  ]
+}
