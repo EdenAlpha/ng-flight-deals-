@@ -1,4 +1,4 @@
-name: Migrated Waka multi-position tile corpus
+name: Migrated four-survey multi-position tile corpus
 on:
   push:
     branches: [migrated-volume-geometry-engine-v1]
@@ -6,7 +6,7 @@ on:
       - 'research/migrated_volume_native_tile_corpus.py'
       - '.github/workflows/migrated_volume_waka_tile_corpus.yml'
   pull_request:
-    branches: [main]
+    branches: [migrated-volume-geometry-engine-v1]
     paths:
       - 'research/migrated_volume_native_tile_corpus.py'
       - '.github/workflows/migrated_volume_waka_tile_corpus.yml'
@@ -16,6 +16,10 @@ env:
   BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
 jobs:
   corpus:
+    strategy:
+      fail-fast: false
+      matrix:
+        dataset: [marine_waka_3d, marine_kahu_3d, marine_tui_3d, marine_opunake_3d]
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     steps:
@@ -28,19 +32,19 @@ jobs:
         run: |
           git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
           git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_manifest.json
-      - name: Extract deterministic Waka corpus
+      - name: Extract deterministic survey corpus
         env: {PYTHONPATH: research}
         run: |
           python research/migrated_volume_native_tile_corpus.py \
             --manifest frozen_manifest.json \
             --eps benchmarks/migrated_volume_global_eps_v1.json \
-            --dataset marine_waka_3d \
-            --out waka_native_corpus.npz
+            --dataset "${{ matrix.dataset }}" \
+            --out "${{ matrix.dataset }}_native_corpus.npz"
       - uses: actions/upload-artifact@v4
         with:
-          name: waka-native-multiposition-corpus
+          name: "native-corpus-${{ matrix.dataset }}"
           path: |
-            waka_native_corpus.npz
-            waka_native_corpus.npz.json
+            ${{ matrix.dataset }}_native_corpus.npz
+            ${{ matrix.dataset }}_native_corpus.npz.json
           compression-level: 0
           retention-days: 30
