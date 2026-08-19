@@ -12,7 +12,7 @@ env:
 
 jobs:
   quick-adapter-loso:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
