@@ -1,0 +1,28 @@
+{
+  "kind": "four-survey-multisource15-fast-boundary-waveform-loso-v1",
+  "date": "2026-08-19",
+  "status": "diagnostic_ideal_probability_rate_not_serialized_codec",
+  "protocol": "multisource-15tile-capacity-v1",
+  "surveys": ["marine_waka_3d","marine_kahu_3d","marine_opunake_3d","marine_tui_3d"],
+  "heldout_survey_used_in_main_or_boundary_training": false,
+  "test_positions_all_charged": true,
+  "same_rule_for_all_heldout_surveys": true,
+  "full_model_updates_only_after_scoring_decoded_chunks": true,
+  "adaptation_chunk": 1024,
+  "boundary_model": "source-trained causal boundary waveform MLP",
+  "boundary_hidden": [160,112,80],
+  "boundary_epochs": 8,
+  "source_training_tiles_per_split": 15,
+  "source_training_fractions": [0.08,0.29,0.50,0.71,0.92],
+  "interior_hidden": [320,240,160],
+  "source_training_epochs": 10,
+  "overall_byte_weighted_gain_vs_sz3": 2.042212796007272,
+  "all_test_positions_beat_sz3": true,
+  "per_survey": {
+    "marine_waka_3d": {"weighted_gain_vs_sz3": 1.7570035743024497, "position_gains": [1.7631832227344106,1.7489573110893033,1.7575321987120516]},
+    "marine_kahu_3d": {"weighted_gain_vs_sz3": 1.8389632492932557, "position_gains": [1.7884639137057927,1.9064316692811665,1.8288758611836193]},
+    "marine_opunake_3d": {"weighted_gain_vs_sz3": 2.4249874101542828, "position_gains": [2.459831008583691,2.4248274988921947,2.3851429452107573]},
+    "marine_tui_3d": {"weighted_gain_vs_sz3": 2.334624124657979, "position_gains": [2.3115225237267745,2.388559444605149,2.3067103794642856]}
+  },
+  "important": "First strict four-survey leave-one-survey-out diagnostic in this hard migrated-volume line whose aggregate byte-weighted ideal probability rate exceeds 2x matched SZ3 under one shared rule. Individual Waka and Kahu remain below 2x in this general 4x24 target geometry. This is not yet a serialized production-codec claim."
+}

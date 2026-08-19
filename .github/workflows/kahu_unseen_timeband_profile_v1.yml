@@ -1,0 +1,41 @@
+name: Kahu unseen time-band profile v1
+on:
+  pull_request:
+    branches: [migrated-volume-geometry-engine-v1]
+    paths:
+      - 'research/kahu_unseen_timeband_profile_v1.py'
+      - '.github/workflows/kahu_unseen_timeband_profile_v1.yml'
+  workflow_dispatch:
+env:
+  BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
+jobs:
+  kahu-timeband:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install dependencies
+        run: |
+          pip install --quiet numpy boto3 pysz zstandard brotli
+          pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Materialize frozen benchmark manifest
+        run: |
+          git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_manifest.json
+      - name: Run frozen Kahu engine with time-band accounting
+        env: {PYTHONPATH: research}
+        run: |
+          python research/kahu_unseen_timeband_profile_v1.py \
+            --manifest frozen_manifest.json \
+            --eps benchmarks/migrated_volume_global_eps_v1.json \
+            --out kahu_unseen_timeband_profile_latest.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kahu-unseen-timeband-profile-v1
+          path: kahu_unseen_timeband_profile_latest.json
+          if-no-files-found: warn
+          retention-days: 30
