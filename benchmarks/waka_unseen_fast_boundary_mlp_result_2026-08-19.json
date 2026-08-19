@@ -1,0 +1,33 @@
+{
+  "kind": "unseen-waka-16x32-fast-adapt-source-boundary-mlp-v1",
+  "date": "2026-08-19",
+  "status": "diagnostic_ideal_probability_rate_not_serialized_codec",
+  "training_datasets": ["marine_kahu_3d", "marine_opunake_3d", "marine_tui_3d"],
+  "source_training_fractions": [0.08, 0.29, 0.5, 0.71, 0.92],
+  "source_training_tiles": 15,
+  "source_training_shape": "4x24 native crop",
+  "source_training_epochs": 10,
+  "interior_hidden": [320, 240, 160],
+  "boundary_hidden": [160, 112, 80],
+  "boundary_epochs": 8,
+  "target_dataset": "marine_waka_3d",
+  "target_shape": "16x32 native",
+  "target_fractions": [0.15, 0.5, 0.85],
+  "waka_used_in_base_or_boundary_training": false,
+  "target_positions_all_charged": true,
+  "full_model_updates_only_after_scoring_decoded_chunks": true,
+  "replay_uses_only_already_decoded_waka_samples": true,
+  "adaptation_chunk": 1024,
+  "boundary_features_use_future_current_trace": false,
+  "residual_representation_changed": false,
+  "base_weighted_gain_vs_sz3": 1.6685915557325568,
+  "full_replay_weighted_gain_vs_sz3": 2.02973807935449,
+  "weighted_gap_to_2x_bps": -0.013001736111111111,
+  "positions_crossing_2x": 2,
+  "rows": [
+    {"fraction": 0.15, "ideal_bytes_plus_header": 88638, "ideal_bps": 0.9233125, "sz3_bytes": 171662, "gain_vs_sz3_ideal": 1.936663733387486},
+    {"fraction": 0.5, "ideal_bytes_plus_header": 78317, "ideal_bps": 0.8158020833333334, "sz3_bytes": 167948, "gain_vs_sz3_ideal": 2.1444641648684195},
+    {"fraction": 0.85, "ideal_bytes_plus_header": 84877, "ideal_bps": 0.8841354166666666, "sz3_bytes": 171543, "gain_vs_sz3_ideal": 2.021077559291681}
+  ],
+  "important": "First strict held-out Waka diagnostic in this research line whose weighted ideal probability rate exceeds 2x matched SZ3. This is not yet a serialized production-codec claim; model deployment, arithmetic-stream materialization, determinism and throughput remain required gates."
+}
