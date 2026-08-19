@@ -1,0 +1,24 @@
+{
+  "kind": "waka-paired-learned-probability-scale-16x32-vs-16x128-v1-summary",
+  "status": "diagnostic_ideal_probability_rate_not_serialized_codec",
+  "source_run": 32273953927,
+  "training_fractions": [0.01, 0.08],
+  "test_fraction": 0.05,
+  "all_regions_nonoverlapping": true,
+  "same_native_16x128_regions_for_both_shapes": true,
+  "shape16x32": {
+    "ideal_bps": 0.9457604166666667,
+    "sz3_bps": 1.7594583333333333,
+    "gain_vs_sz3_ideal": 1.8603636844250107,
+    "gap_to_2x_bps": 0.06603124999999999
+  },
+  "shape16x128": {
+    "ideal_bps": 0.914296875,
+    "sz3_bps": 1.443859375,
+    "gain_vs_sz3_ideal": 1.5792019140391353,
+    "gap_to_2x_bps": 0.19236718750000004
+  },
+  "bps_reduction_ours_128_vs_32": 0.03146354166666665,
+  "interpretation": "Our absolute rate improves slightly with horizontal width, but SZ3 improves much more. The remaining difficult-case failure at wide geometry is therefore long-range horizontal structure that the current probability model does not exploit. Do not assume vertical and horizontal scale gains compound.",
+  "note": "Ideal probability rate only; learned weights are not charged and arithmetic stream is not materialized."
+}
