@@ -4,6 +4,7 @@ on:
     branches: [migrated-volume-geometry-engine-v1]
     paths:
       - 'research/migrated_volume_quick_adapter_loso_v1.py'
+      - 'research/migrated_volume_quick_adapter_loso_v2.py'
       - '.github/workflows/migrated_quick_adapter_pr_gate_v1.yml'
   workflow_dispatch:
 
@@ -33,7 +34,7 @@ jobs:
         env:
           PYTHONPATH: research
         run: |
-          python research/migrated_volume_quick_adapter_loso_v1.py \
+          python research/migrated_volume_quick_adapter_loso_v2.py \
             --manifest frozen_manifest.json \
             --eps benchmarks/migrated_volume_global_eps_v1.json \
             --out quick_adapter_loso_latest.json
