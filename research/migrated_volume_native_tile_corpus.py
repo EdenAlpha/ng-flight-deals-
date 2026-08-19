@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract deterministic native-geometry tiles across a migrated SEG-Y object.
+"""Extract deterministic native-geometry tiles across migrated SEG-Y objects.
 
 Locations come only from fixed fractional positions and header-derived geometry;
 sample values never choose locations. The NPZ contains raw float32 tiles and
@@ -15,10 +15,9 @@ import migrated_volume_large_native_screen as large
 # Fixed before reading any sample values; also serves as the corpus protocol ID.
 FRACTIONS=tuple(np.linspace(.04,.96,16).tolist())
 HEADER_WINDOW=14000
-# PR gate marker: four-survey corpus extraction, 2026-08-19.
 
 
-def extract(objects):
+def extract(objects, stream_index=0):
     rr=r.S3ConcatSequential(r.S3,objects,block_bytes=8*1024*1024)
     try:
         s=r.SegySequential(rr)
@@ -38,12 +37,12 @@ def extract(objects):
             key=(int(ids[0]),int(ids[-1]))
             if key in seen: continue
             seen.add(key);tiles.append(np.asarray(X,np.float32))
-            meta.append({'fraction':float(frac),'window_start':int(st),'geometry_mode':geom['mode'],'group_index':int(gi),'trace_first':key[0],'trace_last':key[1],'shape':list(map(int,X.shape))})
-            print('CORPUS_TILE',wi,frac,key,X.shape,flush=True)
+            meta.append({'stream_index':int(stream_index),'fraction':float(frac),'window_start':int(st),'geometry_mode':geom['mode'],'group_index':int(gi),'trace_first':key[0],'trace_last':key[1],'shape':list(map(int,X.shape))})
+            print('CORPUS_TILE',stream_index,wi,frac,key,X.shape,flush=True)
         if len(tiles)<8: raise RuntimeError(('too few distinct tiles',len(tiles)))
         shapes={tuple(q.shape) for q in tiles}
         if len(shapes)!=1: raise RuntimeError(('nonuniform tile shapes',sorted(shapes)))
-        return np.stack(tiles),meta,total
+        return tiles,meta,total
     finally:
         rr.close()
 
@@ -51,9 +50,17 @@ def extract(objects):
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--manifest',required=True);ap.add_argument('--eps',required=True);ap.add_argument('--dataset',required=True);ap.add_argument('--out',required=True);a=ap.parse_args()
     m=json.load(open(a.manifest));e=json.load(open(a.eps));ds=next(d for d in m['datasets'] if d['id']==a.dataset);eps=float(e['datasets'][a.dataset]['epsilon']);oo=[r.obj(u) for u in ds['objects']]
-    tiles,meta,total=extract(oo)
-    np.savez_compressed(a.out,tiles=tiles,epsilon=np.asarray([eps],np.float64),metadata_json=np.asarray([json.dumps(meta)]),total_traces=np.asarray([total],np.int64),fractions=np.asarray(FRACTIONS,np.float64))
-    Path(a.out+'.json').write_text(json.dumps({'dataset_id':a.dataset,'epsilon':eps,'tiles':len(tiles),'tile_shape':list(map(int,tiles.shape[1:])),'total_traces':total,'positions':meta,'location_selection_uses_sample_values':False},indent=2))
+    # Only objects explicitly declared as bytewise assembly are concatenated.
+    # Otherwise each object is an independent SEG-Y stream with its own headers.
+    streams=[oo] if ds.get('assembly') else [[o] for o in oo]
+    tiles=[];meta=[];totals=[]
+    for si,stream in enumerate(streams):
+        tt,mm,total=extract(stream,si);tiles.extend(tt);meta.extend(mm);totals.append(int(total))
+    shapes={tuple(q.shape) for q in tiles}
+    if len(shapes)!=1: raise RuntimeError(('nonuniform corpus tile shapes across streams',sorted(shapes)))
+    tiles=np.stack(tiles)
+    np.savez_compressed(a.out,tiles=tiles,epsilon=np.asarray([eps],np.float64),metadata_json=np.asarray([json.dumps(meta)]),total_traces=np.asarray([sum(totals)],np.int64),fractions=np.asarray(FRACTIONS,np.float64))
+    Path(a.out+'.json').write_text(json.dumps({'dataset_id':a.dataset,'epsilon':eps,'tiles':len(tiles),'tile_shape':list(map(int,tiles.shape[1:])),'stream_trace_counts':totals,'total_traces':sum(totals),'positions':meta,'location_selection_uses_sample_values':False},indent=2))
     print('CORPUS_DONE',a.dataset,len(tiles),tiles.shape,flush=True)
 
 if __name__=='__main__': main()
