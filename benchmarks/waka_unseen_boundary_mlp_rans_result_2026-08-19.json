@@ -1,0 +1,22 @@
+{
+  "kind": "unseen-waka-finite-cdf-real-rans-v1",
+  "date": "2026-08-19",
+  "status": "actual_entropy_stream_with_precomputed_cdf_decoder_check_not_full_probability_regenerating_decoder",
+  "training_datasets": ["marine_kahu_3d","marine_opunake_3d","marine_tui_3d"],
+  "source_training_tiles": 15,
+  "waka_used_in_probability_training": false,
+  "target_positions_all_charged": true,
+  "adaptation_chunk": 1024,
+  "cdf_precision_bits": 15,
+  "tails_serialized_inside_rans_as_equiprobable_gamma_bits": true,
+  "residual_stream_roundtrip_exact": true,
+  "reference_ideal_probability_gain": 2.02973807935449,
+  "actual_rans_weighted_gain_vs_sz3": 2.0283285781744156,
+  "actual_weighted_gap_to_2x_bps": -0.012394097222222223,
+  "rows": [
+    {"fraction":0.15,"actual_total_bytes":88695,"actual_bps":0.92390625,"sz3_bytes":171662,"gain_vs_sz3_actual_rans":1.935419132983821,"rans_overhead_bits_vs_finite_ideal":27.293719517067075},
+    {"fraction":0.50,"actual_total_bytes":78379,"actual_bps":0.8164479166666667,"sz3_bytes":167948,"gain_vs_sz3_actual_rans":2.142767833220633,"rans_overhead_bits_vs_finite_ideal":29.589208245277405},
+    {"fraction":0.85,"actual_total_bytes":84933,"actual_bps":0.88471875,"sz3_bytes":171543,"gain_vs_sz3_actual_rans":2.019744975451238,"rans_overhead_bits_vs_finite_ideal":25.460686641163193}
+  ],
+  "important": "First actual finite-CDF entropy-stream result in this line to remain above 2x matched SZ3, with exact residual-symbol rANS roundtrip. This gate reuses encoder-computed CDFs during decoding, so independent decoder-side probability regeneration and reconstructed-sample verification remain required before production-codec claim."
+}

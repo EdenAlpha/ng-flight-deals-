@@ -1,0 +1,22 @@
+{
+  "kind": "boundary-waveform-local-crosssurvey-supporting-diagnostic-v1",
+  "date": "2026-08-19",
+  "status": "supporting_local_ideal_probability_diagnostic_not_official_codec_gate",
+  "mechanism": "Small boundary probability MLP using current-trace causal history and fully decoded neighboring waveforms; residual representation unchanged.",
+  "training_rule": "No target survey participates in boundary-model fitting or normalization for the reported held-out check.",
+  "waka_source_training_surveys": ["marine_kahu_3d", "marine_opunake_3d", "marine_tui_3d"],
+  "waka_checks": [
+    {"shape": [16,32,1500], "saving_bps_vs_source_topology_tables": 0.0229089780},
+    {"shape": [4,32,1500], "saving_bps_vs_source_topology_tables": 0.0396738769},
+    {"shape": [4,32,1500], "saving_bps_vs_source_topology_tables": 0.0374086839}
+  ],
+  "waka_16x32_three_seed_savings_bps": [0.0230477821,0.0238745478,0.0229089780],
+  "three_seed_min_saving_bps": 0.0229089780,
+  "current_official_fast_fixed_boundary_gap_to_2x_bps_reference": 0.0167795139,
+  "loso_checks_without_waka": [
+    {"heldout": "marine_kahu_3d", "training": ["marine_opunake_3d","marine_tui_3d"], "mean_saving_bps": 0.0494348773, "tested_regions": 3, "all_tested_regions_positive": true},
+    {"heldout": "marine_opunake_3d", "training": ["marine_kahu_3d","marine_tui_3d"], "mean_saving_bps": 0.0517997734, "tested_regions": 3, "all_tested_regions_positive": true},
+    {"heldout": "marine_tui_3d", "training": ["marine_kahu_3d","marine_opunake_3d"], "mean_saving_bps": 0.0395191421, "tested_regions": 3, "all_tested_regions_positive": true}
+  ],
+  "important": "These numbers motivated PR #711 and PR #712 but do not replace those official held-out gates. No 2x claim should be made from this supporting diagnostic alone."
+}
