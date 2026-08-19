@@ -1,0 +1,20 @@
+{
+  "kind": "four-survey-multisource-causal-full-replay-loso-v2-summary",
+  "status": "diagnostic_ideal_probability_rate_not_serialized_codec",
+  "source_run": 32272001215,
+  "source_tiles_per_loso_split": 9,
+  "source_training_epochs": 8,
+  "max_train_examples": 720000,
+  "held_out_survey_used_in_base_training": false,
+  "test_positions_all_charged": true,
+  "base_overall_byte_weighted_gain_vs_sz3": 1.717628598717424,
+  "full_replay_overall_byte_weighted_gain_vs_sz3": 1.8284263048623155,
+  "all_full_replay_positions_beat_sz3": true,
+  "targets": {
+    "marine_waka_3d": {"base_gain": 1.4197426320485098, "full_replay_gain": 1.54194449006405},
+    "marine_kahu_3d": {"base_gain": 1.6058213053225523, "full_replay_gain": 1.6860263683368377},
+    "marine_opunake_3d": {"base_gain": 1.983597655738012, "full_replay_gain": 2.1388653341409247},
+    "marine_tui_3d": {"base_gain": 2.003641791044776, "full_replay_gain": 2.0955978769903214}
+  },
+  "note": "Same nine source tiles and model family as the frozen 3-epoch result; only source training increased to 8 epochs. Every held-out chunk is charged before adaptation; replay uses only already-decoded target data. Ideal probability rate only."
+}
