@@ -1,0 +1,20 @@
+{
+  "kind": "four-survey-multisource15-causal-full-replay-loso-v2-summary",
+  "status": "diagnostic_ideal_probability_rate_not_serialized_codec",
+  "source_run": 32273532119,
+  "source_tiles_per_loso_split": 15,
+  "source_training_epochs": 10,
+  "max_train_examples": 1200000,
+  "held_out_survey_used_in_base_training": false,
+  "test_positions_all_charged": true,
+  "base_overall_byte_weighted_gain_vs_sz3": 1.74486742547779,
+  "full_replay_overall_byte_weighted_gain_vs_sz3": 1.8624796567539577,
+  "all_full_replay_positions_beat_sz3": true,
+  "targets": {
+    "marine_waka_3d": {"base_gain": 1.4341204863444736, "full_replay_gain": 1.559877055989367},
+    "marine_kahu_3d": {"base_gain": 1.6229506109979634, "full_replay_gain": 1.7158641294108148},
+    "marine_opunake_3d": {"base_gain": 2.0425326803686423, "full_replay_gain": 2.185505332865719},
+    "marine_tui_3d": {"base_gain": 2.038034897372576, "full_replay_gain": 2.149646646881739}
+  },
+  "note": "Same 15 source tiles/model/replay protocol as the frozen 6-epoch run, now trained for 10 epochs. All target surveys remain held out; every target chunk is charged before adaptation. The result nearly matches the separate wide-capacity nine-source result, indicating the small 4x24 regime is beginning to saturate. Ideal probability rate only."
+}
