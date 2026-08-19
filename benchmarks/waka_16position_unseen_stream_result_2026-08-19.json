@@ -1,0 +1,20 @@
+{
+  "kind": "unseen-waka-16position-causal-adaptation-stream-v1-summary",
+  "status": "diagnostic_ideal_probability_rate_not_serialized_codec",
+  "source_run": 32273220413,
+  "training_datasets": ["marine_kahu_3d", "marine_opunake_3d", "marine_tui_3d"],
+  "source_training_tiles": 9,
+  "source_training_epochs": 8,
+  "waka_used_in_base_training": false,
+  "target_positions_all_charged": true,
+  "full_model_updates_only_after_scoring_decoded_chunks": true,
+  "replay_uses_only_already_decoded_waka_samples": true,
+  "target_positions": 16,
+  "whole_stream_byte_weighted_gain_vs_sz3": 1.6164045180346418,
+  "first4_gain": 1.5120105493252234,
+  "last4_gain": 1.6713877879098644,
+  "median_position_gain": 1.641461200153127,
+  "min_position_gain": 1.4569536423841059,
+  "max_position_gain": 1.750302164597297,
+  "note": "Waka is completely unseen during base training. All 16 Waka positions are charged in order. Target adaptation and replay use only Waka samples after they have been decoded. The improvement from first4 to last4 demonstrates cold-start amortization over a long unseen survey. Ideal probability rate only."
+}
