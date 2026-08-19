@@ -1,0 +1,58 @@
+name: Parihaka epsilon preflight v1
+on:
+  pull_request:
+    branches: [migrated-volume-geometry-engine-v1]
+    paths:
+      - 'research/parihaka_epsilon_preflight_v1.py'
+      - '.github/workflows/parihaka_epsilon_preflight_v1.yml'
+  workflow_dispatch:
+env:
+  BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
+jobs:
+  parihaka-epsilon:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install frozen benchmark dependencies
+        run: pip install --quiet numpy zstandard brotli pybind11 boto3 h5py 's3fs<2027' segyio pysz obspy
+      - name: Compile shared benchmark backend
+        run: |
+          EXT=$(python3-config --extension-suffix)
+          c++ -O3 -march=x86-64 -shared -std=c++17 -fPIC $(python -m pybind11 --includes) research/general_seismic_fast_zsm.cpp -o research/general_seismic_fast_zsm${EXT}
+      - name: Fetch frozen benchmark definition and preflight
+        run: |
+          git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_benchmark_manifest.json
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1_execution_amendments.json" > frozen_execution_amendments.json
+          git show "$BENCHMARK_DEFINITION_SHA:research/general_seismic_v1_preflight.py" > frozen_preflight.py
+      - name: Materialize exact effective manifest
+        run: |
+          python - <<'PY'
+          import json,os
+          m=json.load(open('frozen_benchmark_manifest.json'));a=json.load(open('frozen_execution_amendments.json'))
+          for d in m['datasets']:
+              if d['id'] in a.get('dataset_overrides',{}):d.update(a['dataset_overrides'][d['id']])
+          m['execution_amendment']=a;m['benchmark_definition_sha']=os.environ['BENCHMARK_DEFINITION_SHA']
+          json.dump(m,open('general_seismic_v1_effective_manifest.json','w'),indent=2)
+          PY
+      - name: Resolve frozen objects before statistics
+        run: python frozen_preflight.py general_seismic_v1_effective_manifest.json
+      - name: Compute Parihaka epsilon only
+        env: {PYTHONPATH: research}
+        run: |
+          python research/parihaka_epsilon_preflight_v1.py \
+            --manifest general_seismic_v1_effective_manifest.json \
+            --preflight general_seismic_v1_preflight.json \
+            --config benchmarks/general_seismic_codec_portfolio_v1.json \
+            --out parihaka_epsilon_preflight_latest.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parihaka-epsilon-preflight-v1
+          path: parihaka_epsilon_preflight_latest.json
+          if-no-files-found: warn
+          retention-days: 90
