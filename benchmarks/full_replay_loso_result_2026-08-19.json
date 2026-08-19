@@ -1,0 +1,16 @@
+{
+  "kind": "four-survey-causal-full-replay-loso-v1-summary",
+  "status": "diagnostic_ideal_probability_rate_not_serialized_codec",
+  "source_run": 32268791761,
+  "held_out_survey_used_in_base_training": false,
+  "test_positions_all_charged": true,
+  "full_replay_overall_byte_weighted_gain_vs_sz3": 1.6314924792827683,
+  "all_full_replay_positions_beat_sz3": true,
+  "targets": {
+    "marine_waka_3d": {"base_gain": 1.2117680463597527, "full_replay_gain": 1.3615191635609565},
+    "marine_kahu_3d": {"base_gain": 1.425908114878769, "full_replay_gain": 1.5190387685562465},
+    "marine_opunake_3d": {"base_gain": 1.8114014089323576, "full_replay_gain": 1.9293727689954105},
+    "marine_tui_3d": {"base_gain": 1.7245555136857251, "full_replay_gain": 1.846005757136833}
+  },
+  "note": "All base models are trained only on the other three surveys. Each held-out chunk is charged before full-model adaptation from that decoded chunk. Replay uses already-decoded samples only. Ideal rate diagnostic; not yet a serialized codec."
+}
