@@ -1,0 +1,71 @@
+{
+  "kind": "waka-hard-representation-sweep-2026-08-19",
+  "status": "diagnostic_not_serialized_codec",
+  "dataset": "marine_waka_3d",
+  "tile_shape": [4, 32, 1500],
+  "samples": 192000,
+  "epsilon": 117.52927445809354,
+  "matched_sz3_bytes": 38839,
+  "matched_sz3_bps": 1.6182916666666666,
+  "two_x_target_bps": 0.8091458333333333,
+  "reference_clean_full_tile_learned": {
+    "ideal_bps": 0.95027504054,
+    "equivalent_gain_vs_sz3": 1.702971874,
+    "note": "clean full-tile probability-rate diagnostic; not serialized codec"
+  },
+  "reference_topology_combination_estimate": {
+    "estimated_bps": 0.9199613985,
+    "equivalent_gain_vs_sz3": 1.759086489,
+    "note": "combination estimate only; not integrated run"
+  },
+  "joint_row_crf": {
+    "stationary_pairwise": {
+      "optimal_lambda": 0.0,
+      "joint_bps_in_context_restricted_row_model": 1.0601886526,
+      "conclusion": "no benefit from stationary transition potential"
+    },
+    "learned_global_pairwise": {
+      "approx_category_improvement_bps": 0.009,
+      "conclusion": "small real gain, far below measured right-neighbor conditional information"
+    },
+    "contextual_pairwise": [
+      {"regimes": 4, "improvement_bps": 0.00778299284, "total_bps_in_context_restricted_model": 1.0720252073},
+      {"regimes": 8, "improvement_bps": 0.00689755464, "total_bps_in_context_restricted_model": 1.0729106455}
+    ],
+    "conclusion": "kill current CRF family; actual right-neighbor information is not recoverable by these marginal models"
+  },
+  "invertible_spatial_lifting": {
+    "causal_residual_raw_entropy_bps": 1.8500398577,
+    "integer_haar_weighted_marginal_bps": 1.9710716316,
+    "integer_5_3_weighted_marginal_bps": 1.9720093663,
+    "conclusion": "both transforms raise raw residual entropy"
+  },
+  "rate_optimized_trellis_quantization": {
+    "lattice_step_over_epsilon": 1.5,
+    "nearest_static_bps": 2.1163573027,
+    "trellis_static_bps": 1.9802142176,
+    "static_path_improvement_bps": 0.1361430851,
+    "exact_max_error": 117.5270308091,
+    "learned_full_tile_bps": 1.0459789175,
+    "learned_equivalent_gain_vs_sz3": 1.5471551478,
+    "conclusion": "path freedom is real but finer-lattice symbol complexity more than cancels it under learned coding"
+  },
+  "full_dyadic_x_hierarchy": {
+    "anchor_x_count": 2,
+    "level_x_counts": [2, 1, 2, 4, 8, 15],
+    "raw_weighted_entropy_bps": 1.7476604115,
+    "learned_total_ideal_bps": 0.9932943472,
+    "equivalent_gain_vs_sz3": 1.6292166277,
+    "boundary_bps": 0.01015148163,
+    "per_level_learned_bps": [1.7507959738, 1.7981075707, 1.6447489704, 1.3595752607, 1.0170889561, 0.6495375584],
+    "finest_level_fraction": 0.46875,
+    "finest_level_zero_fraction_raw": 0.7595,
+    "conclusion": "cheap bilateral refinement is genuine, but cost migrates into intermediate/coarse levels; current hierarchy does not beat direct model"
+  },
+  "two_dimensional_vertical_extension": {
+    "training_best_horizontal_blend_beta": 1.0,
+    "interpretation": "beta=1 means ignore vertical interpolation",
+    "conclusion": "simple bilateral vertical interpolation worsens residual entropy"
+  },
+  "scientific_takeaway": "The remaining hard-Waka gap is not being closed by probability marginalization, generic invertible lifting, finer-lattice trellis selection, or simple deeper spatial interpolation. The strongest reusable fact remains that well-bracketed refinement traces are very cheap (~0.65 bps in the full hierarchy and ~0.606 bps in earlier strict stride-2 tests), while coarse/intermediate state remains the dominant unresolved cost."
+}
