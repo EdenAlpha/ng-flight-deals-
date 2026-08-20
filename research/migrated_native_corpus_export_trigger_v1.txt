@@ -1,0 +1,1 @@
+Run deterministic native corpus export for Waka, Kahu, Opunake and Tui.
