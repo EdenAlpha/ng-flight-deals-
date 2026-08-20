@@ -1,0 +1,52 @@
+name: Imperial roughness context transfer v1
+
+on:
+  pull_request:
+    branches: [imperial-wave-stencil-current-address]
+    paths:
+      - 'research/imperial_roughness_context_transfer_v1.py'
+      - '.github/workflows/imperial_roughness_context_transfer_v1.yml'
+  workflow_dispatch:
+
+permissions: {contents: read}
+
+jobs:
+  transfer:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install dependencies
+        run: pip install --quiet numpy numba h5py zstandard pysz boto3
+      - name: Download and verify canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Run strict residual-roughness transfer gate
+        env: {PYTHONPATH: research}
+        run: python research/imperial_roughness_context_transfer_v1.py imperial.h5
+      - name: Surface result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_roughness_context_transfer_v1.json'));b=d['baseline'];r=d['roughness']
+          level='notice' if r['total_bytes']<b['total_bytes'] else 'warning'
+          print(f"::{level} title=Imperial roughness transfer::baseline={b['total_bytes']} B rough={r['total_bytes']} B delta={r['delta_bytes_vs_baseline']} B selected={r['roughness_family_selected_on_any_plane']} SZ3={d['sz3']['bytes']} B")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-roughness-context-transfer-v1
+          path: imperial_roughness_context_transfer_v1.json
+          if-no-files-found: ignore
+          retention-days: 30
