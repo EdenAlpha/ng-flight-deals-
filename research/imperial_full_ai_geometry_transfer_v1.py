@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Mechanism-preserving transfer of the migrated-volume learned probability engine to Imperial DAS.
 
-This is deliberately NOT an Imperial-tuned model search.  The learned base model,
+This is deliberately NOT an Imperial-tuned model search. The learned base model,
 normalization and boundary model are fitted only on Waka/Kahu/Opunake/Tui using
 the same 320/240/160, 19-class, causal-scale feature stack that produced the
-migrated-volume hard-case gains.  Imperial is never used to choose weights,
+migrated-volume hard-case gains. Imperial is never used to choose weights,
 normalization, feature thresholds, network size, learning rate or adaptation
 cadence.
 
@@ -12,23 +12,23 @@ Two predeclared geometry interfaces are scored on the canonical stubborn
 32x1024 Imperial tile:
 
   literal_single_row
-      Treat DAS as a one-row native seismic volume.  This preserves the exact
+      Treat DAS as a one-row native seismic volume. This preserves the exact
       migrated-volume predictor, quantizer, feature semantics and source-trained
-      boundary MLP.  It is the strictest "same implementation" transfer control.
+      boundary MLP. It is the strictest "same implementation" transfer control.
 
   imperial_ar1_carrier
       Keep the established Imperial shared AR1/prefix64 deterministic carrier
       and step267 correction field, but expose that field to the SAME semantic
-      learned probability mechanism.  DAS has one spatial axis, so the source
+      learned probability mechanism. DAS has one spatial axis, so the source
       feature slots for the absent second spatial axis are explicitly zero/missing
-      rather than filled with invented target-specific neighbors.  The AR1 model
+      rather than filled with invented target-specific neighbors. The AR1 model
       is the ordinary charged per-file carrier; it does not train the AI.
 
 For each interface we report pristine zero-shot probability rate and the same
 1024-symbol charge-before-update full-model causal adaptation used by the
-successful migrated-volume engine.  Every target chunk is scored before its
-symbols update the network.  No result here is a serialized-rANS claim: this is
-an ideal probability-rate transfer gate.  A positive gate must later be
+successful migrated-volume engine. Every target chunk is scored before its
+symbols update the network. No result here is a serialized-rANS claim: this is
+an ideal probability-rate transfer gate. A positive gate must later be
 materialized with independent decoder-side probability regeneration.
 """
 from __future__ import annotations
@@ -49,14 +49,13 @@ import migrated_volume_quick_adapter_loso_v3 as geometry  # noqa: F401; installs
 from general_seismic_numeric_io import matched_sz3
 
 # Frozen Imperial benchmark identity / gate.
-IMPERIAL_MD5 = '8cb7ea8466ab48880f876fc43cb5ce75'
 T0 = 14488
 C0 = 512
 C = 32
 T = 1024
 EPS = 133.69778037805762
 IMPERIAL_CURRENT_BASELINE_BYTES = 22527  # exact PR #639 t1/train64 current-address stream
-IMPERIAL_CURRENT_SZ3_BYTES = 26751       # same canonical 32x1024 gate
+IMPERIAL_CURRENT_SZ3_BYTES = 26751       # exact canonical comparator with best CT/T orientation
 AR_STEP = 267.0
 AR_TRAIN = 64
 AR_MODEL_BYTES = 10
@@ -134,9 +133,9 @@ def _rms(z):
 def _carrier_features(R, K):
     """Map a 1-D DAS carrier into the exact semantic feature layout of the source AI.
 
-    The existing migrated model has two spatial axes.  DAS has only one.  We
+    The existing migrated model has two spatial axes. DAS has only one. We
     therefore preserve l/l2 (nearest and second-nearest already-decoded channel)
-    and set u/ul to the explicit missing-axis zero state.  This is equivalent to
+    and set u/ul to the explicit missing-axis zero state. This is equivalent to
     evaluating the source feature grammar on y=0 everywhere, not inventing a
     target-specific pseudo-axis.
     """
@@ -297,9 +296,20 @@ def _row(name, A, TT, I, R, net, mu, sd, static, sz3_bytes, boundary_mode, extra
     return row
 
 
+def _canonical_sz3(X):
+    """Reproduce the Imperial comparator: float32 and best of CT/T orientation."""
+    best = None
+    for name, A in (('CT', np.ascontiguousarray(X.astype(np.float32))), ('T', np.ascontiguousarray(X.T.astype(np.float32)))):
+        b, me = matched_sz3(A, EPS)
+        row = (int(b), name, float(me))
+        if best is None or row[0] < best[0]:
+            best = row
+    return best
+
+
 def main(a):
-    # Install the exact winning causal-scale+y/x/t source feature grammar, then
-    # train the source-only boundary MLP around the same source residuals.
+    # Install the winning causal-scale+y/x/t source feature grammar, then train
+    # the source-only boundary MLP around the same source residuals.
     q.b.build = scale.build_with_scale_yxt
     bw.install(multi)
 
@@ -324,9 +334,9 @@ def main(a):
         Ximp = np.asarray(f['Acoustic'][T0:T0+T, C0:C0+C], np.float64).T
     if Ximp.shape != (C, T):
         raise RuntimeError(('Imperial shape', Ximp.shape))
-    sz3_bytes, sz3_me = matched_sz3(Ximp, EPS)
+    sz3_bytes, sz3_orientation, sz3_me = _canonical_sz3(Ximp)
     if int(sz3_bytes) != IMPERIAL_CURRENT_SZ3_BYTES:
-        raise RuntimeError(('SZ3 benchmark drift', sz3_bytes, IMPERIAL_CURRENT_SZ3_BYTES))
+        raise RuntimeError(('SZ3 benchmark drift', sz3_bytes, IMPERIAL_CURRENT_SZ3_BYTES, sz3_orientation))
 
     rows = []
 
@@ -366,6 +376,8 @@ def main(a):
         'kind': 'imperial-full-ai-geometry-transfer-v1',
         'status': 'ideal_probability_rate_transfer_gate_not_serialized_codec',
         'imperial_used_in_base_ai_training_or_normalization': False,
+        'source_ai_weights_charged_per_file_bytes': 0,
+        'installed_universal_model_assumption': True,
         'source_surveys': list(q.SURVEYS),
         'source_training_fractions': list(map(float, SOURCE_FRACS)),
         'source_training_tiles': len(source),
@@ -383,6 +395,7 @@ def main(a):
             'c0': C0,
             'epsilon': EPS,
             'matched_sz3_bytes': int(sz3_bytes),
+            'matched_sz3_orientation': sz3_orientation,
             'matched_sz3_maxerr': float(sz3_me),
             'current_exact_baseline_bytes': IMPERIAL_CURRENT_BASELINE_BYTES,
         },
