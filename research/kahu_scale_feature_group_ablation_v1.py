@@ -18,6 +18,10 @@ introduced. The purpose is causal attribution: identify the minimal explicit
 statistic that explains the neural probe's gain so the discovery can be
 compiled into a simpler codec context law rather than left as an opaque feature
 bundle. Ideal probability-rate diagnostic only.
+
+The all12 matrix leg additionally runs the explicit non-neural scale-table gate
+after reproducing the neural control. This keeps the continuation inside the
+same already-approved workflow while preserving a clean attribution result.
 """
 from __future__ import annotations
 import argparse, json
@@ -44,86 +48,43 @@ GROUP = 'all12'
 _base_build = yxt._orig_build
 
 
-def _meanabs(z):
-    return np.mean(np.abs(z), axis=1)
-
-
-def _rms(z):
-    return np.sqrt(np.mean(np.asarray(z, np.float64) ** 2, axis=1))
-
-
-def _lg(z):
-    return np.log1p(np.asarray(z, np.float64)).astype(np.float32)
+def _meanabs(z):return np.mean(np.abs(z), axis=1)
+def _rms(z):return np.sqrt(np.mean(np.asarray(z, np.float64) ** 2, axis=1))
+def _lg(z):return np.log1p(np.asarray(z, np.float64)).astype(np.float32)
 
 
 def build_group_yxt(X, eps):
-    A, T, I, R = _base_build(X, eps)
-    A = np.asarray(A, np.float32)
-    w = 2 * q.b.RAD + 1
+    A, T, I, R = _base_build(X, eps);A = np.asarray(A, np.float32);w = 2 * q.b.RAD + 1
     expected = 10 + 8 * w + q.b.HIST + 8
-    if A.shape[1] != expected:
-        raise RuntimeError(('base feature layout drift', A.shape[1], expected))
-
-    p = 0
-    cur = A[:, p:p + 10]; p += 10
-    waves = [A[:, p + i*w:p + (i+1)*w] for i in range(4)]; p += 4*w
-    res = [A[:, p + i*w:p + (i+1)*w] for i in range(4)]; p += 4*w
-    crh = A[:, p:p + q.b.HIST]; p += q.b.HIST
-
-    extra = [_lg(_meanabs(cur)), _lg(_rms(cur))]
-    extra += [_lg(_rms(z)) for z in waves]
-    extra += [_lg(_meanabs(z)) for z in res]
-    extra += [_lg(_meanabs(crh)), _lg(_rms(crh))]
-    E = np.stack(extra, axis=1).astype(np.float32)
-    ids = GROUPS[GROUP]
-    E = E[:, ids]
-
-    ny, nx, nt = np.asarray(X).shape
-    C = np.stack([
-        I[:, 0].astype(np.float32) / float(max(1, ny - 1)),
-        I[:, 1].astype(np.float32) / float(max(1, nx - 1)),
-        I[:, 2].astype(np.float32) / float(max(1, nt - 1)),
-    ], axis=1)
-    return np.concatenate([A, E, C], axis=1), T, I, R
+    if A.shape[1] != expected:raise RuntimeError(('base feature layout drift', A.shape[1], expected))
+    p=0;cur=A[:,p:p+10];p+=10;waves=[A[:,p+i*w:p+(i+1)*w] for i in range(4)];p+=4*w;res=[A[:,p+i*w:p+(i+1)*w] for i in range(4)];p+=4*w;crh=A[:,p:p+q.b.HIST]
+    extra=[_lg(_meanabs(cur)),_lg(_rms(cur))];extra += [_lg(_rms(z)) for z in waves];extra += [_lg(_meanabs(z)) for z in res];extra += [_lg(_meanabs(crh)),_lg(_rms(crh))]
+    E=np.stack(extra,axis=1).astype(np.float32)[:,GROUPS[GROUP]];ny,nx,nt=np.asarray(X).shape
+    C=np.stack([I[:,0].astype(np.float32)/float(max(1,ny-1)),I[:,1].astype(np.float32)/float(max(1,nx-1)),I[:,2].astype(np.float32)/float(max(1,nt-1))],axis=1)
+    return np.concatenate([A,E,C],axis=1),T,I,R
 
 
 def main(a):
     global GROUP
-    if a.group not in GROUPS:
-        raise RuntimeError(('unknown group', a.group, sorted(GROUPS)))
-    GROUP = a.group
-    q.b.build = build_group_yxt
-    fr.CHUNK = 512
-    k.main(a)
+    if a.group not in GROUPS:raise RuntimeError(('unknown group',a.group,sorted(GROUPS)))
+    GROUP=a.group;q.b.build=build_group_yxt;fr.CHUNK=512;k.main(a)
+    out=json.load(open(a.out));out['kind']='unseen-kahu-causal-scale-group-ablation-v1';out['scale_group']=GROUP;out['scale_feature_indices']=list(GROUPS[GROUP]);out['scale_feature_count']=len(GROUPS[GROUP]);out['retains_yxt_coordinates']=True;out['extra_transmitted_bits']=0;out['features_use_future_current_trace_samples']=False;out['heldout_kahu_used_to_choose_group_or_feature_form']=False;out['reference_512_gain_vs_sz3']=REFERENCE_512;out['reference_time_gain_vs_sz3']=REFERENCE_TIME;out['reference_yxt_gain_vs_sz3']=REFERENCE_YXT;out['reference_all12_gain_vs_sz3']=REFERENCE_ALL12;out['gain_delta_vs_yxt']=float(out['full_replay_weighted_gain_vs_sz3']-REFERENCE_YXT);out['gain_delta_vs_all12']=float(out['full_replay_weighted_gain_vs_sz3']-REFERENCE_ALL12);out['note']='Controlled attribution of PR #735. Predictor, quantizer, source surveys, boundary waveform model, 320/240/160 network, 10 source epochs, replay, 512-symbol post-charge adaptation and y/x/t coordinates are frozen; only the selected explicit causal scale/roughness feature group changes.'
+    Path(a.out).write_text(json.dumps(out,indent=2));print('KAHU_SCALE_GROUP_FINAL',json.dumps({x:y for x,y in out.items() if x not in ('base_rows','adapt_rows','source_meta')},indent=2),flush=True)
 
-    out = json.load(open(a.out))
-    out['kind'] = 'unseen-kahu-causal-scale-group-ablation-v1'
-    out['scale_group'] = GROUP
-    out['scale_feature_indices'] = list(GROUPS[GROUP])
-    out['scale_feature_count'] = len(GROUPS[GROUP])
-    out['retains_yxt_coordinates'] = True
-    out['extra_transmitted_bits'] = 0
-    out['features_use_future_current_trace_samples'] = False
-    out['heldout_kahu_used_to_choose_group_or_feature_form'] = False
-    out['reference_512_gain_vs_sz3'] = REFERENCE_512
-    out['reference_time_gain_vs_sz3'] = REFERENCE_TIME
-    out['reference_yxt_gain_vs_sz3'] = REFERENCE_YXT
-    out['reference_all12_gain_vs_sz3'] = REFERENCE_ALL12
-    out['gain_delta_vs_yxt'] = float(out['full_replay_weighted_gain_vs_sz3'] - REFERENCE_YXT)
-    out['gain_delta_vs_all12'] = float(out['full_replay_weighted_gain_vs_sz3'] - REFERENCE_ALL12)
-    out['note'] = ('Controlled attribution of PR #735. Predictor, quantizer, source surveys, '
-                   'boundary waveform model, 320/240/160 network, 10 source epochs, replay, '
-                   '512-symbol post-charge adaptation and y/x/t coordinates are frozen; only '
-                   'the selected explicit causal scale/roughness feature group changes.')
-    Path(a.out).write_text(json.dumps(out, indent=2))
-    print('KAHU_SCALE_GROUP_FINAL', json.dumps({x:y for x,y in out.items()
-          if x not in ('base_rows','adapt_rows','source_meta')}, indent=2), flush=True)
+    if GROUP=='all12':
+        # Restore the original causal feature builder before testing the compiled
+        # non-neural interior law. The explicit gate writes a temporary result,
+        # which is then embedded in this workflow's uploaded all12 artifact.
+        q.b.build=_base_build
+        import kahu_explicit_scale_table_v1 as explicit
+        ep=str(Path(a.out).with_suffix('.explicit.json'))
+        ea=argparse.Namespace(manifest=a.manifest,eps=a.eps,out=ep)
+        explicit.main(ea)
+        compiled=json.load(open(ep))
+        out=json.load(open(a.out));out['explicit_scale_table_compilation']=compiled
+        Path(a.out).write_text(json.dumps(out,indent=2))
+        print('KAHU_SCALE_COMPILED_FINAL',json.dumps({k:v for k,v in compiled.items() if k!='variants'},indent=2),flush=True)
 
 
-if __name__ == '__main__':
-    p = argparse.ArgumentParser()
-    p.add_argument('--manifest', required=True)
-    p.add_argument('--eps', required=True)
-    p.add_argument('--group', required=True, choices=sorted(GROUPS))
-    p.add_argument('--out', required=True)
-    main(p.parse_args())
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('--manifest',required=True);p.add_argument('--eps',required=True);p.add_argument('--group',required=True,choices=sorted(GROUPS));p.add_argument('--out',required=True);main(p.parse_args())
