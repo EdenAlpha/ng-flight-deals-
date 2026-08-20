@@ -1,0 +1,21 @@
+name: Imperial integrated latent oracle v13
+on:
+  pull_request:
+    branches: [universal-auto-entropy-context-v7]
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy h5py boto3 pysz zstandard brotli numba
+      - run: python research/download_imperial_v13.py imperial.h5
+      - run: PYTHONPATH=research python research/imperial_integrated_latent_oracle_v13.py imperial.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imperial-integrated-latent-oracle-v13
+          path: imperial_integrated_latent_oracle_v13.json
+          retention-days: 30
