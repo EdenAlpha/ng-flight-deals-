@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - name: Install dependencies
-        run: pip install --quiet numpy h5py boto3 pysz zstandard brotli
+        run: pip install --quiet numpy h5py boto3 pysz zstandard brotli numba
       - name: Download canonical Imperial record
         run: |
           python - <<'PY'
