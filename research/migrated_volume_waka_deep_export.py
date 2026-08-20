@@ -2,15 +2,17 @@
 """Export a deeper deterministic Waka native block for steady-state diagnostics.
 
 Location is fixed by the same 5-percent spread window and SEG-Y header geometry.
-No sample amplitudes choose the block.  Unlike the standard 4x32 fixture this
+No sample amplitudes choose the block. Unlike the standard 4x32 fixture this
 exports 16 consecutive geometry rows x 32 centered fast traces so startup cost
-can be separated from steady-state behavior.
+can be separated from steady-state behavior. Matched SZ3 is measured on the
+same full exported block at the same survey-global absolute error tolerance.
 """
 from __future__ import annotations
 import argparse,json
 import numpy as np
 import migrated_volume_3d_runner as r
 import migrated_volume_3d_spread_screen as sp
+from general_seismic_numeric_io import matched_sz3
 
 NY=16
 NX=32
@@ -51,11 +53,11 @@ def main():
     rr=r.S3ConcatSequential(r.S3,oo,block_bytes=8*1024*1024)
     try:
         s=r.SegySequential(rr);total=int(s.total_traces);wi=0;frac=float(sp.FRACTIONS[wi]);center=int(round(frac*max(0,total-1)))
-        # Wider header window than the standard fixture so 16 coherent rows are available.
         window=max(int(sp.WINDOW_TRACES),120000);st=max(0,min(total-window,center-window//2)) if total>window else 0;n=min(window,total-st)
         A=sp.read_header_window(rr,s,st,n);geom,ranked=r.choose_geometry(A);segabs=[(x+st,y+st) for x,y in geom['segments']]
         _,gi,block,minlen=choose_group(segabs,center);X,ids=read_deep_tile(rr,s,block,minlen)
-        meta={'kind':'waka-deep-native-steady-state-v1','dataset_id':'marine_waka_3d','window_fraction':frac,'window_trace_start':int(st),'target_trace_center':int(center),'geometry_mode':geom['mode'],'geometry_score':float(geom['score']),'group_index':int(gi),'trace_first':int(ids[0]),'trace_last':int(ids[-1]),'shape':list(map(int,X.shape)),'epsilon':eps,'location_uses_sample_values':False}
+        sb,sme=matched_sz3(X,eps);samples=int(X.size)
+        meta={'kind':'waka-deep-native-steady-state-v1','dataset_id':'marine_waka_3d','window_fraction':frac,'window_trace_start':int(st),'target_trace_center':int(center),'geometry_mode':geom['mode'],'geometry_score':float(geom['score']),'group_index':int(gi),'trace_first':int(ids[0]),'trace_last':int(ids[-1]),'shape':list(map(int,X.shape)),'samples':samples,'epsilon':eps,'matched_sz3_bytes':int(sb),'matched_sz3_bps':float(8*sb/samples),'two_x_target_bps':float(4*sb/samples),'sz3_maxerr':float(sme),'location_uses_sample_values':False}
         np.savez_compressed(a.out,tile=X,epsilon=np.asarray([eps],np.float64),metadata_json=np.asarray([json.dumps(meta)]));print(json.dumps(meta,indent=2),flush=True)
     finally: rr.close()
 
