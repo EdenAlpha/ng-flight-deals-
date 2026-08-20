@@ -1,0 +1,47 @@
+name: Universal variable-context entropy v10
+on:
+  pull_request:
+    branches: [universal-auto-entropy-context-v7]
+    paths:
+      - 'research/universal_variable_context_entropy_v10.py'
+      - '.github/workflows/universal_variable_context_entropy_v10.yml'
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 480
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install dependencies
+        run: pip install --quiet numpy h5py boto3 pysz zstandard brotli numba
+      - name: Download canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,hashlib,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Run variable-context coder
+        env: {PYTHONPATH: research}
+        run: python research/universal_variable_context_entropy_v10.py imperial.h5
+      - name: Surface result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('universal_variable_context_entropy_v10.json'));print('bytes',d['bytes'],'field',d['field_bytes'],'gain',d['gain_vs_sz3'])
+          for p in d['planes']:
+              if p.get('source')=='vctx':print('vctx',p)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: universal-variable-context-entropy-v10
+          path: universal_variable_context_entropy_v10.json
+          if-no-files-found: warn
+          retention-days: 30
