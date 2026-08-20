@@ -1,0 +1,67 @@
+name: Imperial full AI geometry transfer v1
+
+on:
+  pull_request:
+    branches: [kahu-unseen-causal-scale-features-v1]
+    paths:
+      - 'research/imperial_full_ai_geometry_transfer_v1.py'
+      - '.github/workflows/imperial_full_ai_geometry_transfer_v1.yml'
+  workflow_dispatch:
+
+env:
+  BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
+
+permissions: {contents: read}
+
+jobs:
+  transfer:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install dependencies
+        run: |
+          pip install --quiet numpy boto3 h5py pysz zstandard brotli
+          pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Materialize frozen migrated benchmark manifest
+        run: |
+          git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_manifest.json
+      - name: Download and verify canonical Imperial DAS record
+        run: |
+          python - <<'PY'
+          import boto3,os,hashlib
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Run strict full learned-mechanism transfer gate
+        env: {PYTHONPATH: research}
+        run: |
+          python research/imperial_full_ai_geometry_transfer_v1.py \
+            --manifest frozen_manifest.json \
+            --eps benchmarks/migrated_volume_global_eps_v1.json \
+            --imperial imperial.h5 \
+            --out imperial_full_ai_geometry_transfer_v1.json
+      - name: Surface compact result
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('imperial_full_ai_geometry_transfer_v1.json'))
+          for r in d['rows']:
+              print(f"::notice title={r['interface']}::zero={r['zero_shot_gain_vs_sz3']:.6f}x adapt={r['causal_adapt_gain_vs_sz3']:.6f}x vs_current={r['causal_adapt_gain_vs_current_imperial_baseline']:.6f}x first={r['modeled_chunk_bps_first']:.4f} last={r['modeled_chunk_bps_last']:.4f} tail={r['residual_tail_fraction_abs_gt_8']:.4f} ood5={r['ood_vs_source_normalization']['fraction_abs_z_gt_5']:.4f}"
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: imperial-full-ai-geometry-transfer-v1
+          path: imperial_full_ai_geometry_transfer_v1.json
+          if-no-files-found: ignore
+          retention-days: 30
