@@ -1,0 +1,64 @@
+name: Waka Imperial domain gap diagnostic v1
+on:
+  pull_request:
+    branches: [imperial-exact-waka-rans-transfer-v1]
+    paths:
+      - 'research/waka_imperial_domain_gap_diagnostic_v1.py'
+      - '.github/workflows/waka_imperial_domain_gap_diagnostic_v1.yml'
+  workflow_dispatch:
+env:
+  BENCHMARK_DEFINITION_SHA: 9b304e262182caa29a2c93e7e74e09ccb5715e92
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install dependencies
+        run: |
+          pip install --quiet numpy boto3 h5py pysz zstandard brotli
+          pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Materialize frozen benchmark manifest
+        run: |
+          git fetch --no-tags --depth=1 origin "$BENCHMARK_DEFINITION_SHA"
+          git show "$BENCHMARK_DEFINITION_SHA:benchmarks/general_seismic_v1.json" > frozen_manifest.json
+      - name: Download canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,hashlib,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5'
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - name: Diagnose domain gap
+        env: {PYTHONPATH: research}
+        run: |
+          python research/waka_imperial_domain_gap_diagnostic_v1.py \
+            --manifest frozen_manifest.json \
+            --eps benchmarks/migrated_volume_global_eps_v1.json \
+            --imperial imperial.h5 \
+            --out waka_imperial_domain_gap_diagnostic_v1.json
+      - name: Surface compact result
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('waka_imperial_domain_gap_diagnostic_v1.json'))
+          for k in ('waka_native','waka_flattened','imperial'):
+              r=d[k]
+              print(k,'zero',r['residual_zero_fraction'],'tail',r['residual_tail_fraction_abs_gt_8'],'rstd',r['residual_std'],'modelbps',r['interior_model_zero_shot_plus_tail_bps'],'ood5',r['feature_fraction_abs_z_gt_5'])
+          print('geometry',d['controlled_geometry_effect'])
+          print('imperial_gap',d['imperial_vs_waka_native'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: waka-imperial-domain-gap-diagnostic-v1
+          path: waka_imperial_domain_gap_diagnostic_v1.json
+          if-no-files-found: warn
+          retention-days: 30
