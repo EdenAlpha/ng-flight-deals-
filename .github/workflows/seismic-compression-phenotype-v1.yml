@@ -1,0 +1,126 @@
+name: Seismic compression phenotype v1
+
+on:
+  pull_request:
+    paths:
+      - 'research/compression_phenotype_probe_v1.py'
+      - 'research/compression_phenotype_cluster_v1.py'
+      - '.github/workflows/seismic-compression-phenotype-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  phenotype:
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        case: [f1, tie, soda, forge, brady, imperial]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+          pip install --quiet numpy h5py boto3 segyio zstandard requests
+      - name: Download deterministic source object
+        shell: bash
+        env:
+          CASE: '${{ matrix.case }}'
+        run: |
+          set -euo pipefail
+          case "$CASE" in
+            f1)
+              curl -L --fail --retry 5 --retry-delay 2 -o input.sgy 'https://zenodo.org/records/18407436/files/F1_shots.sgy?download=1'
+              echo 'b706ed4c9b8179660c02b9d8df5f1e86  input.sgy' | md5sum -c -
+              ;;
+            tie)
+              curl -L --fail --retry 5 --retry-delay 2 -o input.sgy 'https://zenodo.org/records/18407436/files/Tie_shots.sgy?download=1'
+              echo '3ad8937d783a3090dbb73de918282692  input.sgy' | md5sum -c -
+              ;;
+            soda)
+              python - <<'PY'
+          import boto3
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','soda_lake/raw_seismic/2010/v1.0.0/F4371R1.SGY','input.sgy')
+          PY
+              ;;
+            brady)
+              curl -L --fail --retry 5 --retry-delay 2 -o input.sgy 'https://gdr.openei.org/files/849/PoroTomo_iDAS16043_160325140118.sgy'
+              ;;
+            imperial)
+              python - <<'PY'
+          import boto3,hashlib,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          s=boto3.client('s3',config=Config(signature_version=UNSIGNED))
+          s.download_file('gdr-data-lake','imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5','input.h5')
+          assert os.path.getsize('input.h5')==415030456
+          assert hashlib.md5(open('input.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+              ;;
+            forge)
+              python - <<'PY'
+          import requests,struct,json
+          url='https://gdr.openei.org/files/1015/1001-1122%20%281%29.zip'
+          name=b'1511994193_1017_50500_16500_20171202_220556_570.sgy'
+          file_size=112237868;comp_size=102933340;crc=226598985;method=9;data_off=1647386036
+          end=data_off+comp_size-1
+          r=requests.get(url,headers={'Range':f'bytes={data_off}-{end}'},timeout=180);r.raise_for_status();payload=r.content
+          if len(payload)!=comp_size:raise RuntimeError((len(payload),comp_size))
+          local=struct.pack('<IHHHHHIIIHH',0x04034b50,21,0,method,0,0,crc,comp_size,file_size,len(name),0)+name
+          central=struct.pack('<IHHHHHHIIIHHHHHII',0x02014b50,20,21,0,method,0,0,crc,comp_size,file_size,len(name),0,0,0,0,0,0)+name
+          cd_off=len(local)+len(payload);eocd=struct.pack('<IHHHHIIH',0x06054b50,0,0,1,1,len(central),cd_off,0)
+          open('forge_member.zip','wb').write(local+payload+central+eocd)
+          PY
+              7z t forge_member.zip >/dev/null
+              mkdir extracted
+              7z x -y -oextracted forge_member.zip >/dev/null
+              mv 'extracted/1511994193_1017_50500_16500_20171202_220556_570.sgy' input.sgy
+              test "$(stat -c%s input.sgy)" = '112237868'
+              ;;
+            *) exit 2;;
+          esac
+      - name: Measure label-free compression phenotype
+        shell: bash
+        env:
+          CASE: '${{ matrix.case }}'
+        run: |
+          set -euo pipefail
+          if [ "$CASE" = imperial ]; then FILE=input.h5; else FILE=input.sgy; fi
+          python research/compression_phenotype_probe_v1.py "$FILE" "$CASE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compression-phenotype-${{ matrix.case }}
+          path: compression_phenotype_${{ matrix.case }}.json
+          retention-days: 14
+
+  cluster:
+    needs: phenotype
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: compression-phenotype-*
+          path: phenotype-results
+      - name: Build empirical compression families
+        run: python research/compression_phenotype_cluster_v1.py phenotype-results
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compression-phenotype-cluster-v1
+          path: compression_phenotype_cluster_v1.json
+          retention-days: 30
