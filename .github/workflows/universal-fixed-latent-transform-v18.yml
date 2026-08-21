@@ -1,0 +1,34 @@
+name: Universal fixed latent transform v18
+on:
+  pull_request:
+    paths:
+      - 'research/universal_fixed_latent_transform_v18.py'
+      - '.github/workflows/universal-fixed-latent-transform-v18.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install --quiet numpy h5py boto3 pysz zstandard brotli numba
+      - name: Download canonical Imperial record
+        run: |
+          python - <<'PY'
+          import boto3,hashlib,os
+          from botocore import UNSIGNED
+          from botocore.config import Config
+          b='gdr-data-lake';k='imperialvalleydas/v1.0.0/DF__UTC_20201113_235932.602.h5';s=boto3.client('s3',config=Config(signature_version=UNSIGNED));s.download_file(b,k,'imperial.h5')
+          assert os.path.getsize('imperial.h5')==415030456
+          assert hashlib.md5(open('imperial.h5','rb').read()).hexdigest()=='8cb7ea8466ab48880f876fc43cb5ce75'
+          PY
+      - run: PYTHONPATH=research python research/universal_fixed_latent_transform_v18.py imperial.h5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: universal-fixed-latent-transform-v18
+          path: universal_fixed_latent_transform_v18.json
+          retention-days: 30
