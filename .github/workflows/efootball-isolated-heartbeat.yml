@@ -1,0 +1,18 @@
+name: eFootball isolated heartbeat
+
+on:
+  push:
+    branches: [ efootball-managed-assets-isolated-20260823 ]
+
+permissions:
+  issues: write
+
+jobs:
+  heartbeat:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Post heartbeat
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue comment 770 --repo EdenAlpha/ng-flight-deals- --body "Isolated eFootball analysis heartbeat: workflow launched successfully at $(date -u +'%Y-%m-%d %H:%M:%S UTC') on commit $GITHUB_SHA."
