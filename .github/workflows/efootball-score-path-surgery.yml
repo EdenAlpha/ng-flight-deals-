@@ -1,0 +1,192 @@
+name: eFootball score path surgery
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: efootball-score-path-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  surgery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip binutils >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball arm64 binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Exact P2P crypto path trace
+        run: |
+          cat > /tmp/ef/surgery.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re,bisect,struct
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          def vaoff(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va,maxlen=220):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+maxlen].split(b'\0',1)[0]
+              if len(b)<4:return None
+              if sum(32<=x<127 for x in b)/len(b)<.92:return None
+              return b.decode('ascii','replace')
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+
+          # Whole-text streaming pass: exact direct call graph + likely function starts.
+          targets={
+              0x7c088e4:'crypto_config_parser',
+              0x7bfc91c:'profile_loader',
+              0x7c0dca0:'transport_parent',
+              0x7ceafc4:'p2p_reliability',
+              0x7cec4ac:'rt_ack',
+              0x7cf85d4:'reliability_parser',
+              0x75adb2c:'cmd_add_score',
+              0x7d2c954:'command_registry',
+              0x7d4724c:'score_serializer_A',
+              0x7d5b638:'score_serializer_B',
+          }
+          starts=[]; calls={k:[] for k in targets}; allcalls=[]
+          for a,s,m,o in md.disasm_lite(tb,tva):
+              if m=='stp' and 'x29, x30' in o and '[sp' in o:starts.append(a)
+              if m=='bl':
+                  mm=re.match(r'#0x([0-9a-f]+)',o)
+                  if mm:
+                      dst=int(mm.group(1),16); allcalls.append((a,dst))
+                      if dst in calls:calls[dst].append(a)
+          starts=sorted(set(starts))
+          def fstart(a):
+              j=bisect.bisect_right(starts,a)-1
+              return starts[j] if j>=0 else tva
+          def fend(fs):
+              j=bisect.bisect_right(starts,fs)
+              return starts[j] if j<len(starts) else tend
+          callers={}
+          for dst,sites in calls.items():
+              callers[dst]=[(fstart(a),a) for a in sites]
+
+          out=[]
+          out.append('=== EXACT DIRECT CALLERS ===')
+          for dst,name in targets.items():
+              out.append(f'{name} 0x{dst:x}: '+(', '.join(f'func 0x{fs:x}@0x{a:x}' for fs,a in callers[dst]) or 'NONE'))
+
+          # Reverse graph from transport parent/profile loader/parser up to 4 hops.
+          rev={}
+          for a,d in allcalls:rev.setdefault(d,[]).append((fstart(a),a))
+          out.append('\n=== REVERSE GRAPH FROM TRANSPORT CONFIG ===')
+          frontier=[0x7c088e4]; seen={0x7c088e4}
+          for depth in range(5):
+              nf=[]
+              out.append(f'-- depth {depth} --')
+              for d in frontier:
+                  out.append(f'NODE 0x{d:x} callers='+(', '.join(f'0x{fs:x}@0x{a:x}' for fs,a in rev.get(d,[])[:80]) or 'NONE'))
+                  for fs,a in rev.get(d,[]):
+                      if fs not in seen:seen.add(fs);nf.append(fs)
+              frontier=nf
+
+          # Exact surgical ranges. Include full tail of profile loader and wider parent.
+          ranges=[
+              ('profile_loader_full',0x7bfc91c,0x7bfe400),
+              ('transport_parent_full',0x7c0dca0,0x7c0e600),
+              ('crypto_parser_tail',0x7c08d80,0x7c09880),
+          ]
+          def annotate_range(name,lo,hi):
+              out.append(f'\n=== {name} 0x{lo:x}-0x{hi:x} ===')
+              body=list(md.disasm(tb[lo-tva:hi-tva],lo))
+              for i,z in enumerate(body):
+                  extra=''
+                  if z.mnemonic=='adrp':
+                      m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if m:
+                          reg=m.group(1);page=int(m.group(2),16)
+                          for q in body[i+1:i+8]:
+                              mm=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                              if mm:
+                                  va=page+int(mm.group(1),16);s=cstr(va)
+                                  if s: extra=f' ; NEXT_STR={s!r}'
+                                  break
+                  if z.mnemonic in ('bl','blr','br','ret','cmp','cbz','cbnz','tbz','tbnz') or any(x in z.op_str for x in ('#0x11c','#0x128','#0x100','#0x118','#0x120','#0xf8','#0xf4','#0xf0')) or extra:
+                      out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{extra}')
+          for r in ranges: annotate_range(*r)
+
+          # Dump static 0x100-byte source table observed in profile loader (0xc8f2a8), plus nearby printable runs.
+          out.append('\n=== STATIC PROFILE SOURCE AROUND 0xc8f2a8 ===')
+          base=0xc8f2a8; o=vaoff(base)
+          if o is not None:
+              b=raw[o:o+0x400]
+              for i in range(0,len(b),16):
+                  ch=b[i:i+16]; asc=''.join(chr(x) if 32<=x<127 else '.' for x in ch)
+                  out.append(f'0x{base+i:x}: {ch.hex(" ")}  {asc}')
+          else: out.append('VA not mapped')
+
+          # Search raw binary for key/profile names and print local ASCII neighborhood.
+          needles=[b'SessionKeyEncryptionAlgorithm',b'SessionKeyEncryptionKeyLength',b'KeyExchangeEncryptionAlgorithm',b'KeyExchangeEncryptionKey',b'P2P_LOW_LEVEL',b'P2P_HIGH_LEVEL',b'P2P_ADHOC',b'EncryptionAlgorithm',b'EncryptionKeyLength']
+          out.append('\n=== RAW STRING NEIGHBORHOODS ===')
+          for nd in needles:
+              pos=0
+              while True:
+                  j=raw.find(nd,pos)
+                  if j<0:break
+                  lo=max(0,j-256);hi=min(len(raw),j+len(nd)+256)
+                  chunk=raw[lo:hi]
+                  runs=re.findall(rb'[ -~]{4,}',chunk)
+                  out.append(f'NEEDLE {nd.decode()} fileoff=0x{j:x}: '+ ' | '.join(r.decode('ascii','replace') for r in runs[:60]))
+                  pos=j+1
+
+          # Find all callers of transport_parent and dump those functions compactly (max 30).
+          out.append('\n=== TRANSPORT_PARENT CALLER SURGERY ===')
+          for fs,site in callers.get(0x7c0dca0,[])[:30]:
+              fe=min(fend(fs),fs+0x1800)
+              out.append(f'-- caller func 0x{fs:x}, call@0x{site:x}, end~0x{fe:x} --')
+              body=list(md.disasm(tb[fs-tva:fe-tva],fs))
+              for i,z in enumerate(body):
+                  extra=''
+                  if z.mnemonic=='adrp':
+                      m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if m:
+                          reg=m.group(1);page=int(m.group(2),16)
+                          for q in body[i+1:i+8]:
+                              mm=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                              if mm:
+                                  va=page+int(mm.group(1),16);s=cstr(va)
+                                  if s:extra=f' ; NEXT_STR={s!r}'
+                                  break
+                  if z.mnemonic in ('bl','blr','br','ret','cmp','cbz','cbnz','tbz','tbnz') or extra:
+                      out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{extra}')
+
+          Path('/tmp/out/score_path_surgery.txt').write_text('\n'.join(out))
+          PY
+          python3 /tmp/ef/surgery.py
+          echo '===== KEY SUMMARY ====='
+          grep -E '^(crypto_config_parser|profile_loader|transport_parent|NODE|-- depth|NEEDLE|-- caller func)' /tmp/out/score_path_surgery.txt | head -n 800 || true
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-score-path-surgery
+          path: /tmp/out/
+          retention-days: 7
