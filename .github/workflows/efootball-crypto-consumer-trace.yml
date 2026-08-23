@@ -5,13 +5,17 @@ on:
     branches: [ main ]
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: efootball-session-crypto-consumer-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   trace-consumers:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - name: Install tools
@@ -35,43 +39,45 @@ jobs:
           from pathlib import Path
           from elftools.elf.elffile import ELFFile
           from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
-          import re, bisect
+          import re,bisect
 
           p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
           raw=p.read_bytes()
           with p.open('rb') as f:
-              e=ELFFile(f)
-              text=e.get_section_by_name('.text')
+              e=ELFFile(f); text=e.get_section_by_name('.text')
               tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
               loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
 
           def vaoff(va):
               for sv,so,fs in loads:
-                  if sv <= va < sv+fs: return so+va-sv
-              return None
-
-          def cstr(va, maxlen=180):
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va,maxlen=160):
               o=vaoff(va)
-              if o is None: return None
+              if o is None:return None
               b=raw[o:o+maxlen].split(b'\0',1)[0]
-              if len(b)<4: return None
-              if sum(32<=x<127 for x in b)/len(b) < .92: return None
+              if len(b)<4:return None
+              if sum(32<=x<127 for x in b)/len(b)<.92:return None
               return b.decode('ascii','replace')
 
           md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
-          ins=list(md.disasm(tb,tva))
-          addrs=[z.address for z in ins]
+          wanted={0xf0,0xf4,0xf8,0x100,0x118,0x11c,0x120,0x128}
+          hexmem=re.compile(r'\[[wx][0-9]+, #0x([0-9a-f]+)\]')
+          decmem=re.compile(r'\[[wx][0-9]+, #(\d+)\]')
 
-          # Approximate function starts from common ARM64 frame prologues.
-          starts=[]
-          for i,z in enumerate(ins):
-              if z.mnemonic=='stp' and ('x29, x30' in z.op_str or 'x30, x29' in z.op_str) and '[sp' in z.op_str:
-                  starts.append(z.address)
-              elif z.mnemonic=='sub' and z.op_str.startswith('sp, sp, #'):
-                  # include only when near a frame-save to reduce noise
-                  for q in ins[i:i+5]:
-                      if q.mnemonic=='stp' and 'x29, x30' in q.op_str and '[sp' in q.op_str:
-                          starts.append(z.address); break
+          # Memory-light whole-text pass: keep only frame starts and relevant-offset hits.
+          starts=[]; hits=[]; nins=0
+          for addr,size,mnem,ops in md.disasm_lite(tb,tva):
+              nins+=1
+              if mnem=='stp' and 'x29, x30' in ops and '[sp' in ops:
+                  starts.append(addr)
+              off=None
+              m=hexmem.search(ops)
+              if m: off=int(m.group(1),16)
+              else:
+                  d=decmem.search(ops)
+                  if d: off=int(d.group(1))
+              if off in wanted:
+                  hits.append((addr,off,mnem,ops))
           starts=sorted(set(starts))
 
           def fstart(a):
@@ -81,88 +87,68 @@ jobs:
               j=bisect.bisect_right(starts,fs)
               return starts[j] if j<len(starts) else tend
 
-          wanted={0xf0,0xf4,0xf8,0x100,0x118,0x11c,0x120,0x128}
-          imm_re=re.compile(r'\[[wx][0-9]+(?:, #0x([0-9a-f]+))?\]')
-          # Also accept decimal immediates Capstone can emit.
-          dec_re=re.compile(r'\[[wx][0-9]+, #(\d+)\]')
           cand={}
-          for z in ins:
-              off=None
-              m=imm_re.search(z.op_str)
-              if m and m.group(1): off=int(m.group(1),16)
-              else:
-                  d=dec_re.search(z.op_str)
-                  if d: off=int(d.group(1))
-              if off in wanted:
-                  fs=fstart(z.address)
-                  cand.setdefault(fs,[]).append((z.address,off,z.mnemonic,z.op_str))
-
-          # Rank: exact algorithm+keylen pair first, then number of layout offsets touched.
+          for h in hits:cand.setdefault(fstart(h[0]),[]).append(h)
           ranked=[]
-          for fs,hits in cand.items():
-              offs={h[1] for h in hits}
-              score=(100 if {0x11c,0x128}<=offs else 0)+(30 if {0x118,0x120}<=offs else 0)+len(offs)*5+len(hits)
-              ranked.append((score,fs,offs,hits))
+          for fs,hs in cand.items():
+              offs={h[1] for h in hs}
+              score=(120 if {0x11c,0x128}<=offs else 0)+(45 if {0x118,0x11c,0x120,0x128}<=offs else 0)+(35 if {0xf8,0x100}<=offs else 0)+len(offs)*6+len(hs)
+              ranked.append((score,fs,offs,hs))
           ranked.sort(reverse=True)
 
-          out=[]
-          out.append(f'.text 0x{tva:x}-0x{tend:x}, instructions={len(ins)}, prologue_starts={len(starts)}')
-          out.append(f'candidate functions touching crypto-layout offsets: {len(ranked)}')
-          out.append('TARGET LAYOUT: +F0 key-exchange-alg flag, +F4 alg, +F8 key flag, +100 key object, +118 session-alg flag, +11C session-alg, +120 keylen flag, +128 keylen')
+          out=[f'.text=0x{tva:x}-0x{tend:x} instructions={nins} frame_starts={len(starts)} relevant_hits={len(hits)} candidates={len(ranked)}',
+               'KNOWN CONFIG OFFSETS: F0 keyex-alg-flag; F4 keyex-alg; F8 keyex-key-flag; 100 keyex-key-object; 118 session-alg-flag; 11C session-alg; 120 keylen-flag; 128 keylen']
 
-          # Global summary, top 80.
-          for score,fs,offs,hits in ranked[:80]:
-              out.append(f'\n=== CANDIDATE 0x{fs:x} score={score} offsets={",".join(hex(x) for x in sorted(offs))} hits={len(hits)} ===')
-              for h in hits[:40]: out.append(f'  HIT 0x{h[0]:x}: {h[2]:8} {h[3]}  [off={hex(h[1])}]')
+          high=[]
+          for score,fs,offs,hs in ranked[:120]:
+              out.append(f'\n=== CANDIDATE 0x{fs:x} score={score} offsets={",".join(hex(x) for x in sorted(offs))} hits={len(hs)} ===')
+              for a,o,mn,op in hs[:50]:out.append(f'HIT 0x{a:x}: {mn:8} {op} [off={hex(o)}]')
+              if {0x11c,0x128}<=offs or len(offs)>=5 or score>=95:high.append((score,fs,offs,hs))
 
-              # Dump bounded function body with useful annotations if high-value.
-              if score < 70: continue
-              fe=min(fend(fs),fs+0x1800)
-              a=bisect.bisect_left(addrs,fs); b=bisect.bisect_left(addrs,fe)
-              body=ins[a:b]
-              # ADRP+ADD printable string annotations.
-              anns={}
+          out.append(f'\nBOTH_SESSION_ALG_AND_KEYLEN={sum(1 for r in ranked if {0x11c,0x128}<=r[2])}')
+          for score,fs,offs,hs in ranked:
+              if {0x11c,0x128}<=offs:out.append(f'BOTH 0x{fs:x} score={score} offsets={",".join(hex(x) for x in sorted(offs))}')
+
+          # Surgical disassembly only for high-confidence functions.
+          for score,fs,offs,hs in high[:35]:
+              fe=min(fend(fs),fs+0x2000)
+              body=list(md.disasm(tb[fs-tva:fe-tva],fs))
+              out.append(f'\n--- SURGERY 0x{fs:x}-0x{fe:x} score={score} ---')
+              # Find printable ADRP+ADD strings.
+              ann={}
               for i,z in enumerate(body):
-                  if z.mnemonic!='adrp': continue
-                  m=re.match(r'([wx][0-9]+), #0x([0-9a-f]+)',z.op_str)
-                  if not m: continue
-                  reg=m.group(1).replace('w','x'); page=int(m.group(2),16)
-                  for q in body[i+1:i+9]:
+                  if z.mnemonic!='adrp':continue
+                  m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                  if not m:continue
+                  reg=m.group(1);page=int(m.group(2),16)
+                  for q in body[i+1:i+8]:
                       mm=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
                       if mm:
-                          va=page+int(mm.group(1),16); s=cstr(va)
-                          if s: anns[q.address]=f' ; STR@0x{va:x}={s!r}'
+                          va=page+int(mm.group(1),16);s=cstr(va)
+                          if s:ann[q.address]=f' ; STR@0x{va:x}={s!r}'
                           break
-              out.append(f'--- DISASM 0x{fs:x}-0x{fe:x} ---')
-              for z in body:
-                  extra=anns.get(z.address,'')
-                  # Highlight compares/switches/calls and all relevant loads.
-                  if any(f'#0x{x:x}' in z.op_str for x in wanted) or z.mnemonic in ('cmp','cmn','cbz','cbnz','tbz','tbnz','br','blr','bl'):
-                      extra+='  <INTEREST>'
-                  out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{extra}')
-
-          # Specifically print all functions with BOTH +11c and +128, regardless rank.
-          both=[r for r in ranked if {0x11c,0x128}<=r[2]]
-          out.append(f'\n\nBOTH_SESSION_ALG_AND_KEYLEN_FUNCTIONS={len(both)}')
-          for score,fs,offs,hits in both:
-              out.append(f'0x{fs:x} score={score} offsets={sorted(hex(x) for x in offs)}')
-
-          # Search candidate bodies for comparisons against likely enum/key-size values.
-          out.append('\nLIKELY_ENUM_OR_KEYSIZE_COMPARISONS')
-          for score,fs,offs,hits in ranked:
-              if 0x11c not in offs and 0x128 not in offs: continue
-              fe=min(fend(fs),fs+0x1200)
-              a=bisect.bisect_left(addrs,fs); b=bisect.bisect_left(addrs,fe)
-              for z in ins[a:b]:
-                  if z.mnemonic in ('cmp','subs') and re.search(r'#0x(?:1|2|3|4|8|10|18|20|40)\b|#(?:1|2|3|4|8|16|24|32|64)\b',z.op_str):
-                      out.append(f'func 0x{fs:x} @0x{z.address:x}: {z.mnemonic} {z.op_str}')
+              # Track registers loaded from session-alg / key-length and print nearby use.
+              tainted={}
+              for i,z in enumerate(body):
+                  tag=''
+                  mm=hexmem.search(z.op_str); dd=decmem.search(z.op_str)
+                  off=int(mm.group(1),16) if mm else (int(dd.group(1)) if dd else None)
+                  if off in wanted:tag+=f' <OFFSET {hex(off)}>'
+                  lm=re.match(r'(?:ldr|ldrb|ldrh|ldrsw)\s+([wx]\d+),',z.mnemonic+' '+z.op_str)
+                  if lm and off in (0x11c,0x128):
+                      tainted[lm.group(1)]=(z.address,off)
+                  # Propagate simple mov w/x register aliases for a few instructions by reporting, not full SSA.
+                  uses=[]
+                  for reg,(src,soff) in list(tainted.items()):
+                      if reg in z.op_str and z.address!=src:uses.append(f'{reg}<-{hex(soff)}@{hex(src)}')
+                  if uses:tag+=' <USES '+','.join(uses)+'>'
+                  if z.mnemonic in ('cmp','cmn','subs','cbz','cbnz','tbz','tbnz','bl','blr','br') or tag or z.address in ann:
+                      out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{ann.get(z.address,"")}{tag}')
 
           Path('/tmp/out/session_crypto_consumers.txt').write_text('\n'.join(out))
           PY
           python3 /tmp/ef/trace_consumers.py
-          echo '===== HIGH VALUE SUMMARY ====='
-          grep -E '^(=== CANDIDATE|BOTH_SESSION|0x[0-9a-f]+ score=|LIKELY_ENUM|func 0x)' /tmp/out/session_crypto_consumers.txt | head -n 500 || true
-          echo '===== FULL TRACE ====='
+          echo '===== SESSION CRYPTO CONSUMER TRACE ====='
           cat /tmp/out/session_crypto_consumers.txt
       - name: Upload findings
         uses: actions/upload-artifact@v4
