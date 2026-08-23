@@ -1,0 +1,75 @@
+# Package identity
+package: name='jp.konami.pesam' versionCode='311000101' versionName='11.0.1' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+install-location:'internalOnly'
+minSdkVersion:'32'
+targetSdkVersion:'36'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+uses-permission: name='android.permission.ACCESS_WIFI_STATE'
+uses-permission: name='android.permission.BLUETOOTH' maxSdkVersion='30'
+uses-permission: name='android.permission.BLUETOOTH_ADMIN' maxSdkVersion='30'
+uses-permission: name='android.permission.BLUETOOTH_ADVERTISE'
+uses-permission: name='android.permission.BLUETOOTH_CONNECT'
+uses-permission: name='android.permission.BLUETOOTH_SCAN' usesPermissionFlags='neverForLocation'
+uses-permission: name='android.permission.CHANGE_NETWORK_STATE'
+uses-permission: name='android.permission.CHANGE_WIFI_MULTICAST_STATE'
+uses-permission: name='android.permission.CHANGE_WIFI_STATE'
+uses-permission: name='android.permission.DISABLE_KEYGUARD'
+uses-permission: name='android.permission.FOREGROUND_SERVICE'
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.MODIFY_AUDIO_SETTINGS'
+uses-permission: name='android.permission.POST_NOTIFICATIONS'
+uses-permission: name='android.permission.READ_EXTERNAL_STORAGE'
+uses-permission: name='android.permission.VIBRATE'
+uses-permission: name='android.permission.WAKE_LOCK'
+uses-permission: name='android.permission.WRITE_EXTERNAL_STORAGE'
+uses-permission: name='com.android.vending.BILLING'
+uses-permission: name='com.android.vending.CHECK_LICENSE'
+uses-permission: name='com.google.android.gms.permission.AD_ID'
+uses-permission: name='com.google.android.c2dm.permission.RECEIVE'
+uses-permission: name='android.permission.ACCESS_ADSERVICES_ATTRIBUTION'
+uses-permission: name='android.permission.ACCESS_ADSERVICES_AD_ID'
+uses-permission: name='android.permission.ACCESS_ADSERVICES_TOPICS'
+uses-permission: name='android.permission.FOREGROUND_SERVICE_DATA_SYNC'
+uses-permission: name='com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE'
+uses-permission: name='jp.konami.pesam.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+application-label:'eFootball™'
+application-icon-160:'res/mipmap-anydpi-v26/ic_launcher.xml'
+application-icon-240:'res/mipmap-anydpi-v26/ic_launcher.xml'
+application-icon-320:'res/mipmap-anydpi-v26/ic_launcher.xml'
+application-icon-480:'res/mipmap-anydpi-v26/ic_launcher.xml'
+application-icon-640:'res/mipmap-anydpi-v26/ic_launcher.xml'
+application-icon-65534:'res/mipmap-anydpi-v26/ic_launcher.xml'
+application: label='eFootball™' icon='res/mipmap-anydpi-v26/ic_launcher.xml'
+launchable-activity: name='com.epicgames.ue4.SplashActivity'  label='eFootball™' icon=''
+property: name='android.adservices.AD_SERVICES_CONFIG' resource='res/xml/gma_ad_services_config.xml' 
+property: name='android.window.PROPERTY_COMPAT_ALLOW_USER_ASPECT_RATIO_FULLSCREEN_OVERRIDE' value='0' 
+property: name='android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY' value='-1' 
+uses-library-not-required:'org.apache.http.legacy'
+uses-library-not-required:'android.ext.adservices'
+feature-group: label=''
+  uses-gl-es: '0x30001'
+  uses-feature: name='android.hardware.touchscreen'
+  uses-feature: name='android.hardware.touchscreen.multitouch'
+  uses-feature: name='android.hardware.bluetooth'
+  uses-implied-feature: name='android.hardware.bluetooth' reason='requested android.permission.BLUETOOTH permission, requested android.permission.BLUETOOTH_ADMIN permission, and targetSdkVersion > 4'
+  uses-feature: name='android.hardware.screen.landscape'
+  uses-implied-feature: name='android.hardware.screen.landscape' reason='one or more activities have specified a landscape orientation'
+  uses-feature: name='android.hardware.wifi'
+  uses-implied-feature: name='android.hardware.wifi' reason='requested android.permission.ACCESS_WIFI_STATE permission, requested android.permission.CHANGE_WIFI_MULTICAST_STATE permission, and requested android.permission.CHANGE_WIFI_STATE permission'
+main
+other-activities
+other-receivers
+other-services
+supports-screens: 'small' 'normal' 'large' 'xlarge'
+supports-any-density: 'true'
+locales: '--_--'
+densities: '160' '240' '320' '480' '640' '65534'
+
+d0a03ee845371d3dcb85b015a64d3b2e5f57758ea3d9f5b27ffddc819013cfa9  work/apks/jp.konami.pesam.apk
+6e6bf640a27ff2baed19a34eccaa3b463c8a21796e5144754b5fcf5b5ae9bfdf  work/apks/config.arm64_v8a.apk
+config.arm64_v8a.apk 57148181 bytes
+config.en.apk 32978 bytes
+config.mdpi.apk 58987 bytes
+jp.konami.pesam.apk 22335209 bytes
+pad_it_0.apk 386375435 bytes
+pad_it_1.apk 395420368 bytes
