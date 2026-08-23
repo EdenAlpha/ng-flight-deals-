@@ -1,0 +1,62 @@
+name: eFootball extract Konami peerlink Java
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+      - name: Extract selected decompiled classes from combined report
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          src=Path('managed-output/peerlink_and_network_glue.txt').read_text(errors='ignore')
+          outdir=Path('managed-output/peerlink-java'); outdir.mkdir(parents=True,exist_ok=True)
+          names=['jp/konami/peerlink/wifidirect/WifiDirect.java','jp/konami/peerlink/wifidirect/WifiDirectNsd.java','jp/konami/peerlink/nsd/NetworkServiceDiscovery.java']
+          for name in names:
+              marker='===== managed-work/jadx/sources/'+name+' ====='
+              i=src.find(marker)
+              if i<0:
+                  print('missing',name); continue
+              start=src.find('\n',i)+1
+              j=src.find('\n===== managed-work/jadx/sources/',start)
+              if j<0: j=src.find('\n# References to jp.konami.peerlink',start)
+              if j<0: j=len(src)
+              text=src[start:j]
+              p=outdir/Path(name).name
+              p.write_text(text)
+              print(p,len(text))
+          PY
+      - name: Build API summary
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          out=[]
+          for p in sorted(Path('managed-output/peerlink-java').glob('*.java')):
+              s=p.read_text(errors='ignore')
+              out.append('\n### '+p.name)
+              for n,line in enumerate(s.splitlines(),1):
+                  if re.search(r'^\s*(public|private|protected)\s+.*\([^;]*\)\s*(\{|throws)',line):
+                      out.append(f'{n}: {line.strip()}')
+                  if any(k in line for k in ['WifiP2pManager','WifiP2pConfig','ServerSocket','SocketChannel','Socket(','Datagram','Selector','FileDescriptor','ParcelFileDescriptor','NetworkInterface','InetSocketAddress','getGroupOwnerAddress','groupOwner','createGroup','discoverServices','requestConnectionInfo','bind','listen','accept','connect(']):
+                      out.append(f'{n}: {line.strip()}')
+          Path('managed-output/peerlink-java/API_SUMMARY.txt').write_text('\n'.join(out))
+          PY
+      - name: Commit extracted sources
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add managed-output/peerlink-java
+          git commit -m 'Extract Konami peerlink Wi-Fi classes' || exit 0
+          git push origin HEAD:efootball-apk-analysis-2026-08-23
