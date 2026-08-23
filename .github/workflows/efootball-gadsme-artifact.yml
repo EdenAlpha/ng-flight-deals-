@@ -1,0 +1,47 @@
+name: Temporary eFootball gadsme artifact
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+env:
+  BRANCH: efootball-apk-analysis-2026-08-23
+
+jobs:
+  extract:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+      - name: Download current arm64 networking library
+        run: |
+          set -euxo pipefail
+          rm -rf /tmp/efg
+          mkdir -p /tmp/efg/bundle /tmp/efg/native /tmp/efg/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/efg/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/efg/efootball.xapk -d /tmp/efg/bundle
+          APK="$(find /tmp/efg/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          test -n "$APK"
+          unzip -q "$APK" -d /tmp/efg/native
+          cp /tmp/efg/native/lib/arm64-v8a/libgadsme.so /tmp/efg/out/libgadsme.so
+          sha256sum /tmp/efg/out/libgadsme.so
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-11.0.1-arm64-libgadsme-analysis-only
+          path: /tmp/efg/out/libgadsme.so
+          compression-level: 0
+          retention-days: 1
+      - name: Publish run id only
+        run: |
+          printf 'run_id=%s\nsha=%s\n' "$GITHUB_RUN_ID" "$(sha256sum /tmp/efg/out/libgadsme.so | cut -d' ' -f1)" > gadsme-artifact-run.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add gadsme-artifact-run.txt
+          git commit -m 'Record temporary eFootball gadsme artifact run' || exit 0
+          git push origin HEAD:$BRANCH
