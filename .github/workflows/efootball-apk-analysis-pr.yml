@@ -1,0 +1,107 @@
+name: eFootball APK analysis PR
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y unzip binutils file ripgrep python3 python3-pip openjdk-17-jre-headless
+          curl -L --retry 3 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.5/jadx-1.5.5.zip
+          mkdir -p /opt/jadx && unzip -q /tmp/jadx.zip -d /opt/jadx
+          echo /opt/jadx/bin >> "$GITHUB_PATH"
+          python3 -m pip install --break-system-packages androguard==4.1.3 lief==0.17.0
+      - name: Download eFootball 11.0.1 XAPK
+        run: |
+          set -euxo pipefail
+          mkdir -p work/download work/bundle work/apks work/unpacked work/jadx report hits/native
+          curl -L --fail --retry 5 --retry-delay 3 -A 'Mozilla/5.0' -o work/download/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          file work/download/efootball.xapk
+          ls -lh work/download/efootball.xapk
+          unzip -q work/download/efootball.xapk -d work/bundle
+          find work/bundle -type f -name '*.apk' -exec cp '{}' work/apks/ \;
+          find work/apks -type f -printf '%f %s\n' | sort
+      - name: Verify and inventory APKs
+        run: |
+          set -euxo pipefail
+          sha256sum work/apks/*.apk > hits/apk_sha256.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          from androguard.core.apk import APK
+          o=[]
+          for p in sorted(Path('work/apks').glob('*.apk')):
+            try:
+              a=APK(str(p)); o += [f'FILE={p.name}', f'package={a.get_package()} version={a.get_androidversion_name()} code={a.get_androidversion_code()}', 'permissions='+','.join(sorted(a.get_permissions())), 'activities='+','.join(sorted(a.get_activities())), 'services='+','.join(sorted(a.get_services())), '']
+            except Exception as e: o += [f'FILE={p.name} ERROR={e}','']
+          Path('hits/android_inventory.txt').write_text('\n'.join(o),errors='ignore')
+          PY
+          for a in work/apks/*.apk; do echo "### $a"; keytool -printcert -jarfile "$a" 2>&1 | sed -n '1,35p'; done > hits/certificates.txt || true
+      - name: Decompile Java and resources
+        run: |
+          set -euxo pipefail
+          mapfile -t APKS < <(find work/apks -type f -name '*.apk' | sort)
+          jadx --no-debug-info --show-bad-code --deobf -j 4 -d work/jadx "${APKS[@]}" 2>&1 | tee hits/jadx.log || true
+          echo "files=$(find work/jadx -type f | wc -l)" >> hits/jadx.log
+      - name: Extract and inspect native libraries
+        run: |
+          set -euxo pipefail
+          n=0; for a in work/apks/*.apk; do n=$((n+1)); mkdir -p "work/unpacked/$n"; unzip -q -o "$a" -d "work/unpacked/$n" || true; done
+          find work/unpacked -type f -name '*.so' -printf '%p %s\n' | sort -k2 -nr > hits/native_libraries.txt
+          find work/unpacked -type f -printf '%p %s\n' | sort -k2 -nr | head -300 > hits/largest_files.txt
+          find work/unpacked -type f -name '*.so' -print0 | while IFS= read -r -d '' so; do
+            k=$(echo "$so" | tr '/ ' '__')
+            { echo "FILE=$so"; file "$so"; sha256sum "$so"; readelf -d "$so" 2>/dev/null | grep -E 'NEEDED|SONAME' || true; readelf -Ws "$so" 2>/dev/null | grep -Ei 'stun|turn|ice|dtls|ssl|tls|udp|socket|sendto|recvfrom|connect|bind|score|match|result|winner|clock' | head -1500 || true; } > "hits/native/$k.elf.txt"
+            strings -a -n 5 "$so" > "hits/native/$k.strings.txt" || true
+          done
+      - name: Surgical keyword and endpoint scan
+        run: |
+          set -euxo pipefail
+          P='stun|turn\.konami|turn|ice|relay|dtls|boringssl|openssl|xor.?mapped|mapped.?address|message.?integrity|fingerprint|change.?request|response.?port|bc\.googleusercontent|googleusercontent|udp|datagram|socket|peer.?to.?peer|p2p|friend.?match|match.?result|final.?score|score|winner|loser|victory|defeat|draw|half.?time|full.?time|extra.?time|added.?time|stoppage|abbrev|abbreviation|short.?name|team.?code|match.?clock|game.?clock|pause|resume'
+          rg -n -i --hidden --glob '!*.so' "$P" work/jadx > hits/jadx_hits.txt || true
+          cat hits/native/*.strings.txt 2>/dev/null | grep -Ein "$P" | head -50000 > hits/native_hits.txt || true
+          cat hits/native/*.strings.txt 2>/dev/null | grep -Eio '([a-z0-9-]+\.)+(konami\.com|googleusercontent\.com|googleapis\.com|gstatic\.com)' | sort -u > hits/endpoints.txt || true
+          python3 - <<'PY'
+          from pathlib import Path
+          pats={n:bytes.fromhex(h) for n,h in {'080Abe':'080a','090Abe':'090a','080Bbe':'080b','090Bbe':'090b','080Cbe':'080c','090Cbe':'090c','080Ale':'0a08','090Ale':'0a09','080Ble':'0b08','090Ble':'0b09','080Cle':'0c08','090Cle':'0c09'}.items()}
+          r=[]
+          for p in Path('work/unpacked').rglob('*'):
+            if p.is_file() and p.suffix in {'.so','.dex','.bin','.dat','.pak'} and p.stat().st_size < 650_000_000:
+              try:d=p.read_bytes()
+              except:continue
+              c={k:d.count(v) for k,v in pats.items()}
+              if any(c.values()): r.append(f'{p} size={len(d)} '+' '.join(f'{k}={v}' for k,v in c.items()))
+          Path('hits/connectivity_constants.txt').write_text('\n'.join(r))
+          PY
+      - name: Assemble report
+        run: |
+          {
+            echo '# eFootball current Android package static analysis'; date -u
+            echo '## APK inventory'; cat hits/android_inventory.txt
+            echo '## Certificates'; cat hits/certificates.txt
+            echo '## Native libraries'; cat hits/native_libraries.txt
+            echo '## Largest files'; sed -n '1,180p' hits/largest_files.txt
+            echo '## Endpoints'; cat hits/endpoints.txt
+            echo '## Connectivity constant counts'; cat hits/connectivity_constants.txt
+            echo '## Java/resource high-value hits'; sed -n '1,1800p' hits/jadx_hits.txt
+            echo '## Native high-value hits'; sed -n '1,3500p' hits/native_hits.txt
+            echo '## JADX tail'; tail -200 hits/jadx.log
+          } > report/report.md
+          cat report/report.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-static-analysis
+          path: |
+            report/
+            hits/
+          retention-days: 7
