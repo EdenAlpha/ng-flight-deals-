@@ -8,14 +8,14 @@ on:
 jobs:
   inspect:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - name: Install tools
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq unzip python3 python3-pip file >/dev/null
-          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+          python3 -m pip install --break-system-packages -q pyelftools==0.32
       - name: Download current eFootball arm64 binary
         run: |
           mkdir -p /tmp/ef/bundle /tmp/ef/native
@@ -25,23 +25,24 @@ jobs:
           unzip -q "$NATIVE" -d /tmp/ef/native
           test -f /tmp/ef/native/lib/arm64-v8a/libUE4.so
           file /tmp/ef/native/lib/arm64-v8a/libUE4.so
-      - name: Exact string map and ARM64 xrefs
+      - name: Fast exact string map and ARM64 xrefs
         run: |
           cat > /tmp/ef/x.py <<'PY'
           from pathlib import Path
           from elftools.elf.elffile import ELFFile
-          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM,arm64
           import struct,re
+
           p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); d=p.read_bytes()
           terms=[
-            'P2P_ADHOC_WIFIDIRECTLAN','P2P_ADHOC_LAN','direct_online_turn_mode',
+            'P2P_ADHOC_WIFIDIRECTLAN','P2P_ADHOC_WIFIDIRECTLAN_LOW_LEVEL','P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL',
+            'P2P_ADHOC_LAN','P2P_ADHOC_LAN_LOW_LEVEL','P2P_ADHOC_LAN_HIGH_LEVEL','direct_online_turn_mode',
             'LOCAL_GAMERELAY','CMD_SET_LOCAL_GAMERELAY_LIST','TaskEvCompeLocalGamerelay',
             'CMD_CHANGE_GAMEPHASE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT','CMD_ADD_SCORE',
             'MatchScoreChanged','m_homeScore','m_awayScore','GetGameScore','SetHomeScore','SetAwayScore',
             'EPKR_GamePhase::GameplayFinished','EPKR_GamePhase::ResultPresentation',
-            'EMatchFlowTask::SendServerMatchEnd','MatchResultTimeUpDemo','Match/End/MatchEnd',
-            'ROOM_GAME_PHASE_END','NUM_GUESTS_END_MATCH','ADDED_TIME','m_isExtraTime',
-            'HOST_DIRECT','HOST_RELAY','PUNCHING_FINISHED','START_UDP_HOLE_PUNCHING',
+            'EMatchFlowTask::SendServerMatchEnd','EMatchFlowTask::WaitTimeup','EMatchFlowTask::DemoTimeupTrans',
+            'MatchResultTimeUpDemo','Match/End/MatchEnd','ROOM_GAME_PHASE_END','NUM_GUESTS_END_MATCH','ADDED_TIME','m_isExtraTime',
+            'HOST_DIRECT','HOST_RELAY','PUNCHING_FINISHED','START_UDP_HOLE_PUNCHING','MATCHING_STATE_STUN_CHECK',
             'OnlineSystemMultiplaySessionStrategyP2pFullMeshWithTurn.cpp'
           ]
           with p.open('rb') as f:
@@ -58,35 +59,37 @@ jobs:
               if o<0:break
               inst.append((t,o,ova(o)));s=o+1
           labels={va:(t,o) for t,o,va in inst if va is not None}; pages={a&~0xfff for a in labels}
-          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM);md.detail=True
-          regs={}; refs=[]; n=0
-          for i in md.disasm(tb,tva):
-            n+=1
-            for r,(pg,k) in list(regs.items()):
-              if n-k>8:regs.pop(r,None)
-            ops=i.operands
-            if i.mnemonic=='adrp' and len(ops)>=2 and ops[0].type==arm64.ARM64_OP_REG and ops[1].type==arm64.ARM64_OP_IMM:
-              pg=int(ops[1].imm)
-              if pg in pages:regs[ops[0].reg]=(pg,n)
-            elif i.mnemonic=='add' and len(ops)>=3 and ops[1].type==arm64.ARM64_OP_REG and ops[2].type==arm64.ARM64_OP_IMM:
-              if ops[1].reg in regs:
-                a=regs[ops[1].reg][0]+int(ops[2].imm)
-                if a in labels:refs.append((i.address,a,'ADRP+ADD'))
-            elif i.mnemonic=='adr' and len(ops)>=2 and ops[1].type==arm64.ARM64_OP_IMM:
-              a=int(ops[1].imm)
-              if a in labels:refs.append((i.address,a,'ADR'))
-          print('=== TARGETS ===')
-          for t,o,va in inst:print(f'{t}\toff=0x{o:x}\tva=0x{va:x}')
-          print('\n=== DIRECT CODE XREFS ===')
-          by={}
-          for pc,a,k in refs:by.setdefault(a,[]).append((pc,k))
-          for a,(t,o) in labels.items():
-            rr=by.get(a,[]);print(f'{t}\tva=0x{a:x}\txrefs={len(rr)}\t'+','.join(f'0x{x:x}:{k}' for x,k in rr[:30]))
+          refs={a:[] for a in labels}
+          mv=memoryview(tb); words=len(tb)//4
+          def sx(x,b): return x-(1<<b) if x&(1<<(b-1)) else x
+          # Raw AArch64 ADRP -> ADD immediate scan. No full disassembler: ~25M words but very cheap.
+          for idx in range(words):
+            w=struct.unpack_from('<I',mv,idx*4)[0]
+            if (w & 0x9f000000) != 0x90000000: continue
+            rd=w&31; immlo=(w>>29)&3; immhi=(w>>5)&0x7ffff
+            imm=sx((immhi<<2)|immlo,21)<<12
+            pc=tva+idx*4; page=(pc&~0xfff)+imm
+            if page not in pages: continue
+            for j in range(1,9):
+              if idx+j>=words: break
+              w2=struct.unpack_from('<I',mv,(idx+j)*4)[0]
+              # ADD (immediate), 32/64-bit; require source register == ADRP destination.
+              if (w2 & 0x1f000000) != 0x11000000: continue
+              if ((w2>>30)&1): continue  # SUB, not ADD
+              rn=(w2>>5)&31
+              if rn!=rd: continue
+              imm12=(w2>>10)&0xfff; sh=(w2>>22)&1
+              cand=page+(imm12<<(12 if sh else 0))
+              if cand in refs: refs[cand].append((pc,tva+(idx+j)*4))
+          print('=== TARGETS / FAST ADRP+ADD XREFS ===')
+          for t,o,va in inst:
+            rr=refs.get(va,[])
+            print(f'{t}\toff=0x{o:x}\tva=0x{va:x}\txrefs={len(rr)}\t'+','.join(f'0x{a:x}->0x{b:x}' for a,b in rr[:40]))
           print('\n=== STRING NEIGHBORHOODS ===')
           for t,o,va in inst:
             print(f'\n--- {t} @ 0x{o:x} ---')
-            lo=max(0,o-700);hi=min(len(d),o+700)
+            lo=max(0,o-500);hi=min(len(d),o+500)
             for m in re.finditer(rb'[ -~]{4,}',d[lo:hi]):
               print(f'0x{lo+m.start():x} '+m.group().decode('ascii','ignore'))
           PY
-          python3 /tmp/ef/x.py
+          time python3 /tmp/ef/x.py
