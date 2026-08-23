@@ -1,0 +1,1 @@
+trigger terminal-chain analysis 2026-08-23T18:40+01
