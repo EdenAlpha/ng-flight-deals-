@@ -1,0 +1,201 @@
+name: eFootball 0x7c0c670 crypto lineage trace
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch: {}
+
+concurrency:
+  group: efootball-c670-lineage-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lineage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball arm64 binary (runner-side only)
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Trace 0x7c0c670 lineage
+        run: |
+          cat > /tmp/ef/c670_lineage.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re,bisect,collections
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+
+          TARGET=0x7c0c670
+          COPY_HELPER=0x691d118
+          OUT_OFFSETS={0x80:'keyex_alg',0x88:'keyex_key_obj',0xa0:'session_alg',0xa8:'session_keylen'}
+
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          hexmem=re.compile(r'\[[wx][0-9]+, #0x([0-9a-f]+)\]')
+          decmem=re.compile(r'\[[wx][0-9]+, #(\d+)\]')
+
+          def vaoff(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va,maxlen=120):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+maxlen].split(b'\0',1)[0]
+              if len(b)<4:return None
+              if sum(32<=x<127 for x in b)/len(b)<.92:return None
+              return b.decode('ascii','replace')
+
+          # ---- pass 1: frame starts + direct BL targets + adrp-page refs to TARGET/COPY_HELPER
+          starts=[]; bl_hits=[]; adrp_pages=collections.defaultdict(list); nins=0
+          for addr,size,mnem,ops in md.disasm_lite(tb,tva):
+              nins+=1
+              if mnem=='stp' and 'x29, x30' in ops and '[sp' in ops:
+                  starts.append(addr)
+              if mnem=='bl':
+                  try:t=int(ops[1:],16)
+                  except:continue
+                  if t in (TARGET,COPY_HELPER):bl_hits.append((addr,t))
+              elif mnem=='adrp':
+                  m=re.match(r'(x\d+), #0x([0-9a-f]+)',ops)
+                  if m:adrp_pages[int(m.group(2),16)].append((addr,m.group(1)))
+          starts=sorted(set(starts))
+          def fstart(a):
+              j=bisect.bisect_right(starts,a)-1
+              return starts[j] if j>=0 else tva
+          def fend(fs):
+              j=bisect.bisect_right(starts,fs)
+              return starts[j] if j<len(starts) else tend
+
+          out=[f'text=0x{tva:x}-0x{tend:x} ins={nins} frames={len(starts)}']
+          tgt_page=TARGET & ~0xFFF; helper_page=COPY_HELPER & ~0xFFF
+          out.append(f'DIRECT_BL_TARGET={hex(TARGET)} count={sum(1 for a,t in bl_hits if t==TARGET)}')
+          for a,t in bl_hits:
+              tag='TARGET' if t==TARGET else 'COPY_HELPER'
+              out.append(f'BL_{tag} site=0x{a:x} caller_fn=0x{fstart(a):x}')
+          # adrp+add materialization of function address (vtable/fptr style)
+          for pg,label in ((tgt_page,'TARGET'),(helper_page,'COPY_HELPER')):
+              for addr,reg in adrp_pages.get(pg,[]):
+                  fs=fstart(addr); fe=min(fend(fs),addr+40)
+                  seg=list(md.disasm(tb[addr-tva:fe-tva],addr))
+                  for i,z in enumerate(seg):
+                      if z.mnemonic=='add' and re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',z.op_str):
+                          off=int(re.search(r'#0x([0-9a-f]+)',z.op_str).group(1),16)
+                          if pg+off==(TARGET if label=='TARGET' else COPY_HELPER):
+                              out.append(f'ADRPREF_{label} site=0x{z.address:x} fn=0x{fs:x}')
+                          break
+
+          # ---- full annotated dump of TARGET with input/output taint
+          fe=min(fend(TARGET),TARGET+0x3000)
+          body=list(md.disasm(tb[TARGET-tva:fe-tva],TARGET))
+          ann={}
+          for i,z in enumerate(body):
+              if z.mnemonic!='adrp':continue
+              m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+              if not m:continue
+              reg=m.group(1);page=int(m.group(2),16)
+              for q in body[i+1:i+8]:
+                  mm=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                  if mm:
+                      va=page+int(mm.group(1),16);s=cstr(va)
+                      if s:ann[q.address]=f' ; STR@0x{va:x}={s!r}'
+                      break
+          out.append(f'\n===== FULL DUMP 0x{TARGET:x}-0x{fe:x} ({len(body)} ins) =====')
+          for z in body:
+              extra=ann.get(z.address,'')
+              m=hexmem.search(z.op_str); d=decmem.search(z.op_str)
+              off=int(m.group(1),16) if m else (int(d.group(1)) if d else None)
+              tag=''
+              if off in (0xf0,0xf4):tag+=' <IN:keyex_alg>'
+              elif off in (0xf8,0x100):tag+=' <IN:keyex_key>'
+              elif off in (0x118,0x11c):tag+=' <IN:session_alg>'
+              elif off in (0x120,0x128):tag+=' <IN:session_keylen>'
+              elif off in OUT_OFFSETS:tag+=f' <OUT:{OUT_OFFSETS[off]}>'
+              out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{extra}{tag}')
+
+          # ---- pass 2: candidate consumers of COMPACT output object offsets
+          # functions that READ [x,#0xA0]/[x,#0xA8] (ldr w/x) AND contain cmp-with-small-imm,
+          # plus any BL into cipher/crypto regions. Report compactly.
+          consumer=collections.defaultdict(lambda:{'ldrs':[],'cmps':0,'strs':[],'calls':[]})
+          for addr,size,mnem,ops in md.disasm_lite(tb,tva):
+              fs=fstart(addr)
+              c=consumer[fs]
+              m=hexmem.search(ops)
+              off=int(m.group(1),16) if m else None
+              if mnem in ('ldr','ldrw','ldrb','ldur') and off in (0xa0,0xa8):
+                  c['ldrs'].append((addr,off))
+              elif mnem.startswith('str') and off in (0x80,0x88,0xa0,0xa8):
+                  c['strs'].append((addr,off))
+              if mnem in ('cmp','subs') and re.search(r'#(?:0x)?[0-9]{1,2}$',ops):c['cmps']+=1
+              if mnem in ('bl','blr'):c['calls'].append((addr,ops))
+
+          # known crypto-ish call targets: anything near OpenSSL alias-registration region ~0x7f9xxxx
+          CRYPTO_LO,CRYPTO_HI=0x7e00000,0x8300000
+          ranked=[]
+          for fs,c in consumer.items():
+              ld=[x for x in c['ldrs']]
+              if not ld:continue
+              crypto_calls=[(a,o) for a,o in c['calls'] if o.startswith('#') and CRYPTO_LO<=int(o[1:],16)<CRYPTO_HI]
+              score=len(ld)*30+len(c['strs'])*10+(25 if len(ld)>=2 else 0)+min(c['cmps'],10)
+              if crypto_calls:score+=60
+              if score>=30:ranked.append((score,fs,ld,c['strs'],crypto_calls,min(c['cmps'],12)))
+          ranked.sort(reverse=True)
+          out.append(f'\n===== COMPACT-OBJECT (+0xA0/+0xA8) CONSUMER CANDIDATES={len(ranked)} =====')
+          for score,fs,ld,strs,cc,ncmp in ranked[:60]:
+              out.append(f'CAND fn=0x{fs:x} score={score} reads={[f"0x{a:x}:+{hex(o)}" for a,o in ld]} writes={len(strs)} crypto_bl={[f"0x{a:x}->0x{o}" for a,o in cc[:4]]} small_cmps={ncmp}')
+
+          # surgical dumps for top candidates (bounded)
+          for score,fs,ld,strs,cc,ncmp in ranked[:15]:
+              fe2=min(fend(fs),fs+0x1800)
+              b2=list(md.disasm(tb[fs-tva:fe2-tva],fs))
+              out.append(f'\n--- CONSUMER SURGERY 0x{fs:x}-0x{fe2:x} score={score} ---')
+              taint={}
+              for z in b2:
+                  tag=''
+                  mm=re.search(r'\[(x\d+)[,\]]',z.op_str)
+                  lm=re.match(r'(?:ldr|ldrb|ldrh|ldrsw|ldur)\s+([wx]\d+),\s*\[?(?:x\d+)?(?:, #0x([0-9a-f]+))?\]?',z.mnemonic+' '+z.op_str)
+                  h=hexmem.search(z.op_str)
+                  off=int(h.group(1),16) if h else None
+                  if lm and off in (0xa0,0xa8):
+                      taint[lm.group(1)]=(z.address,f'+{hex(off)}');tag=f' <LOAD_COMPACT {taint[lm.group(1)][1]}>'
+                  for reg,(src,soff) in list(taint.items()):
+                      if reg in z.op_str and z.address!=src:tag+=f' <{reg}<-{soff}@0x{src:x}>'
+                  if z.mnemonic in ('cmp','cbz','cbnz','tbz','tbnz','blr','br') or 'bl ' == z.mnemonic[:3] or tag:
+                      out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{tag}')
+
+          txt='\n'.join(out)
+          Path('/tmp/out/c670_lineage.txt').write_text(txt)
+          print(f'report bytes={len(txt)}')
+          PY
+          python3 /tmp/ef/c670_lineage.py
+      - name: Show compact summary
+        run: |
+          grep -E "DIRECT_BL_|ADRPREF_|CAND |CONSUMER SURGERY|COMPACT-OBJECT" /tmp/out/c670_lineage.txt || true
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-c670-lineage
+          path: /tmp/out/
+          retention-days: 7
