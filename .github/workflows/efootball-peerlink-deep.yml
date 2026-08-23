@@ -1,0 +1,57 @@
+name: eFootball internal PeerLink dissection
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl file binutils openjdk-17-jre-headless >/dev/null
+          curl -L --fail --retry 4 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.1/jadx-1.5.1.zip
+          mkdir -p /tmp/jadx && unzip -q /tmp/jadx.zip -d /tmp/jadx
+      - name: Download current eFootball bundle
+        run: |
+          mkdir -p /tmp/ef/bundle /tmp/ef/base /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          BASE="$(find /tmp/ef/bundle -maxdepth 2 -type f -name 'jp.konami.pesam.apk' | head -n1)"
+          NATIVE="$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          test -f "$BASE" && test -f "$NATIVE"
+          cp "$BASE" /tmp/ef/base.apk
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          echo "BASE=$BASE" > /tmp/out/inventory.txt
+          echo "NATIVE=$NATIVE" >> /tmp/out/inventory.txt
+          sha256sum /tmp/ef/base.apk /tmp/ef/native/lib/arm64-v8a/libUE4.so >> /tmp/out/inventory.txt
+      - name: JADX targeted managed dissection
+        run: |
+          /tmp/jadx/bin/jadx --no-res --no-debug-info -j 2 -d /tmp/ef/jadx /tmp/ef/base.apk >/tmp/out/jadx.log 2>&1 || true
+          echo '=== PEERLINK FILES ===' > /tmp/out/peerlink_files.txt
+          find /tmp/ef/jadx -type f \( -path '*jp/konami/peerlink/*' -o -iname '*BluetoothSwitch*' \) -print | sort >> /tmp/out/peerlink_files.txt
+          : > /tmp/out/peerlink_sources.txt
+          while IFS= read -r f; do
+            case "$f" in /tmp/ef/jadx/*)
+              echo -e "\n\n===== $f =====" >> /tmp/out/peerlink_sources.txt
+              sed -n '1,2400p' "$f" >> /tmp/out/peerlink_sources.txt
+            esac
+          done < <(tail -n +2 /tmp/out/peerlink_files.txt)
+          grep -RniE 'peerlink|BluetoothSwitch|WifiDirect|WiFiDirect|P2P_ADHOC|LOCAL_GAMERELAY|gamerelay|native[A-Z]|System\.loadLibrary|startActivityForResult|Intent|getExtra|putExtra|LocalSocket|DatagramSocket|ServerSocket|BluetoothAdapter|WifiP2p|NetworkInterface' /tmp/ef/jadx 2>/dev/null | head -n 12000 > /tmp/out/managed_crossrefs.txt || true
+      - name: Native PeerLink and LAN correlation
+        run: |
+          SO=/tmp/ef/native/lib/arm64-v8a/libUE4.so
+          strings -a -t x "$SO" | grep -Ei 'jp[./]konami[./]peerlink|BluetoothSwitch|P2P_ADHOC|WIFIDIRECTLAN|LOCAL_GAMERELAY|CmdSetLocalGamerelay|TaskEvCompeLocalGamerelay|canUseWiFi|GET_PEER_NAME|BindNTLAddress|LinkUpMode|NetworkQualityTestForP2pFullMesh|OnlineSystemMultiplaySessionStrategyP2pFullMesh' > /tmp/out/native_peerlink_strings.txt || true
+          readelf -Ws "$SO" | grep -Ei 'peerlink|wifi|bluetooth|gamerelay|p2p' > /tmp/out/native_symbols.txt || true
+          strings -a -t x "$SO" | grep -Ei 'GameplayFinished|ResultPresentation|SendServerMatchEnd|WaitTimeup|MatchResultTimeUpDemo|CMD_GET_GAME_RESULT|CMD_ADD_SCORE|CMD_CHANGE_GAMEPHASE|HOME_SCORE|AWAY_SCORE|NUM_GUESTS_END_MATCH|MATCH_END|ADDED_TIME|IsMatchEnd|HasMatchEnded|PKR_OnChangeGameScore' > /tmp/out/result_state_strings.txt || true
+      - name: Package and upload textual findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-peerlink-deep
+          path: /tmp/out/
+          retention-days: 7
