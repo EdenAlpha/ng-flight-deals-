@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: efootball-apk-analysis-2026-08-23
-      - name: Download current arm64 libUE4
+      - name: Download current arm64 native binaries
         run: |
           set -euxo pipefail
           rm -rf /tmp/efbin
@@ -30,18 +30,21 @@ jobs:
           test -n "$APK"
           unzip -q "$APK" -d /tmp/efbin/native
           cp /tmp/efbin/native/lib/arm64-v8a/libUE4.so /tmp/efbin/out/libUE4.so
-          sha256sum /tmp/efbin/out/libUE4.so
+          cp /tmp/efbin/native/lib/arm64-v8a/libgadsme.so /tmp/efbin/out/libgadsme.so
+          sha256sum /tmp/efbin/out/libUE4.so /tmp/efbin/out/libgadsme.so
       - uses: actions/upload-artifact@v4
         with:
-          name: efootball-11.0.1-arm64-libUE4-analysis-only
-          path: /tmp/efbin/out/libUE4.so
+          name: efootball-11.0.1-arm64-native-analysis-only
+          path: |
+            /tmp/efbin/out/libUE4.so
+            /tmp/efbin/out/libgadsme.so
           compression-level: 0
           retention-days: 1
       - name: Publish run id only
         run: |
-          printf 'run_id=%s\nsha=%s\n' "$GITHUB_RUN_ID" "$(sha256sum /tmp/efbin/out/libUE4.so | cut -d' ' -f1)" > binary-artifact-run.txt
+          printf 'run_id=%s\nue4_sha=%s\ngadsme_sha=%s\n' "$GITHUB_RUN_ID" "$(sha256sum /tmp/efbin/out/libUE4.so | cut -d' ' -f1)" "$(sha256sum /tmp/efbin/out/libgadsme.so | cut -d' ' -f1)" > binary-artifact-run.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add binary-artifact-run.txt
-          git commit -m 'Record temporary eFootball binary artifact run' || exit 0
+          git commit -m 'Record temporary eFootball native artifact run' || exit 0
           git push origin HEAD:$BRANCH
