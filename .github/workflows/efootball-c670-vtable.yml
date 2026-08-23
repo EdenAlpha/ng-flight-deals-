@@ -49,7 +49,7 @@ jobs:
               text=e.get_section_by_name('.text')
               tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
               loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
-              relsecs=[s for s in e.iter_sections() if s.header['sh_type'] in ('SHT_RELA',)]
+              relsecs=[s.data() for s in e.iter_sections() if s.header['sh_type'] in ('SHT_RELA',)]
 
           TARGET=0x7c0c670
           md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
@@ -71,8 +71,7 @@ jobs:
           # ---- step 1: relocations whose addend == TARGET => vtable slots
           # parse raw RELA entries: 24B each = r_offset,r_info,r_addend ; type=r_info&0xffffffff
           slots=[]
-          for s in relsecs:
-              d=s.data()
+          for d in relsecs:
               for o in range(0,len(d)-23,24):
                   r_off,r_info,r_add=struct.unpack_from('<QQq',d,o)
                   if (r_info & 0xFFFFFFFF)==1027 and r_add==TARGET:
