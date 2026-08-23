@@ -1,0 +1,126 @@
+name: eFootball all-native PeerLink reachability
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install analysis tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl binutils python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download and unpack every native split
+        run: |
+          set -e
+          mkdir -p /tmp/ef/bundle /tmp/ef/libs /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          : > /tmp/out/native_inventory.txt
+          n=0
+          while IFS= read -r apk; do
+            n=$((n+1)); dst="/tmp/ef/split_$n"; mkdir -p "$dst"
+            unzip -q "$apk" -d "$dst" || true
+            find "$dst" -type f -name '*.so' -print | while read -r so; do
+              echo "$apk :: $so :: $(stat -c%s "$so") bytes" >> /tmp/out/native_inventory.txt
+              rel="split_${n}_$(basename "$so")"; cp "$so" "/tmp/ef/libs/$rel"
+            done
+          done < <(find /tmp/ef/bundle -type f -name '*.apk' | sort)
+          sort -u /tmp/out/native_inventory.txt -o /tmp/out/native_inventory.txt
+          cat /tmp/out/native_inventory.txt
+      - name: Scan every library for PeerLink/JNI reachability
+        run: |
+          : > /tmp/out/all_so_peerlink_hits.txt
+          : > /tmp/out/all_so_jni_symbols.txt
+          for so in /tmp/ef/libs/*.so; do
+            echo "===== $(basename "$so") =====" >> /tmp/out/all_so_peerlink_hits.txt
+            strings -a -t x "$so" | grep -Ei 'jp[./]konami[./]peerlink|peerlink/(ble|btc|wifi)|NetworkServiceDiscovery|WifiDirectNsd|WifiDirectNsdList|BluetoothLowEnergy(Socket)?|BluetoothClassic(Socket)?|BluetoothSwitch|P2P_ADHOC_(LAN|WIFIDIRECTLAN|BLE)|LOCAL_GAMERELAY|CmdSetLocalGamerelay|TaskEvCompeLocalGamerelay' >> /tmp/out/all_so_peerlink_hits.txt || true
+            echo "===== $(basename "$so") =====" >> /tmp/out/all_so_jni_symbols.txt
+            readelf -Ws "$so" 2>/dev/null | grep -Ei 'JNI_OnLoad|Java_jp_konami_peerlink|peerlink|WifiDirect|BluetoothLowEnergy|BluetoothClassic' >> /tmp/out/all_so_jni_symbols.txt || true
+          done
+          echo '--- concise hit-bearing libraries ---'
+          awk '/^=====/{h=$0; next} NF{print h; print; h=""}' /tmp/out/all_so_peerlink_hits.txt | head -n 500
+      - name: Resolve UE4 mode and match-state xrefs with function/call clustering
+        run: |
+          UE4="$(find /tmp/ef/libs -type f -name '*libUE4.so' | head -n1)"
+          test -f "$UE4"
+          cat > /tmp/ef/xcluster.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import struct,re,collections,sys
+          p=Path(sys.argv[1]); raw=p.read_bytes()
+          with p.open('rb') as f:
+            e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr'])
+            loads=[(int(s['p_offset']),int(s['p_filesz']),int(s['p_vaddr'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          def ova(o):
+            for po,sz,va in loads:
+              if po<=o<po+sz:return va+o-po
+          terms=['P2P_ADHOC_LAN_LOW_LEVEL','P2P_ADHOC_LAN_HIGH_LEVEL','P2P_ADHOC_WIFIDIRECTLAN_LOW_LEVEL','P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL','P2P_ADHOC_BLE','LOCAL_GAMERELAY','CmdSetLocalGamerelay','TaskEvCompeLocalGamerelay','direct_online_turn_mode','LinkUpMode','CMD_CHANGE_GAMEPHASE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT','CMD_ADD_SCORE','EMatchFlowTask::SendServerMatchEnd','NUM_GUESTS_END_MATCH','NUM_LOCAL_GUESTS_END_MATCH','NUM_NODES_END_MATCH','WaitTimeup','GameplayFinished','ResultPresentation']
+          labels={}
+          for term in terms:
+            s=0
+            while True:
+              o=raw.find(term.encode(),s)
+              if o<0:break
+              va=ova(o)
+              if va is not None: labels.setdefault(va,[]).append(term)
+              s=o+1
+          pages={a&~0xfff for a in labels}; refs=collections.defaultdict(list)
+          mv=memoryview(tb); words=len(tb)//4
+          def sx(x,b): return x-(1<<b) if x&(1<<(b-1)) else x
+          for idx in range(words):
+            w=struct.unpack_from('<I',mv,idx*4)[0]
+            if (w&0x9f000000)!=0x90000000: continue
+            rd=w&31; imm=sx((((w>>5)&0x7ffff)<<2)|((w>>29)&3),21)<<12
+            pc=tva+idx*4; page=(pc&~0xfff)+imm
+            if page not in pages: continue
+            for j in range(1,9):
+              if idx+j>=words: break
+              w2=struct.unpack_from('<I',mv,(idx+j)*4)[0]
+              if (w2&0x1f000000)!=0x11000000 or ((w2>>30)&1) or ((w2>>5)&31)!=rd: continue
+              cand=page+(((w2>>10)&0xfff)<<(12 if ((w2>>22)&1) else 0))
+              if cand in labels: refs[cand].append(pc)
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          def get_bytes(lo,hi):
+            lo=max(tva,lo); hi=min(tva+len(tb),hi); return tb[lo-tva:hi-tva],lo
+          def approx_start(pc):
+            lo=max(tva,pc-0x1200); data,_=get_bytes(lo,pc+4); cand=[]
+            for ins in md.disasm(data,lo):
+              if ins.address>=pc: break
+              if ins.mnemonic=='stp' and 'x29, x30' in ins.op_str and '[sp' in ins.op_str and '!' in ins.op_str: cand.append(ins.address)
+            return cand[-1] if cand else max(tva,pc-0x300)
+          out=['=== STRING XREFS AND APPROXIMATE FUNCTIONS ===']
+          groups=collections.defaultdict(list)
+          for sva,names in sorted(labels.items()):
+            for pc in refs.get(sva,[]): groups[approx_start(pc)].append((pc,sva,'|'.join(names)))
+          for fs,items in sorted(groups.items()):
+            out.append(f'\nFUNCTION~0x{fs:x}')
+            for pc,sva,name in sorted(items): out.append(f'  xref 0x{pc:x} -> 0x{sva:x} {name}')
+            maxpc=max(x[0] for x in items); data,start=get_bytes(fs,min(maxpc+0x380,fs+0x2400))
+            calls=collections.Counter()
+            snippets=[]
+            for ins in md.disasm(data,start):
+              if ins.mnemonic=='bl': calls[ins.op_str]+=1
+              if any(abs(ins.address-x[0])<=0x38 for x in items): snippets.append(f'    0x{ins.address:x}: {ins.mnemonic:8} {ins.op_str}')
+            out.append('  direct BL targets: '+', '.join(f'{k}x{v}' for k,v in calls.most_common(20)))
+            out.append('  xref neighborhoods:')
+            out.extend(snippets[:220])
+          out.append('\n=== UNREFERENCED / REFERENCED TERMS ===')
+          for sva,names in sorted(labels.items()): out.append(f'0x{sva:x} refs={len(refs.get(sva,[]))} '+ '|'.join(names))
+          Path('/tmp/out/xref_function_clusters.txt').write_text('\n'.join(out))
+          PY
+          python3 /tmp/ef/xcluster.py "$UE4"
+          sed -n '1,1200p' /tmp/out/xref_function_clusters.txt
+      - name: Upload textual findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-all-native-reachability
+          path: /tmp/out/
+          retention-days: 7
