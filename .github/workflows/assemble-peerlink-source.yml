@@ -21,7 +21,30 @@ jobs:
         run: |
           set -euxo pipefail
           test -f .handoff/READY
-          cat .handoff/peerlink_source.b64.part* | base64 -d > /tmp/peerlink-source.tar.xz
+          cat \
+            .handoff/peerlink_source.b64.part00 \
+            .handoff/peerlink_source.b64.part01 \
+            .handoff/peerlink_source.b64.part02 \
+            .handoff/peerlink_source.b64.part03 \
+            .handoff/peerlink_source.b64.part04 \
+            .handoff/peerlink_source.b64.part05 \
+            .handoff/peerlink_source.b64.part06 \
+            .handoff/peerlink_source.b64.part07 \
+            .handoff/peerlink_source.b64.part08 \
+            .handoff/peerlink_source.b64.part09 \
+            .handoff/peerlink_source.b64.part10 \
+            .handoff/peerlink_source.b64.part11 \
+            .handoff/peerlink_source.b64.part12 \
+            .handoff/peerlink_source.b64.part15 \
+            .handoff/peerlink_source.b64.part16 \
+            .handoff/peerlink_source.b64.part17 \
+            .handoff/peerlink_source.b64.part18 \
+            .handoff/peerlink_source.b64.part19 \
+            .handoff/peerlink_source.b64.part20 \
+            .handoff/peerlink_source.b64.part21 \
+            .handoff/peerlink_source.b64.part22 \
+            .handoff/peerlink_source.b64.part23 \
+            | base64 -d > /tmp/peerlink-source.tar.xz
           echo 'eedc02267803092ed6ac9bc6f712af9131567133cc4585636dc2469dd0fa5651  /tmp/peerlink-source.tar.xz' | sha256sum -c -
           rm -rf peerlink-source /tmp/unpack
           mkdir -p /tmp/unpack
