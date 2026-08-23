@@ -1,6 +1,6 @@
 # eFootball APK surgical static analysis
 
-Sun Aug 23 14:16:24 UTC 2026
+Sun Aug 23 14:37:00 UTC 2026
 
 ## APK bundle inventory
 config.arm64_v8a.apk 57148181 bytes
