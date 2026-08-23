@@ -1,0 +1,124 @@
+name: eFootball ARM64 xref analysis
+
+on:
+  push:
+    branches: [ efootball-xref-isolated-20260823 ]
+
+permissions:
+  contents: write
+
+jobs:
+  xref:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-xref-isolated-20260823
+      - name: Install tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y unzip file binutils python3 python3-pip
+          python3 -m pip install --break-system-packages pyelftools==0.32 capstone==5.0.6
+      - name: Download libUE4
+        run: |
+          set -euxo pipefail
+          rm -rf xwork xref-output
+          mkdir -p xwork/bundle xwork/arm xref-output
+          curl -L --fail --retry 5 --retry-delay 3 -A 'Mozilla/5.0' -o xwork/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q xwork/efootball.xapk -d xwork/bundle
+          ARM="$(find xwork/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"; test -n "$ARM"
+          unzip -q "$ARM" -d xwork/arm
+          cp xwork/arm/lib/arm64-v8a/libUE4.so xwork/libUE4.so
+      - name: Find ARM64 code xrefs to high-value strings
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          from capstone.arm64 import ARM64_OP_IMM, ARM64_OP_REG
+          import re
+          path='xwork/libUE4.so'
+          targets=['get_game_result_timeout_sec','NUM_LOCAL_GUESTS_END_MATCH','match_to_match_result','CheckMatchResult','CheckMatchResultDetail','MatchResultTimeUpDemo','MATCH_RESULT','bIsWinner','GAMERESULT_DRAW','ADDED_TIME','m_isExtraTime','EMatchPhase::HalfTime','OnlineSystemMultiplaySessionStrategyP2pFullMeshWithTurn.cpp','HOST_DIRECT','HOST_RELAY','MATCHING_STATE_STUN_CHECK','START_UDP_HOLE_PUNCHING','STOP_UDP_HOLE_PUNCHING','pesam.stun.service.konami.net','P2PTURNIO_P2P_RTT_Mean','turn_server_list']
+          data=Path(path).read_bytes()
+          with open(path,'rb') as f:
+            elf=ELFFile(f); loads=[]
+            for seg in elf.iter_segments():
+              if seg['p_type']=='PT_LOAD': loads.append((seg['p_offset'],seg['p_offset']+seg['p_filesz'],seg['p_vaddr']))
+            def off2va(off):
+              for lo,hi,va in loads:
+                if lo<=off<hi:return va+(off-lo)
+            text=elf.get_section_by_name('.text'); code=text.data(); text_va=text['sh_addr']
+            funcs=[]
+            for secname in ['.symtab','.dynsym']:
+              sec=elf.get_section_by_name(secname)
+              if sec:
+                for s in sec.iter_symbols():
+                  if s['st_info']['type']=='STT_FUNC' and s['st_value'] and s['st_size']: funcs.append((s['st_value'],s['st_value']+s['st_size'],s.name))
+            funcs.sort()
+          occ=[]
+          for t in targets:
+            needle=t.encode(); start=0
+            while True:
+              i=data.find(needle,start)
+              if i<0: break
+              va=off2va(i)
+              if va is not None: occ.append((t,i,va))
+              start=i+1
+          pages={}; target_by_va={}
+          for t,off,va in occ:
+            pages.setdefault(va&~0xfff,[]).append((va,t,off)); target_by_va[va]=(t,off)
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=True; ins=list(md.disasm(code,text_va))
+          regs={}; ages={}; refs=[]
+          for idx,x in enumerate(ins):
+            for r in list(ages):
+              ages[r]+=1
+              if ages[r]>20: regs.pop(r,None); ages.pop(r,None)
+            if x.mnemonic=='adrp' and len(x.operands)>=2 and x.operands[0].type==ARM64_OP_REG and x.operands[1].type==ARM64_OP_IMM:
+              r=x.reg_name(x.operands[0].reg); regs[r]=x.operands[1].imm; ages[r]=0
+            elif x.mnemonic=='adr' and len(x.operands)>=2 and x.operands[1].type==ARM64_OP_IMM:
+              dest=x.operands[1].imm
+              if dest in target_by_va:
+                t,off=target_by_va[dest]; refs.append((idx,x.address,dest,t,off,'ADR'))
+            elif x.mnemonic=='add' and len(x.operands)>=3 and x.operands[1].type==ARM64_OP_REG and x.operands[2].type==ARM64_OP_IMM:
+              src=x.reg_name(x.operands[1].reg)
+              if src in regs:
+                dest=regs[src]+x.operands[2].imm
+                for va,t,off in pages.get(regs[src]&~0xfff,[]):
+                  if dest==va: refs.append((idx,x.address,va,t,off,'ADRP+ADD'))
+            if x.mnemonic in {'b','br','ret'}: regs={}; ages={}
+          out=[]
+          for idx,addr,sva,t,off,kind in refs:
+            fn=''
+            for lo,hi,name in funcs:
+              if lo<=addr<hi: fn=f'{name} [0x{lo:x}-0x{hi:x}]'; break
+            out.append(f'===== TARGET={t} string_file_off=0x{off:x} string_va=0x{sva:x} XREF=0x{addr:x} via={kind} function={fn or "<stripped/unknown>"} =====')
+            for y in ins[max(0,idx-28):min(len(ins),idx+45)]: out.append(f'0x{y.address:012x}: {y.mnemonic:8} {y.op_str}')
+            out.append('')
+          Path('xref-output/xrefs.txt').write_text('\n'.join(out),errors='ignore')
+          Path('xref-output/targets.txt').write_text('\n'.join(f'{t} fileoff=0x{o:x} va=0x{v:x}' for t,o,v in occ))
+          Path('xref-output/summary.txt').write_text(f'target_occurrences={len(occ)}\nxrefs_found={len(refs)}\n')
+          PY
+      - name: Search source-path and result-command vocabulary
+        run: |
+          set -euxo pipefail
+          strings -a -t x -n 12 xwork/libUE4.so | grep -Ei 'PES22HC/.+\.(cpp|h)$|UE4\.26_eFB/.+\.(cpp|h)$' | grep -Ei 'Multiplay|SessionStrategy|Match|Result|Network|Net|Turn|Stun|Peer|OnlineSystem' > xref-output/source_paths.txt || true
+          strings -a -t x -n 5 xwork/libUE4.so | grep -Ei 'CMD_[A-Z0-9_]*(MATCH|RESULT|GAME|END)|Task[A-Za-z0-9_]*(Match|Result|Game)|match_[a-z0-9_]*(result|end)|get_game_result|END_MATCH|END_GAME|GAME_RESULT' > xref-output/result_commands.txt || true
+      - name: Commit results
+        run: |
+          set -euxo pipefail
+          {
+            echo '# eFootball ARM64 string xref report'; date -u
+            echo; cat xref-output/summary.txt
+            echo; echo '## Targets'; cat xref-output/targets.txt
+            echo; echo '## Result/session commands'; cat xref-output/result_commands.txt
+            echo; echo '## Relevant embedded source paths'; cat xref-output/source_paths.txt
+            echo; echo '## Xrefs and disassembly'; cat xref-output/xrefs.txt
+          } > xref-output/report.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add xref-output
+          git commit -m 'Add eFootball ARM64 xref analysis' || exit 0
+          git push origin HEAD:efootball-xref-isolated-20260823
