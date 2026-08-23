@@ -1,0 +1,1 @@
+Trigger the push-only eFootball command wire-format and LAN-mode analysis.
