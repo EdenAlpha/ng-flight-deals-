@@ -1,0 +1,55 @@
+work/unpacked/apk4/play-services-drive.properties:2:client=play-services-drive
+work/unpacked/apk4/play-services-drive.properties:3:play-services-drive_client=17.0.0
+work/unpacked/apk4/play-services-stats.properties:2:client=play-services-stats
+work/unpacked/apk4/play-services-stats.properties:3:play-services-stats_client=17.0.2
+work/unpacked/apk4/play-services-appset.properties:2:client=play-services-appset
+work/unpacked/apk4/play-services-appset.properties:3:play-services-appset_client=16.0.1
+work/unpacked/apk4/play-services-auth-base.properties:2:client=play-services-auth-base
+work/unpacked/apk4/play-services-auth-base.properties:3:play-services-auth-base_client=17.0.0
+work/unpacked/apk4/play-services-auth.properties:2:client=play-services-auth
+work/unpacked/apk4/play-services-auth.properties:3:play-services-auth_client=18.1.0
+work/unpacked/apk4/res/raw/firebase_crashlytics_keep.xml:4:  ~ Licensed under the Apache License, Version 2.0 (the "License");
+work/unpacked/apk4/res/raw/firebase_crashlytics_keep.xml:5:  ~ you may not use this file except in compliance with the License.
+work/unpacked/apk4/res/raw/firebase_crashlytics_keep.xml:6:  ~ You may obtain a copy of the License at
+work/unpacked/apk4/res/raw/firebase_crashlytics_keep.xml:8:  ~     http://www.apache.org/licenses/LICENSE-2.0
+work/unpacked/apk4/res/raw/firebase_crashlytics_keep.xml:11:  ~ distributed under the License is distributed on an "AS IS" BASIS,
+work/unpacked/apk4/res/raw/firebase_crashlytics_keep.xml:13:  ~ See the License for the specific language governing permissions and
+work/unpacked/apk4/res/raw/firebase_crashlytics_keep.xml:14:  ~ limitations under the License.
+work/unpacked/apk4/play-services-ads-identifier.properties:2:client=play-services-ads-identifier
+work/unpacked/apk4/play-services-ads-identifier.properties:3:play-services-ads-identifier_client=18.0.0
+work/unpacked/apk4/play-services-ads.properties:2:client=play-services-ads
+work/unpacked/apk4/play-services-ads.properties:3:play-services-ads_client=23.1.0
+work/unpacked/apk4/play-services-places-placereport.properties:2:client=play-services-places-placereport
+work/unpacked/apk4/play-services-places-placereport.properties:3:play-services-places-placereport_client=17.0.0
+work/unpacked/apk4/play-services-ads-base.properties:2:client=play-services-ads-base
+work/unpacked/apk4/play-services-ads-base.properties:3:play-services-ads-base_client=23.1.0
+work/unpacked/apk4/play-services-ads-lite.properties:2:client=play-services-ads-lite
+work/unpacked/apk4/play-services-ads-lite.properties:3:play-services-ads-lite_client=23.1.0
+work/unpacked/apk4/play-services-measurement-sdk.properties:2:client=play-services-measurement-sdk
+work/unpacked/apk4/play-services-measurement-sdk.properties:3:play-services-measurement-sdk_client=21.6.2
+work/unpacked/apk4/play-services-games-v2.properties:2:client=play-services-games-v2
+work/unpacked/apk4/play-services-games-v2.properties:3:play-services-games-v2_client=20.1.2
+work/unpacked/apk4/play-services-tasks.properties:2:client=play-services-tasks
+work/unpacked/apk4/play-services-tasks.properties:3:play-services-tasks_client=18.2.0
+work/unpacked/apk4/play-services-measurement-sdk-api.properties:2:client=play-services-measurement-sdk-api
+work/unpacked/apk4/play-services-measurement-sdk-api.properties:3:play-services-measurement-sdk-api_client=21.6.2
+work/unpacked/apk4/play-services-cronet.properties:2:client=play-services-cronet
+work/unpacked/apk4/play-services-cronet.properties:3:play-services-cronet_client=18.0.1
+work/unpacked/apk4/play-services-auth-api-phone.properties:2:client=play-services-auth-api-phone
+work/unpacked/apk4/play-services-auth-api-phone.properties:3:play-services-auth-api-phone_client=17.0.0
+work/unpacked/apk4/play-services-measurement-api.properties:2:client=play-services-measurement-api
+work/unpacked/apk4/play-services-measurement-api.properties:3:play-services-measurement-api_client=21.6.2
+work/unpacked/apk4/play-services-location.properties:2:client=play-services-location
+work/unpacked/apk4/play-services-location.properties:3:play-services-location_client=19.0.0
+work/unpacked/apk4/play-services-measurement-base.properties:2:client=play-services-measurement-base
+work/unpacked/apk4/play-services-measurement-base.properties:3:play-services-measurement-base_client=21.6.2
+work/unpacked/apk4/play-services-measurement-impl.properties:2:client=play-services-measurement-impl
+work/unpacked/apk4/play-services-measurement-impl.properties:3:play-services-measurement-impl_client=21.6.2
+work/unpacked/apk4/play-services-basement.properties:2:client=play-services-basement
+work/unpacked/apk4/play-services-basement.properties:3:play-services-basement_client=18.9.0
+work/unpacked/apk4/play-services-base.properties:2:client=play-services-base
+work/unpacked/apk4/play-services-base.properties:3:play-services-base_client=18.5.0
+work/unpacked/apk4/play-services-cloud-messaging.properties:2:client=play-services-cloud-messaging
+work/unpacked/apk4/play-services-cloud-messaging.properties:3:play-services-cloud-messaging_client=17.0.1
+work/unpacked/apk4/play-services-measurement.properties:2:client=play-services-measurement
+work/unpacked/apk4/play-services-measurement.properties:3:play-services-measurement_client=21.6.2
