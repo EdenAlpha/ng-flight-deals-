@@ -1,0 +1,94 @@
+TARGET CMD_ADD_SCORE
+xref_count=4
+  pc=0x75adbe0 va=0x9d9601 CmdAddScore.php
+  pc=0x75af798 va=0x9d9601 CmdAddScore.php
+TARGET CMD_CHANGE_GAMEPHASE
+xref_count=4
+  pc=0x75bfedc va=0x9ecee0 CMD_CHANGE_GAMEPHASE
+  pc=0x75bff44 va=0xbeeb63 CmdChangeGamephase.php
+  pc=0x75c37f4 va=0x9ecee0 CMD_CHANGE_GAMEPHASE
+  pc=0x75c3848 va=0xbeeb63 CmdChangeGamephase.php
+TARGET CMD_GET_GAME_RESULT
+xref_count=4
+  pc=0x7621ad8 va=0xaf6d0e CMD_GET_GAME_RESULT
+  pc=0x7621ec8 va=0xaf6d0e CMD_GET_GAME_RESULT
+  pc=0x7621f30 va=0xbc949f CmdGetGameResult.php
+  pc=0x7622240 va=0xaf6d0e CMD_GET_GAME_RESULT
+  pc=0x7622298 va=0xbc949f CmdGetGameResult.php
+TARGET CMD_SET_GAME_RESULT
+xref_count=3
+  pc=0x76d42c8 va=0xba196a CMD_SET_GAME_RESULT
+  pc=0x76d4330 va=0xb8ee08 CmdSetGameResult.php
+  pc=0x76e0250 va=0xba196a CMD_SET_GAME_RESULT
+  pc=0x76e02a4 va=0xb8ee08 CmdSetGameResult.php
+TARGET EMatchFlowTask::SendServerMatchEnd
+xref_count=0
+TARGET EMatchFlowTask::WaitTimeup
+xref_count=0
+TARGET EMatchFlowTask::DemoTimeupTrans
+xref_count=0
+TARGET EPKR_GamePhase::GameplayFinished
+xref_count=0
+TARGET EPKR_GamePhase::ResultPresentation
+xref_count=0
+TARGET ROOM_GAME_PHASE_END
+xref_count=0
+TARGET P2P_ADHOC_LAN
+xref_count=8
+TARGET P2P_ADHOC_LAN_LOW_LEVEL
+xref_count=2
+TARGET P2P_ADHOC_LAN_HIGH_LEVEL
+xref_count=2
+TARGET P2P_ADHOC_WIFIDIRECTLAN
+xref_count=8
+TARGET P2P_ADHOC_WIFIDIRECTLAN_LOW_LEVEL
+xref_count=2
+TARGET P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+xref_count=2
+TARGET CMD_SET_LOCAL_GAMERELAY_LIST
+xref_count=2
+  pc=0x76e8bb0 va=0xa0030a CmdSetLocalGamerelayList.php
+  pc=0x76e99b0 va=0xa0030a CmdSetLocalGamerelayList.php
+TARGET TaskEvCompeLocalGamerelay
+xref_count=1
+  pc=0x7a13bd0 va=0xa97bc2 TaskEvCompeLocalGamerelay
+TARGET direct_online_turn_mode
+xref_count=1
+TARGET LinkUpMode
+xref_count=1
+[CMD_CHANGE_GAMEPHASE] file_off=0x9ecee0
+  0x9ecee0 CMD_CHANGE_GAMEPHASE
+[CMD_CHANGE_GAMEPHASE] file_off=0xbef67e
+  0xbee4ff CmdGetGamerelayQualityCheckList
+  0xbee51f CmdSetGameResult
+  0xbeeb63 CmdChangeGamephase.php
+  0xbef67e {"default": {"onmode": {"get_game_result_error_sec": 30, "game_result_timeout_sec": 45, "at_match_polling_interval_msec": 30000},"timeout": {"CMD_ADD_SCORE": 30, "CMD_ADD_FOUL": 30, "CMD_CHANGE_GAMEPHASE": 30},"invitation_task": {"enable": true, "use_http_command": false},"connect_grpc_task": {"disable": true}}}
+  0xa710fe CommandObjectCmdGetVscomOpponent error.
+[TaskEvCompeLocalGamerelay] file_off=0xa97bc2
+  0xa97bc2 TaskEvCompeLocalGamerelay
+  0xabe9f0 P2pModeTurnSendEnable
+  0xabe9f0 P2pModeTurnSendEnable
+  0xb553bd CmdSetGamerelayQuality.php
+  0xb55af0 G:\PES22HC\Dev-600Series\Source\Shared\pes\Game\Online\OnlineSystem\Multiplay\SessionStrategy\OnlineSystemMultiplaySessionStrategyP2pFullMeshWithTurn.cpp
+  0xabe9f0 P2pModeTurnSendEnable
+[CMD_GET_GAME_RESULT] file_off=0xaf6d0e
+  0xaf6d0e CMD_GET_GAME_RESULT
+  0xb553bd CmdSetGamerelayQuality.php
+  0xb55af0 G:\PES22HC\Dev-600Series\Source\Shared\pes\Game\Online\OnlineSystem\Multiplay\SessionStrategy\OnlineSystemMultiplaySessionStrategyP2pFullMeshWithTurn.cpp
+  0xb7b114 CmdGetGameResult
+  0xbee4ff CmdGetGamerelayQualityCheckList
+  0xbee51f CmdSetGameResult
+  0xbeeb63 CmdChangeGamephase.php
+  0xbef67e {"default": {"onmode": {"get_game_result_error_sec": 30, "game_result_timeout_sec": 45, "at_match_polling_interval_msec": 30000},"timeout": {"CMD_ADD_SCORE": 30, "CMD_ADD_FOUL": 30, "CMD_CHANGE_GAMEPHASE": 30},"invitation_task": {"enable": true, "use_http_command": false},"connect_grpc_task": {"disable": true}}}
+  0xb553bd CmdSetGamerelayQuality.php
+  0xb55af0 G:\PES22HC\Dev-600Series\Source\Shared\pes\Game\Online\OnlineSystem\Multiplay\SessionStrategy\OnlineSystemMultiplaySessionStrategyP2pFullMeshWithTurn.cpp
+  0xb7b114 CmdGetGameResult
+[CMD_SET_GAME_RESULT] file_off=0xba196a
+  0xba11a8 EvCompeLocalGamerelay
+  0xba18a0 CmdGetGamerelayQualitycheckList.php
+  0xba196a CMD_SET_GAME_RESULT
+  0xba2d3c G:\PES22HC\Dev-600Series\Source\Shared\pes\Game\Online\OnlineSystem\Multiplay\SessionStrategy\OnlineSystemMultiplaySessionStrategyP2pFullMeshTurnOnly.cpp
+  0xbee4ff CmdGetGamerelayQualityCheckList
+  0xbee51f CmdSetGameResult
+  0xbeeb63 CmdChangeGamephase.php
+  0xbef67e {"default": {"onmode": {"get_game_result_error_sec": 30, "game_result_timeout_sec": 45, "at_match_polling_interval_msec": 30000},"timeout": {"CMD_ADD_SCORE": 30, "CMD_ADD_FOUL": 30, "CMD_CHANGE_GAMEPHASE": 30},"invitation_task": {"enable": true, "use_http_command": false},"connect_grpc_task": {"disable": true}}}
