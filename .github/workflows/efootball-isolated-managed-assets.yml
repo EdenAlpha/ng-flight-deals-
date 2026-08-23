@@ -1,0 +1,143 @@
+name: eFootball isolated managed-assets analysis
+
+on:
+  push:
+    branches: [ efootball-managed-assets-isolated-20260823 ]
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-managed-assets-isolated-20260823
+
+      - name: Install analysis tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y unzip file ripgrep openjdk-17-jre-headless binutils xxd
+          curl -L --fail --retry 3 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.5/jadx-1.5.5.zip
+          sudo mkdir -p /opt/jadx
+          sudo unzip -q /tmp/jadx.zip -d /opt/jadx
+          sudo chmod +x /opt/jadx/bin/jadx
+
+      - name: Download exact current eFootball package
+        run: |
+          set -euxo pipefail
+          rm -rf work isolated-output
+          mkdir -p work/bundle work/apks work/base work/arm work/pads work/jadx isolated-output
+          curl -L --fail --retry 5 --retry-delay 3 -A 'Mozilla/5.0' -o work/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q work/efootball.xapk -d work/bundle
+          find work/bundle -type f -name '*.apk' -exec cp '{}' work/apks/ \;
+          BASE="$(find work/apks -type f -name 'jp.konami.pesam.apk' | head -n1)"
+          ARM="$(find work/apks -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          test -n "$BASE"; test -n "$ARM"
+          unzip -q "$BASE" -d work/base
+          unzip -q "$ARM" -d work/arm
+          for p in work/apks/pad_it_*.apk; do d="work/pads/$(basename "$p" .apk)"; mkdir -p "$d"; unzip -q "$p" -d "$d" || true; done
+          {
+            echo '# Package identity'
+            ${ANDROID_HOME}/build-tools/36.0.0/aapt2 dump badging "$BASE" | head -80
+            echo
+            sha256sum "$BASE" "$ARM"
+            find work/apks -type f -name '*.apk' -printf '%f %s bytes\n' | sort
+          } > isolated-output/package_identity.txt
+
+      - name: Correctly decompile BASE APK
+        run: |
+          set -euxo pipefail
+          /opt/jadx/bin/jadx --no-debug-info --show-bad-code --deobf -j 4 -d work/jadx work/apks/jp.konami.pesam.apk > isolated-output/jadx.log 2>&1 || true
+          echo "JADX_FILES=$(find work/jadx -type f | wc -l)" > isolated-output/jadx_summary.txt
+          find work/jadx/sources -type f -printf '%p\n' | sort > isolated-output/jadx_source_files.txt || true
+
+          {
+            echo '## Konami / Epic source file list'
+            find work/jadx/sources -type f | grep -Ei '/jp/konami/|/com/epicgames/' | sort || true
+            echo
+            echo '## Peer/network/native bridge references'
+            rg -n -i 'GameActivity|nativeLoad|System\.loadLibrary|libUE4|JNI|peerlink|BluetoothSwitch|WifiDirect|Datagram|Udp|Socket|ConnectivityManager|NetworkInterface|STUN|TURN|P2P|relay|hole.?punch|match.?result|score|winner|halftime|fulltime|extra.?time|added.?time' work/jadx/sources/jp work/jadx/sources/com/epicgames 2>/dev/null || true
+          } > isolated-output/managed_focus.txt
+
+      - name: Extract exact Konami peerlink glue if present
+        run: |
+          set -euxo pipefail
+          {
+            find work/jadx/sources/jp/konami/peerlink -type f -name '*.java' -print 2>/dev/null | sort | while read f; do
+              echo "===== $f ====="
+              cat "$f"
+              echo
+            done
+            echo '===== references elsewhere ====='
+            rg -n -i 'jp\.konami\.peerlink|BluetoothSwitch|peerlink' work/jadx/sources 2>/dev/null || true
+          } > isolated-output/konami_peerlink_glue.txt
+
+      - name: Native high-precision extraction
+        run: |
+          set -euxo pipefail
+          UE4="$(find work/arm -type f -name 'libUE4.so' | head -n1)"; test -n "$UE4"
+          cp "$UE4" work/libUE4.so
+          strings -a -t x -n 4 work/libUE4.so > work/ue4.strings
+          NET='P2pFullMeshWithTurn|pesam\.stun\.service\.konami\.net|ntl\.service\.konami\.net|HOST_DIRECT|HOST_RELAY|MATCHING_STATE_STUN_CHECK|START_UDP_HOLE_PUNCHING|STOP_UDP_HOLE_PUNCHING|ALLOC_TURN|FREE_TURN|CHANNEL_BIND|MAPPED_ADDRESS|XOR_MAPPED_ADDRESS|MESSAGE_INTEGRITY|FINGERPRINT|P2PTURNIO|turn_server_list|ConnectTurnTask|TURN_SESSION|STUN_TEST|PEER_STUN|TARGET_STUN_SERVER|IPADDR_PEER|COMMUNICATION_MODE'
+          MATCH='CheckMatchResult|CheckMatchResultDetail|MatchResultTimeUpDemo|MATCH_RESULT|match_result|match_to_match_result|get_game_result|NUM_LOCAL_GUESTS_END_MATCH|END_MATCH|bIsWinner|GAMERESULT_|EMatchPhase|HalfTime|HALFTIME|HALF_TIME|FullTime|FULL_TIME|ADDED_TIME|AddedTime|ExtraTime|m_isExtraTime|WinnerChoice|VICTORY|DEFEAT|EMenuLeagueWinLoseDraw|match_stop|MATCH_STOP|MATCH_SETTING_TIME|MATCH_SETTING_SEASON'
+          grep -Ei "$NET" work/ue4.strings > isolated-output/native_network_exact.txt || true
+          grep -Ei "$MATCH" work/ue4.strings > isolated-output/native_match_exact.txt || true
+          readelf -Ws work/libUE4.so | c++filt | grep -Ei "$NET|$MATCH" > isolated-output/native_symbols_exact.txt || true
+
+      - name: Nearby string-neighborhood analysis
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          lines=Path('work/ue4.strings').read_text(errors='ignore').splitlines()
+          terms=re.compile(r'P2pFullMeshWithTurn|get_game_result_timeout_sec|NUM_LOCAL_GUESTS_END_MATCH|CheckMatchResult|MatchResultTimeUpDemo|match_to_match_result|MATCH_RESULT|bIsWinner|GAMERESULT_|EMatchPhase::HalfTime|ADDED_TIME|m_isExtraTime|HOST_DIRECT|HOST_RELAY|MATCHING_STATE_STUN_CHECK|START_UDP_HOLE_PUNCHING|pesam\.stun\.service\.konami\.net',re.I)
+          idx=[i for i,l in enumerate(lines) if terms.search(l)]
+          out=[]
+          for i in idx:
+            out.append(f'===== HIT line {i+1}: {lines[i]} =====')
+            out.extend(lines[max(0,i-35):min(len(lines),i+36)])
+            out.append('')
+          Path('isolated-output/string_neighborhoods.txt').write_text('\n'.join(out),errors='ignore')
+          PY
+
+      - name: Asset-pack and Unreal container scan
+        run: |
+          set -euxo pipefail
+          find work/pads -type f -printf '%p %s bytes\n' | sort -k2 -nr > isolated-output/asset_inventory.txt
+          MATCH='CheckMatchResult|MatchResultTimeUpDemo|MATCH_RESULT|match_result|match_to_match_result|get_game_result|NUM_LOCAL_GUESTS_END_MATCH|bIsWinner|GAMERESULT_|HalfTime|HALFTIME|HALF_TIME|FullTime|FULL_TIME|ADDED_TIME|AddedTime|ExtraTime|m_isExtraTime|WinnerChoice|VICTORY|DEFEAT'
+          NET='P2pFullMeshWithTurn|HOST_DIRECT|HOST_RELAY|MATCHING_STATE_STUN_CHECK|START_UDP_HOLE_PUNCHING|P2PTURNIO|pesam\.stun\.service\.konami\.net|ntl\.service\.konami\.net'
+          : > isolated-output/asset_match_hits.txt
+          : > isolated-output/asset_network_hits.txt
+          find work/pads -type f \( -name '*.cpk' -o -name '*.pak' -o -name '*.utoc' -o -name '*.ucas' -o -name '*.bin' -o -name '*.dat' \) -print0 | while IFS= read -r -d '' f; do
+            strings -a -t x -n 4 "$f" | grep -Ei "$MATCH" | head -3000 | sed "s#^#$f:#" >> isolated-output/asset_match_hits.txt || true
+            strings -a -t x -n 4 "$f" | grep -Ei "$NET" | head -3000 | sed "s#^#$f:#" >> isolated-output/asset_network_hits.txt || true
+          done
+
+      - name: Build concise surgical report
+        run: |
+          {
+            echo '# eFootball isolated surgical report'; date -u
+            echo; cat isolated-output/package_identity.txt
+            echo; echo '## JADX'; cat isolated-output/jadx_summary.txt; tail -80 isolated-output/jadx.log
+            echo; echo '## Konami peerlink glue'; sed -n '1,2500p' isolated-output/konami_peerlink_glue.txt
+            echo; echo '## Managed focus'; sed -n '1,3000p' isolated-output/managed_focus.txt
+            echo; echo '## Native networking exact'; sed -n '1,2500p' isolated-output/native_network_exact.txt
+            echo; echo '## Native match/result exact'; sed -n '1,3000p' isolated-output/native_match_exact.txt
+            echo; echo '## Relevant string neighborhoods'; sed -n '1,5000p' isolated-output/string_neighborhoods.txt
+            echo; echo '## Asset match hits'; sed -n '1,3000p' isolated-output/asset_match_hits.txt
+            echo; echo '## Asset network hits'; sed -n '1,3000p' isolated-output/asset_network_hits.txt
+          } > isolated-output/report.md
+
+      - name: Commit analysis text to isolated branch
+        run: |
+          set -euxo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add isolated-output
+          git commit -m 'Add isolated eFootball managed/assets analysis' || exit 0
+          git push origin HEAD:efootball-managed-assets-isolated-20260823
