@@ -1,1 +1,1 @@
-Trigger eFootball 11.0.1 static analysis after default-branch workflow activation.
+Trigger eFootball 11.0.1 deep analysis pass 2 after workflow update.
