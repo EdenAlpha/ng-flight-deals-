@@ -1,0 +1,176 @@
+name: eFootball isolated terminal-chain analysis
+
+on:
+  push:
+    branches: [ efootball-terminal-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-terminal-analysis-2026-08-23
+      - name: Install
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip binutils >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current arm64 split
+        run: |
+          rm -rf /tmp/efi terminal-isolated-output
+          mkdir -p /tmp/efi/bundle /tmp/efi/native terminal-isolated-output
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/efi/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/efi/efootball.xapk -d /tmp/efi/bundle
+          APK="$(find /tmp/efi/bundle -name config.arm64_v8a.apk | head -1)"
+          unzip -q "$APK" -d /tmp/efi/native
+          test -f /tmp/efi/native/lib/arm64-v8a/libUE4.so
+          test -f /tmp/efi/native/lib/arm64-v8a/libgadsme.so
+          sha256sum /tmp/efi/native/lib/arm64-v8a/libUE4.so /tmp/efi/native/lib/arm64-v8a/libgadsme.so > terminal-isolated-output/hashes.txt
+      - name: Deep static trace
+        run: |
+          cat > /tmp/efi/a.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from elftools.dwarf.callframe import FDE
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM,arm64
+          import re,bisect,collections
+          O=Path('terminal-isolated-output')
+          NET=re.compile(r'(dtls|ssl|tls|stun|turn|udp|socket|sendto|recvfrom|sendmsg|recvmsg|packet|ack|sequence|reliable|fragment|cipher|encrypt|decrypt|peer|relay|p2p)',re.I)
+          SIZE={26,63,68,70,105,107}
+
+          class Bin:
+            def __init__(self,p):
+              self.p=p; self.raw=Path(p).read_bytes()
+              with open(p,'rb') as f:
+                e=ELFFile(f); self.e=e
+                t=e.get_section_by_name('.text'); self.tb=t.data(); self.tv=int(t['sh_addr'])
+                r=e.get_section_by_name('.rodata'); self.rv=int(r['sh_addr']) if r else 0; self.rb=r.data() if r else b''
+                self.strings={self.rv+m.start():m.group().decode('ascii','ignore') for m in re.finditer(rb'[ -~]{4,}',self.rb)}
+                self.ranges=[]
+                try:
+                  for x in e.get_dwarf_info().EH_CFI_entries():
+                    if isinstance(x,FDE):
+                      a=int(x['initial_location']);z=a+int(x['address_range'])
+                      if self.tv<=a<z<=self.tv+len(self.tb):self.ranges.append((a,z))
+                except Exception:pass
+                self.ranges=sorted(set(self.ranges));self.starts=[a for a,z in self.ranges]
+                self.plt={}
+                plt=e.get_section_by_name('.plt');rel=e.get_section_by_name('.rela.plt')
+                if plt is not None and rel is not None:
+                  sy=e.get_section(rel['sh_link']);base=int(plt['sh_addr'])+32
+                  for i,q in enumerate(rel.iter_relocations()):self.plt[base+i*16]=sy.get_symbol(q['r_info_sym']).name
+                dyn=e.get_section_by_name('.dynsym');self.dyn=[s.name for s in dyn.iter_symbols() if s.name] if dyn else []
+              self.md=Cs(CS_ARCH_ARM64,CS_MODE_ARM);self.md.detail=True
+              self.ins=list(self.md.disasm(self.tb,self.tv))
+            def fr(self,pc):
+              k=bisect.bisect_right(self.starts,pc)-1
+              if k>=0 and self.ranges[k][0]<=pc<self.ranges[k][1]:return self.ranges[k]
+              return (max(self.tv,pc-0x300),min(self.tv+len(self.tb),pc+0x500))
+            def string_refs(self,terms):
+              vas=collections.defaultdict(set)
+              for va,s in self.strings.items():
+                for t in terms:
+                  if t.lower() in s.lower():vas[t].add(va)
+              refs=collections.defaultdict(list);pg={}
+              for I in self.ins:
+                op=I.operands
+                if I.mnemonic=='adrp' and len(op)>=2 and op[0].type==arm64.ARM64_OP_REG and op[1].type==arm64.ARM64_OP_IMM:
+                  pg[op[0].reg]=(int(op[1].imm),I.address)
+                elif I.mnemonic=='add' and len(op)>=3 and op[1].type==arm64.ARM64_OP_REG and op[2].type==arm64.ARM64_OP_IMM:
+                  b=pg.get(op[1].reg)
+                  if not b or I.address-b[1]>0x50:continue
+                  a=b[0]+int(op[2].imm)
+                  for t,v in vas.items():
+                    if a in v:refs[t].append(I.address)
+              return vas,refs
+
+          g=Bin('/tmp/efi/native/lib/arm64-v8a/libgadsme.so')
+          u=Bin('/tmp/efi/native/lib/arm64-v8a/libUE4.so')
+
+          # Is gadsme actually game transport?
+          O.joinpath('gadsme_network_imports.txt').write_text('\n'.join(sorted(x for x in g.dyn if NET.search(x))))
+          O.joinpath('gadsme_network_strings.txt').write_text('\n'.join(f'0x{a:x} {s}' for a,s in g.strings.items() if NET.search(s)))
+          gf=collections.defaultdict(lambda:{'call':[],'sz':[]})
+          for I in g.ins:
+            f=g.fr(I.address)
+            if I.mnemonic=='bl' and I.operands and I.operands[0].type==arm64.ARM64_OP_IMM:
+              n=g.plt.get(int(I.operands[0].imm),'')
+              if n and NET.search(n):gf[f]['call'].append((I.address,n))
+            for op in I.operands:
+              if op.type==arm64.ARM64_OP_IMM and int(op.imm) in SIZE:gf[f]['sz'].append((I.address,int(op.imm),I.mnemonic,I.op_str))
+          rr=[]
+          for f,d in gf.items():
+            if not d['call'] and len(d['sz'])<2:continue
+            rr.append(f'FUNCTION 0x{f[0]:x}-0x{f[1]:x}')
+            rr += [f' CALL 0x{x:x} {n}' for x,n in d['call']]
+            rr += [f' SIZE 0x{x:x} {v} {m} {o}' for x,v,m,o in d['sz']]
+          O.joinpath('gadsme_size_network_functions.txt').write_text('\n'.join(rr))
+
+          # Exact result/end/score string families in UE4.
+          terms=['CMD_SET_GAME_RESULT','CmdSetGameResult.php','CMD_GET_GAME_RESULT','CmdGetGameResult.php','CMD_CHANGE_GAMEPHASE','EMatchFlowTask::SendServerMatchEnd','EMatchFlowTask::WaitTimeup','EMatchFlowTask::DemoTimeupTrans','GameplayFinished','ResultPresentation','ROOM_GAME_PHASE_END','HOME_SCORE','AWAY_SCORE','END_REASON','m_homeScore','m_awayScore','GetGameScore','SetHomeScore','SetAwayScore']
+          vas,refs=u.string_refs(terms)
+          fl=collections.defaultdict(set)
+          for t,pcs in refs.items():
+            for pc in pcs:fl[u.fr(pc)].add(t)
+          out=[]
+          for t in terms:out.append(f'{t}: vas={[hex(x) for x in sorted(vas[t])]} refs={[hex(x) for x in refs[t]]}')
+          O.joinpath('ue4_target_refs.txt').write_text('\n'.join(out))
+
+          # Internal BL call graph. Find actual callers of result-command string-bearing functions, up to 5 hops.
+          callers=collections.defaultdict(list);callees=collections.defaultdict(list)
+          for I in u.ins:
+            if I.mnemonic=='bl' and I.operands and I.operands[0].type==arm64.ARM64_OP_IMM:
+              d=int(I.operands[0].imm)
+              if u.tv<=d<u.tv+len(u.tb):
+                sf=u.fr(I.address); callers[d].append((I.address,sf));callees[sf[0]].append((I.address,d))
+          resultfs={f for f,l in fl.items() if any('set_game_result' in x.lower() or 'setgameresult' in x.lower() for x in l)}
+          endfs={f for f,l in fl.items() if any(('sendservermatchend' in x.lower() or 'waittimeup' in x.lower() or 'demotimeuptrans' in x.lower() or 'gameplayfinished' in x.lower() or 'resultpresentation' in x.lower() or 'room_game_phase_end' in x.lower()) for x in l)}
+          def closure(fs,depth):
+            cur={f[0] for f in fs}; allx=set(cur);edges=[]
+            for dep in range(1,depth+1):
+              nxt=set()
+              for d in cur:
+                for pc,cf in callers.get(d,[]):
+                  edges.append((dep,d,pc,cf));nxt.add(cf[0])
+              nxt-=allx;allx|=nxt;cur=nxt
+            return allx,edges
+          ra,re=closure(resultfs,5);ea,ee=closure(endfs,5)
+          common=ra&ea
+          cg=[f'RESULT_FUNCTIONS={[(hex(a),hex(z),sorted(fl[(a,z)])) for a,z in resultfs]}',f'END_FUNCTIONS={[(hex(a),hex(z),sorted(fl[(a,z)])) for a,z in endfs]}',f'COMMON_ANCESTORS_5HOP={[hex(x) for x in sorted(common)]}']
+          cg.append('\nRESULT_CALLERS')
+          for dep,d,pc,cf in re:cg.append(f'depth={dep} target=0x{d:x} call=0x{pc:x} caller=0x{cf[0]:x}-0x{cf[1]:x} labels={sorted(fl.get(cf,set()))}')
+          cg.append('\nEND_CALLERS')
+          for dep,d,pc,cf in ee:cg.append(f'depth={dep} target=0x{d:x} call=0x{pc:x} caller=0x{cf[0]:x}-0x{cf[1]:x} labels={sorted(fl.get(cf,set()))}')
+          O.joinpath('ue4_result_end_callgraph.txt').write_text('\n'.join(cg))
+
+          # Dump result-command functions and all immediate direct callers for field-copy/serialization clues.
+          dump=[]
+          want=set(resultfs)
+          for f in list(resultfs):
+            for pc,cf in callers.get(f[0],[]):want.add(cf)
+          for a,z in sorted(want):
+            dump.append(f'\n===== FUNCTION 0x{a:x}-0x{z:x} labels={sorted(fl.get((a,z),set()))} =====')
+            hi=min(z,a+0x5000)
+            for I in u.md.disasm(u.tb[a-u.tv:hi-u.tv],a):dump.append(f'0x{I.address:x}: {I.mnemonic:8} {I.op_str}')
+          O.joinpath('ue4_result_functions_disasm.txt').write_text('\n'.join(dump))
+          PY
+          python3 /tmp/efi/a.py
+          echo ==== TARGET REFS ====
+          cat terminal-isolated-output/ue4_target_refs.txt
+          echo ==== CALLGRAPH HEAD ====
+          sed -n '1,300p' terminal-isolated-output/ue4_result_end_callgraph.txt
+          echo ==== GADSME IMPORTS ====
+          cat terminal-isolated-output/gadsme_network_imports.txt
+      - name: Commit findings
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add terminal-isolated-output
+          git commit -m 'Add isolated eFootball terminal-chain findings'
+          git push origin HEAD:efootball-terminal-analysis-2026-08-23
