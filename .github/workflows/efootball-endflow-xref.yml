@@ -1,0 +1,125 @@
+name: eFootball match-end precise xrefs
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download eFootball arm64 binary
+        run: |
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE="$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          test -f /tmp/ef/native/lib/arm64-v8a/libUE4.so
+      - name: Precise end-flow analysis
+        run: |
+          cat > /tmp/ef/analyze.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import struct,re
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); d=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); toff=int(text['sh_offset'])
+              loads=[(int(s['p_offset']),int(s['p_filesz']),int(s['p_vaddr'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          def off2va(o):
+              for po,sz,va in loads:
+                  if po<=o<po+sz:return va+(o-po)
+          def va2off(v):
+              for po,sz,va in loads:
+                  if va<=v<va+sz:return po+(v-va)
+          def sx(x,b): return x-(1<<b) if x&(1<<(b-1)) else x
+          terms=[
+            'IsMatchEnd','HasMatchEnded','MatchEndListener','JUST_BEFORE_MATCHEND','Online/Match/MatchProcessEnd',
+            'EPKR_GamePhase::GameplayFinished','EPKR_GamePhase::ResultPresentation',
+            'OnEndMatchDelegate__DelegateSignature','OnEndMatchEffectEventDelegate__DelegateSignature',
+            'MatchFlowChanged','SetGameState','GetMatchPhase','SetMatchTime',
+            'EMatchFlowTask::WaitTimeup','EMatchFlowTask::SendServerMatchEnd','EMatchFlowTask::DemoTimeupTrans','EMatchFlowTask::PkMatchEndDemo',
+            'Match/End/MatchEnd','ProcessOnlineMatchEnd.cpp','GAME_RESULT','END_REASON','NUM_GUESTS_END_MATCH',
+            'P2P_ADHOC_WIFIDIRECTLAN_LOW_LEVEL','P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL','P2P_ADHOC_LAN_LOW_LEVEL','P2P_ADHOC_LAN_HIGH_LEVEL','direct_online_turn_mode'
+          ]
+          inst=[]
+          for term in terms:
+              s=0
+              while True:
+                  o=d.find(term.encode(),s)
+                  if o<0: break
+                  inst.append((term,o,off2va(o))); s=o+1
+          # Exact ADRP+ADD pairs. Track only ADRP destinations that could make target page, then require exact final VA.
+          mv=memoryview(tb); words=len(tb)//4
+          targets={va:(term,o) for term,o,va in inst if va is not None}
+          pages={va & ~0xfff for va in targets}
+          refs={va:[] for va in targets}
+          for idx in range(words):
+              w=struct.unpack_from('<I',mv,idx*4)[0]
+              if (w & 0x9f000000) != 0x90000000: continue
+              rd=w&31; immlo=(w>>29)&3; immhi=(w>>5)&0x7ffff
+              imm=sx((immhi<<2)|immlo,21)<<12
+              pc=tva+idx*4; page=(pc&~0xfff)+imm
+              if page not in pages: continue
+              for j in range(1,13):
+                  if idx+j>=words:break
+                  w2=struct.unpack_from('<I',mv,(idx+j)*4)[0]
+                  # ADD immediate: sf ignored, op(SUB)=0, S=0, fixed 10001
+                  if (w2 & 0x7f000000) != 0x11000000: continue
+                  rn=(w2>>5)&31
+                  if rn!=rd: continue
+                  imm12=(w2>>10)&0xfff; sh=(w2>>22)&1
+                  cand=page+(imm12<<(12 if sh else 0))
+                  if cand in refs:
+                      refs[cand].append((pc,tva+(idx+j)*4,rd))
+          print('=== EXACT STRING LOCATIONS AND ADRP+ADD XREFS ===')
+          for term,o,va in inst:
+              print(f'{term}\toff=0x{o:x}\tva=0x{va:x}\txrefs='+','.join(f'0x{a:x}->0x{b:x}/x{r}' for a,b,r in refs.get(va,[])))
+
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM)
+          def dump(center,before=0x180,after=0x280):
+              lo=max(tva,center-before); hi=min(tva+len(tb),center+after); lo &= ~3
+              blob=tb[lo-tva:hi-tva]
+              for ins in md.disasm(blob,lo):
+                  mark='>>' if center-0x10<=ins.address<=center+0x14 else '  '
+                  print(f'{mark} 0x{ins.address:x}: {ins.mnemonic:8s} {ins.op_str}')
+          print('\n=== EXACT XREF WINDOWS ===')
+          for term,o,va in inst:
+              rr=refs.get(va,[])
+              if not rr: continue
+              for a,b,r in rr[:12]:
+                  print(f'\n--- {term} target=0x{va:x} ADRP=0x{a:x} ADD=0x{b:x} ---')
+                  dump(b)
+
+          # Known runtime function candidates from previous pass. Find direct BL callers exactly.
+          fn_targets=[0x802df88,0x7aad144,0x75bfe84,0x75c3758]
+          blcall={x:[] for x in fn_targets}
+          for idx in range(words):
+              w=struct.unpack_from('<I',mv,idx*4)[0]
+              if (w & 0xfc000000) != 0x94000000: continue
+              imm=sx(w&0x03ffffff,26)<<2; pc=tva+idx*4; dest=pc+imm
+              if dest in blcall: blcall[dest].append(pc)
+          print('\n=== DIRECT BL CALLERS OF KNOWN RUNTIME CANDIDATES ===')
+          for dest,cs in blcall.items():
+              print(f'FUNCTION 0x{dest:x} CALLERS '+','.join(f'0x{x:x}' for x in cs))
+              for c in cs[:12]:
+                  print(f'\n--- caller around 0x{c:x} -> 0x{dest:x} ---'); dump(c,0x140,0x180)
+          PY
+          python3 /tmp/ef/analyze.py > /tmp/out/endflow_precise.txt
+          strings -a -t x /tmp/ef/native/lib/arm64-v8a/libUE4.so | grep -Ei 'IsMatchEnd|HasMatchEnded|MatchEndListener|JUST_BEFORE_MATCHEND|MatchProcessEnd|GameplayFinished|ResultPresentation|OnEndMatchDelegate|OnEndMatchEffectEvent|MatchFlowChanged|SetGameState|GetMatchPhase|SetMatchTime|WaitTimeup|SendServerMatchEnd|DemoTimeupTrans|PkMatchEndDemo|ProcessOnlineMatchEnd.cpp|Match/End/MatchEnd' > /tmp/out/endflow_strings.txt || true
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-endflow-precise
+          path: /tmp/out/
+          retention-days: 7
