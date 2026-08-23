@@ -1,0 +1,89 @@
+name: eFootball managed peerlink analysis
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  managed:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+      - name: Install JADX and Androguard
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y unzip openjdk-17-jre-headless python3 python3-pip ripgrep
+          curl -L --retry 3 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.5/jadx-1.5.5.zip
+          mkdir -p /opt/jadx && unzip -q /tmp/jadx.zip -d /opt/jadx
+          chmod +x /opt/jadx/bin/jadx /opt/jadx/bin/jadx-gui || true
+          echo /opt/jadx/bin >> "$GITHUB_PATH"
+          python3 -m pip install --break-system-packages androguard==4.1.3
+      - name: Download base APK and decompile
+        run: |
+          set -euxo pipefail
+          rm -rf managed-work managed-output
+          mkdir -p managed-work/bundle managed-output
+          curl -L --fail --retry 5 --retry-delay 3 -A 'Mozilla/5.0' -o managed-work/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q managed-work/efootball.xapk -d managed-work/bundle
+          BASE="$(find managed-work/bundle -type f -name 'jp.konami.pesam.apk' | head -n1)"
+          test -n "$BASE"
+          cp "$BASE" managed-work/base.apk
+          jadx --no-debug-info --show-bad-code --deobf -j 4 -d managed-work/jadx managed-work/base.apk 2>&1 | tee managed-output/jadx.log || true
+          echo "JADX_FILES=$(find managed-work/jadx -type f | wc -l)" >> managed-output/jadx.log
+      - name: Extract Konami peerlink and network glue
+        run: |
+          set -euxo pipefail
+          find managed-work/jadx/sources -type f | grep -Ei '/jp/konami/(peerlink|android/common|pesam)/|/com/epicgames/ue4/' > managed-output/konami_source_files.txt || true
+          {
+            echo '# jp.konami.peerlink sources'
+            find managed-work/jadx/sources/jp/konami/peerlink -type f -name '*.java' -print 2>/dev/null | sort | while read f; do echo; echo "===== $f ====="; cat "$f"; done
+            echo '# References to jp.konami.peerlink'
+            rg -n -i 'jp\.konami\.peerlink|BluetoothSwitch|peerlink' managed-work/jadx/sources 2>/dev/null || true
+            echo '# Network glue hits'
+            rg -n -i 'WifiDirect|Wi-?Fi Direct|Bluetooth|BLE|BTC|Datagram|Udp|Socket|NetworkInterface|ConnectivityManager|bindSocket|STUN|TURN|hole.?punch|P2P|peer.?to.?peer' managed-work/jadx/sources/jp/konami managed-work/jadx/sources/com/epicgames/ue4 2>/dev/null || true
+          } > managed-output/peerlink_and_network_glue.txt
+      - name: Decode manifest details for peerlink activities
+        run: |
+          python3 - <<'PY'
+          from androguard.core.apk import APK
+          from pathlib import Path
+          a=APK('managed-work/base.apk')
+          out=[]
+          out.append(f'package={a.get_package()} version={a.get_androidversion_name()} code={a.get_androidversion_code()}')
+          for act in a.get_activities():
+            if 'peerlink' in act.lower() or 'bluetooth' in act.lower():
+              out.append('\nACTIVITY '+act)
+              for attr in ['exported','enabled','permission','process','launchMode','theme']:
+                try: out.append(f'  {attr}={a.get_attribute_value("activity",attr,name=act)}')
+                except Exception as e: out.append(f'  {attr}=ERR:{e}')
+              try: out.append('  filters='+repr(a.get_intent_filters('activity', act)))
+              except Exception as e: out.append('  filters=ERR:'+str(e))
+          Path('managed-output/peerlink_manifest.txt').write_text('\n'.join(out))
+          PY
+      - name: Search managed code for score/end/result access
+        run: |
+          set -euxo pipefail
+          rg -n -i 'MatchResult|MatchEnd|GamePhase|HalfTime|FullTime|Score|Winner|Victory|Defeat|AddedTime|ExtraTime|result|screencap|SurfaceFlinger|MediaProjection' managed-work/jadx/sources/jp/konami managed-work/jadx/sources/com/epicgames/ue4 2>/dev/null > managed-output/match_result_managed_hits.txt || true
+      - name: Commit textual managed findings
+        run: |
+          set -euxo pipefail
+          {
+            echo '# eFootball 11.0.1 managed-code pass'; date -u
+            echo; echo '## JADX status'; cat managed-output/jadx.log
+            echo; echo '## Manifest peerlink activities'; cat managed-output/peerlink_manifest.txt
+            echo; echo '## Peerlink and network glue'; sed -n '1,5000p' managed-output/peerlink_and_network_glue.txt
+            echo; echo '## Match/result managed hits'; sed -n '1,3000p' managed-output/match_result_managed_hits.txt
+          } > managed-output/managed_report.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add managed-output
+          git commit -m 'Add managed eFootball peerlink analysis' || exit 0
+          git push origin HEAD:efootball-apk-analysis-2026-08-23
