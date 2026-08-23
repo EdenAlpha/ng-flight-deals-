@@ -7222,15 +7222,6 @@ work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:602:        w
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:623:        this.mWifiP2pManager.removeServiceRequest(this.mChannel, wifiP2pServiceRequest, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.7
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:644:        wifiP2pManager.clearLocalServices(channel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.5
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:665:        this.mWifiP2pManager.removeLocalService(this.mChannel, wifiP2pServiceInfo, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.4
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:1:package jp.konami.peerlink.ble;
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:14:import jp.konami.peerlink.ble.Central;
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:15:import jp.konami.peerlink.ble.Peripheral;
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:19:    static final String BLUETOOTH_DEVICE_DISABLED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_DISABLED";
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:20:    static final String BLUETOOTH_DEVICE_ENABLED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_ENABLED";
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:21:    static final String PERMISSION_DENIED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_DENIED";
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:22:    static final String PERMISSION_GRANTED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED";
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:222:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:277:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:1:package jp.konami.peerlink.wifidirect;
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:23:import jp.konami.peerlink.wifidirect.WifiDirectNsd;
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:307:                    wifiDirect2.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.1
@@ -7242,6 +7233,15 @@ work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:484:            
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:496:            wifiP2pManager.removeGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.5
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:528:        this.mWifiP2pManager.connect(this.mChannel, wifiP2pConfig, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.3
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:549:        this.mWifiP2pManager.createGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.2
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:1:package jp.konami.peerlink.ble;
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:14:import jp.konami.peerlink.ble.Central;
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:15:import jp.konami.peerlink.ble.Peripheral;
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:19:    static final String BLUETOOTH_DEVICE_DISABLED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_DISABLED";
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:20:    static final String BLUETOOTH_DEVICE_ENABLED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_ENABLED";
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:21:    static final String PERMISSION_DENIED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_DENIED";
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:22:    static final String PERMISSION_GRANTED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED";
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:222:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:277:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
 work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:1:package jp.konami.peerlink.ble;
 work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:13:public class BluetoothSwitch extends Activity {
 work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:19:    private static final String TAG = "ble/BluetoothSwitch";

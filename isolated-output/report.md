@@ -1,5 +1,5 @@
 # eFootball isolated surgical report
-Sun Aug 23 13:42:09 UTC 2026
+Sun Aug 23 13:46:52 UTC 2026
 
 # Package identity
 package: name='jp.konami.pesam' versionCode='311000101' versionName='11.0.1' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
@@ -81,7 +81,7 @@ pad_it_1.apk 395420368 bytes
 JADX_FILES=14380
 INFO  - loading ...
 INFO  - processing ...
-INFO  - progress: 0 of 9679 (0%)INFO  - progress: 358 of 9679 (3%)INFO  - progress: 376 of 9679 (3%)INFO  - progress: 506 of 9679 (5%)INFO  - progress: 963 of 9679 (9%)INFO  - progress: 1367 of 9679 (14%)INFO  - progress: 1794 of 9679 (18%)INFO  - progress: 2230 of 9679 (23%)INFO  - progress: 2444 of 9679 (25%)INFO  - progress: 2760 of 9679 (28%)INFO  - progress: 3012 of 9679 (31%)INFO  - progress: 3267 of 9679 (33%)INFO  - progress: 3641 of 9679 (37%)INFO  - progress: 3962 of 9679 (40%)INFO  - progress: 4330 of 9679 (44%)INFO  - progress: 4509 of 9679 (46%)INFO  - progress: 4767 of 9679 (49%)INFO  - progress: 4917 of 9679 (50%)INFO  - progress: 5042 of 9679 (52%)INFO  - progress: 5154 of 9679 (53%)INFO  - progress: 5271 of 9679 (54%)INFO  - progress: 5404 of 9679 (55%)INFO  - progress: 5597 of 9679 (57%)INFO  - progress: 5772 of 9679 (59%)INFO  - progress: 6012 of 9679 (62%)INFO  - progress: 6191 of 9679 (63%)INFO  - progress: 6511 of 9679 (67%)INFO  - progress: 6802 of 9679 (70%)INFO  - progress: 6880 of 9679 (71%)INFO  - progress: 6985 of 9679 (72%)INFO  - progress: 7096 of 9679 (73%)INFO  - progress: 7165 of 9679 (74%)INFO  - progress: 7219 of 9679 (74%)INFO  - progress: 7278 of 9679 (75%)INFO  - progress: 7366 of 9679 (76%)INFO  - progress: 7404 of 9679 (76%)INFO  - progress: 7493 of 9679 (77%)INFO  - progress: 7669 of 9679 (79%)INFO  - progress: 7705 of 9679 (79%)INFO  - progress: 7811 of 9679 (80%)INFO  - progress: 7811 of 9679 (80%)INFO  - progress: 7875 of 9679 (81%)INFO  - progress: 7976 of 9679 (82%)INFO  - progress: 8071 of 9679 (83%)INFO  - progress: 8279 of 9679 (85%)INFO  - progress: 8450 of 9679 (87%)INFO  - progress: 8599 of 9679 (88%)INFO  - progress: 8672 of 9679 (89%)INFO  - progress: 8675 of 9679 (89%)INFO  - progress: 8735 of 9679 (90%)INFO  - progress: 8770 of 9679 (90%)INFO  - progress: 8853 of 9679 (91%)INFO  - progress: 8948 of 9679 (92%)INFO  - progress: 9034 of 9679 (93%)INFO  - progress: 9162 of 9679 (94%)INFO  - progress: 9350 of 9679 (96%)INFO  - progress: 9423 of 9679 (97%)INFO  - progress: 9526 of 9679 (98%)INFO  - progress: 9621 of 9679 (99%)INFO  - progress: 9671 of 9679 (99%)INFO  - progress: 9678 of 9679 (99%)INFO  - progress: 9678 of 9679 (99%)INFO  - progress: 9678 of 9679 (99%)INFO  - progress: 9678 of 9679 (99%)INFO  - progress: 9678 of 9679 (99%)                                                             ERROR - finished with errors, count: 78
+INFO  - progress: 0 of 9679 (0%)INFO  - progress: 362 of 9679 (3%)INFO  - progress: 413 of 9679 (4%)INFO  - progress: 542 of 9679 (5%)INFO  - progress: 1152 of 9679 (11%)INFO  - progress: 1456 of 9679 (15%)INFO  - progress: 1851 of 9679 (19%)INFO  - progress: 2231 of 9679 (23%)INFO  - progress: 2543 of 9679 (26%)INFO  - progress: 2804 of 9679 (28%)INFO  - progress: 3093 of 9679 (31%)INFO  - progress: 3354 of 9679 (34%)INFO  - progress: 3570 of 9679 (36%)INFO  - progress: 3939 of 9679 (40%)INFO  - progress: 4277 of 9679 (44%)INFO  - progress: 4463 of 9679 (46%)INFO  - progress: 4645 of 9679 (47%)INFO  - progress: 4907 of 9679 (50%)INFO  - progress: 5038 of 9679 (52%)INFO  - progress: 5150 of 9679 (53%)INFO  - progress: 5211 of 9679 (53%)INFO  - progress: 5332 of 9679 (55%)INFO  - progress: 5533 of 9679 (57%)INFO  - progress: 5746 of 9679 (59%)INFO  - progress: 5942 of 9679 (61%)INFO  - progress: 6185 of 9679 (63%)INFO  - progress: 6483 of 9679 (66%)INFO  - progress: 6773 of 9679 (69%)INFO  - progress: 6849 of 9679 (70%)INFO  - progress: 6958 of 9679 (71%)INFO  - progress: 7056 of 9679 (72%)INFO  - progress: 7149 of 9679 (73%)INFO  - progress: 7220 of 9679 (74%)INFO  - progress: 7276 of 9679 (75%)INFO  - progress: 7356 of 9679 (75%)INFO  - progress: 7400 of 9679 (76%)INFO  - progress: 7515 of 9679 (77%)INFO  - progress: 7686 of 9679 (79%)INFO  - progress: 7695 of 9679 (79%)INFO  - progress: 7793 of 9679 (80%)INFO  - progress: 7858 of 9679 (81%)INFO  - progress: 7936 of 9679 (81%)INFO  - progress: 7996 of 9679 (82%)INFO  - progress: 8065 of 9679 (83%)INFO  - progress: 8251 of 9679 (85%)INFO  - progress: 8390 of 9679 (86%)INFO  - progress: 8597 of 9679 (88%)INFO  - progress: 8672 of 9679 (89%)INFO  - progress: 8675 of 9679 (89%)INFO  - progress: 8749 of 9679 (90%)INFO  - progress: 8815 of 9679 (91%)INFO  - progress: 8847 of 9679 (91%)INFO  - progress: 8854 of 9679 (91%)INFO  - progress: 8881 of 9679 (91%)INFO  - progress: 8977 of 9679 (92%)INFO  - progress: 9074 of 9679 (93%)INFO  - progress: 9221 of 9679 (95%)INFO  - progress: 9358 of 9679 (96%)INFO  - progress: 9467 of 9679 (97%)INFO  - progress: 9569 of 9679 (98%)INFO  - progress: 9678 of 9679 (99%)INFO  - progress: 9678 of 9679 (99%)INFO  - progress: 9678 of 9679 (99%)INFO  - progress: 9678 of 9679 (99%)INFO  - progress: 9678 of 9679 (99%)                                                             ERROR - finished with errors, count: 88
 
 ## Konami peerlink glue
 ===== work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java =====
@@ -2949,11 +2949,6 @@ work/jadx/sources/com/epicgames/ue4/WebViewControl.java:1263:        GameActivit
 work/jadx/sources/com/epicgames/ue4/WebViewControl.java:1301:            GameActivity.Log.warn("updateVideoFrame failed to alloc mOESTextureRenderer ");
 work/jadx/sources/com/epicgames/ue4/WebViewControl.java:1303:            return null;
 work/jadx/sources/com/epicgames/ue4/WebViewControl.java:1308:        return frameUpdateInfoUpdateVideoFrame;
-work/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:22:        GameActivity.Log.debug("Registering volume receiver");
-work/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:33:        GameActivity.Log.debug("startVolumeReceiver: " + streamVolume);
-work/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:38:        GameActivity.Log.debug("Unregistering volume receiver");
-work/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:46:        GameActivity.Log.debug("OnReceive VOLUME_CHANGED_ACTION");
-work/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:52:            GameActivity.Log.debug("skipping volume change from stream " + iIntValue);
 work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:14:import com.epicgames.ue4.GameActivity;
 work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:53:        if (GameActivity.Get().VerifyOBBOnStartUp && !expansionFilesUptoData()) {
 work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:55:            return;
@@ -2978,13 +2973,6 @@ work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:376:                re
 work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:388:                        GameActivity.Log.debug("Exception thrown during file details writing.");
 work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:391:                    DownloaderActivity.this.OutputData.putExtra(GameActivity.DOWNLOAD_RETURN_NAME, 1);
 work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:406:                            DownloaderActivity.this.OutputData.putExtra(GameActivity.DOWNLOAD_RETURN_NAME, 5);
-work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:34:                return null;
-work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:47:                            if (!GameActivity.LocalNotificationScheduleAtTime(context, i, jSONObject2.getString("local-notification-targetDateTime"), jSONObject2.getBoolean("local-notification-localTime"), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_TITLE), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_BODY), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_ACTION), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_ACTION_EVENT))) {
-work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:62:                                return r19;
-work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:86:            return r19;
-work/jadx/sources/com/epicgames/ue4/GameApplication_LifecycleAdapter.java:20:            return;
-work/jadx/sources/com/epicgames/ue4/GameApplication_LifecycleAdapter.java:25:                return;
-work/jadx/sources/com/epicgames/ue4/GameApplication_LifecycleAdapter.java:27:            return;
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:1:package jp.konami.peerlink.btc;
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:11:public class BluetoothSwitch extends Activity {
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:21:    private static final String TAG = "btc/BluetoothSwitch";
@@ -2999,120 +2987,22 @@ work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:64:            sen
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:66:            return;
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:92:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_DENIED"));
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:96:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_GRANTED"));
-work/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:9:    private GameActivity gameActivity;
-work/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:11:    public ConsoleCmdReceiver(GameActivity gameActivity) {
-work/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:12:        this.gameActivity = gameActivity;
-work/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:20:            return;
-work/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:22:        this.gameActivity.nativeConsoleCommand(stringExtra);
-work/jadx/sources/com/epicgames/ue4/GameApplication.java:18:        return !isForeground;
-work/jadx/sources/com/epicgames/ue4/GameApplication.java:22:        return isForeground;
-work/jadx/sources/jp/konami/AdMobReward.java:134:                return;
-work/jadx/sources/jp/konami/AdMobReward.java:139:                    return;
-work/jadx/sources/jp/konami/AdMobReward.java:141:                return;
-work/jadx/sources/jp/konami/AdMobReward.java:152:            return;
-work/jadx/sources/jp/konami/AdMobReward.java:159:            return;
-work/jadx/sources/jp/konami/AdMobReward.java:184:            return GOOGLE_CMP_PURPOSE_RESULT_STRING_ERROR;
-work/jadx/sources/jp/konami/AdMobReward.java:188:            return GOOGLE_CMP_PURPOSE_RESULT_DISAGREE;
-work/jadx/sources/jp/konami/AdMobReward.java:191:            return GOOGLE_CMP_PURPOSE_RESULT_OK;
-work/jadx/sources/jp/konami/AdMobReward.java:194:        return GOOGLE_CMP_PURPOSE_RESULT_NONPARSONALIZE;
-work/jadx/sources/jp/konami/AdMobReward.java:206:        return s_createdCMPDialog;
-work/jadx/sources/jp/konami/AdMobReward.java:210:        return s_isCMP_ShowError ? s_CMP_ShowErrorCode : s_isCMP_UpdateError ? s_CMP_UpdateErrorCode : Integer.MAX_VALUE;
-work/jadx/sources/jp/konami/AdMobReward.java:214:        return s_errorCodeByLoad;
-work/jadx/sources/jp/konami/AdMobReward.java:218:        return s_errorCodeByShow;
-work/jadx/sources/jp/konami/AdMobReward.java:226:                return id.equals("00000000-0000-0000-0000-000000000000") ? "NONE" : id;
-work/jadx/sources/jp/konami/AdMobReward.java:230:                return str;
-work/jadx/sources/jp/konami/AdMobReward.java:234:                return str;
-work/jadx/sources/jp/konami/AdMobReward.java:238:                return str;
-work/jadx/sources/jp/konami/AdMobReward.java:249:        return string;
-work/jadx/sources/jp/konami/AdMobReward.java:255:        return string;
-work/jadx/sources/jp/konami/AdMobReward.java:261:        return string;
-work/jadx/sources/jp/konami/AdMobReward.java:266:            return;
-work/jadx/sources/jp/konami/AdMobReward.java:292:            return;
-work/jadx/sources/jp/konami/AdMobReward.java:304:            return false;
-work/jadx/sources/jp/konami/AdMobReward.java:310:                return true;
-work/jadx/sources/jp/konami/AdMobReward.java:313:            return false;
-work/jadx/sources/jp/konami/AdMobReward.java:320:                return true;
-work/jadx/sources/jp/konami/AdMobReward.java:324:        return false;
-work/jadx/sources/jp/konami/AdMobReward.java:328:        return s_isCMP_UpdateError || !s_isCMP_Update_End || s_CMP_Type == 1;
-work/jadx/sources/jp/konami/AdMobReward.java:333:            return -1;
-work/jadx/sources/jp/konami/AdMobReward.java:345:            return 0;
-work/jadx/sources/jp/konami/AdMobReward.java:357:                return -1;
-work/jadx/sources/jp/konami/AdMobReward.java:364:                return -1;
-work/jadx/sources/jp/konami/AdMobReward.java:371:                return -1;
-work/jadx/sources/jp/konami/AdMobReward.java:380:                return -1;
-work/jadx/sources/jp/konami/AdMobReward.java:387:                return -1;
-work/jadx/sources/jp/konami/AdMobReward.java:394:        return 1;
-work/jadx/sources/jp/konami/AdMobReward.java:399:            return -1;
-work/jadx/sources/jp/konami/AdMobReward.java:401:        return s_isCMP_Update_End ? 1 : 0;
-work/jadx/sources/jp/konami/AdMobReward.java:405:        return s_isEarnedReward;
-work/jadx/sources/jp/konami/AdMobReward.java:409:        return s_isCMP_Show_Enter;
-work/jadx/sources/jp/konami/AdMobReward.java:415:            return 1;
-work/jadx/sources/jp/konami/AdMobReward.java:417:        return s_adStatusList[c] == AdStatus.LOADERROR ? -1 : 0;
-work/jadx/sources/jp/konami/AdMobReward.java:422:            return 1;
-work/jadx/sources/jp/konami/AdMobReward.java:424:        return s_adStatusList[0] == AdStatus.SHOWERROR ? -1 : 0;
-work/jadx/sources/jp/konami/AdMobReward.java:505:                    return;
-work/jadx/sources/jp/konami/AdMobReward.java:532:            return;
-work/jadx/sources/jp/konami/AdMobReward.java:541:                    return;
-work/jadx/sources/jp/konami/AdMobReward.java:554:                return;
-work/jadx/sources/jp/konami/AdMobReward.java:565:                    return;
-work/jadx/sources/jp/konami/AdMobReward.java:584:            return;
-work/jadx/sources/jp/konami/AdMobReward.java:766:            return;
-work/jadx/sources/jp/konami/AdMobReward.java:772:            return;
-work/jadx/sources/jp/konami/AdMobReward.java:815:            return 0;
-work/jadx/sources/jp/konami/AdMobReward.java:819:            return 1;
-work/jadx/sources/jp/konami/AdMobReward.java:834:        return 0;
-work/jadx/sources/jp/konami/AdMobReward.java:887:                return;
-work/jadx/sources/jp/konami/AdMobReward.java:892:                return;
-work/jadx/sources/jp/konami/AdMobReward.java:907:        return withTimeByJson;
-work/jadx/sources/jp/konami/AdMobReward.java:1023:            return;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:28:    private GameActivity gameActivity;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:56:    public GooglePlayStoreHelper(String str, GameActivity gameActivity, Logger logger) {
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:59:        this.gameActivity = gameActivity;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:61:        BillingClient billingClientBuild = BillingClient.newBuilder(this.gameActivity).setListener(new PurchasesUpdatedListener() { // from class: com.epicgames.ue4.GooglePlayStoreHelper.1
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:87:                    googlePlayStoreHelper.Log.debug("In-app billing NOT supported for " + GooglePlayStoreHelper.this.gameActivity.getPackageName() + " error " + billingResult.getResponseCode());
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:90:                    GooglePlayStoreHelper.this.Log.debug("In-app billing supported for " + GooglePlayStoreHelper.this.gameActivity.getPackageName());
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:97:        return -1;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:104:                return "The request has reached the maximum timeout before Google Play responds";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:106:                return "Requested feature is not supported by Play Store on the current device";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:108:                return "Play Store service is not connected now - potentially transient state";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:110:                return "Success";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:112:                return "User pressed back or canceled a dialog";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:114:                return "Network connection is down";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:116:                return "Billing API version is not supported for the type requested";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:118:                return "Requested product is not available for purchase";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:120:                return "Invalid arguments provided to the API. This error can also indicate that the application was not correctly signed or properly set up for In-app Billing in Google Play, or does not have the necessary permissions in its manifest";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:122:                return "Fatal error during the API action";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:124:                return "Failure to purchase since item is already owned";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:126:                return "Failure to consume since item is not owned";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:128:                return "Unknown Server Response Code";
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:147:                    return;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:150:                    GooglePlayStoreHelper.this.mBillingClient.launchBillingFlow(GooglePlayStoreHelper.this.gameActivity, BillingFlowParams.newBuilder().setObfuscatedAccountId(this.ObfuscatedAccountId).setProductDetailsParamsList(C0928x5c9a8c85.m69m(new Object[]{BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productDetails).setOfferToken(productDetails.getOneTimePurchaseOfferDetails().getOfferToken()).build()})).build()).getResponseCode();
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:157:                return this;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:160:        return true;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:188:        return this.bIsIapSetup;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:203:            return false;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:216:        return true;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:225:            return false;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:297:        return true;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:308:            return false;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:382:                    return;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:394:        return true;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:408:        return false;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:424:            return true;
-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:452:        return true;
-work/jadx/sources/jp/konami/PermissionRequest.java:68:        return !IsNotificationPermissionNeeded(context) || ContextCompat.checkSelfPermission(context, "android.permission.POST_NOTIFICATIONS") == 0;
-work/jadx/sources/jp/konami/PermissionRequest.java:72:        return Build.VERSION.SDK_INT >= 33;
-work/jadx/sources/jp/konami/PermissionRequest.java:81:                return z;
-work/jadx/sources/jp/konami/PermissionRequest.java:92:            return true;
-work/jadx/sources/jp/konami/PermissionRequest.java:121:                return true;
-work/jadx/sources/jp/konami/PermissionRequest.java:130:        return false;
-work/jadx/sources/jp/konami/PermissionRequest.java:135:            return false;
-work/jadx/sources/jp/konami/PermissionRequest.java:138:        return true;
-work/jadx/sources/jp/konami/PermissionRequest.java:143:            return false;
-work/jadx/sources/jp/konami/PermissionRequest.java:145:        return ActivityCompat.shouldShowRequestPermissionRationale((Activity) context, "android.permission.POST_NOTIFICATIONS");
-work/jadx/sources/jp/konami/PermissionRequest.java:193:            return false;
-work/jadx/sources/jp/konami/PermissionRequest.java:196:        return true;
-work/jadx/sources/jp/konami/PermissionRequest.java:201:            return;
+work/jadx/sources/jp/konami/GetDeviceHash.java:10:import java.net.NetworkInterface;
+work/jadx/sources/jp/konami/GetDeviceHash.java:33:            return raw2str(mac.doFinal(str.getBytes()));
+work/jadx/sources/jp/konami/GetDeviceHash.java:36:            return "";
+work/jadx/sources/jp/konami/GetDeviceHash.java:39:            return "";
+work/jadx/sources/jp/konami/GetDeviceHash.java:47:                return raw2str(new MediaDrm(uuidFromString).getPropertyByteArray("deviceUniqueId"));
+work/jadx/sources/jp/konami/GetDeviceHash.java:53:        return "invalid";
+work/jadx/sources/jp/konami/GetDeviceHash.java:59:            for (NetworkInterface networkInterface : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+work/jadx/sources/jp/konami/GetDeviceHash.java:60:                String name = networkInterface.getName();
+work/jadx/sources/jp/konami/GetDeviceHash.java:62:                    byte[] hardwareAddress = networkInterface.getHardwareAddress();
+work/jadx/sources/jp/konami/GetDeviceHash.java:70:            return map;
+work/jadx/sources/jp/konami/GetDeviceHash.java:73:            return null;
+work/jadx/sources/jp/konami/GetDeviceHash.java:103:        return mStringBuilder.toString();
+work/jadx/sources/jp/konami/GetDeviceHash.java:114:        return mStringBuilder.toString();
+work/jadx/sources/jp/konami/GetDeviceHash.java:122:        return str;
+work/jadx/sources/jp/konami/GetDeviceHash.java:135:        return this.mDeviceHash;
+work/jadx/sources/jp/konami/GetDeviceHash.java:139:        return context.getPackageName();
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1:package jp.konami.peerlink.btc;
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:7:import android.bluetooth.BluetoothServerSocket;
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:8:import android.bluetooth.BluetoothSocket;
@@ -3395,6 +3285,16 @@ work/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1723:            
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1727:            return false;
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1735:            return false;
 work/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1741:        return true;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderOTA.java:42:                return;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderOTA.java:45:            return;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderOTA.java:48:            return;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderOTA.java:81:            return true;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderOTA.java:97:        return false;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderOTA.java:109:            return false;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderOTA.java:118:        return true;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderOTA.java:122:        return mDownloadedSize;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderOTA.java:130:            return false;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderOTA.java:140:        return zEquals;
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:1:package jp.konami.peerlink.wifidirect;
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:3:import android.net.wifi.p2p.WifiP2pDevice;
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:4:import android.net.wifi.p2p.WifiP2pManager;
@@ -3560,339 +3460,92 @@ work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:671:         
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:673:                WifiDirectNsd.this.mRegisteredService.remove(serviceInfo2);
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:674:                Logger.m967d("WifiDirectNsd", "Unregistered service.");
 work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:677:        return true;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:112:                    GameActivity.Log.debug("MediaPlayer14: disabled shared GL context on " + strGlGetString);
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:118:                return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:129:                return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:167:                return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:172:                return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:278:                GameActivity.Log.warn("Failed to complete framebuffer attachment (" + iGlCheckFramebufferStatus + ")");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:322:                return true;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:358:            return true;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:369:                    GameActivity.Log.error("Could not compile shader " + i + ":");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:370:                    GameActivity.Log.error(GLES20.glGetShaderInfoLog(iGlCreateShader));
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:372:                    return 0;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:375:            return iGlCreateShader;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:381:                return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:391:                    return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:407:                    GameActivity.Log.error("unable to get EGL14 display");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:408:                    return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:413:                    GameActivity.Log.error("unable to initialize EGL14 display");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:414:                    return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:421:                    GameActivity.Log.debug("MediaPlayer14: Existing GL context is version " + iArr[0] + "." + iArr2[0]);
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:423:                    GameActivity.Log.debug("MediaPlayer14: Existing GL context is version " + iArr[0]);
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:425:                    GameActivity.Log.debug("MediaPlayer14: Existing GL context version not detected");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:451:                GameActivity.Log.error("mTextureID <= 0");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:453:                return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:464:                GameActivity.Log.error("mFBO <= 0");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:466:                return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:471:                GameActivity.Log.error("mBlitVertexShaderID == 0");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:473:                return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:477:                GameActivity.Log.error("mBlitFragmentShaderID == 0");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:479:                return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:484:                GameActivity.Log.error("mProgram <= 0");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:486:                return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:494:                GameActivity.Log.error("Could not link program: ");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:495:                GameActivity.Log.error(GLES20.glGetProgramInfoLog(this.mProgram));
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:499:                return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:508:                GameActivity.Log.error("mBlitBuffer <= 0");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:510:                return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:545:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_ENUM");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:548:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_VALUE");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:551:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_OPERATION");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:554:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_OUT_OF_MEMORY");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:557:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_FRAMEBUFFER_OPERATION");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:560:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:563:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:566:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_UNSUPPORTED");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:569:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError " + i);
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:575:            return this.mTextureID;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:579:            return this.mSurface;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:583:            return this.mSurfaceTexture;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:587:            return this.mSurfaceTexture != null;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:663:            return z;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:685:                    return this.mFrameData;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:687:                return null;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:693:                return copyFrameTexture(i, null);
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:776:                    return frameUpdateInfo;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:779:            return frameUpdateInfo;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:783:            return this.mTextureID;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:787:            return this.mSurface;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:791:            return this.mSurfaceTexture;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:795:            return this.mSurfaceTexture != null;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:824:            return z;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:842:            return frameUpdateInfo;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:862:            return this.fileSize;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:870:                    return -1;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:877:                    return 0;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:883:                return iNativeReadAt;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:918:                GameActivity.Log.debug("MediaPlayer14: onError returned what=" + i + ", extra=" + i2);
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:919:                return true;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:950:            return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:965:        return true;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:974:            return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:989:        return true;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1000:                return null;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1009:                    return str;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1013:                    return null;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1025:                return null;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1033:                return audioTrackInfo;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1036:        return null;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1042:                return videoTrackInfo;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1045:        return null;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1050:            return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1101:            return audioTrackInfoArr;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1142:        return audioTrackInfoArr2;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1147:            return new CaptionTrackInfo[0];
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1175:        return captionTrackInfoArr;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1228:                return videoTrackInfoArr;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1232:            return new VideoTrackInfo[0];
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1244:        return videoTrackInfoArr2;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1253:        return z;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1259:            return oESTextureRenderer.resolutionChanged();
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1263:            return bitmapRenderer.resolutionChanged();
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1265:        return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1274:        return currentPosition;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1283:        return duration;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1289:            return oESTextureRenderer.getExternalTextureId();
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1293:            return bitmapRenderer.getExternalTextureId();
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1295:        return -1;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1301:            return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1306:        return zUpdateFrameData;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1312:            return null;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1317:        return bufferUpdateFrameData;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1322:            return;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1324:        GameActivity.Log.warn("initBitmapRenderer failed to alloc mBitmapRenderer ");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1330:        return this.Looping;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1338:        return z;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1354:                    GameActivity.Log.debug("MediaPlayer14: Prepare Exception: " + e.toString());
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1358:                GameActivity.Log.debug("MediaPlayer14: Prepare IOException: " + e2.toString());
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1361:                GameActivity.Log.debug("MediaPlayer14: Prepare IllegalStateExecption: " + e3.toString());
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1483:            return true;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1486:            GameActivity.Log.debug("setDataSource (asset): Exception = " + e);
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1487:            return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1513:                return true;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1515:            return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1517:            GameActivity.Log.debug("setDataSource (file): Exception = " + e);
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1518:            return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1555:                return true;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1558:                GameActivity.Log.debug("setDataSource (archive): Exception = " + e);
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1559:                return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1577:            return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1590:                    GameActivity.Log.debug("setDataSourceURL: Exception = " + e);
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1591:                    GameActivity.Log.debug("setDataSourceURL: Continuing without track info");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1595:            return true;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1597:            GameActivity.Log.debug("setDataSourceURL: Exception = " + e2);
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1598:            return false;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1647:            GameActivity.Log.warn("updateVideoFrame failed to alloc mOESTextureRenderer ");
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1649:            return null;
-work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1654:        return frameUpdateInfoUpdateVideoFrame;
-work/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:18:        GameActivity.Log.debug("Registering headset receiver");
-work/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:27:        GameActivity.Log.debug("startHeadsetReceiver: " + intExtra);
-work/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:34:        GameActivity.Log.debug("Unregistering headset receiver");
-work/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:40:        GameActivity.Log.debug("headsetReceiver::onReceive");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:1:package jp.konami.peerlink.wifidirect;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:8:import android.net.wifi.p2p.WifiP2pConfig;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:9:import android.net.wifi.p2p.WifiP2pDevice;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:10:import android.net.wifi.p2p.WifiP2pInfo;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:11:import android.net.wifi.p2p.WifiP2pManager;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:23:import jp.konami.peerlink.wifidirect.WifiDirectNsd;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:28:public class WifiDirect {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:34:    private WifiP2pManager.Channel mChannel;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:39:    private WifiDirectNsd mWifiDirectNsd;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:40:    private WifiP2pManager mWifiP2pManager;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:59:            return (str2 == null || str2.isEmpty() || (str = this.mId) == null || str.isEmpty() || this.mPort <= 0 || Pattern.compile("[^a-z0-9-]").matcher(this.mServiceId).find()) ? false : true;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:63:            return this.mAttribute;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:67:            return this.mId;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:71:            return this.mPort;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:75:            return this.mServiceId;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:120:        private WifiP2pInfo mWifiP2pInfo;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:144:            this.mWifiP2pInfo = null;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:160:            this.mWifiP2pInfo = null;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:164:        public synchronized void set(WifiP2pInfo wifiP2pInfo) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:165:            this.mWifiP2pInfo = new WifiP2pInfo(wifiP2pInfo);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:185:                return true;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:187:            return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:191:            return this.mConnectionState;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:201:                return attribute;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:205:                return null;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:207:            return config.getAttribute();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:211:            WifiP2pInfo wifiP2pInfo = this.mWifiP2pInfo;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:212:            if (wifiP2pInfo != null && wifiP2pInfo.groupFormed) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:213:                return this.mWifiP2pInfo.groupOwnerAddress.getHostName();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:215:            return null;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:221:                return serviceInfo == null ? "" : serviceInfo.getId();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:225:                return "";
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:227:            return config.getId();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:237:                return port;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:241:                return 0;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:243:            return config.getPort();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:247:            WifiP2pInfo wifiP2pInfo = this.mWifiP2pInfo;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:248:            if (wifiP2pInfo != null && wifiP2pInfo.groupFormed) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:249:                return this.mWifiP2pInfo.isGroupOwner;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:251:            return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:261:            intentFilter.addAction("android.net.wifi.p2p.STATE_CHANGED");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:262:            intentFilter.addAction("android.net.wifi.p2p.CONNECTION_STATE_CHANGE");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:263:            intentFilter.addAction("android.net.wifi.p2p.THIS_DEVICE_CHANGED");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:264:            WifiDirect.this.mActivity.registerReceiver(this, intentFilter, 4);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:271:                WifiDirect.this.mActivity.unregisterReceiver(this);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:282:            if (action.equals("android.net.wifi.p2p.STATE_CHANGED")) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:283:                int intExtra = intent.getIntExtra("wifi_p2p_state", -1);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:284:                WifiDirect wifiDirect = WifiDirect.this;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:286:                    wifiDirect.mDeviceState = DeviceState.ACTIVATING;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:287:                    Logger.m967d("WifiDirect", "Enabled WifiP2p.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:288:                    return;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:290:                    wifiDirect.mDeviceState = DeviceState.INACTIVATED;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:291:                    Logger.m967d("WifiDirect", "Disabled WifiP2p.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:292:                    return;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:295:            if (!action.equals("android.net.wifi.p2p.CONNECTION_STATE_CHANGE")) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:296:                if (action.equals("android.net.wifi.p2p.THIS_DEVICE_CHANGED")) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:297:                    Logger.m967d("WifiDirect", "Device changed: \n" + ((WifiP2pDevice) intent.getParcelableExtra("wifiP2pDevice")).toString());
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:298:                    return;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:300:                return;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:303:            if (WifiDirect.this.mDeviceState == DeviceState.ACTIVATING) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:305:                WifiDirect wifiDirect2 = WifiDirect.this;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:307:                    wifiDirect2.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.1
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:308:                        @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:310:                            Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:313:                        @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:315:                            Logger.m967d("WifiDirect", "Closed.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:318:                    return;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:320:                    wifiDirect2.mDeviceState = DeviceState.ACTIVATED;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:321:                    return;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:324:            Logger.m967d("WifiDirect", "Connection changed: \n" + networkInfo.toString());
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:326:            WifiDirect wifiDirect3 = WifiDirect.this;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:328:                if (wifiDirect3.mNetworkInfo.tryDelayDisconnect()) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:329:                    return;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:331:                WifiDirect.this.mNetworkInfo.init();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:332:                return;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:334:            wifiDirect3.mNetworkInfo.stopDelayDisconnect();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:335:            NetworkInfo.ConnectionState connectionState = WifiDirect.this.mNetworkInfo.getConnectionState();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:337:                WifiDirect.this.mWifiP2pManager.requestConnectionInfo(WifiDirect.this.mChannel, new WifiP2pManager.ConnectionInfoListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.3
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:338:                    @Override // android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:339:                    public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:340:                        Logger.m967d("WifiDirect", "Connection info availed: \n" + wifiP2pInfo.toString());
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:341:                        NetworkInfo.ConnectionState connectionState2 = WifiDirect.this.mNetworkInfo.getConnectionState();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:342:                        if (!(connectionState2 == NetworkInfo.ConnectionState.CREATING && wifiP2pInfo.isGroupOwner) && (!(connectionState2 == NetworkInfo.ConnectionState.ESTABLISHED && WifiDirect.this.mNetworkInfo.isGroupOwner() && wifiP2pInfo.isGroupOwner) && (connectionState2 != NetworkInfo.ConnectionState.CONNECTING || wifiP2pInfo.isGroupOwner))) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:343:                            Logger.m968e("WifiDirect", "Unknown error.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:344:                            WifiDirect.this.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.3.1
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:345:                                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:347:                                    Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:350:                                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:352:                                    Logger.m967d("WifiDirect", "Closed.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:356:                            WifiDirect.this.mNetworkInfo.set(wifiP2pInfo);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:357:                            WifiDirect.this.mNetworkInfo.changeConnectionState(NetworkInfo.ConnectionState.ESTABLISHED);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:362:                Logger.m968e("WifiDirect", "Unknown error.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:363:                WifiDirect.this.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.2
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:364:                    @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:366:                        Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:369:                    @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:371:                        Logger.m967d("WifiDirect", "Closed.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:379:        private WifiDirectNsd.DetectedServiceInfo mDetectedServiceInfo;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:385:        private ServiceInfo(WifiDirectNsd.DetectedServiceInfo detectedServiceInfo) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:386:            this.mDetectedServiceInfo = new WifiDirectNsd.DetectedServiceInfo(detectedServiceInfo);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:390:        public WifiP2pDevice getDevice() {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:391:            return this.mDetectedServiceInfo.getDevice();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:396:                return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:399:                return super.equals(obj);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:401:            WifiDirectNsd.DetectedServiceInfo detectedServiceInfo = this.mDetectedServiceInfo;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:402:            WifiDirectNsd.DetectedServiceInfo detectedServiceInfo2 = ((ServiceInfo) obj).mDetectedServiceInfo;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:403:            return detectedServiceInfo == null ? detectedServiceInfo2 == null : detectedServiceInfo.equals(detectedServiceInfo2);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:409:            if (attribute == null || (str = attribute.get(WifiDirect.ATTRIBUTE_KEY_USER_ATTRIBUTE)) == null) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:410:                return null;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:423:                return map;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:426:                return null;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:432:            return attribute == null ? "" : attribute.get(WifiDirect.ATTRIBUTE_KEY_ID);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:438:            if (attribute == null || (str = attribute.get(WifiDirect.ATTRIBUTE_KEY_PORT)) == null) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:439:                return 0;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:441:            return Integer.valueOf(str).intValue();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:445:            return this.mDetectedServiceInfo.hashCode();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:449:    public WifiDirect(Config config, Activity activity) throws IllegalArgumentException {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:452:            Logger.m967d("WifiDirect", "Invalid argument.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:456:        WifiP2pManager wifiP2pManager = (WifiP2pManager) activity.getSystemService("wifip2p");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:457:        if (wifiP2pManager == null) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:459:            return;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:463:        this.mWifiP2pManager = wifiP2pManager;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:464:        this.mChannel = wifiP2pManager.initialize(activity, activity.getMainLooper(), new WifiP2pManager.ChannelListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.1
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:465:            @Override // android.net.wifi.p2p.WifiP2pManager.ChannelListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:467:                Logger.m967d("WifiDirect", "The channel has been disconnected.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:468:                WifiDirect.this.mDeviceState = DeviceState.INACTIVATED;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:471:        this.mWifiDirectNsd = new WifiDirectNsd(this.mWifiP2pManager, this.mChannel);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:477:        if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() == NetworkInfo.ConnectionState.OPEN || this.mNetworkInfo.getConnectionState() == NetworkInfo.ConnectionState.CLOSED) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:478:            return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:482:        WifiP2pManager wifiP2pManager = this.mWifiP2pManager;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:484:            wifiP2pManager.cancelConnect(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.4
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:485:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:487:                    Logger.m968e("WifiDirect", "Failed to cancelConnect. (error = " + i + ")");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:490:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:492:                    Logger.m967d("WifiDirect", "Canceled.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:496:            wifiP2pManager.removeGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.5
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:497:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:499:                    Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:502:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:504:                    Logger.m967d("WifiDirect", "Closed.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:509:        return true;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:513:        if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() != NetworkInfo.ConnectionState.OPEN) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:514:            return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:517:        final WifiP2pDevice device = serviceInfo2.getDevice();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:519:            return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:522:            Logger.m968e("WifiDirect", "WPS push button configuration is not supported.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:523:            return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:525:        WifiP2pConfig wifiP2pConfig = new WifiP2pConfig();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:526:        wifiP2pConfig.deviceAddress = device.deviceAddress;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:527:        wifiP2pConfig.wps.setup = 0;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:528:        this.mWifiP2pManager.connect(this.mChannel, wifiP2pConfig, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.3
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:529:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:531:                Logger.m968e("WifiDirect", "Failed to connect. (error = " + i + ")");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:532:                WifiDirect.this.mNetworkInfo.init();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:535:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:537:                Logger.m967d("WifiDirect", "Connecting to: \n" + device.toString());
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:538:                WifiDirect.this.mNetworkInfo.set(serviceInfo2);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:542:        return true;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:546:        if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() != NetworkInfo.ConnectionState.OPEN) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:547:            return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:549:        this.mWifiP2pManager.createGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.2
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:550:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:552:                Logger.m968e("WifiDirect", "Failed to createGroup. (error = " + i + ")");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:553:                WifiDirect.this.mNetworkInfo.init();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:556:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:558:                Logger.m967d("WifiDirect", "Creating group...");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:562:        return true;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:573:        WifiDirectNsd wifiDirectNsd = this.mWifiDirectNsd;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:574:        if (wifiDirectNsd != null) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:575:            wifiDirectNsd.destruct();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:579:        this.mWifiP2pManager = null;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:586:            return AdvertisementState.INACTIVATED;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:588:        WifiDirectNsd.ServiceInfo serviceInfo = new WifiDirectNsd.ServiceInfo();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:599:                return AdvertisementState.INACTIVATED;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:602:        WifiDirectNsd.RegisterServiceState registerServiceState = this.mWifiDirectNsd.getRegisterServiceState(serviceInfo);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:603:        return registerServiceState == WifiDirectNsd.RegisterServiceState.ACTIVATING ? AdvertisementState.ACTIVATING : registerServiceState == WifiDirectNsd.RegisterServiceState.ACTIVATED ? AdvertisementState.ACTIVATED : registerServiceState == WifiDirectNsd.RegisterServiceState.INACTIVATING ? AdvertisementState.INACTIVATING : registerServiceState == WifiDirectNsd.RegisterServiceState.INACTIVATED ? AdvertisementState.INACTIVATED : AdvertisementState.INACTIVATED;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:607:        List<WifiDirectNsd.DetectedServiceInfo> detectedServiceInfoList;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:608:        if (this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || (detectedServiceInfoList = this.mWifiDirectNsd.getDetectedServiceInfoList()) == null || detectedServiceInfoList.size() == 0) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:609:            return null;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:612:        Iterator<WifiDirectNsd.DetectedServiceInfo> it = detectedServiceInfoList.iterator();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:617:            return null;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:619:        return arrayList;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:623:        return this.mDeviceState;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:628:            return DiscoveryState.INACTIVATED;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:630:        WifiDirectNsd.DiscoveryServiceInfo discoveryServiceInfo = new WifiDirectNsd.DiscoveryServiceInfo();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:632:        WifiDirectNsd.RegisterDiscoveryServiceState registerDiscoveryServiceState = this.mWifiDirectNsd.getRegisterDiscoveryServiceState(discoveryServiceInfo);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:633:        return registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.ACTIVATING ? DiscoveryState.ACTIVATING : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.ACTIVATED ? DiscoveryState.ACTIVATED : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.INACTIVATING ? DiscoveryState.INACTIVATING : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.INACTIVATED ? DiscoveryState.INACTIVATED : DiscoveryState.INACTIVATED;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:637:        return this.mNetworkInfo;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:642:            return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:644:        WifiDirectNsd.ServiceInfo serviceInfo = new WifiDirectNsd.ServiceInfo();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:655:                return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:658:        return this.mWifiDirectNsd.registerService(serviceInfo);
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:663:            return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:665:        WifiDirectNsd.DiscoveryServiceInfo discoveryServiceInfo = new WifiDirectNsd.DiscoveryServiceInfo();
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:667:        if (!this.mWifiDirectNsd.registerDiscoveryService(discoveryServiceInfo)) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:668:            return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:670:        if (this.mWifiDirectNsd.startDiscovery()) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:671:            return true;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:673:        if (!this.mWifiDirectNsd.unregisterDiscoveryService()) {
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:674:            Logger.m968e("WifiDirect", "Unknown error.");
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:676:        return false;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:680:        return (this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || !this.mWifiDirectNsd.unregisterService()) ? false : true;
-work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:684:        return this.mDeviceState != DeviceState.UNSUPPORTED && this.mDeviceState != DeviceState.INACTIVATED && this.mWifiDirectNsd.stopDiscovery() && this.mWifiDirectNsd.unregisterDiscoveryService();
+work/jadx/sources/jp/konami/AdMobReward.java:134:                return;
+work/jadx/sources/jp/konami/AdMobReward.java:139:                    return;
+work/jadx/sources/jp/konami/AdMobReward.java:141:                return;
+work/jadx/sources/jp/konami/AdMobReward.java:152:            return;
+work/jadx/sources/jp/konami/AdMobReward.java:159:            return;
+work/jadx/sources/jp/konami/AdMobReward.java:184:            return GOOGLE_CMP_PURPOSE_RESULT_STRING_ERROR;
+work/jadx/sources/jp/konami/AdMobReward.java:188:            return GOOGLE_CMP_PURPOSE_RESULT_DISAGREE;
+work/jadx/sources/jp/konami/AdMobReward.java:191:            return GOOGLE_CMP_PURPOSE_RESULT_OK;
+work/jadx/sources/jp/konami/AdMobReward.java:194:        return GOOGLE_CMP_PURPOSE_RESULT_NONPARSONALIZE;
+work/jadx/sources/jp/konami/AdMobReward.java:206:        return s_createdCMPDialog;
+work/jadx/sources/jp/konami/AdMobReward.java:210:        return s_isCMP_ShowError ? s_CMP_ShowErrorCode : s_isCMP_UpdateError ? s_CMP_UpdateErrorCode : Integer.MAX_VALUE;
+work/jadx/sources/jp/konami/AdMobReward.java:214:        return s_errorCodeByLoad;
+work/jadx/sources/jp/konami/AdMobReward.java:218:        return s_errorCodeByShow;
+work/jadx/sources/jp/konami/AdMobReward.java:226:                return id.equals("00000000-0000-0000-0000-000000000000") ? "NONE" : id;
+work/jadx/sources/jp/konami/AdMobReward.java:230:                return str;
+work/jadx/sources/jp/konami/AdMobReward.java:234:                return str;
+work/jadx/sources/jp/konami/AdMobReward.java:238:                return str;
+work/jadx/sources/jp/konami/AdMobReward.java:249:        return string;
+work/jadx/sources/jp/konami/AdMobReward.java:255:        return string;
+work/jadx/sources/jp/konami/AdMobReward.java:261:        return string;
+work/jadx/sources/jp/konami/AdMobReward.java:266:            return;
+work/jadx/sources/jp/konami/AdMobReward.java:292:            return;
+work/jadx/sources/jp/konami/AdMobReward.java:304:            return false;
+work/jadx/sources/jp/konami/AdMobReward.java:310:                return true;
+work/jadx/sources/jp/konami/AdMobReward.java:313:            return false;
+work/jadx/sources/jp/konami/AdMobReward.java:320:                return true;
+work/jadx/sources/jp/konami/AdMobReward.java:324:        return false;
+work/jadx/sources/jp/konami/AdMobReward.java:328:        return s_isCMP_UpdateError || !s_isCMP_Update_End || s_CMP_Type == 1;
+work/jadx/sources/jp/konami/AdMobReward.java:333:            return -1;
+work/jadx/sources/jp/konami/AdMobReward.java:345:            return 0;
+work/jadx/sources/jp/konami/AdMobReward.java:357:                return -1;
+work/jadx/sources/jp/konami/AdMobReward.java:364:                return -1;
+work/jadx/sources/jp/konami/AdMobReward.java:371:                return -1;
+work/jadx/sources/jp/konami/AdMobReward.java:380:                return -1;
+work/jadx/sources/jp/konami/AdMobReward.java:387:                return -1;
+work/jadx/sources/jp/konami/AdMobReward.java:394:        return 1;
+work/jadx/sources/jp/konami/AdMobReward.java:399:            return -1;
+work/jadx/sources/jp/konami/AdMobReward.java:401:        return s_isCMP_Update_End ? 1 : 0;
+work/jadx/sources/jp/konami/AdMobReward.java:405:        return s_isEarnedReward;
+work/jadx/sources/jp/konami/AdMobReward.java:409:        return s_isCMP_Show_Enter;
+work/jadx/sources/jp/konami/AdMobReward.java:415:            return 1;
+work/jadx/sources/jp/konami/AdMobReward.java:417:        return s_adStatusList[c] == AdStatus.LOADERROR ? -1 : 0;
+work/jadx/sources/jp/konami/AdMobReward.java:422:            return 1;
+work/jadx/sources/jp/konami/AdMobReward.java:424:        return s_adStatusList[0] == AdStatus.SHOWERROR ? -1 : 0;
+work/jadx/sources/jp/konami/AdMobReward.java:505:                    return;
+work/jadx/sources/jp/konami/AdMobReward.java:532:            return;
+work/jadx/sources/jp/konami/AdMobReward.java:541:                    return;
+work/jadx/sources/jp/konami/AdMobReward.java:554:                return;
+work/jadx/sources/jp/konami/AdMobReward.java:565:                    return;
+work/jadx/sources/jp/konami/AdMobReward.java:584:            return;
+work/jadx/sources/jp/konami/AdMobReward.java:766:            return;
+work/jadx/sources/jp/konami/AdMobReward.java:772:            return;
+work/jadx/sources/jp/konami/AdMobReward.java:815:            return 0;
+work/jadx/sources/jp/konami/AdMobReward.java:819:            return 1;
+work/jadx/sources/jp/konami/AdMobReward.java:834:        return 0;
+work/jadx/sources/jp/konami/AdMobReward.java:887:                return;
+work/jadx/sources/jp/konami/AdMobReward.java:892:                return;
+work/jadx/sources/jp/konami/AdMobReward.java:907:        return withTimeByJson;
+work/jadx/sources/jp/konami/AdMobReward.java:1023:            return;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:38:            return false;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:47:        return str2.equals(strSubstring);
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:55:                return;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:58:            return;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:61:            return;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:98:            return true;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:107:            return false;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:110:        return false;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:145:                return true;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:149:            return false;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:154:            return true;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:160:        return false;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:237:            return false;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:240:        return true;
+work/jadx/sources/jp/konami/PermissionRequest.java:68:        return !IsNotificationPermissionNeeded(context) || ContextCompat.checkSelfPermission(context, "android.permission.POST_NOTIFICATIONS") == 0;
+work/jadx/sources/jp/konami/PermissionRequest.java:72:        return Build.VERSION.SDK_INT >= 33;
+work/jadx/sources/jp/konami/PermissionRequest.java:81:                return z;
+work/jadx/sources/jp/konami/PermissionRequest.java:92:            return true;
+work/jadx/sources/jp/konami/PermissionRequest.java:121:                return true;
+work/jadx/sources/jp/konami/PermissionRequest.java:130:        return false;
+work/jadx/sources/jp/konami/PermissionRequest.java:135:            return false;
+work/jadx/sources/jp/konami/PermissionRequest.java:138:        return true;
+work/jadx/sources/jp/konami/PermissionRequest.java:143:            return false;
+work/jadx/sources/jp/konami/PermissionRequest.java:145:        return ActivityCompat.shouldShowRequestPermissionRationale((Activity) context, "android.permission.POST_NOTIFICATIONS");
+work/jadx/sources/jp/konami/PermissionRequest.java:193:            return false;
+work/jadx/sources/jp/konami/PermissionRequest.java:196:        return true;
+work/jadx/sources/jp/konami/PermissionRequest.java:201:            return;
 work/jadx/sources/com/epicgames/ue4/GameActivity.java:36:import android.net.ConnectivityManager;
 work/jadx/sources/com/epicgames/ue4/GameActivity.java:170:public class GameActivity extends KonamiIabBaseNativeActivity implements SurfaceHolder.Callback2, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, SensorEventListener, Logger.ILoggerCallback, ComponentCallbacks2 {
 work/jadx/sources/com/epicgames/ue4/GameActivity.java:197:    public static final int DOWNLOAD_NO_RETURN_CODE = 0;
@@ -4429,16 +4082,214 @@ work/jadx/sources/com/epicgames/ue4/GameActivity.java:4700:            return;
 work/jadx/sources/com/epicgames/ue4/GameActivity.java:4715:            int i2 = C092142.$SwitchMap$com$epicgames$ue4$GameActivity$VirtualKeyboardCommand[lastVirtualKeyboardCommand.ordinal()];
 work/jadx/sources/com/epicgames/ue4/GameActivity.java:4783:            return;
 work/jadx/sources/com/epicgames/ue4/GameActivity.java:4800:            return;
-work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:32:                    GameActivity.Log.warn("Android Audio Decoder: CreateCodec failed!");
-work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:34:                    return false;
-work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:40:        return true;
-work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:62:                    GameActivity.Log.debug("Android Audio Decoder: INFO_OUTPUT_BUFFERS_CHANGED");
-work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:64:                    GameActivity.Log.debug("Android Audio Decoder: New format " + this.mAudioCodec.getOutputFormat());
-work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:72:                    GameActivity.Log.debug("Android Audio Decoder: dequeueOutputBuffer timed out!");
-work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:77:        return bArr2;
-work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:101:            GameActivity.Log.warn("Android Audio Decoder: updateConfig channelCount:" + i2);
-work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:110:        return zCreateCodec;
-work/jadx/sources/com/epicgames/ue4/MulticastBroadcastReceiver.java:17:            return;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:1:package jp.konami.peerlink.wifidirect;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:8:import android.net.wifi.p2p.WifiP2pConfig;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:9:import android.net.wifi.p2p.WifiP2pDevice;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:10:import android.net.wifi.p2p.WifiP2pInfo;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:11:import android.net.wifi.p2p.WifiP2pManager;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:23:import jp.konami.peerlink.wifidirect.WifiDirectNsd;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:28:public class WifiDirect {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:34:    private WifiP2pManager.Channel mChannel;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:39:    private WifiDirectNsd mWifiDirectNsd;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:40:    private WifiP2pManager mWifiP2pManager;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:59:            return (str2 == null || str2.isEmpty() || (str = this.mId) == null || str.isEmpty() || this.mPort <= 0 || Pattern.compile("[^a-z0-9-]").matcher(this.mServiceId).find()) ? false : true;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:63:            return this.mAttribute;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:67:            return this.mId;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:71:            return this.mPort;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:75:            return this.mServiceId;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:120:        private WifiP2pInfo mWifiP2pInfo;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:144:            this.mWifiP2pInfo = null;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:160:            this.mWifiP2pInfo = null;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:164:        public synchronized void set(WifiP2pInfo wifiP2pInfo) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:165:            this.mWifiP2pInfo = new WifiP2pInfo(wifiP2pInfo);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:185:                return true;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:187:            return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:191:            return this.mConnectionState;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:201:                return attribute;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:205:                return null;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:207:            return config.getAttribute();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:211:            WifiP2pInfo wifiP2pInfo = this.mWifiP2pInfo;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:212:            if (wifiP2pInfo != null && wifiP2pInfo.groupFormed) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:213:                return this.mWifiP2pInfo.groupOwnerAddress.getHostName();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:215:            return null;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:221:                return serviceInfo == null ? "" : serviceInfo.getId();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:225:                return "";
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:227:            return config.getId();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:237:                return port;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:241:                return 0;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:243:            return config.getPort();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:247:            WifiP2pInfo wifiP2pInfo = this.mWifiP2pInfo;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:248:            if (wifiP2pInfo != null && wifiP2pInfo.groupFormed) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:249:                return this.mWifiP2pInfo.isGroupOwner;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:251:            return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:261:            intentFilter.addAction("android.net.wifi.p2p.STATE_CHANGED");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:262:            intentFilter.addAction("android.net.wifi.p2p.CONNECTION_STATE_CHANGE");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:263:            intentFilter.addAction("android.net.wifi.p2p.THIS_DEVICE_CHANGED");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:264:            WifiDirect.this.mActivity.registerReceiver(this, intentFilter, 4);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:271:                WifiDirect.this.mActivity.unregisterReceiver(this);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:282:            if (action.equals("android.net.wifi.p2p.STATE_CHANGED")) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:283:                int intExtra = intent.getIntExtra("wifi_p2p_state", -1);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:284:                WifiDirect wifiDirect = WifiDirect.this;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:286:                    wifiDirect.mDeviceState = DeviceState.ACTIVATING;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:287:                    Logger.m967d("WifiDirect", "Enabled WifiP2p.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:288:                    return;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:290:                    wifiDirect.mDeviceState = DeviceState.INACTIVATED;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:291:                    Logger.m967d("WifiDirect", "Disabled WifiP2p.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:292:                    return;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:295:            if (!action.equals("android.net.wifi.p2p.CONNECTION_STATE_CHANGE")) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:296:                if (action.equals("android.net.wifi.p2p.THIS_DEVICE_CHANGED")) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:297:                    Logger.m967d("WifiDirect", "Device changed: \n" + ((WifiP2pDevice) intent.getParcelableExtra("wifiP2pDevice")).toString());
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:298:                    return;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:300:                return;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:303:            if (WifiDirect.this.mDeviceState == DeviceState.ACTIVATING) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:305:                WifiDirect wifiDirect2 = WifiDirect.this;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:307:                    wifiDirect2.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.1
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:308:                        @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:310:                            Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:313:                        @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:315:                            Logger.m967d("WifiDirect", "Closed.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:318:                    return;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:320:                    wifiDirect2.mDeviceState = DeviceState.ACTIVATED;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:321:                    return;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:324:            Logger.m967d("WifiDirect", "Connection changed: \n" + networkInfo.toString());
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:326:            WifiDirect wifiDirect3 = WifiDirect.this;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:328:                if (wifiDirect3.mNetworkInfo.tryDelayDisconnect()) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:329:                    return;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:331:                WifiDirect.this.mNetworkInfo.init();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:332:                return;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:334:            wifiDirect3.mNetworkInfo.stopDelayDisconnect();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:335:            NetworkInfo.ConnectionState connectionState = WifiDirect.this.mNetworkInfo.getConnectionState();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:337:                WifiDirect.this.mWifiP2pManager.requestConnectionInfo(WifiDirect.this.mChannel, new WifiP2pManager.ConnectionInfoListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.3
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:338:                    @Override // android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:339:                    public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:340:                        Logger.m967d("WifiDirect", "Connection info availed: \n" + wifiP2pInfo.toString());
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:341:                        NetworkInfo.ConnectionState connectionState2 = WifiDirect.this.mNetworkInfo.getConnectionState();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:342:                        if (!(connectionState2 == NetworkInfo.ConnectionState.CREATING && wifiP2pInfo.isGroupOwner) && (!(connectionState2 == NetworkInfo.ConnectionState.ESTABLISHED && WifiDirect.this.mNetworkInfo.isGroupOwner() && wifiP2pInfo.isGroupOwner) && (connectionState2 != NetworkInfo.ConnectionState.CONNECTING || wifiP2pInfo.isGroupOwner))) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:343:                            Logger.m968e("WifiDirect", "Unknown error.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:344:                            WifiDirect.this.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.3.1
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:345:                                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:347:                                    Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:350:                                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:352:                                    Logger.m967d("WifiDirect", "Closed.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:356:                            WifiDirect.this.mNetworkInfo.set(wifiP2pInfo);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:357:                            WifiDirect.this.mNetworkInfo.changeConnectionState(NetworkInfo.ConnectionState.ESTABLISHED);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:362:                Logger.m968e("WifiDirect", "Unknown error.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:363:                WifiDirect.this.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.2
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:364:                    @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:366:                        Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:369:                    @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:371:                        Logger.m967d("WifiDirect", "Closed.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:379:        private WifiDirectNsd.DetectedServiceInfo mDetectedServiceInfo;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:385:        private ServiceInfo(WifiDirectNsd.DetectedServiceInfo detectedServiceInfo) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:386:            this.mDetectedServiceInfo = new WifiDirectNsd.DetectedServiceInfo(detectedServiceInfo);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:390:        public WifiP2pDevice getDevice() {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:391:            return this.mDetectedServiceInfo.getDevice();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:396:                return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:399:                return super.equals(obj);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:401:            WifiDirectNsd.DetectedServiceInfo detectedServiceInfo = this.mDetectedServiceInfo;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:402:            WifiDirectNsd.DetectedServiceInfo detectedServiceInfo2 = ((ServiceInfo) obj).mDetectedServiceInfo;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:403:            return detectedServiceInfo == null ? detectedServiceInfo2 == null : detectedServiceInfo.equals(detectedServiceInfo2);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:409:            if (attribute == null || (str = attribute.get(WifiDirect.ATTRIBUTE_KEY_USER_ATTRIBUTE)) == null) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:410:                return null;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:423:                return map;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:426:                return null;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:432:            return attribute == null ? "" : attribute.get(WifiDirect.ATTRIBUTE_KEY_ID);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:438:            if (attribute == null || (str = attribute.get(WifiDirect.ATTRIBUTE_KEY_PORT)) == null) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:439:                return 0;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:441:            return Integer.valueOf(str).intValue();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:445:            return this.mDetectedServiceInfo.hashCode();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:449:    public WifiDirect(Config config, Activity activity) throws IllegalArgumentException {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:452:            Logger.m967d("WifiDirect", "Invalid argument.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:456:        WifiP2pManager wifiP2pManager = (WifiP2pManager) activity.getSystemService("wifip2p");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:457:        if (wifiP2pManager == null) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:459:            return;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:463:        this.mWifiP2pManager = wifiP2pManager;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:464:        this.mChannel = wifiP2pManager.initialize(activity, activity.getMainLooper(), new WifiP2pManager.ChannelListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.1
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:465:            @Override // android.net.wifi.p2p.WifiP2pManager.ChannelListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:467:                Logger.m967d("WifiDirect", "The channel has been disconnected.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:468:                WifiDirect.this.mDeviceState = DeviceState.INACTIVATED;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:471:        this.mWifiDirectNsd = new WifiDirectNsd(this.mWifiP2pManager, this.mChannel);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:477:        if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() == NetworkInfo.ConnectionState.OPEN || this.mNetworkInfo.getConnectionState() == NetworkInfo.ConnectionState.CLOSED) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:478:            return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:482:        WifiP2pManager wifiP2pManager = this.mWifiP2pManager;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:484:            wifiP2pManager.cancelConnect(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.4
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:485:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:487:                    Logger.m968e("WifiDirect", "Failed to cancelConnect. (error = " + i + ")");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:490:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:492:                    Logger.m967d("WifiDirect", "Canceled.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:496:            wifiP2pManager.removeGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.5
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:497:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:499:                    Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:502:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:504:                    Logger.m967d("WifiDirect", "Closed.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:509:        return true;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:513:        if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() != NetworkInfo.ConnectionState.OPEN) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:514:            return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:517:        final WifiP2pDevice device = serviceInfo2.getDevice();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:519:            return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:522:            Logger.m968e("WifiDirect", "WPS push button configuration is not supported.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:523:            return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:525:        WifiP2pConfig wifiP2pConfig = new WifiP2pConfig();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:526:        wifiP2pConfig.deviceAddress = device.deviceAddress;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:527:        wifiP2pConfig.wps.setup = 0;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:528:        this.mWifiP2pManager.connect(this.mChannel, wifiP2pConfig, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.3
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:529:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:531:                Logger.m968e("WifiDirect", "Failed to connect. (error = " + i + ")");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:532:                WifiDirect.this.mNetworkInfo.init();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:535:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:537:                Logger.m967d("WifiDirect", "Connecting to: \n" + device.toString());
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:538:                WifiDirect.this.mNetworkInfo.set(serviceInfo2);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:542:        return true;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:546:        if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() != NetworkInfo.ConnectionState.OPEN) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:547:            return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:549:        this.mWifiP2pManager.createGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.2
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:550:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:552:                Logger.m968e("WifiDirect", "Failed to createGroup. (error = " + i + ")");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:553:                WifiDirect.this.mNetworkInfo.init();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:556:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:558:                Logger.m967d("WifiDirect", "Creating group...");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:562:        return true;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:573:        WifiDirectNsd wifiDirectNsd = this.mWifiDirectNsd;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:574:        if (wifiDirectNsd != null) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:575:            wifiDirectNsd.destruct();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:579:        this.mWifiP2pManager = null;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:586:            return AdvertisementState.INACTIVATED;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:588:        WifiDirectNsd.ServiceInfo serviceInfo = new WifiDirectNsd.ServiceInfo();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:599:                return AdvertisementState.INACTIVATED;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:602:        WifiDirectNsd.RegisterServiceState registerServiceState = this.mWifiDirectNsd.getRegisterServiceState(serviceInfo);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:603:        return registerServiceState == WifiDirectNsd.RegisterServiceState.ACTIVATING ? AdvertisementState.ACTIVATING : registerServiceState == WifiDirectNsd.RegisterServiceState.ACTIVATED ? AdvertisementState.ACTIVATED : registerServiceState == WifiDirectNsd.RegisterServiceState.INACTIVATING ? AdvertisementState.INACTIVATING : registerServiceState == WifiDirectNsd.RegisterServiceState.INACTIVATED ? AdvertisementState.INACTIVATED : AdvertisementState.INACTIVATED;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:607:        List<WifiDirectNsd.DetectedServiceInfo> detectedServiceInfoList;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:608:        if (this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || (detectedServiceInfoList = this.mWifiDirectNsd.getDetectedServiceInfoList()) == null || detectedServiceInfoList.size() == 0) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:609:            return null;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:612:        Iterator<WifiDirectNsd.DetectedServiceInfo> it = detectedServiceInfoList.iterator();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:617:            return null;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:619:        return arrayList;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:623:        return this.mDeviceState;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:628:            return DiscoveryState.INACTIVATED;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:630:        WifiDirectNsd.DiscoveryServiceInfo discoveryServiceInfo = new WifiDirectNsd.DiscoveryServiceInfo();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:632:        WifiDirectNsd.RegisterDiscoveryServiceState registerDiscoveryServiceState = this.mWifiDirectNsd.getRegisterDiscoveryServiceState(discoveryServiceInfo);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:633:        return registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.ACTIVATING ? DiscoveryState.ACTIVATING : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.ACTIVATED ? DiscoveryState.ACTIVATED : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.INACTIVATING ? DiscoveryState.INACTIVATING : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.INACTIVATED ? DiscoveryState.INACTIVATED : DiscoveryState.INACTIVATED;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:637:        return this.mNetworkInfo;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:642:            return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:644:        WifiDirectNsd.ServiceInfo serviceInfo = new WifiDirectNsd.ServiceInfo();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:655:                return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:658:        return this.mWifiDirectNsd.registerService(serviceInfo);
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:663:            return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:665:        WifiDirectNsd.DiscoveryServiceInfo discoveryServiceInfo = new WifiDirectNsd.DiscoveryServiceInfo();
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:667:        if (!this.mWifiDirectNsd.registerDiscoveryService(discoveryServiceInfo)) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:668:            return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:670:        if (this.mWifiDirectNsd.startDiscovery()) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:671:            return true;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:673:        if (!this.mWifiDirectNsd.unregisterDiscoveryService()) {
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:674:            Logger.m968e("WifiDirect", "Unknown error.");
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:676:        return false;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:680:        return (this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || !this.mWifiDirectNsd.unregisterService()) ? false : true;
+work/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:684:        return this.mDeviceState != DeviceState.UNSUPPORTED && this.mDeviceState != DeviceState.INACTIVATED && this.mWifiDirectNsd.stopDiscovery() && this.mWifiDirectNsd.unregisterDiscoveryService();
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderActivity.java:13:import com.epicgames.ue4.GameActivity;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderActivity.java:98:        return false;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderActivity.java:107:            return;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderActivity.java:296:                return true;
+work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderActivity.java:302:                DownloaderActivity.this.startActivity(new Intent(DownloaderActivity.this.getApplicationContext(), (Class<?>) GameActivity.class));
 work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:1:package jp.konami.peerlink.ble;
 work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:14:import jp.konami.peerlink.ble.Central;
 work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:15:import jp.konami.peerlink.ble.Peripheral;
@@ -4486,84 +4337,6 @@ work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:350:           
 work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:352:        return peripheral.stopAdvertise();
 work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:358:            return false;
 work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:360:        return central.stopScan();
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:101:                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:106:                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:155:                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:161:                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:198:                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:221:                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:226:                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:283:                    return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:285:                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:338:                    return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:340:                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:375:        return list == null ? new ArrayList() : list;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:380:        return initializeFlg != null && initializeFlg.equals(ApplilinkHttpRequest.HttpResponseValue.STATUS_SUCCESS);
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:389:            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:464:            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:488:                            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:490:                        return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:538:                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:571:                                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:573:                            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:634:                                    return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:636:                                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:691:                                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:693:                            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:732:                                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:734:                            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:770:            return EncryptionUtils.decryptAES128(RecommendNetworkConsts.initializeFlgEncKey, sharedPrefs);
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:772:        return null;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:815:                                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:817:                            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:873:                    return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:885:            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:987:                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:993:                    return Utils.isAdNativeInitialized();
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1001:                        return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1005:                        return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1041:                        return Utils.isAdNativeInitialized();
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1048:                            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1052:                            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1074:                        return Utils.isAdNativeInitialized();
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1081:                            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1149:                                    return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1151:                                return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1187:            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1223:            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1227:            return;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1244:            return;
-work/jadx/sources/com/epicgames/ue4/MessageBox01.java:36:        AlertDialog.Builder builder = new AlertDialog.Builder(GameActivity.Get());
-work/jadx/sources/com/epicgames/ue4/MessageBox01.java:47:        GameActivity.Get().runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.MessageBox01.2
-work/jadx/sources/com/epicgames/ue4/MessageBox01.java:77:                                Button button2 = new Button(GameActivity.Get());
-work/jadx/sources/com/epicgames/ue4/MessageBox01.java:85:                return;
-work/jadx/sources/com/epicgames/ue4/MessageBox01.java:137:            GameActivity.Get().runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.MessageBox01.1
-work/jadx/sources/com/epicgames/ue4/MessageBox01.java:150:        return this.ButtonPressed;
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:1:package jp.konami.peerlink.ble;
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:13:public class BluetoothSwitch extends Activity {
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:19:    private static final String TAG = "ble/BluetoothSwitch";
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:24:            sendBroadcast(new Intent(i2 == -1 ? "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_ENABLED" : "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_DISABLED"));
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:35:            return;
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:40:            return;
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:45:            return;
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:59:                return;
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:61:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:63:                return;
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:79:            sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:106:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_DENIED"));
-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:109:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkConsts.java:13:        return EncryptionUtils.sha256(initializeFlgEncKey);
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkConsts.java:17:        return EncryptionUtils.sha256(installFlgEncKey);
-work/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:35:                return;
-work/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:37:            GameActivity.Log.debug("Battery: status = " + intExtra + ", rawlevel = " + intExtra2 + ", scale = " + intExtra3);
-work/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:46:        GameActivity.Log.debug("Registering battery receiver");
-work/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:58:        GameActivity.Log.debug("Unregistering battery receiver");
-work/jadx/sources/com/epicgames/ue4/C0928x5c9a8c85.java:18:        return Collections.unmodifiableList(arrayList);
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetwork.java:31:            return this.banner_display_status;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetwork.java:35:            return this.unread_count;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetwork.java:96:        return instance;
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetwork.java:107:            return coreInstance.isInstalledAppli(str);
-work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetwork.java:109:        return false;
 work/jadx/sources/com/epicgames/ue4/VideoDecoder.java:92:                GameActivity.Log.debug("BitmapRenderer: mSwizzlePixels");
 work/jadx/sources/com/epicgames/ue4/VideoDecoder.java:95:                GameActivity.Log.debug("BitmapRenderer 2" + strGlGetString);
 work/jadx/sources/com/epicgames/ue4/VideoDecoder.java:97:                    GameActivity.Log.debug("VideoDecoder: disabled shared GL context on " + strGlGetString);
@@ -4669,14 +4442,70 @@ work/jadx/sources/com/epicgames/ue4/VideoDecoder.java:1107:        return Create
 work/jadx/sources/com/epicgames/ue4/VideoDecoder.java:1112:            GameActivity.Log.warn("updateVideoFrame failed to alloc mOESTextureRenderer ");
 work/jadx/sources/com/epicgames/ue4/VideoDecoder.java:1114:            return null;
 work/jadx/sources/com/epicgames/ue4/VideoDecoder.java:1119:        return frameUpdateInfoUpdateVideoFrame;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetwork.java:32:            return this.all_install_flg;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetwork.java:36:            return this.status;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetwork.java:40:            return this.expire;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetwork.java:84:        return coreInstance.getInitializeFlg();
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetwork.java:88:        return instance;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkConsts.java:14:        return EncryptionUtils.sha256(campaignFlgEncKey);
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkConsts.java:18:        return EncryptionUtils.sha256(initializeFlgEncKey);
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkConsts.java:22:        return EncryptionUtils.sha256(useFlgKey);
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:1:package jp.konami.peerlink.ble;
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:13:public class BluetoothSwitch extends Activity {
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:19:    private static final String TAG = "ble/BluetoothSwitch";
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:24:            sendBroadcast(new Intent(i2 == -1 ? "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_ENABLED" : "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_DISABLED"));
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:35:            return;
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:40:            return;
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:45:            return;
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:59:                return;
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:61:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:63:                return;
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:79:            sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:106:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_DENIED"));
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:109:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
+work/jadx/sources/com/epicgames/ue4/C0928x5c9a8c85.java:18:        return Collections.unmodifiableList(arrayList);
+work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:68:        return (str2 == null || str2.length() <= 0) ? str : str + "." + this.mExt;
+work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:74:            return this.mContentLength;
+work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:83:            return this.mProtocol;
+work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:92:            return this.mReceivedDataLength;
+work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:242:                    return;
+work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:276:                return;
+work/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:35:                return;
+work/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:37:            GameActivity.Log.debug("Battery: status = " + intExtra + ", rawlevel = " + intExtra2 + ", scale = " + intExtra3);
+work/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:46:        GameActivity.Log.debug("Registering battery receiver");
+work/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:58:        GameActivity.Log.debug("Unregistering battery receiver");
+work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:32:                    GameActivity.Log.warn("Android Audio Decoder: CreateCodec failed!");
+work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:34:                    return false;
+work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:40:        return true;
+work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:62:                    GameActivity.Log.debug("Android Audio Decoder: INFO_OUTPUT_BUFFERS_CHANGED");
+work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:64:                    GameActivity.Log.debug("Android Audio Decoder: New format " + this.mAudioCodec.getOutputFormat());
+work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:72:                    GameActivity.Log.debug("Android Audio Decoder: dequeueOutputBuffer timed out!");
+work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:77:        return bArr2;
+work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:101:            GameActivity.Log.warn("Android Audio Decoder: updateConfig channelCount:" + i2);
+work/jadx/sources/com/epicgames/ue4/AudioDecoder.java:110:        return zCreateCodec;
+work/jadx/sources/com/epicgames/ue4/MulticastBroadcastReceiver.java:17:            return;
+work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:25:        return s_fcmToken.get().toString();
+work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:29:        return 0L;
+work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:37:        return z;
+work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:45:        return z;
+work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:53:        return z;
+work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:61:        return z;
+work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:72:                    return;
+work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:96:                    return;
+work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:118:                    return;
+work/jadx/sources/jp/konami/android/common/GameController$$ExternalSyntheticBackport0.java:20:        return Collections.unmodifiableSet(hashSet);
+work/jadx/sources/jp/konami/android/common/GameController$$ExternalSyntheticBackport0.java:27:                return false;
+work/jadx/sources/jp/konami/android/common/GameController$$ExternalSyntheticBackport0.java:30:        return true;
+work/jadx/sources/com/epicgames/ue4/MessageBox01.java:36:        AlertDialog.Builder builder = new AlertDialog.Builder(GameActivity.Get());
+work/jadx/sources/com/epicgames/ue4/MessageBox01.java:47:        GameActivity.Get().runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.MessageBox01.2
+work/jadx/sources/com/epicgames/ue4/MessageBox01.java:77:                                Button button2 = new Button(GameActivity.Get());
+work/jadx/sources/com/epicgames/ue4/MessageBox01.java:85:                return;
+work/jadx/sources/com/epicgames/ue4/MessageBox01.java:137:            GameActivity.Get().runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.MessageBox01.1
+work/jadx/sources/com/epicgames/ue4/MessageBox01.java:150:        return this.ButtonPressed;
+work/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:22:        GameActivity.Log.debug("Registering volume receiver");
+work/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:33:        GameActivity.Log.debug("startVolumeReceiver: " + streamVolume);
+work/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:38:        GameActivity.Log.debug("Unregistering volume receiver");
+work/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:46:        GameActivity.Log.debug("OnReceive VOLUME_CHANGED_ACTION");
+work/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:52:            GameActivity.Log.debug("skipping volume change from stream " + iIntValue);
+work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:34:                return null;
+work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:47:                            if (!GameActivity.LocalNotificationScheduleAtTime(context, i, jSONObject2.getString("local-notification-targetDateTime"), jSONObject2.getBoolean("local-notification-localTime"), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_TITLE), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_BODY), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_ACTION), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_ACTION_EVENT))) {
+work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:62:                                return r19;
+work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:86:            return r19;
+work/jadx/sources/com/epicgames/ue4/GameApplication_LifecycleAdapter.java:20:            return;
+work/jadx/sources/com/epicgames/ue4/GameApplication_LifecycleAdapter.java:25:                return;
+work/jadx/sources/com/epicgames/ue4/GameApplication_LifecycleAdapter.java:27:            return;
 work/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:1:package jp.konami.peerlink.ble;
 work/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:29:import jp.konami.peerlink.ble.BluetoothLowEnergySocket;
 work/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:46:    private final Map<BluetoothDevice, Socket> mSocketMap;
@@ -4871,239 +4700,179 @@ work/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:961:            return 
 work/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:965:        return true;
 work/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:970:            return false;
 work/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:974:        return true;
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:31:            return this.value;
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:53:            return this.adModel;
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:57:            return String.valueOf(this.adModel);
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:61:            return this.value;
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:79:            return this.type;
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:95:            return this.align;
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:110:            return this.value;
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:136:            return this.environ;
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:140:            return this.host;
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:144:            return this.scheme + "://" + this.host;
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:148:            return String.valueOf(this.value);
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:152:            return this.value;
-work/jadx/sources/jp/applilink/sdk/common/ApplilinkConsts.java:167:            return this.value;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:66:                    return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:68:                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:132:                                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:154:            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:164:        return list == null ? new ArrayList() : list;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:169:        return initializeFlg != null && initializeFlg.equals(ApplilinkHttpRequest.HttpResponseValue.STATUS_SUCCESS);
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:175:        return rewardUseFlg != null && rewardUseFlg.equals(ApplilinkHttpRequest.HttpResponseValue.STATUS_SUCCESS);
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:183:            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:218:                    return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:220:                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:244:                            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:326:            return EncryptionUtils.decryptAES128(RewardNetworkConsts.campaignFlgEncKey, sharedPrefs);
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:328:        return null;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:334:            return EncryptionUtils.decryptAES128(RewardNetworkConsts.initializeFlgEncKey, sharedPrefs);
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:336:        return null;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:340:        return this._work.getSharedPrefs(RewardNetworkConsts.getSharedPrefKeyUseFlg());
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:347:                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:349:            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:360:                    return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:362:                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:381:                                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:383:                            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:428:                            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:469:                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:471:            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:476:                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:479:                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:541:                            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:567:                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:569:            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:597:                            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:619:                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:621:            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:628:                return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:630:            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:655:                            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:657:                        return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:663:                            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:665:                        return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:671:                            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:673:                        return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:679:                            return;
-work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:681:                        return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:82:            return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:106:                            LogUtils.debug("[ApplilinkAgreementDialog] failed to put return value : " + next);
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:118:        return jSONObject;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:132:        return replaceButton(str);
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:138:        return string;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:144:        return (jSONObject == null || (strOptString = jSONObject.optString(_keyFooter)) == null) ? "" : strOptString;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:152:        return _htmlTemplate.replace(_keywordTitle, title).replace(_keywordMessage, message).replace(_keywordValues, values).replace(_keywordInitvalues, initvalues).replace(_keywordFooter, getFooter());
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:159:        return replaceCheckboxValue(_htmlTemplate2.replace(_keywordTitle, title).replace(_keywordMessage, message)).replace(_keywordInitvalues, initvalues).replace(_keywordFooter, getFooter()).replace(_keywordButtonLayout, getButtonLayout());
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:173:        return strReplace.replace(_keywordValues, values + topValue).replace(_keywordInitvalues, initvalues).replace(_keywordFooter, footer).replace(_keywordButtonLayout, getButtonLayout());
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:178:        return jSONObject == null ? "{}" : jSONObject.toString();
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:182:        return _listenerInstance;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:188:        return (jSONObject == null || (strOptString = jSONObject.optString(_keyMsg)) == null) ? "" : strOptString;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:192:        return _status;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:198:        return (jSONObject == null || (strOptString = jSONObject.optString("title")) == null) ? "" : strOptString;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:209:        return str + (_typeEditable.compareTo(_typeConstant) == 0 ? strReplace2.replace(_keywordBtndisable, "disabled") : strReplace2.replace(_keywordBtndisable, ""));
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:215:            return 1;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:219:            return iOptInt;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:223:            return 1;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:226:            return Integer.parseInt(strOptString);
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:228:            return 1;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:253:            return "";
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:343:        return str4;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:351:            return jSONObject;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:356:            return jSONObject;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:361:            return jSONObject2;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:364:            return jSONObject;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:371:        return string;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:375:        return EncryptionUtils.sha256(_AgreementDataKeyword);
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:443:            return str;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:448:        return strOptString2 != null ? strReplace.replace(_keywordBtncancel, strOptString2) : strReplace.replace(_keywordBtncancel, "");
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:454:            return str;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:461:        return strOptString2.compareTo(_valueTrue) == 0 ? strReplace2.replace(_keywordBtnchecked, "checked") : strReplace2.replace(_keywordBtnchecked, "");
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:466:            return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialog.java:500:            return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:56:            return alertDialogCreate;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:79:            return alertDialogCreate;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:102:            return alertDialogCreate;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:114:                return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:127:            return dialogInvoke;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:146:                return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:159:            return dialogInvoke;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:186:                return layoutParams;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:189:            return layoutParams;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:207:            return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:213:                return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:216:                return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:231:            return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:240:                return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:246:            return;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkAgreementDialogFragment.java:252:            return;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:59:            return;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:73:        return false;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:78:            return null;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:83:                    return cacheFileInfo;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:86:            return null;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:115:        return new File(getCacheDirPath() + str).exists();
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:121:            return null;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:131:        return cacheFileInfo;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:135:        return cacheFileInfo.originalUrl.replaceAll("::", "%_:_:_%") + "::" + cacheFileInfo.cacheFilePath.replaceAll("::", "%_:_:_%") + "::" + cacheFileInfo.expirationTime + "::" + cacheFileInfo.fileSize + "::" + cacheFileInfo.checksum;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:139:        return _cacheDirPath;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:143:        return _cacheDirPath;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:171:                return;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:173:            return;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:208:                                return;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:210:                            return;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:302:        return instance;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:307:            return null;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:310:            return ApplilinkSettings.getContext().getFilesDir().getCanonicalPath();
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:313:            return null;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:318:        return _isInitialized;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:332:                    return;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:359:            return false;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:370:            return true;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:372:            return false;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:384:            return false;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:409:                return true;
-work/jadx/sources/jp/applilink/sdk/common/util/StorageFileManager.java:411:            return saveCacheFileInfo();
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkJSObject2.java:8:        return "ApplilinkJSObject";
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkJSObject2.java:16:        return 1;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkJSObject2.java:22:        return 1;
-work/jadx/sources/jp/applilink/sdk/agreementdialog/ApplilinkJSObject2.java:29:        return 1;
-work/jadx/sources/jp/konami/android/common/GranularOption.java:28:        return s_list.get(i);
-work/jadx/sources/jp/konami/android/common/GranularOption.java:32:        return s_list.size();
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:38:            return;
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:104:        return decryptAES128GCM(str, str2);
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:114:            return new String(cipher.doFinal(bArr));
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:117:            return null;
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:131:            return new String(cipher.doFinal(bArr2));
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:134:            return null;
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:145:            return new String(cipher.doFinal(bArr));
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:148:            return null;
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:153:        return encryptAES128GCM(str, str2);
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:170:            return toHex(cipher.getIV()) + Constants.FILENAME_SEQUENCE_SEPARATOR + toHex(cipher.doFinal(str2.getBytes(StandardCharsets.UTF_8)));
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:173:            return null;
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:195:        return bArr2;
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:213:        return sb.toString();
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:218:            return toHex(MessageDigest.getInstance(com.adjust.sdk.Constants.SHA256).digest(str.getBytes(StandardCharsets.UTF_8)));
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:221:            return null;
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:232:        return bArr;
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:237:            return "";
-work/jadx/sources/jp/applilink/sdk/common/util/EncryptionUtils.java:243:        return stringBuffer.toString();
-work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:68:        return (str2 == null || str2.length() <= 0) ? str : str + "." + this.mExt;
-work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:74:            return this.mContentLength;
-work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:83:            return this.mProtocol;
-work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:92:            return this.mReceivedDataLength;
-work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:242:                    return;
-work/jadx/sources/jp/konami/android/common/CronetRequestCallback.java:276:                return;
-work/jadx/sources/jp/konami/android/common/Tracking.java:83:        return s_adjustAdid.get().toString();
-work/jadx/sources/jp/konami/android/common/Tracking.java:88:        return s_advertisingId.get().toString();
-work/jadx/sources/jp/konami/android/common/Tracking.java:93:        return s_androidId.get().toString();
-work/jadx/sources/jp/konami/android/common/Tracking.java:103:            return;
-work/jadx/sources/jp/konami/android/common/Tracking.java:109:            LogI("initialize : return due to already initialized.", new Object[0]);
-work/jadx/sources/jp/konami/android/common/Tracking.java:110:            return;
-work/jadx/sources/jp/konami/android/common/Tracking.java:129:                return true;
-work/jadx/sources/jp/konami/android/common/Tracking.java:153:                return this;
-work/jadx/sources/jp/konami/android/common/Tracking.java:184:                return this;
-work/jadx/sources/jp/konami/android/common/Tracking.java:193:            return Build.SUPPORTED_64_BIT_ABIS.length <= 0;
-work/jadx/sources/jp/konami/android/common/Tracking.java:196:            return true;
-work/jadx/sources/jp/konami/android/common/Tracking.java:203:            return;
-work/jadx/sources/jp/konami/android/common/Tracking.java:228:            LogV("onNewIntent : return due to uninitialized", new Object[0]);
-work/jadx/sources/jp/konami/android/common/Tracking.java:244:                    return this;
-work/jadx/sources/jp/konami/android/common/Tracking.java:252:            LogV("onPause : return due to uninitialized", new Object[0]);
-work/jadx/sources/jp/konami/android/common/Tracking.java:253:            return;
-work/jadx/sources/jp/konami/android/common/Tracking.java:262:            LogV("onResume : return due to uninitialized", new Object[0]);
-work/jadx/sources/jp/konami/android/common/Tracking.java:263:            return;
-work/jadx/sources/jp/konami/android/common/Tracking.java:283:            return;
-work/jadx/sources/jp/konami/android/common/Tracking.java:309:                    return this;
-work/jadx/sources/jp/konami/android/common/Tracking.java:356:            LogV("tryToStartGettingAdjustId : return due to uninitialized", new Object[0]);
-work/jadx/sources/jp/konami/android/common/Tracking.java:357:            return;
-work/jadx/sources/jp/konami/android/common/Tracking.java:361:            LogV("tryToStartGettingAdjustId : return because already finished/gave up getting AdjustID.", new Object[0]);
-work/jadx/sources/jp/konami/android/common/Tracking.java:362:            return;
-work/jadx/sources/jp/konami/android/common/Tracking.java:376:                        return;
-work/jadx/sources/jp/konami/android/common/Tracking.java:379:                    Tracking.LogV("Adjust.getAdid() returned null. count=" + Tracking.s_checkAdjustIdCount, new Object[0]);
-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:25:        return s_fcmToken.get().toString();
-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:29:        return 0L;
-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:37:        return z;
-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:45:        return z;
-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:53:        return z;
-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:61:        return z;
-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:72:                    return;
-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:96:                    return;
-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:118:                    return;
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:53:        return log(LogLevel.d, str, str2, null);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:58:        return log(LogLevel.d, str, str2, th);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:67:        return log(LogLevel.e, str, str2, null);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:72:        return log(LogLevel.e, str, str2, th);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:77:        return log(LogLevel.i, str, str2, null);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:82:        return log(LogLevel.i, str, str2, th);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:87:            return false;
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:90:            return true;
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:92:        return ApplilinkSettings.isDebug();
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:97:            return 0;
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:102:                return th == null ? Log.w(str, str2) : Log.w(str, str2, th);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:105:                return th == null ? Log.e(str, str2) : Log.e(str, str2, th);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:108:            return th == null ? Log.i(str, str2) : Log.i(str, str2, th);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:110:        return 0;
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:114:        return logLabel(5);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:119:            return "";
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:123:        return stackTraceElement == null ? "" : stackTraceElement.getClassName().substring(stackTraceElement.getClassName().lastIndexOf(".") + 1) + "." + stackTraceElement.getMethodName();
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:182:        return log(LogLevel.v, str, str2, null);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:187:        return log(LogLevel.v, str, str2, th);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:192:        return log(LogLevel.w, str, str2, null);
-work/jadx/sources/jp/applilink/sdk/common/util/LogUtils.java:197:        return log(LogLevel.w, str, str2, th);
-work/jadx/sources/jp/konami/android/common/FirebaseImplementation.java:31:        return s_isForceCrashlyticsCollectionEnable;
-work/jadx/sources/jp/konami/android/common/FirebaseImplementation.java:35:        return s_isMasterBuild;
-work/jadx/sources/jp/konami/android/common/GameController$$ExternalSyntheticBackport0.java:20:        return Collections.unmodifiableSet(hashSet);
-work/jadx/sources/jp/konami/android/common/GameController$$ExternalSyntheticBackport0.java:27:                return false;
-work/jadx/sources/jp/konami/android/common/GameController$$ExternalSyntheticBackport0.java:30:        return true;
-work/jadx/sources/jp/applilink/sdk/common/util/GoogleAdvertisingId.java:26:            return;
-work/jadx/sources/jp/applilink/sdk/common/util/GoogleAdvertisingId.java:55:            return idZero;
-work/jadx/sources/jp/applilink/sdk/common/util/GoogleAdvertisingId.java:59:            return null;
-work/jadx/sources/jp/applilink/sdk/common/util/GoogleAdvertisingId.java:61:        return info.getId();
-work/jadx/sources/jp/applilink/sdk/common/util/GoogleAdvertisingId.java:65:        return isGooglePlayServiceAvailable;
-work/jadx/sources/jp/applilink/sdk/common/util/GoogleAdvertisingId.java:71:            return true;
-work/jadx/sources/jp/applilink/sdk/common/util/GoogleAdvertisingId.java:74:            return info.isLimitAdTrackingEnabled();
-work/jadx/sources/jp/applilink/sdk/common/util/GoogleAdvertisingId.java:76:        return false;
-work/jadx/sources/jp/applilink/sdk/common/util/GoogleAdvertisingId.java:80:        return adIdProcessing;
+work/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:9:    private GameActivity gameActivity;
+work/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:11:    public ConsoleCmdReceiver(GameActivity gameActivity) {
+work/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:12:        this.gameActivity = gameActivity;
+work/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:20:            return;
+work/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:22:        this.gameActivity.nativeConsoleCommand(stringExtra);
+work/jadx/sources/com/epicgames/ue4/GameApplication.java:18:        return !isForeground;
+work/jadx/sources/com/epicgames/ue4/GameApplication.java:22:        return isForeground;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:101:                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:106:                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:155:                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:161:                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:198:                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:221:                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:226:                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:283:                    return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:285:                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:338:                    return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:340:                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:375:        return list == null ? new ArrayList() : list;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:380:        return initializeFlg != null && initializeFlg.equals(ApplilinkHttpRequest.HttpResponseValue.STATUS_SUCCESS);
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:389:            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:464:            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:488:                            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:490:                        return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:538:                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:571:                                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:573:                            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:634:                                    return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:636:                                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:691:                                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:693:                            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:732:                                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:734:                            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:770:            return EncryptionUtils.decryptAES128(RecommendNetworkConsts.initializeFlgEncKey, sharedPrefs);
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:772:        return null;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:815:                                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:817:                            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:873:                    return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:885:            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:987:                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:993:                    return Utils.isAdNativeInitialized();
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1001:                        return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1005:                        return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1041:                        return Utils.isAdNativeInitialized();
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1048:                            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1052:                            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1074:                        return Utils.isAdNativeInitialized();
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1081:                            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1149:                                    return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1151:                                return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1187:            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1223:            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1227:            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkCore.java:1244:            return;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkConsts.java:13:        return EncryptionUtils.sha256(initializeFlgEncKey);
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetworkConsts.java:17:        return EncryptionUtils.sha256(installFlgEncKey);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:38:        return this.konamiIabClient.buyItem(skuDetails, str, str2).getResponseCode();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:44:            return this.konamiIabClient.buyItem(productDetails, i, str2, str3);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:47:        return 5;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:54:            return this.konamiIabClient.buyItem(skuDetails, str2, str3).getResponseCode();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:57:        return 5;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:65:        return this.konamiIabClient.canMakePayment();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:83:        return this.konamiIabClient.endConnection();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:97:        return this.mSkuMap.get(str);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:101:        return this.mProductMap.get(str);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:105:        return this.mProductMap.get(str);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:109:        return this.konamiIabClient.getConnectionState();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:151:        return this.konamiIabClient.getProduct(purchase);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:155:        return this.konamiIabClient.getProduct(purchaseHistoryRecord);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:171:            return jSONObject.toString();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:173:            return "{}";
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:218:            return jSONObject.toString();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:220:            return "{}";
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:226:        return this.konamiIabClient.getSku(purchase);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:231:        return this.konamiIabClient.getSku(purchaseHistoryRecord);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:277:        return this.konamiIabClient.isAcknowledgeOnPurchase();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:281:        return this.konamiIabClient.isInAppMessagingSupported();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:285:        return this.konamiIabClient.isPriceChangeConfirmationSupported();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:289:        return this.konamiIabClient.isProductDetailsSupported();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:297:        return this.konamiIabClient.isRestartConnectionOnDisconnected();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:301:        return this.konamiIabClient.isSubscriptionUpgradeSupported();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:305:        return this.konamiIabClient.isSubscriptionsSupported();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:333:        return this.konamiIabClient.showInAppMessages(new OnShowInAppMessageFinishedListener() { // from class: jp.konami.android.common.iab.KonamiIabBaseNativeActivity.6
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:344:            return this.konamiIabClient.upgradeSubscription(productDetails, str2, str3, i).getResponseCode();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:347:        return 5;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:28:    private GameActivity gameActivity;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:56:    public GooglePlayStoreHelper(String str, GameActivity gameActivity, Logger logger) {
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:59:        this.gameActivity = gameActivity;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:61:        BillingClient billingClientBuild = BillingClient.newBuilder(this.gameActivity).setListener(new PurchasesUpdatedListener() { // from class: com.epicgames.ue4.GooglePlayStoreHelper.1
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:87:                    googlePlayStoreHelper.Log.debug("In-app billing NOT supported for " + GooglePlayStoreHelper.this.gameActivity.getPackageName() + " error " + billingResult.getResponseCode());
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:90:                    GooglePlayStoreHelper.this.Log.debug("In-app billing supported for " + GooglePlayStoreHelper.this.gameActivity.getPackageName());
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:97:        return -1;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:104:                return "The request has reached the maximum timeout before Google Play responds";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:106:                return "Requested feature is not supported by Play Store on the current device";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:108:                return "Play Store service is not connected now - potentially transient state";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:110:                return "Success";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:112:                return "User pressed back or canceled a dialog";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:114:                return "Network connection is down";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:116:                return "Billing API version is not supported for the type requested";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:118:                return "Requested product is not available for purchase";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:120:                return "Invalid arguments provided to the API. This error can also indicate that the application was not correctly signed or properly set up for In-app Billing in Google Play, or does not have the necessary permissions in its manifest";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:122:                return "Fatal error during the API action";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:124:                return "Failure to purchase since item is already owned";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:126:                return "Failure to consume since item is not owned";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:128:                return "Unknown Server Response Code";
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:147:                    return;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:150:                    GooglePlayStoreHelper.this.mBillingClient.launchBillingFlow(GooglePlayStoreHelper.this.gameActivity, BillingFlowParams.newBuilder().setObfuscatedAccountId(this.ObfuscatedAccountId).setProductDetailsParamsList(C0928x5c9a8c85.m69m(new Object[]{BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productDetails).setOfferToken(productDetails.getOneTimePurchaseOfferDetails().getOfferToken()).build()})).build()).getResponseCode();
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:157:                return this;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:160:        return true;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:188:        return this.bIsIapSetup;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:203:            return false;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:216:        return true;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:225:            return false;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:297:        return true;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:308:            return false;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:382:                    return;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:394:        return true;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:408:        return false;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:424:            return true;
+work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:452:        return true;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetwork.java:31:            return this.banner_display_status;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetwork.java:35:            return this.unread_count;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetwork.java:96:        return instance;
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetwork.java:107:            return coreInstance.isInstalledAppli(str);
+work/jadx/sources/jp/applilink/sdk/recommend/RecommendNetwork.java:109:        return false;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetwork.java:32:            return this.all_install_flg;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetwork.java:36:            return this.status;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetwork.java:40:            return this.expire;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetwork.java:84:        return coreInstance.getInitializeFlg();
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetwork.java:88:        return instance;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkConsts.java:14:        return EncryptionUtils.sha256(campaignFlgEncKey);
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkConsts.java:18:        return EncryptionUtils.sha256(initializeFlgEncKey);
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkConsts.java:22:        return EncryptionUtils.sha256(useFlgKey);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:65:        return billingClient != null && billingClient.isFeatureSupported(str).getResponseCode() == 0;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:69:        return this.billingClient.launchBillingFlow(this.activity, billingFlowParams);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:96:        return buyItem(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productDetails).setOfferToken(str).build(), str2, str3);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:109:        return new String(Base64.decode(str, 0));
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:113:        return Base64.encodeToString(str.getBytes(), 0);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:119:        return launchBillingFlow(BillingFlowParams.newBuilder().setObfuscatedAccountId(str).setObfuscatedProfileId(str2).setProductDetailsParamsList(arrayList).build()).getResponseCode();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:126:                return 5;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:132:                return 5;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:136:        return buyItem(productDetailsParamsBuild, str, str2);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:142:        return launchBillingFlow(BillingFlowParams.newBuilder().setObfuscatedAccountId(str).setObfuscatedProfileId(str2).setSkuDetails(skuDetails).build());
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:147:            return false;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:156:        return this.billingClient.isReady();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:170:            return false;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:174:        return true;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:181:                return true;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:184:        return false;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:193:                return true;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:196:        return false;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:211:            return 0;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:213:        return billingClient.getConnectionState();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:256:        return accountIdentifiers != null ? accountIdentifiers.getObfuscatedAccountId() : "";
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:261:        return accountIdentifiers != null ? accountIdentifiers.getObfuscatedProfileId() : "";
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:265:        return purchase.getProducts().get(0);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:269:        return purchaseHistoryRecord.getProducts().get(0);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:273:        return purchase.getProducts();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:279:        return purchase.getSkus().get(0);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:285:        return purchaseHistoryRecord.getSkus().get(0);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:291:        return purchase.getSkus();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:301:                    return;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:337:                    return;
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:365:        return isAcknowledgeOnPurchase.booleanValue();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:378:        return isFeatureSupported(BillingClient.FeatureType.IN_APP_MESSAGING);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:382:        return isFeatureSupported(BillingClient.FeatureType.PRICE_CHANGE_CONFIRMATION);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:386:        return isFeatureSupported(BillingClient.FeatureType.PRODUCT_DETAILS);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:394:        return isRestartConnectionOnDisconnected.booleanValue();
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:398:        return isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS_UPDATE);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:402:        return isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS);
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:425:        return this.billingClient.showInAppMessages(this.activity, InAppMessageParams.newBuilder().addInAppMessageCategoryToShow(2).build(), new InAppMessageResponseListener() { // from class: jp.konami.android.common.iab.KonamiIabClient.14
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:435:        return launchBillingFlow(BillingFlowParams.newBuilder().setSubscriptionUpdateParams(BillingFlowParams.SubscriptionUpdateParams.newBuilder().setOldPurchaseToken(str).setSubscriptionReplacementMode(i).build()).setProductDetailsParamsList(C0928x5c9a8c85.m69m(new Object[]{BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productDetails).setOfferToken(str2).build()})).build());
+work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:443:        return launchBillingFlow(BillingFlowParams.newBuilder().setSubscriptionUpdateParams(BillingFlowParams.SubscriptionUpdateParams.newBuilder().setOldPurchaseToken(str).build()).setProductDetailsParamsList(C0928x5c9a8c85.m69m(new Object[]{BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productDetails).setOfferToken(str3).setSubscriptionProductReplacementParams(BillingFlowParams.ProductDetailsParams.SubscriptionProductReplacementParams.newBuilder().setOldProductId(str2).setReplacementMode(i).build()).build()})).build());
 work/jadx/sources/jp/konami/peerlink/ble/Central.java:1:package jp.konami.peerlink.ble;
 work/jadx/sources/jp/konami/peerlink/ble/Central.java:37:import jp.konami.peerlink.ble.BluetoothLowEnergySocket;
 work/jadx/sources/jp/konami/peerlink/ble/Central.java:60:    private static final AtomicLong mNextSocketObjectId = new AtomicLong();
@@ -5586,6 +5355,237 @@ work/jadx/sources/jp/konami/peerlink/ble/Central.java:1367:                    r
 work/jadx/sources/jp/konami/peerlink/ble/Central.java:1370:                    return false;
 work/jadx/sources/jp/konami/peerlink/ble/Central.java:1372:                return this.mRequestedConnectionMap.putIfAbsent(uuid, new DataWithTimeLimit<>(this, Constants.WATCHDOG_WAKE_TIMER, socket)) == null;
 work/jadx/sources/jp/konami/peerlink/ble/Central.java:1381:            Iterator<Map.Entry<UUID, DataWithTimeLimit<Socket>>> it = this.mDetectedMap.entrySet().iterator();
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1403:        Thread thread = new Thread(new Runnable() { // from class: jp.konami.peerlink.ble.Central.1
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1427:                            Central.this.mSocketMaps.updateDetectedTimer();
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1430:                        Central.this.mSocketMaps.update();
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1433:                        return;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1441:        this.mScanCallback = new ScanCallback() { // from class: jp.konami.peerlink.ble.Central.2
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1460:                if (Central.this.mSocketMaps.isScanning(device)) {
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1461:                    return;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1466:                        Socket socket = new Socket(device);
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1467:                        if (socket.scan()) {
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1468:                            if (Central.this.mSocketMaps.notifyStartedScan(device, socket)) {
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1470:                                return;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1473:                                socket.abort();
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1474:                                return;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1477:                        return;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1490:            return;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1496:            return;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1502:            return;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1517:            return;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1526:            return;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1545:    public List<BluetoothLowEnergySocket> getDetectedSocketList() {
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1546:        return this.mSocketMaps.getDetectedSocketList();
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1550:        return this.mScanState;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1554:        return this.mState;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1559:            return false;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1561:        this.mSocketMaps.clearDetected();
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1563:        return true;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1568:            return false;
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1571:        this.mSocketMaps.clearDetected();
+work/jadx/sources/jp/konami/peerlink/ble/Central.java:1573:        return true;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:66:                    return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:68:                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:132:                                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:154:            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:164:        return list == null ? new ArrayList() : list;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:169:        return initializeFlg != null && initializeFlg.equals(ApplilinkHttpRequest.HttpResponseValue.STATUS_SUCCESS);
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:175:        return rewardUseFlg != null && rewardUseFlg.equals(ApplilinkHttpRequest.HttpResponseValue.STATUS_SUCCESS);
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:183:            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:218:                    return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:220:                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:244:                            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:326:            return EncryptionUtils.decryptAES128(RewardNetworkConsts.campaignFlgEncKey, sharedPrefs);
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:328:        return null;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:334:            return EncryptionUtils.decryptAES128(RewardNetworkConsts.initializeFlgEncKey, sharedPrefs);
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:336:        return null;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:340:        return this._work.getSharedPrefs(RewardNetworkConsts.getSharedPrefKeyUseFlg());
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:347:                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:349:            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:360:                    return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:362:                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:381:                                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:383:                            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:428:                            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:469:                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:471:            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:476:                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:479:                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:541:                            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:567:                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:569:            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:597:                            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:619:                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:621:            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:628:                return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:630:            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:655:                            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:657:                        return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:663:                            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:665:                        return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:671:                            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:673:                        return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:679:                            return;
+work/jadx/sources/jp/applilink/sdk/reward/RewardNetworkCore.java:681:                        return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:112:                    GameActivity.Log.debug("MediaPlayer14: disabled shared GL context on " + strGlGetString);
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:118:                return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:129:                return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:167:                return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:172:                return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:278:                GameActivity.Log.warn("Failed to complete framebuffer attachment (" + iGlCheckFramebufferStatus + ")");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:322:                return true;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:358:            return true;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:369:                    GameActivity.Log.error("Could not compile shader " + i + ":");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:370:                    GameActivity.Log.error(GLES20.glGetShaderInfoLog(iGlCreateShader));
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:372:                    return 0;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:375:            return iGlCreateShader;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:381:                return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:391:                    return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:407:                    GameActivity.Log.error("unable to get EGL14 display");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:408:                    return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:413:                    GameActivity.Log.error("unable to initialize EGL14 display");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:414:                    return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:421:                    GameActivity.Log.debug("MediaPlayer14: Existing GL context is version " + iArr[0] + "." + iArr2[0]);
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:423:                    GameActivity.Log.debug("MediaPlayer14: Existing GL context is version " + iArr[0]);
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:425:                    GameActivity.Log.debug("MediaPlayer14: Existing GL context version not detected");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:451:                GameActivity.Log.error("mTextureID <= 0");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:453:                return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:464:                GameActivity.Log.error("mFBO <= 0");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:466:                return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:471:                GameActivity.Log.error("mBlitVertexShaderID == 0");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:473:                return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:477:                GameActivity.Log.error("mBlitFragmentShaderID == 0");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:479:                return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:484:                GameActivity.Log.error("mProgram <= 0");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:486:                return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:494:                GameActivity.Log.error("Could not link program: ");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:495:                GameActivity.Log.error(GLES20.glGetProgramInfoLog(this.mProgram));
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:499:                return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:508:                GameActivity.Log.error("mBlitBuffer <= 0");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:510:                return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:545:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_ENUM");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:548:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_VALUE");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:551:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_OPERATION");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:554:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_OUT_OF_MEMORY");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:557:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_FRAMEBUFFER_OPERATION");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:560:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:563:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:566:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_UNSUPPORTED");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:569:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError " + i);
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:575:            return this.mTextureID;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:579:            return this.mSurface;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:583:            return this.mSurfaceTexture;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:587:            return this.mSurfaceTexture != null;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:663:            return z;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:685:                    return this.mFrameData;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:687:                return null;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:693:                return copyFrameTexture(i, null);
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:776:                    return frameUpdateInfo;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:779:            return frameUpdateInfo;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:783:            return this.mTextureID;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:787:            return this.mSurface;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:791:            return this.mSurfaceTexture;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:795:            return this.mSurfaceTexture != null;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:824:            return z;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:842:            return frameUpdateInfo;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:862:            return this.fileSize;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:870:                    return -1;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:877:                    return 0;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:883:                return iNativeReadAt;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:918:                GameActivity.Log.debug("MediaPlayer14: onError returned what=" + i + ", extra=" + i2);
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:919:                return true;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:950:            return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:965:        return true;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:974:            return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:989:        return true;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1000:                return null;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1009:                    return str;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1013:                    return null;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1025:                return null;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1033:                return audioTrackInfo;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1036:        return null;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1042:                return videoTrackInfo;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1045:        return null;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1050:            return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1101:            return audioTrackInfoArr;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1142:        return audioTrackInfoArr2;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1147:            return new CaptionTrackInfo[0];
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1175:        return captionTrackInfoArr;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1228:                return videoTrackInfoArr;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1232:            return new VideoTrackInfo[0];
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1244:        return videoTrackInfoArr2;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1253:        return z;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1259:            return oESTextureRenderer.resolutionChanged();
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1263:            return bitmapRenderer.resolutionChanged();
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1265:        return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1274:        return currentPosition;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1283:        return duration;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1289:            return oESTextureRenderer.getExternalTextureId();
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1293:            return bitmapRenderer.getExternalTextureId();
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1295:        return -1;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1301:            return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1306:        return zUpdateFrameData;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1312:            return null;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1317:        return bufferUpdateFrameData;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1322:            return;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1324:        GameActivity.Log.warn("initBitmapRenderer failed to alloc mBitmapRenderer ");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1330:        return this.Looping;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1338:        return z;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1354:                    GameActivity.Log.debug("MediaPlayer14: Prepare Exception: " + e.toString());
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1358:                GameActivity.Log.debug("MediaPlayer14: Prepare IOException: " + e2.toString());
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1361:                GameActivity.Log.debug("MediaPlayer14: Prepare IllegalStateExecption: " + e3.toString());
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1483:            return true;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1486:            GameActivity.Log.debug("setDataSource (asset): Exception = " + e);
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1487:            return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1513:                return true;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1515:            return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1517:            GameActivity.Log.debug("setDataSource (file): Exception = " + e);
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1518:            return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1555:                return true;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1558:                GameActivity.Log.debug("setDataSource (archive): Exception = " + e);
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1559:                return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1577:            return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1590:                    GameActivity.Log.debug("setDataSourceURL: Exception = " + e);
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1591:                    GameActivity.Log.debug("setDataSourceURL: Continuing without track info");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1595:            return true;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1597:            GameActivity.Log.debug("setDataSourceURL: Exception = " + e2);
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1598:            return false;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1647:            GameActivity.Log.warn("updateVideoFrame failed to alloc mOESTextureRenderer ");
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1649:            return null;
+work/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1654:        return frameUpdateInfoUpdateVideoFrame;
+work/jadx/sources/jp/konami/android/common/GetTrafficStats.java:8:        return TrafficStats.getTotalRxBytes();
+work/jadx/sources/jp/konami/android/common/GetTrafficStats.java:12:        return TrafficStats.getTotalTxBytes();
+work/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:18:        GameActivity.Log.debug("Registering headset receiver");
+work/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:27:        GameActivity.Log.debug("startHeadsetReceiver: " + intExtra);
+work/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:34:        GameActivity.Log.debug("Unregistering headset receiver");
+work/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:40:        GameActivity.Log.debug("headsetReceiver::onReceive");
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:1:package jp.konami.peerlink.ble;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:31:            return;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:40:        return this.mUuid != null && (str = this.mServiceId) != null && str.length() > 0 && this.mServiceId.length() <= 255 && (str2 = this.mId) != null && str2.length() > 0 && this.mId.length() <= 255;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:57:                    return false;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:63:                    return false;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:68:                    return false;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:83:                return true;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:88:        return false;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:93:            return false;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:96:            return super.equals(obj);
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:109:                            return true;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:112:                        return true;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:117:        return false;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:121:        return this.mAttribute;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:125:        return this.mId;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:129:        return this.mServiceId;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:133:        return this.mUuid;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:144:        return iHashCode3 + (map != null ? map.hashCode() : 0);
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:149:            return null;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:158:                return null;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:165:                return null;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:174:                return null;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:177:                return Arrays.copyOfRange(byteBufferAllocate.array(), 0, byteBufferAllocate.position());
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:180:            return null;
+work/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:183:            return null;
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergySocket.java:1:package jp.konami.peerlink.ble;
+work/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergySocket.java:8:public abstract class BluetoothLowEnergySocket implements Closeable {
 
 ## Native networking exact
  293b72 _ZNK6icu_646number4impl15DecimalQuantity22getPositionFingerprintEv
