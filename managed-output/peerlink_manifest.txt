@@ -1,0 +1,19 @@
+package=jp.konami.pesam version=11.0.1 code=311000101
+
+ACTIVITY jp.konami.peerlink.btc.BluetoothSwitch
+  exported=None
+  enabled=None
+  permission=None
+  process=None
+  launchMode=None
+  theme=@android:01030010
+  filters={}
+
+ACTIVITY jp.konami.peerlink.ble.BluetoothSwitch
+  exported=None
+  enabled=None
+  permission=None
+  process=None
+  launchMode=None
+  theme=@android:01030010
+  filters={}
