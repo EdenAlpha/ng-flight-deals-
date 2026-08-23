@@ -1,164 +1,118 @@
 name: Temporary eFootball deep analysis
 
 on:
-  pull_request:
-    branches: [ main ]
+  push:
+    branches: [ efootball-managed-assets-isolated-20260823 ]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   analyze:
-    if: github.head_ref == 'efootball-apk-analysis-2026-08-23'
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: efootball-managed-assets-isolated-20260823
       - name: Install tools
         run: |
           set -euxo pipefail
           sudo apt-get update
           sudo apt-get install -y unzip binutils file ripgrep python3 python3-pip openjdk-17-jre-headless
-          curl -L --retry 3 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.5/jadx-1.5.5.zip
-          mkdir -p /opt/jadx && unzip -q /tmp/jadx.zip -d /opt/jadx
-          chmod +x /opt/jadx/bin/jadx /opt/jadx/bin/jadx-gui || true
-          echo /opt/jadx/bin >> "$GITHUB_PATH"
+          curl -L --fail --retry 3 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.5/jadx-1.5.5.zip
+          sudo mkdir -p /opt/jadx && sudo unzip -q /tmp/jadx.zip -d /opt/jadx
+          sudo chmod +x /opt/jadx/bin/jadx
           python3 -m pip install --break-system-packages androguard==4.1.3
-      - name: Download and extract current package
+      - name: Download current package
         run: |
           set -euxo pipefail
-          mkdir -p work/download work/bundle work/base work/native report hits
-          curl -L --fail --retry 5 --retry-delay 3 -A 'Mozilla/5.0' -o work/download/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
-          unzip -q work/download/efootball.xapk -d work/bundle
-          find work/bundle -type f -name 'jp.konami.pesam.apk' -exec cp '{}' work/base/base.apk \;
-          find work/bundle -type f -name 'config.arm64_v8a.apk' -exec cp '{}' work/native/native.apk \;
-          unzip -q work/native/native.apk -d work/native/unpacked
-          test -f work/base/base.apk
-          test -f work/native/unpacked/lib/arm64-v8a/libUE4.so
-          ls -lh work/base/base.apk work/native/unpacked/lib/arm64-v8a/libUE4.so
-      - name: Decompile base APK correctly
+          rm -rf work deep-output
+          mkdir -p work/bundle work/base work/native work/jadx work/pads deep-output
+          curl -L --fail --retry 5 --retry-delay 3 -A 'Mozilla/5.0' -o work/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q work/efootball.xapk -d work/bundle
+          BASE="$(find work/bundle -type f -name 'jp.konami.pesam.apk' | head -n1)"
+          ARM="$(find work/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          test -n "$BASE"; test -n "$ARM"
+          cp "$BASE" work/base.apk; cp "$ARM" work/arm.apk
+          unzip -q work/arm.apk -d work/native
+          for p in $(find work/bundle -type f -name 'pad_it_*.apk'); do d="work/pads/$(basename "$p" .apk)"; mkdir -p "$d"; unzip -q "$p" -d "$d" || true; done
+          ${ANDROID_HOME}/build-tools/36.0.0/aapt2 dump badging work/base.apk > deep-output/base_badging.txt
+          sha256sum work/base.apk work/native/lib/arm64-v8a/libUE4.so > deep-output/hashes.txt
+      - name: Correct base APK decompile
         run: |
           set -euxo pipefail
-          mkdir -p work/jadx
-          jadx --no-debug-info --show-bad-code --deobf -j 4 -d work/jadx work/base/base.apk 2>&1 | tee hits/jadx.log || true
-          echo "JADX_FILES=$(find work/jadx -type f | wc -l)" | tee -a hits/jadx.log
-          find work/jadx -type f | grep -Ei 'jp/konami/peerlink|BluetoothSwitch' > hits/peerlink_files.txt || true
+          /opt/jadx/bin/jadx --no-debug-info --show-bad-code --deobf -j 4 -d work/jadx work/base.apk > deep-output/jadx.log 2>&1 || true
+          echo "JADX_FILES=$(find work/jadx -type f | wc -l)" > deep-output/jadx_summary.txt
+          find work/jadx/sources -type f | grep -Ei '/jp/konami/peerlink|/jp/konami/|/com/epicgames/' | sort > deep-output/managed_files.txt || true
           {
-            echo '### peerlink file list'
-            cat hits/peerlink_files.txt
-            echo '### peerlink source content'
-            while IFS= read -r f; do echo; echo "===== $f ====="; sed -n '1,1200p' "$f"; done < hits/peerlink_files.txt
-          } > hits/peerlink_managed_sources.txt
-          rg -n -i 'peerlink|BluetoothSwitch|wifi.?direct|bluetooth|stun|turn|p2p|score|match.?result|game.?phase|half.?time|full.?time' work/jadx/sources/jp/konami work/jadx/sources/com/epicgames 2>/dev/null > hits/managed_target_hits.txt || true
-      - name: Decode peerlink activity manifest metadata
-        run: |
-          set -euxo pipefail
+            echo '===== jp.konami.peerlink source ====='
+            find work/jadx/sources/jp/konami/peerlink -type f -name '*.java' -print 2>/dev/null | sort | while read f; do echo "### $f"; cat "$f"; done
+            echo '===== references ====='
+            rg -n -i 'jp\.konami\.peerlink|peerlink|BluetoothSwitch|WifiDirect|Datagram|Udp|Socket|STUN|TURN|P2P|relay|hole.?punch|MatchResult|MatchScore|GamePhase|HalfTime|FullTime|Winner' work/jadx/sources/jp/konami work/jadx/sources/com/epicgames 2>/dev/null || true
+          } > deep-output/managed_focus.txt
           python3 - <<'PY'
           from androguard.core.apk import APK
           from pathlib import Path
-          a=APK('work/base/base.apk')
-          out=[]
-          out.append(f'package={a.get_package()} version={a.get_androidversion_name()} code={a.get_androidversion_code()}')
+          a=APK('work/base.apk'); out=[f'package={a.get_package()} version={a.get_androidversion_name()} code={a.get_androidversion_code()}']
           for act in a.get_activities():
-              if 'peerlink' in act.lower() or 'bluetooth' in act.lower():
-                  out.append('ACTIVITY '+act)
-                  try:
-                      out.append('  exported='+str(a.get_attribute_value('activity','exported',name=act)))
-                      out.append('  permission='+str(a.get_attribute_value('activity','permission',name=act)))
-                  except Exception as e: out.append('  attr_error='+str(e))
-                  try:
-                      fs=a.get_intent_filters('activity', act)
-                      out.append('  intent_filters='+repr(fs))
-                  except Exception as e: out.append('  filter_error='+str(e))
-          Path('hits/peerlink_manifest.txt').write_text('\n'.join(out))
+            if 'peerlink' in act.lower() or 'bluetooth' in act.lower():
+              out.append('ACTIVITY '+act)
+              try: out.append(' filters='+repr(a.get_intent_filters('activity',act)))
+              except Exception as e: out.append(' filters_error='+str(e))
+          Path('deep-output/peerlink_manifest.txt').write_text('\n'.join(out))
           PY
-      - name: Curated libUE4 networking and match-state map
+      - name: Curated UE4 analysis
         run: |
           set -euxo pipefail
-          SO=work/native/unpacked/lib/arm64-v8a/libUE4.so
-          strings -a -n 5 "$SO" > work/libUE4.strings
-          strings -a -t x -n 5 "$SO" > work/libUE4.offset_strings
+          SO=work/native/lib/arm64-v8a/libUE4.so
+          strings -a -n 5 "$SO" > work/ue4.strings
+          strings -a -t x -n 5 "$SO" > work/ue4.offsets
+          grep -Ein 'P2P_ADHOC|WIFIDIRECTLAN|FIDIRECTLAN|P2pFullMeshWithTurn|P2pFullMeshTurnOnly|HOST_DIRECT|HOST_RELAY|MATCHING_STATE_STUN_CHECK|UDP_HOLE_PUNCHING|STUN_TEST|ALLOC_TURN|CHANNEL_BIND|P2PTURNIO|pesam\.stun\.service\.konami\.net|ntl\.service\.konami\.net|turn_server_list|COMMUNICATION_MODE' work/ue4.offsets > deep-output/network_exact.txt || true
+          grep -Ein 'EMatchFlowTask::WaitTimeup|EMatchFlowTask::DemoTimeupTrans|EMatchFlowTask::SendServerMatchEnd|ROOM_GAME_PHASE_END|EPKR_GamePhase::GameplayFinished|EPKR_GamePhase::ResultPresentation|match_to_match_result|MatchResultTimeUpDemo|CheckMatchResult|MatchScoreChanged|m_homeScore|m_awayScore|GetGameScore|SetHomeScore|SetAwayScore|CMD_ADD_SCORE|CMD_CHANGE_GAMEPHASE|CMD_GET_GAME_RESULT|CMD_SET_GAME_RESULT|get_game_result_timeout_sec|NUM_LOCAL_GUESTS_END_MATCH|GAMERESULT_|bIsWinner|ADDED_TIME|AddedTime|ExtraTime|m_isExtraTime|KIND_HALFTIME' work/ue4.offsets > deep-output/match_exact.txt || true
+          strings -a -n 12 "$SO" | grep -Ei 'PES22HC/.+\.(cpp|h)$|UE4\.26_eFB/.+\.(cpp|h)$' | grep -Ei 'Multiplay|SessionStrategy|Match|Result|Network|Net|Turn|Stun|Peer|OnlineSystem|Gamephase' > deep-output/source_paths.txt || true
           python3 - <<'PY'
           from pathlib import Path
-          lines=Path('work/libUE4.strings').read_text(errors='ignore').splitlines()
-          groups={
-            'transport':['STUN','TURN','P2PTURNIO','UDP_HOLE_PUNCHING','PEER_STUN','TARGET_STUN_SERVER','TARGET_TURN_SERVER','RP_RELAYED_ADDRESS','XOR_RELAYED_ADDRESS','CHANNEL_BIND','ALLOCATE_REQUEST','REFRESH_REQUEST','NATTYPE','PEER_HOST','NODE_ID_PEER','TransportDump','PeerCtl'],
-            'adhoc':['P2P_ADHOC','WIFIDIRECTLAN','Bluetooth','BLE','BTC'],
-            'match_end':['EMatchFlowTask::WaitTimeup','EMatchFlowTask::DemoTimeupTrans','EMatchFlowTask::SendServerMatchEnd','ROOM_GAME_PHASE_END','EPKR_GamePhase::GameplayFinished','EPKR_GamePhase::ResultPresentation','match_to_match_result','MatchResultTimeUpDemo','MatchScoreChanged','m_homeScore','m_awayScore','GetGameScore','SetHomeScore','SetAwayScore','CMD_ADD_SCORE','CMD_CHANGE_GAMEPHASE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT','GAME_RESULT','ADDED_TIME','KIND_HALFTIME'],
-            'source_paths':['P2pFullMeshWithTurn.cpp','P2pFullMeshTurnOnly.cpp','CommandObjectCmdChangeGamephase.cpp']
-          }
-          out=[]
-          for g,terms in groups.items():
-            out.append('\n######## '+g+' ########')
-            seen=set()
-            for i,s in enumerate(lines):
-              if any(t.lower() in s.lower() for t in terms):
-                lo=max(0,i-8); hi=min(len(lines),i+9)
-                key=(lo,hi)
-                if key in seen: continue
-                seen.add(key)
-                out.append(f'--- line {i+1}: {s} ---')
-                out.extend(f'{j+1}: {lines[j]}' for j in range(lo,hi))
-          Path('hits/libue4_curated_context.txt').write_text('\n'.join(out), errors='ignore')
+          import re
+          lines=Path('work/ue4.strings').read_text(errors='ignore').splitlines()
+          pat=re.compile(r'P2P_ADHOC|WIFIDIRECTLAN|FIDIRECTLAN|P2pFullMeshWithTurn|get_game_result_timeout_sec|NUM_LOCAL_GUESTS_END_MATCH|SendServerMatchEnd|GameplayFinished|ResultPresentation|CMD_ADD_SCORE|CMD_CHANGE_GAMEPHASE|CMD_GET_GAME_RESULT|CMD_SET_GAME_RESULT|MatchScoreChanged|m_homeScore|m_awayScore|HOST_DIRECT|HOST_RELAY|MATCHING_STATE_STUN_CHECK|UDP_HOLE_PUNCHING',re.I)
+          hits=[i for i,s in enumerate(lines) if pat.search(s)]
+          out=[]; used=[]
+          for i in hits:
+            lo=max(0,i-18); hi=min(len(lines),i+19)
+            if any(abs(i-j)<8 for j in used): continue
+            used.append(i); out.append(f'===== HIT {i+1}: {lines[i]} ====='); out.extend(f'{j+1}: {lines[j]}' for j in range(lo,hi)); out.append('')
+          Path('deep-output/native_neighborhoods.txt').write_text('\n'.join(out),errors='ignore')
           PY
-          grep -n -E 'G:[\\/]PES22HC.*OnlineSystem|G:[\\/]PES22HC.*Match|OnlineSystem.*\.cpp|Match.*\.cpp' work/libUE4.strings > hits/source_path_clues.txt || true
-          grep -n -E '^P2P_ADHOC|^P2PTURNIO|^EMatchFlowTask|^ERoomGamePhase|^EPKR_GamePhase|^CMD_(ADD_SCORE|CHANGE_GAMEPHASE|GET_GAME_RESULT|SET_GAME_RESULT)|^MatchScoreChanged$|^m_(home|away)Score$|^ADDED_TIME$' work/libUE4.strings > hits/exact_internal_symbols.txt || true
-      - name: Locate protocol constants and high-value string file offsets
+      - name: Asset-pack string scan
         run: |
           set -euxo pipefail
-          SO=work/native/unpacked/lib/arm64-v8a/libUE4.so
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('work/native/unpacked/lib/arm64-v8a/libUE4.so'); d=p.read_bytes()
-          pats={
-            'STUN_MAGIC_BE':bytes.fromhex('2112a442'), 'STUN_MAGIC_LE':bytes.fromhex('42a41221'),
-            'DTLS12_RECORD':bytes.fromhex('17fefd'),
-            'STUN_BINDING_REQ':bytes.fromhex('0001'), 'STUN_ALLOCATE_REQ':bytes.fromhex('0003'), 'STUN_REFRESH_REQ':bytes.fromhex('0004'), 'STUN_CHANNELBIND_REQ':bytes.fromhex('0009')
-          }
-          o=[]
-          for name,b in pats.items():
-            pos=[]; start=0
-            while True:
-              x=d.find(b,start)
-              if x<0:break
-              pos.append(x); start=x+1
-              if len(pos)>=1000:break
-            o.append(f'{name}: count_at_least={len(pos)} first_offsets={[hex(x) for x in pos[:100]]}')
-          Path('hits/protocol_constant_offsets.txt').write_text('\n'.join(o))
-          PY
-          for q in 'Requested stun method. (ALLOCATE_REQUEST)' 'Responded stun method. (ALLOCATE_SUCCESS_RESPONSE)' 'P2P_ADHOC_WIFIDIRECTLAN' 'OnlineSystemMultiplaySessionStrategyP2pFullMeshWithTurn.cpp' 'EMatchFlowTask::SendServerMatchEnd' 'MatchScoreChanged' 'CMD_ADD_SCORE' 'CMD_CHANGE_GAMEPHASE'; do
-            echo "===== $q =====" >> hits/high_value_string_offsets.txt
-            grep -F "$q" work/libUE4.offset_strings | head -30 >> hits/high_value_string_offsets.txt || true
+          find work/pads -type f -printf '%p %s bytes\n' | sort -k2 -nr > deep-output/asset_inventory.txt
+          : > deep-output/asset_match_hits.txt
+          : > deep-output/asset_network_hits.txt
+          find work/pads -type f \( -name '*.cpk' -o -name '*.pak' -o -name '*.ucas' -o -name '*.utoc' \) -print0 | while IFS= read -r -d '' f; do
+            strings -a -t x -n 5 "$f" | grep -Ei 'MatchResult|match_result|HalfTime|HALFTIME|FullTime|ADDED_TIME|AddedTime|ExtraTime|bIsWinner|GamePhase|Score|Winner|Victory|Defeat' | head -3000 | sed "s#^#$f:#" >> deep-output/asset_match_hits.txt || true
+            strings -a -t x -n 5 "$f" | grep -Ei 'P2P_ADHOC|WIFIDIRECTLAN|P2pFullMeshWithTurn|HOST_DIRECT|HOST_RELAY|STUN|TURN|P2PTURNIO' | head -3000 | sed "s#^#$f:#" >> deep-output/asset_network_hits.txt || true
           done
-      - name: Inspect large game asset packs for match/result vocabulary
+      - name: Build and commit report
         run: |
           set -euxo pipefail
-          mkdir -p hits/assets
-          find work/bundle -type f \( -name '*.cpk' -o -name '*.pak' -o -name '*.ucas' -o -name '*.utoc' \) -print0 | while IFS= read -r -d '' f; do
-            k=$(basename "$f")
-            echo "FILE=$f size=$(stat -c%s "$f")" > "hits/assets/$k.hits.txt"
-            strings -a -n 5 "$f" | grep -Ein 'match.?result|full.?time|half.?time|added.?time|score|winner|victory|defeat|draw|abbrev|team.?code|game.?phase' | head -5000 >> "hits/assets/$k.hits.txt" || true
-          done
-      - name: Assemble deep report
-        run: |
           {
-            echo '# eFootball deep pass 2'; date -u
-            echo '## JADX'; cat hits/jadx.log
-            echo '## Managed peerlink manifest'; cat hits/peerlink_manifest.txt
-            echo '## Managed peerlink classes'; sed -n '1,2500p' hits/peerlink_managed_sources.txt
-            echo '## Managed target hits'; sed -n '1,2500p' hits/managed_target_hits.txt
-            echo '## Exact native internal names'; cat hits/exact_internal_symbols.txt
-            echo '## Native curated context'; sed -n '1,6000p' hits/libue4_curated_context.txt
-            echo '## Source path clues'; sed -n '1,2000p' hits/source_path_clues.txt
-            echo '## Protocol constant offsets'; cat hits/protocol_constant_offsets.txt
-            echo '## High-value string offsets'; cat hits/high_value_string_offsets.txt
-            echo '## Asset pack hits'; for f in hits/assets/*.hits.txt; do echo "===== $f ====="; sed -n '1,800p' "$f"; done
-          } > report/deep_report.md
-          cat report/deep_report.md
-      - uses: actions/upload-artifact@v4
-        with:
-          name: efootball-deep-pass2
-          path: |
-            report/
-            hits/
-          retention-days: 7
+            echo '# eFootball 11.0.1 surgical deep report'; date -u
+            echo; cat deep-output/base_badging.txt; cat deep-output/hashes.txt
+            echo; echo '## JADX'; cat deep-output/jadx_summary.txt; tail -80 deep-output/jadx.log
+            echo; echo '## PeerLink manifest'; cat deep-output/peerlink_manifest.txt
+            echo; echo '## Managed focus'; sed -n '1,3500p' deep-output/managed_focus.txt
+            echo; echo '## Native network exact'; sed -n '1,3000p' deep-output/network_exact.txt
+            echo; echo '## Native match/result exact'; sed -n '1,3500p' deep-output/match_exact.txt
+            echo; echo '## Embedded source paths'; sed -n '1,2500p' deep-output/source_paths.txt
+            echo; echo '## Native neighborhoods'; sed -n '1,6000p' deep-output/native_neighborhoods.txt
+            echo; echo '## Asset match hits'; sed -n '1,3000p' deep-output/asset_match_hits.txt
+            echo; echo '## Asset network hits'; sed -n '1,3000p' deep-output/asset_network_hits.txt
+          } > deep-output/report.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add deep-output
+          git commit -m 'Add isolated eFootball deep report' || exit 0
+          git push origin HEAD:efootball-managed-assets-isolated-20260823
