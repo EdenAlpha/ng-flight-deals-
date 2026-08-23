@@ -1,0 +1,204 @@
+name: eFootball c670 vtable lineage
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch: {}
+
+concurrency:
+  group: efootball-c670-vtable-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  vtable:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball arm64 binary (runner-side)
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Find vtable of 0x7c0c670 and its dispatch sites
+        run: |
+          cat > /tmp/ef/vtable_trace.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re,bisect,collections,struct
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f)
+              text=e.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+              relsecs=[s for s in e.iter_sections() if s.header['sh_type'] in ('SHT_RELA',)]
+
+          TARGET=0x7c0c670
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          hexmem=re.compile(r'\[[wx][0-9]+, #0x([0-9a-f]+)\]')
+
+          def vaoff(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va,maxlen=120):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+maxlen].split(b'\0',1)[0]
+              if len(b)<4:return None
+              if sum(32<=x<127 for x in b)/len(b)<.92:return None
+              return b.decode('ascii','replace')
+
+          out=[]
+
+          # ---- step 1: relocations whose addend == TARGET => vtable slots
+          slots=[]
+          for s in relsecs:
+              for r in s.iter_relocations():
+                  if r['r_info_type']==1027 and r['r_addend']==TARGET:  # R_AARCH64_RELATIVE=1027
+                      slots.append(int(r['r_offset']))
+          out.append(f'RELOC_SLOTS_FOR_{hex(TARGET)}: {len(slots)} -> {[hex(x) for x in slots]}')
+
+          def rd64(va):
+              o=vaoff(va)
+              return int.from_bytes(raw[o:o+8],'little') if o is not None else None
+
+          # ---- step 2: dump neighbor vtable slots (the class's other methods)
+          vt_windows=[]
+          for sl in sorted(set(slots)):
+              lo,hi=sl-0x100,sl+0x108
+              vt_windows.append((lo,hi))
+              out.append(f'\n=== VTABLE WINDOW around {hex(sl)} ===')
+              for va in range(lo,hi,8):
+                  v=rd64(va)
+                  mark=' <<<< TARGET SLOT' if va==sl else ''
+                  out.append(f'{hex(va)}: {hex(v) if v is not None else "?"}{mark}')
+
+          # ---- step 3: scan .text for virtual-dispatch: ldr Xn,[Xm,#disp] ; ... blr Xn
+          starts=[]
+          for addr,size,mnem,ops in md.disasm_lite(tb,tva):
+              if mnem=='stp' and 'x29, x30' in ops and '[sp' in ops:
+                  starts.append(addr)
+          starts=sorted(set(starts))
+          def fstart(a):
+              j=bisect.bisect_right(starts,a)-1
+              return starts[j] if j>=0 else tva
+          def fend(fs):
+              j=bisect.bisect_right(starts,fs)
+              return starts[j] if j<len(starts) else tend
+
+          disp_set={sl & 0xFFF for sl in slots}
+          # collect all ldr-with-these-displacements followed by blr same reg within 12 ins
+          pending={}   # reg -> list of (addr,disp)
+          dispatch=[]
+          idx=0
+          ins_list=list(md.disasm_lite(tb,tva))
+          for i,(addr,size,mnem,ops) in enumerate(ins_list):
+              m=re.match(r'(?:ldr|xpa)?\s*([xw]\d+), \[(x\d+)(?:, #(0x[0-9a-f]+))?\]',mnem+' '+ops) if False else None
+              mm=re.match(r'([x]\d+), \[(x\d+), #(0x[0-9a-f]+)\]',' '.join([mnem,ops]).replace('ldr ','',1)) if mnem=='ldr' else None
+              if mm:
+                  reg=mm.group(1); disp=int(mm.group(3),16)
+                  if disp in disp_set:
+                      pending.setdefault(reg,[]).append((addr,disp))
+                      continue
+              if mnem=='blr':
+                  reg=ops
+                  for la,d in pending.get(reg,[])[-3:]:
+                      if addr-la<0x60:
+                          dispatch.append((la,addr,d))
+              # crude invalidation on register redefinition
+              if mnem in ('ldr','mov','add','adrp') and ops:
+                  r=ops.split(',')[0]
+                  pending.pop(r,None)
+
+          # dedupe per site
+          seen=set(); dclean=[]
+          for la,ba,d in dispatch:
+              k=(la,ba)
+              if k not in seen:
+                  seen.add(k);dclean.append((la,ba,d))
+          out.append(f'\nDISPATCH_CANDIDATES={len(dclean)}')
+
+          # rank: prefer sites whose containing function also touches compact offsets 0xa0/0xa8
+          # or lies inside known P2P/crypto ranges
+          def rng(a):return 'p2p' if 0x7b00000<=a<0x7d00000 else ('crypto' if 0x7e00000<=a<0x8300000 else '')
+          ranked=collections.defaultdict(list)
+          for la,ba,d in dclean:
+              fs=fstart(la)
+              ranked[fs].append((la,ba,d))
+
+          scored=[]
+          for fs,sites in ranked.items():
+              fe=min(fend(fs),fs+0x2000)
+              bodytxt=[]
+              n_a0=0
+              for z in md.disasm(tb[fs-tva:fe-tva],fs):
+                  h=hexmem.search(z.op_str)
+                  if h and h.group(1)=='a0':n_a0+=1
+                  bodytxt.append(z)
+              score=len(sites)*10+n_a0*15+(40 if 0x7b00000<=fs<0x7d00000 else 0)+(30 if 0x7e00000<=fs<0x8300000 else 0)
+              scored.append((score,fs,sites,n_a0,bodytxt[:400]))
+          scored.sort(reverse=True,key=lambda x:x[0])
+
+          for score,fs,sites,n_a0,_ in scored[:40]:
+              out.append(f'DISPATCH fn=0x{fs:x} score={score} sites={[f"ldr@0x{la:x}/blr@0x{ba:x}/disp=0x{d:x}" for la,ba,d in sites]} a0_reads={n_a0} range={rng(fs)}')
+
+          # surgical annotated dumps of top 12 dispatching functions
+          for score,fs,sites,n_a0,bodytxt in scored[:12]:
+              fe2=min(fend(fs),fs+0x1500)
+              out.append(f'\n--- DISPATCH SURGERY 0x{fs:x}-0x{fe2:x} score={score} ---')
+              ann={}
+              bl=list(md.disasm(tb[fs-tva:fe2-tva],fs))
+              for i,z in enumerate(bl):
+                  if z.mnemonic!='adrp':continue
+                  m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                  if not m:continue
+                  reg=m.group(1);page=int(m.group(2),16)
+                  for q in bl[i+1:i+8]:
+                      mm=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                      if mm:
+                          va=page+int(mm.group(1),16);s=cstr(va)
+                          if s:ann[q.address]=f' ; STR@0x{va:x}={s!r}'
+                          break
+              site_addrs={la for la,_,_ in sites}|{ba for _,ba,_ in sites}
+              for z in bl:
+                  tag=''
+                  h=hexmem.search(z.op_str)
+                  off=int(h.group(1),16) if h else None
+                  if off in (0x80,0x88,0xa0,0xa8):tag+=f' <COMPACT+{hex(off)}>'
+                  if off in (0xf4,0x100,0x11c,0x128):tag+=f' <LARGE+{hex(off)}>'
+                  if z.address in site_addrs:tag+=' <<< DISPATCH SITE'
+                  if z.mnemonic in ('cmp','cbz','cbnz','tbz','tbnz','blr','br') or z.mnemonic.startswith('bl ') or tag or z.address in ann:
+                      out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{ann.get(z.address,"")}{tag}')
+
+          txt='\n'.join(out)
+          Path('/tmp/out/c670_vtable.txt').write_text(txt)
+          print(f'report bytes={len(txt)}')
+          PY
+          python3 /tmp/ef/vtable_trace.py
+      - name: Show compact summary
+        run: |
+          grep -E "RELOC_SLOTS|VTABLE WINDOW|TARGET SLOT|DISPATCH fn=|DISPATCH_CANDIDATES|DISPATCH SURGERY" /tmp/out/c670_vtable.txt | head -80 || true
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-c670-vtable
+          path: /tmp/out/
+          retention-days: 7
