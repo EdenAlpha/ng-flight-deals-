@@ -1,0 +1,20 @@
+ 9c6d22 Requested stun method. (CHANNEL_BIND_REQUEST)
+ 9c8a8d dtls message too big
+ 9da58a Requested stun method. (REFRESH_REQUEST)
+ 9ed683 Responded stun method. (ALLOCATE_SUCCESS_RESPONSE)
+ 9ed6b6 FINGERPRINT
+ a26017 Responded unexpected stun method. (
+ a2603b Responded stun method. (REFRESH_SUCCESS_RESPONSE)
+ a388f4 ## Turn Status
+ a97f6c MESSAGE_INTEGRITY
+ aab94b ## Stun Status
+ b8d21b Found pending candidate for reuse and CURLOPT_PIPEWAIT is set
+ b8f459 MAPPED_ADDRESS
+ bb6879 Responded stun method. (REFRESH_ERROR_RESPONSE)
+ bb82be fingerprint size does not match digest
+ bc9bae Responded stun method. (ALLOCATE_ERROR_RESPONSE)
+ bc9e52 pesam.stun.service.konami.net
+ bdc7d5 Responded stun method. (CHANNEL_BIND_ERROR_RESPONSE)
+ bdc8a5 ## Stun Profile
+ bef45a Requested stun method. (ALLOCATE_REQUEST)
+ c02534 Responded stun method. (CHANNEL_BIND_SUCCESS_RESPONSE)

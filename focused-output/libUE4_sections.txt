@@ -1,0 +1,62 @@
+There are 26 section headers, starting at offset 0x995f038:
+
+Section Headers:
+  [Nr] Name              Type             Address           Offset
+       Size              EntSize          Flags  Link  Info  Align
+  [ 0]                   NULL             0000000000000000  00000000
+       0000000000000000  0000000000000000           0     0     0
+  [ 1] .note.androi[...] NOTE             0000000000000270  00000270
+       0000000000000098  0000000000000000   A       0     0     4
+  [ 2] .note.gnu.bu[...] NOTE             0000000000000308  00000308
+       0000000000000020  0000000000000000   A       0     0     4
+  [ 3] .dynsym           DYNSYM           0000000000000328  00000328
+       00000000000c81a8  0000000000000018   A       7     1     8
+  [ 4] .gnu.version      VERSYM           00000000000c84d0  000c84d0
+       0000000000010ace  0000000000000002   A       3     0     2
+  [ 5] .gnu.version_r    VERNEED          00000000000d8fa0  000d8fa0
+       0000000000000050  0000000000000000   A       7     2     4
+  [ 6] .gnu.hash         GNU_HASH         00000000000d8ff0  000d8ff0
+       0000000000038f14  0000000000000000   A       3     0     8
+  [ 7] .dynstr           STRTAB           0000000000111f04  00111f04
+       00000000001db368  0000000000000000   A       0     0     1
+  [ 8] .rela.dyn         LOOS+0x2         00000000002ed270  002ed270
+       00000000003de65a  0000000000000001   A       3     0     8
+  [ 9] .rela.plt         RELA             00000000006cb8d0  006cb8d0
+       0000000000059e98  0000000000000018  AI       3    21     8
+  [10] .rodata           PROGBITS         0000000000725800  00725800
+       00000000008da744  0000000000000000 AMS       0     0     256
+  [11] .gcc_except_table PROGBITS         0000000000ffff44  00ffff44
+       00000000000183b4  0000000000000000   A       0     0     4
+  [12] .eh_frame_hdr     PROGBITS         00000000010182f8  010182f8
+       0000000000427bfc  0000000000000000   A       0     0     4
+  [13] .eh_frame         PROGBITS         000000000143fef8  0143fef8
+       00000000013e54b8  0000000000000000   A       0     0     8
+  [14] .text             PROGBITS         00000000028293c0  028253c0
+       000000000630be48  0000000000000000  AX       0     0     32
+  [15] .plt              PROGBITS         0000000008b35210  08b31210
+       000000000003bf30  0000000000000000  AX       0     0     16
+  [16] .data.rel.ro      PROGBITS         0000000008b75140  08b6d140
+       0000000000d48748  0000000000000000  WA       0     0     16
+  [17] .fini_array       FINI_ARRAY       00000000098bd888  098b5888
+       0000000000000010  0000000000000000  WA       0     0     8
+  [18] .init_array       INIT_ARRAY       00000000098bd898  098b5898
+       00000000000171a8  0000000000000000  WA       0     0     8
+  [19] .dynamic          DYNAMIC          00000000098d4a40  098cca40
+       0000000000000220  0000000000000010  WA       7     0     8
+  [20] .got              PROGBITS         00000000098d4c60  098ccc60
+       00000000000100c0  0000000000000000  WA       0     0     8
+  [21] .got.plt          PROGBITS         00000000098e4d20  098dcd20
+       000000000001dfa0  0000000000000000  WA       0     0     8
+  [22] .data             PROGBITS         0000000009906cc0  098facc0
+       0000000000063d84  0000000000000000  WA       0     0     16
+  [23] .bss              NOBITS           000000000996aa80  0995ea44
+       0000000000c42408  0000000000000000 WAo       0     0     64
+  [24] .comment          PROGBITS         0000000000000000  0995ea44
+       00000000000004ef  0000000000000001  MS       0     0     1
+  [25] .shstrtab         STRTAB           0000000000000000  0995ef33
+       0000000000000104  0000000000000000           0     0     1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  D (mbind), p (processor specific)
