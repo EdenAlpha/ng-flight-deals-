@@ -1,0 +1,144 @@
+name: eFootball live function trace
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip python3 python3-pip file >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball arm64
+        run: |
+          mkdir -p /tmp/ef/bundle /tmp/ef/native
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE="$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+      - name: Resolve containing functions, string references and imported calls
+        run: |
+          cat > /tmp/ef/trace.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from elftools.dwarf.callframe import FDE
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM,arm64
+          import struct,re,bisect
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); data=p.read_bytes()
+          wanted=[
+            'P2P_ADHOC_WIFIDIRECTLAN_LOW_LEVEL','P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL','P2P_ADHOC_LAN_LOW_LEVEL','P2P_ADHOC_LAN_HIGH_LEVEL',
+            'CMD_SET_LOCAL_GAMERELAY_LIST','TaskEvCompeLocalGamerelay',
+            'CMD_CHANGE_GAMEPHASE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT','CMD_ADD_SCORE',
+            'EMatchFlowTask::SendServerMatchEnd','MatchResultTimeUpDemo','Match/End/MatchEnd','NUM_GUESTS_END_MATCH',
+            'HOST_DIRECT','HOST_RELAY','PUNCHING_FINISHED','START_UDP_HOLE_PUNCHING_COMPLETE'
+          ]
+          with p.open('rb') as f:
+            elf=ELFFile(f)
+            text=elf.get_section_by_name('.text'); text_va=int(text['sh_addr']); text_bytes=text.data()
+            ro=elf.get_section_by_name('.rodata'); ro_va=int(ro['sh_addr']); ro_bytes=ro.data()
+            loads=[(int(s['p_offset']),int(s['p_filesz']),int(s['p_vaddr'])) for s in elf.iter_segments() if s['p_type']=='PT_LOAD']
+            # Function ranges from unwind FDEs.
+            dwarf=elf.get_dwarf_info()
+            ranges=[]
+            try:
+              for e in dwarf.EH_CFI_entries():
+                if isinstance(e,FDE):
+                  a=int(e['initial_location']); z=a+int(e['address_range'])
+                  if a<=z and text_va<=a<text_va+len(text_bytes): ranges.append((a,z))
+            except Exception as ex:
+              print('EH_FRAME_PARSE_ERROR',repr(ex))
+            ranges=sorted(set(ranges)); starts=[a for a,z in ranges]
+            # Dynamic symbols.
+            dyn=elf.get_section_by_name('.dynsym'); dyn_names={int(s['st_value']):s.name for s in dyn.iter_symbols() if int(s['st_value'])}
+            # PLT import address map from .rela.plt ordering (AArch64: PLT0 32 bytes, slots 16).
+            plt=elf.get_section_by_name('.plt'); rela=elf.get_section_by_name('.rela.plt'); plt_names={}
+            if plt is not None and rela is not None:
+              base=int(plt['sh_addr'])+32
+              symtab=elf.get_section(rela['sh_link'])
+              for idx,r in enumerate(rela.iter_relocations()):
+                sym=symtab.get_symbol(r['r_info_sym'])
+                plt_names[base+idx*16]=sym.name
+          def ova(o):
+            for po,sz,va in loads:
+              if po<=o<po+sz:return va+o-po
+          # Printable rodata string starts.
+          strmap={ro_va+m.start():m.group().decode('ascii','ignore') for m in re.finditer(rb'[ -~]{4,}',ro_bytes)}
+          wanted_inst=[]
+          for t in wanted:
+            s=0
+            while True:
+              o=data.find(t.encode(),s)
+              if o<0:break
+              wanted_inst.append((t,o,ova(o)));s=o+1
+          targets={va:(t,o) for t,o,va in wanted_inst if va is not None}; pages={x&~0xfff for x in targets}
+          # Find xrefs to target strings.
+          mv=memoryview(text_bytes); n=len(text_bytes)//4
+          def sx(x,b):return x-(1<<b) if x&(1<<(b-1)) else x
+          xrefs=[]
+          for idx in range(n):
+            w=struct.unpack_from('<I',mv,idx*4)[0]
+            if (w&0x9f000000)!=0x90000000:continue
+            rd=w&31; imm=sx((((w>>5)&0x7ffff)<<2)|((w>>29)&3),21)<<12
+            pc=text_va+idx*4; pg=(pc&~0xfff)+imm
+            if pg not in pages:continue
+            for j in range(1,9):
+              if idx+j>=n:break
+              q=struct.unpack_from('<I',mv,(idx+j)*4)[0]
+              if (q&0x1f000000)!=0x11000000 or ((q>>30)&1) or ((q>>5)&31)!=rd:continue
+              cand=pg+(((q>>10)&0xfff)<<(12 if ((q>>22)&1) else 0))
+              if cand in targets:xrefs.append((text_va+(idx+j)*4,cand))
+          def func_for(pc):
+            k=bisect.bisect_right(starts,pc)-1
+            if k>=0 and ranges[k][0]<=pc<ranges[k][1]:return ranges[k]
+            return (max(text_va,pc-0x300),min(text_va+len(text_bytes),pc+0x500))
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM);md.detail=True
+          done=set()
+          for pc,target in xrefs:
+            t,o=targets[target]; fr=func_for(pc)
+            key=(t,fr)
+            if key in done:continue
+            done.add(key)
+            a,z=fr
+            # cap giant unwind regions at +/-16KB around xref
+            if z-a>0x10000:a=max(a,pc-0x4000);z=min(z,pc+0x4000)
+            blob=text_bytes[a-text_va:z-text_va]
+            print('\n'+'='*110)
+            print(f'TARGET={t} target_va=0x{target:x} XREF=0x{pc:x} FUNCTION=0x{fr[0]:x}-0x{fr[1]:x} scan=0x{a:x}-0x{z:x}')
+            print('FUNCTION_STRING_REFS:')
+            # Lightweight ADRP+ADD tracking in this function, resolve any rodata strings.
+            ins=list(md.disasm(blob,a)); regpg={}; refs=[]; calls=[]
+            for ii,I in enumerate(ins):
+              try:ops=I.operands
+              except:continue
+              if I.mnemonic=='adrp' and len(ops)>=2 and ops[0].type==arm64.ARM64_OP_REG and ops[1].type==arm64.ARM64_OP_IMM:
+                regpg[ops[0].reg]=(int(ops[1].imm),ii)
+              elif I.mnemonic=='add' and len(ops)>=3 and ops[1].type==arm64.ARM64_OP_REG and ops[2].type==arm64.ARM64_OP_IMM:
+                b=regpg.get(ops[1].reg)
+                if b and ii-b[1]<=10:
+                  addr=b[0]+int(ops[2].imm)
+                  s=strmap.get(addr)
+                  if s:refs.append((I.address,s))
+              elif I.mnemonic=='adr' and len(ops)>=2 and ops[1].type==arm64.ARM64_OP_IMM:
+                s=strmap.get(int(ops[1].imm))
+                if s:refs.append((I.address,s))
+              elif I.mnemonic=='bl' and len(ops)>=1 and ops[0].type==arm64.ARM64_OP_IMM:
+                dst=int(ops[0].imm); name=plt_names.get(dst) or dyn_names.get(dst)
+                if name:calls.append((I.address,dst,name))
+            for x,s in refs[:200]:print(f'  0x{x:x} -> {s[:220]}')
+            print('IMPORTED_CALLS:')
+            for x,dst,name in calls[:200]:print(f'  0x{x:x} -> 0x{dst:x} {name}')
+            print('DISASM_AROUND_XREF:')
+            for I in ins:
+              if pc-0x100<=I.address<=pc+0x180:
+                mark='>>' if I.address==pc else '  '
+                print(f'{mark}0x{I.address:x}: {I.mnemonic:8s} {I.op_str}')
+          PY
+          time python3 /tmp/ef/trace.py

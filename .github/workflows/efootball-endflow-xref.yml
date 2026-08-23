@@ -1,0 +1,170 @@
+name: eFootball match-end precise xrefs
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download eFootball arm64 binary
+        run: |
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE="$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          test -f /tmp/ef/native/lib/arm64-v8a/libUE4.so
+      - name: Deep match-end and transport analysis
+        run: |
+          cat > /tmp/ef/analyze.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM,CS_OPT_DETAIL
+          import struct,re
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); d=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr'])
+              loads=[(int(s['p_offset']),int(s['p_filesz']),int(s['p_vaddr'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          def off2va(o):
+              for po,sz,va in loads:
+                  if po<=o<po+sz:return va+(o-po)
+          def va2off(v):
+              for po,sz,va in loads:
+                  if va<=v<va+sz:return po+(v-va)
+          def sx(x,b): return x-(1<<b) if x&(1<<(b-1)) else x
+          def cstr(v,limit=180):
+              o=va2off(v)
+              if o is None or o<0 or o>=len(d): return None
+              z=d.find(b'\0',o,min(len(d),o+limit))
+              if z<0:z=min(len(d),o+limit)
+              b=d[o:z]
+              if not (2<=len(b)<=limit):return None
+              if sum((32<=x<127 or x in (9,10,13)) for x in b)/len(b)<.95:return None
+              try:return b.decode('utf-8','replace')
+              except:return None
+
+          terms=[
+            'IsMatchEnd','HasMatchEnded','MatchEndListener','JUST_BEFORE_MATCHEND','Online/Match/MatchProcessEnd',
+            'EPKR_GamePhase::GameplayFinished','EPKR_GamePhase::ResultPresentation','GameplayFinished','ResultPresentation',
+            'OnEndMatchDelegate__DelegateSignature','OnEndMatchEffectEventDelegate__DelegateSignature','OnEndMatchEffectEvent',
+            'MatchFlowChanged','SetGameState','GetMatchPhase','SetMatchTime',
+            'EMatchFlowTask::WaitTimeup','EMatchFlowTask::SendServerMatchEnd','EMatchFlowTask::DemoTimeupTrans','EMatchFlowTask::PkMatchEndDemo',
+            'Match/End/MatchEnd','ProcessOnlineMatchEnd.cpp','CMD_GET_GAME_RESULT','CMD_ADD_SCORE','GAME_RESULT','END_REASON','NUM_GUESTS_END_MATCH',
+            'P2P_ADHOC_WIFIDIRECTLAN_LOW_LEVEL','P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL','P2P_ADHOC_LAN_LOW_LEVEL','P2P_ADHOC_LAN_HIGH_LEVEL',
+            'P2P_ADHOC_BLE','LOCAL_GAMERELAY','direct_online_turn_mode'
+          ]
+          inst=[]
+          for term in terms:
+              s=0
+              while True:
+                  o=d.find(term.encode(),s)
+                  if o<0: break
+                  inst.append((term,o,off2va(o))); s=o+1
+
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=True
+          insns=list(md.disasm(tb,tva)); byaddr={i.address:i for i in insns}; idxby={i.address:n for n,i in enumerate(insns)}
+          # Precise ADRP -> ADD xD,xD,#imm xrefs, rejecting paths where xD is overwritten before the ADD.
+          target_by_va={va:term for term,o,va in inst if va is not None}
+          pages={va&~0xfff for va in target_by_va}
+          refs={va:[] for va in target_by_va}
+          for n,ins in enumerate(insns):
+              if ins.mnemonic!='adrp' or len(ins.operands)<2: continue
+              try:
+                  rd=ins.operands[0].reg; page=ins.operands[1].imm
+              except: continue
+              if page not in pages: continue
+              for j in range(n+1,min(n+13,len(insns))):
+                  q=insns[j]
+                  # If destination register is overwritten before an ADD using it, this ADRP is dead.
+                  try: reads,writes=q.regs_access()
+                  except: reads,writes=([],[])
+                  if q.mnemonic=='add' and len(q.operands)>=3 and q.operands[0].reg==rd and q.operands[1].reg==rd and q.operands[2].type==2:
+                      cand=page+q.operands[2].imm
+                      if cand in refs: refs[cand].append((ins.address,q.address,md.reg_name(rd)))
+                      break
+                  if rd in writes: break
+
+          print('=== PRECISE TARGET XREFS ===')
+          for term,o,va in inst:
+              print(f'{term}\toff=0x{o:x}\tva='+('none' if va is None else f'0x{va:x}')+'\txrefs='+(','.join(f'0x{a:x}->0x{b:x}/{r}' for a,b,r in refs.get(va,[])) if va else ''))
+
+          def nearest_ascii(v):
+              s=cstr(v)
+              if s and len(s)<=150:return s.replace('\n','\\n')
+              return None
+          def annotate(lo,hi):
+              print(f'=== ANNOTATED RANGE 0x{lo:x}-0x{hi:x} ===')
+              # Track ADRP base values per architectural register within straight-line snippets; clear on writes.
+              regs={}
+              for ins in insns:
+                  if ins.address<lo: continue
+                  if ins.address>=hi: break
+                  note=''
+                  try: reads,writes=ins.regs_access()
+                  except: reads,writes=([],[])
+                  if ins.mnemonic=='adrp' and len(ins.operands)>=2:
+                      regs[ins.operands[0].reg]=ins.operands[1].imm
+                  elif ins.mnemonic=='add' and len(ins.operands)>=3 and ins.operands[0].reg==ins.operands[1].reg and ins.operands[2].type==2:
+                      r=ins.operands[0].reg
+                      if r in regs:
+                          v=regs[r]+ins.operands[2].imm; s=nearest_ascii(v)
+                          if s: note=f' ; STR@0x{v:x}={s!r}'
+                          regs[r]=v
+                  # only kill registers not intentionally updated by adrp/add above
+                  if ins.mnemonic not in ('adrp','add'):
+                      for r in list(regs):
+                          if r in writes: regs.pop(r,None)
+                  print(f'0x{ins.address:x}: {ins.mnemonic:9s} {ins.op_str}{note}')
+
+          for lo,hi in [
+              (0x802d700,0x802e500), # Match-end state machine + Match/End/MatchEnd emitter
+              (0x7aad000,0x7aad900), # Online/Match/MatchProcessEnd constructor/transition
+              (0x7a6d000,0x7a6f900), # callers driving online match process end
+              (0x7bfe000,0x7bff200), # P2P mode config/register area
+              (0x7c0e000,0x7c0e800), # direct_online_turn_mode area
+              (0x7d54f00,0x7d55400), # GAME_RESULT/END_REASON processing #1
+              (0x7d5cd00,0x7d5d200), # GAME_RESULT/END_REASON processing #2
+          ]: annotate(lo,hi)
+
+          # direct callers of likely end/event functions
+          targets=[0x802df88,0x7aad144,0x7a45790,0x7a45b68,0x7a45f7c,0x7a45fb0,0x79854a0]
+          calls={x:[] for x in targets}
+          for ins in insns:
+              if ins.mnemonic=='bl' and ins.operands and ins.operands[0].type==2:
+                  dest=ins.operands[0].imm
+                  if dest in calls:calls[dest].append(ins.address)
+          print('=== DIRECT CALLERS ===')
+          for t,cs in calls.items():print(f'0x{t:x}: '+','.join(f'0x{x:x}' for x in cs[:200]))
+
+          # Enumerate every printable string containing match-end/result/score terms, with precise xrefs when possible.
+          pats=re.compile(rb'(?i)(match.{0,24}(end|result|finish)|(?:end|result|finish).{0,24}match|game_result|end_reason|score|timeup)')
+          print('=== RELATED ASCII STRINGS ===')
+          seen=set()
+          for m in re.finditer(rb'[ -~]{4,180}\x00',d):
+              b=m.group()[:-1]
+              if not pats.search(b):continue
+              o=m.start(); va=off2va(o)
+              if (o,b) in seen:continue
+              seen.add((o,b))
+              text=b.decode('utf-8','replace')
+              rr=refs.get(va,[]) if va else []
+              print(f'0x{o:x}\tva='+('none' if va is None else f'0x{va:x}')+f'\t{text}\txrefs='+','.join(f'0x{a:x}->0x{b:x}/{r}' for a,b,r in rr))
+          PY
+          python3 /tmp/ef/analyze.py > /tmp/out/deep_endflow.txt
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-endflow-precise-v2
+          path: /tmp/out/
+          retention-days: 7

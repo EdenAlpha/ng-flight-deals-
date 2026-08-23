@@ -1,0 +1,189 @@
+name: eFootball exact match-end state-machine trace
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip binutils >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current arm64 eFootball binary
+        run: |
+          set -e
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE="$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          test -f "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          test -f /tmp/ef/native/lib/arm64-v8a/libUE4.so
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so > /tmp/out/binary_sha256.txt
+      - name: Trace match-end and score-event state machines
+        run: |
+          cat > /tmp/ef/trace.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import struct, collections
+
+          P=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          RAW=P.read_bytes()
+          with P.open('rb') as f:
+              elf=ELFFile(f)
+              text=elf.get_section_by_name('.text')
+              TEXT=text.data(); TVA=int(text['sh_addr'])
+              LOADS=[(int(s['p_offset']),int(s['p_filesz']),int(s['p_vaddr'])) for s in elf.iter_segments() if s['p_type']=='PT_LOAD']
+          MD=Cs(CS_ARCH_ARM64,CS_MODE_ARM)
+          MD.detail=False
+
+          TARGETS=[
+            'GameplayFinished','ResultPresentation','HasMatchEnded','IsMatchEnd','OnGameEnded',
+            'MatchEndReasonFinish','MatchEndReasonNoContestApply','SendServerMatchEnd','WaitTimeup',
+            'PKR_OnChangeGameScore','PKR_OnGameEnded','OnChangeGameScore','OnFinish',
+            'NUM_GUESTS_END_MATCH','NUM_LOCAL_GUESTS_END_MATCH','NUM_NODES_END_MATCH',
+            'HOME_SCORE','AWAY_SCORE','END_REASON','MATCH_END'
+          ]
+
+          def off_to_va(o):
+              for po,sz,va in LOADS:
+                  if po<=o<po+sz: return va+(o-po)
+          def sx(x,b): return x-(1<<b) if x&(1<<(b-1)) else x
+          labels={}
+          for term in TARGETS:
+              s=0
+              while True:
+                  o=RAW.find(term.encode(),s)
+                  if o<0: break
+                  va=off_to_va(o)
+                  if va is not None: labels.setdefault(va,[]).append(term)
+                  s=o+1
+          pages={x&~0xfff for x in labels}
+          refs=collections.defaultdict(list)
+          mv=memoryview(TEXT); words=len(TEXT)//4
+          # Find AArch64 ADRP + ADD references to target strings.
+          for i in range(words):
+              w=struct.unpack_from('<I',mv,i*4)[0]
+              if (w&0x9f000000)!=0x90000000: continue
+              rd=w&31
+              imm=sx((((w>>5)&0x7ffff)<<2)|((w>>29)&3),21)<<12
+              pc=TVA+i*4; page=(pc&~0xfff)+imm
+              if page not in pages: continue
+              for j in range(1,11):
+                  if i+j>=words: break
+                  w2=struct.unpack_from('<I',mv,(i+j)*4)[0]
+                  if (w2&0x1f000000)!=0x11000000: continue
+                  if ((w2>>30)&1) or ((w2>>5)&31)!=rd: continue
+                  val=page+(((w2>>10)&0xfff) << (12 if ((w2>>22)&1) else 0))
+                  if val in labels: refs[val].append((pc,TVA+(i+j)*4,rd))
+
+          def chunk(lo,hi):
+              lo=max(TVA,lo); hi=min(TVA+len(TEXT),hi)
+              return TEXT[lo-TVA:hi-TVA],lo
+
+          # Approximate function starts conservatively using several common ARM64 prologue shapes.
+          def function_start(pc):
+              lo=max(TVA,pc-0x1800); data,start=chunk(lo,pc+4); starts=[]
+              prev=None
+              for ins in MD.disasm(data,start):
+                  op=ins.op_str.replace(' ','')
+                  if ins.mnemonic=='stp' and ('x29,x30,[sp' in op or 'x28,x27,[sp' in op) and '!' in op:
+                      starts.append(ins.address)
+                  elif ins.mnemonic=='sub' and op.startswith('sp,sp,#'):
+                      starts.append(ins.address)
+                  prev=ins
+              # nearest candidate at least 16 bytes before ref; cap distance to reduce false giant functions
+              c=[x for x in starts if x<=pc-0x10]
+              return c[-1] if c else max(TVA,pc-0x600)
+
+          def disasm_range(a,b):
+              data,start=chunk(a,b); return list(MD.disasm(data,start))
+
+          def parse_target(op):
+              op=op.strip()
+              if op.startswith('#'): op=op[1:]
+              try: return int(op,0)
+              except: return None
+
+          # Build direct-call incoming reference counts for local callees in .text.
+          call_in=collections.Counter(); call_sites=collections.defaultdict(list)
+          for ins in MD.disasm(TEXT,TVA):
+              if ins.mnemonic=='bl':
+                  t=parse_target(ins.op_str)
+                  if t is not None:
+                      call_in[t]+=1; call_sites[t].append(ins.address)
+
+          out=[]
+          out.append('=== TARGET STRING XREF SUMMARY ===')
+          for va,names in sorted(labels.items()):
+              rr=refs.get(va,[])
+              out.append(f'0x{va:x} refs={len(rr)} names={"|".join(names)} xrefs='+','.join(f'0x{x[0]:x}' for x in rr))
+
+          # Cluster refs by approximate enclosing function.
+          groups=collections.defaultdict(list)
+          for sva,names in labels.items():
+              for adrp,add,reg in refs.get(sva,[]):
+                  fs=function_start(adrp)
+                  groups[fs].append((adrp,add,sva,'|'.join(names)))
+
+          out.append('\n=== FUNCTION CLUSTERS / BRANCH LOGIC ===')
+          for fs,items in sorted(groups.items()):
+              maxref=max(x[0] for x in items)
+              end=min(TVA+len(TEXT),max(fs+0x1400,maxref+0x700))
+              insns=disasm_range(fs,end)
+              out.append(f'\n##### FUNCTION~0x{fs:x} refs={len(items)} incoming_direct_calls={call_in.get(fs,0)} #####')
+              for adrp,add,sva,name in sorted(items):
+                  out.append(f'TARGET {name}: string=0x{sva:x} ADRP=0x{adrp:x} ADD=0x{add:x}')
+              # Record calls and all conditional branches around exact refs.
+              calls=[]
+              for ins in insns:
+                  if ins.mnemonic in ('bl','blr'):
+                      calls.append((ins.address,ins.mnemonic,ins.op_str))
+              out.append('DIRECT CALLS (first 120):')
+              for a,m,o in calls[:120]: out.append(f'  0x{a:x}: {m} {o}')
+              for adrp,add,sva,name in sorted(items):
+                  out.append(f'\n--- ±0x180 around {name} @0x{adrp:x} ---')
+                  for ins in insns:
+                      if adrp-0x180 <= ins.address <= adrp+0x240:
+                          marker='>>' if adrp-4<=ins.address<=add+8 else '  '
+                          out.append(f'{marker} 0x{ins.address:x}: {ins.mnemonic:9} {ins.op_str}')
+                  # Highlight branch/call chain in 0x300 after xref.
+                  out.append('  BRANCH/CALL CHAIN after xref:')
+                  for ins in insns:
+                      if adrp <= ins.address <= adrp+0x380 and (ins.mnemonic.startswith('b.') or ins.mnemonic in ('b','bl','blr','cbz','cbnz','tbz','tbnz','ret')):
+                          out.append(f'    0x{ins.address:x}: {ins.mnemonic:9} {ins.op_str}')
+
+          # Extra: discover exact nearby string literals around each target's file offset.
+          out.append('\n=== STRING NEIGHBORHOODS ===')
+          for sva,names in sorted(labels.items()):
+              # map back approximately through PT_LOAD
+              off=None
+              for po,sz,va in LOADS:
+                  if va<=sva<va+sz: off=po+(sva-va); break
+              if off is None: continue
+              lo=max(0,off-900); hi=min(len(RAW),off+1500); blob=RAW[lo:hi]
+              vals=[]
+              for m in __import__('re').finditer(rb'[ -~]{4,160}',blob):
+                  txt=m.group().decode('ascii','replace')
+                  vals.append((lo+m.start(),txt))
+              out.append(f'\n--- {"|".join(names)} VA=0x{sva:x} ---')
+              for o,t in vals[:100]: out.append(f'  file+0x{o:x}: {t}')
+
+          Path('/tmp/out/match_end_trace.txt').write_text('\n'.join(out))
+          PY
+          python3 /tmp/ef/trace.py
+          sed -n '1,1800p' /tmp/out/match_end_trace.txt
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-match-end-state-machine
+          path: /tmp/out/
+          retention-days: 7

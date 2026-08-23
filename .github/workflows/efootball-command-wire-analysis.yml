@@ -1,0 +1,166 @@
+name: eFootball command wire-format analysis
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip binutils >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current arm64 game binary
+        run: |
+          set -euxo pipefail
+          rm -rf /tmp/ef wire-output
+          mkdir -p /tmp/ef/bundle /tmp/ef/native wire-output
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          APK="$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          test -n "$APK"
+          unzip -q "$APK" -d /tmp/ef/native
+          test -f /tmp/ef/native/lib/arm64-v8a/libUE4.so
+      - name: Recover command and LAN-mode function neighborhoods
+        run: |
+          cat > /tmp/ef/analyze.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import struct, collections, re
+
+          P=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw=P.read_bytes()
+          with P.open('rb') as f:
+              e=ELFFile(f)
+              text=e.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr'])
+              loads=[(int(s['p_offset']),int(s['p_filesz']),int(s['p_vaddr'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          def ova(o):
+              for po,sz,va in loads:
+                  if po<=o<po+sz:return va+o-po
+          def vaoff(v):
+              for po,sz,va in loads:
+                  if va<=v<va+sz:return po+v-va
+          targets=[
+              'CMD_ADD_SCORE','CMD_CHANGE_GAMEPHASE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT',
+              'EMatchFlowTask::SendServerMatchEnd','EMatchFlowTask::WaitTimeup','EMatchFlowTask::DemoTimeupTrans',
+              'EPKR_GamePhase::GameplayFinished','EPKR_GamePhase::ResultPresentation','ROOM_GAME_PHASE_END',
+              'P2P_ADHOC_LAN','P2P_ADHOC_LAN_LOW_LEVEL','P2P_ADHOC_LAN_HIGH_LEVEL',
+              'P2P_ADHOC_WIFIDIRECTLAN','P2P_ADHOC_WIFIDIRECTLAN_LOW_LEVEL','P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL',
+              'CMD_SET_LOCAL_GAMERELAY_LIST','TaskEvCompeLocalGamerelay','direct_online_turn_mode','LinkUpMode'
+          ]
+          # printable strings >=4 with VA map
+          strs={}
+          i=0
+          while i<len(raw):
+              if 32<=raw[i]<127:
+                  j=i
+                  while j<len(raw) and 32<=raw[j]<127:j+=1
+                  if j-i>=4:
+                      v=ova(i)
+                      if v is not None:strs[v]=raw[i:j].decode('ascii','ignore')
+                  i=j+1
+              else:i+=1
+          target_vas=collections.defaultdict(list)
+          for va,s in strs.items():
+              for t in targets:
+                  if s==t or t in s:
+                      target_vas[t].append(va)
+          pages={va&~0xfff for vals in target_vas.values() for va in vals}
+          # Build ADRP+ADD string refs across text and, for every function-like neighborhood, map all referenced strings.
+          words=len(tb)//4; mv=memoryview(tb)
+          def sx(x,b):return x-(1<<b) if x&(1<<(b-1)) else x
+          allrefs=collections.defaultdict(list) # pc -> [(va,str)]
+          for idx in range(words):
+              w=struct.unpack_from('<I',mv,idx*4)[0]
+              if (w&0x9f000000)!=0x90000000:continue
+              rd=w&31; imm=sx((((w>>5)&0x7ffff)<<2)|((w>>29)&3),21)<<12
+              pc=tva+idx*4; page=(pc&~0xfff)+imm
+              for j in range(1,7):
+                  if idx+j>=words:break
+                  w2=struct.unpack_from('<I',mv,(idx+j)*4)[0]
+                  if (w2&0x1f000000)!=0x11000000 or ((w2>>30)&1) or ((w2>>5)&31)!=rd:continue
+                  cand=page+(((w2>>10)&0xfff)<<(12 if ((w2>>22)&1) else 0))
+                  s=strs.get(cand)
+                  if s: allrefs[pc].append((cand,s))
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM)
+          def approx_start(pc):
+              lo=max(tva,pc-0x1800); data=tb[lo-tva:pc-tva+4]; c=[]
+              for ins in md.disasm(data,lo):
+                  if ins.address>=pc:break
+                  if ins.mnemonic=='stp' and 'x29, x30' in ins.op_str and '[sp' in ins.op_str and '!' in ins.op_str:c.append(ins.address)
+              return c[-1] if c else max(tva,pc-0x500)
+          def function_end(fs):
+              hi=min(tva+len(tb),fs+0x5000); data=tb[fs-tva:hi-tva]
+              last=fs
+              for ins in md.disasm(data,fs):
+                  last=ins.address+4
+                  if ins.mnemonic=='ret' and ins.address>fs+0x40:return last
+              return last
+          out=[]
+          for target in targets:
+              out.append('\n'+'#'*80+'\nTARGET '+target)
+              vas=target_vas.get(target,[])
+              out.append('string_vas='+','.join(hex(v) for v in vas) if vas else 'string_vas=NONE')
+              pcs=[]
+              for pc,refs in allrefs.items():
+                  if any(v in vas for v,_ in refs):pcs.append(pc)
+              out.append('xref_count='+str(len(pcs)))
+              for n,pc in enumerate(sorted(pcs)[:20]):
+                  fs=approx_start(pc); fe=function_end(fs)
+                  out.append(f'\nXREF[{n}] pc=0x{pc:x} function~=0x{fs:x}-0x{fe:x}')
+                  # all strings referenced in the same approximate function
+                  neighbors=[]
+                  for rpc,refs in allrefs.items():
+                      if fs<=rpc<fe:
+                          for va,s in refs:
+                              if len(s)<=240:neighbors.append((rpc,va,s))
+                  out.append('SAME_FUNCTION_STRINGS:')
+                  for rpc,va,s in sorted(set(neighbors))[:250]:out.append(f'  pc=0x{rpc:x} va=0x{va:x} {s}')
+                  # disassembly around exact xref, preserving immediates/stores/branches
+                  lo=max(tva,pc-0x100); hi=min(tva+len(tb),pc+0x180)
+                  out.append('XREF_DISASM:')
+                  for ins in md.disasm(tb[lo-tva:hi-tva],lo):
+                      mark='>>' if abs(ins.address-pc)<=0x20 else '  '
+                      out.append(f'{mark} 0x{ins.address:x}: {ins.mnemonic:8} {ins.op_str}')
+          # Also dump raw string neighborhoods around exact command names; source paths/class names often live nearby.
+          out.append('\n'+'#'*80+'\nRAW STRING NEIGHBORHOODS')
+          for target,vas in target_vas.items():
+              for va in vas:
+                  off=vaoff(va)
+                  if off is None:continue
+                  lo=max(0,off-0x1800); hi=min(len(raw),off+0x1800)
+                  found=[]; k=lo
+                  while k<hi:
+                      if 32<=raw[k]<127:
+                          z=k
+                          while z<hi and 32<=raw[z]<127:z+=1
+                          if z-k>=4:found.append((k,raw[k:z].decode('ascii','ignore')))
+                          k=z+1
+                      else:k+=1
+                  out.append(f'\n[{target}] file_off=0x{off:x}')
+                  for o,s in found: out.append(f'  0x{o:x} {s}')
+          Path('wire-output/command_wire_report.txt').write_text('\n'.join(out),errors='ignore')
+          PY
+          python3 /tmp/ef/analyze.py
+          wc -l wire-output/command_wire_report.txt
+          grep -E '^TARGET |^xref_count=|CommandObject|Cmd(AddScore|ChangeGamephase|GetGameResult|SetGameResult)|P2p|Wifi|Gamerelay|GAME_RESULT|GAMEPHASE' wire-output/command_wire_report.txt | head -1000 > wire-output/concise.txt || true
+      - name: Commit findings
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add wire-output
+          git commit -m 'Add eFootball command wire analysis' || exit 0
+          git push origin HEAD:efootball-apk-analysis-2026-08-23

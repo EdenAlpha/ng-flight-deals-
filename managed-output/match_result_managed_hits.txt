@@ -1,0 +1,249 @@
+managed-work/jadx/sources/jp/konami/ExternalStorage.java:116:    public static boolean onActivityResult(int i, int i2, Intent intent) {
+managed-work/jadx/sources/jp/konami/ExternalStorage.java:159:        ((Activity) context).startActivityForResult(new Intent("android.intent.action.OPEN_DOCUMENT_TREE"), DIR_PICKER_REQUEST_CODE);
+managed-work/jadx/sources/jp/konami/ExternalStorage.java:170:        ((Activity) context).startActivityForResult(intent, FILE_PICKER_REQUEST_CODE);
+managed-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:121:                    String result = task.getResult();
+managed-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:122:                    FirebaseMessagingServiceDerived.s_fcmToken.set(result);
+managed-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:123:                    FirebaseImplementation.LogD("FcmToken / FcmToken = " + result);
+managed-work/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java:125:                    FirebaseImplementation.LogW("FcmToken / Failed to task.getResult(). Exception message = " + e.getMessage());
+managed-work/jadx/sources/com/epicgames/ue4/SplashActivity.java:237:    public void onRequestPermissionsResult(int i, String[] strArr, int[] iArr) {
+managed-work/jadx/sources/com/epicgames/ue4/SplashActivity.java:285:                            SplashActivity.this.startActivityForResult(intent, 1);
+managed-work/jadx/sources/com/epicgames/ue4/StoreHelper.java:19:    boolean onActivityResult(int i, int i2, Intent intent);
+managed-work/jadx/sources/jp/konami/android/common/iab/OnAcknowledgeFinishedListener.java:3:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnAcknowledgeFinishedListener.java:7:    void onAcknowledgeFinished(BillingResult billingResult);
+managed-work/jadx/sources/jp/konami/android/common/iab/OnShowInAppMessageFinishedListener.java:3:import com.android.billingclient.api.InAppMessageResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnShowInAppMessageFinishedListener.java:7:    void onShowInAppMessageFinished(InAppMessageResult inAppMessageResult);
+managed-work/jadx/sources/com/epicgames/ue4/WebViewControl.java:21:import android.webkit.JsPromptResult;
+managed-work/jadx/sources/com/epicgames/ue4/WebViewControl.java:22:import android.webkit.JsResult;
+managed-work/jadx/sources/com/epicgames/ue4/WebViewControl.java:719:        public native boolean onJsAlert(WebView webView, String str, String str2, JsResult jsResult);
+managed-work/jadx/sources/com/epicgames/ue4/WebViewControl.java:722:        public native boolean onJsBeforeUnload(WebView webView, String str, String str2, JsResult jsResult);
+managed-work/jadx/sources/com/epicgames/ue4/WebViewControl.java:725:        public native boolean onJsConfirm(WebView webView, String str, String str2, JsResult jsResult);
+managed-work/jadx/sources/com/epicgames/ue4/WebViewControl.java:728:        public native boolean onJsPrompt(WebView webView, String str, String str2, String str3, JsPromptResult jsPromptResult);
+managed-work/jadx/sources/jp/konami/android/common/iab/OnGetItemDetailsFinishedListener.java:3:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnGetItemDetailsFinishedListener.java:9:    void onGetItemDetailsFinished(BillingResult billingResult, List<SkuDetails> list);
+managed-work/jadx/sources/jp/konami/android/common/iab/OnConsumeFinishedListener.java:3:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnConsumeFinishedListener.java:8:    void onConsumeFinished(BillingResult billingResult, Purchase purchase);
+managed-work/jadx/sources/jp/konami/android/common/iab/OnBillingProgramAvailabilityResponseFinishedListener.java:4:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnBillingProgramAvailabilityResponseFinishedListener.java:8:    void onBillingProgramAvailabilityResponseFinished(BillingResult billingResult, BillingProgramAvailabilityDetails billingProgramAvailabilityDetails);
+managed-work/jadx/sources/jp/konami/android/common/iab/OnGetExternalTransactionTokenFinishedListener.java:3:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnGetExternalTransactionTokenFinishedListener.java:7:    void onGetExternalTransactionTokenFinished(BillingResult billingResult, String str);
+managed-work/jadx/sources/jp/konami/pesam/C2396R.java:898:        public static final int textAppearanceSearchResultSubtitle = 2130903300;
+managed-work/jadx/sources/jp/konami/pesam/C2396R.java:901:        public static final int textAppearanceSearchResultTitle = 2130903301;
+managed-work/jadx/sources/jp/konami/pesam/C2396R.java:3321:        public static final int Base_TextAppearance_AppCompat_SearchResult = 2131689502;
+managed-work/jadx/sources/jp/konami/pesam/C2396R.java:3324:        public static final int Base_TextAppearance_AppCompat_SearchResult_Subtitle = 2131689503;
+managed-work/jadx/sources/jp/konami/pesam/C2396R.java:3327:        public static final int Base_TextAppearance_AppCompat_SearchResult_Title = 2131689504;
+managed-work/jadx/sources/jp/konami/pesam/C2396R.java:3834:        public static final int TextAppearance_AppCompat_Light_SearchResult_Subtitle = 2131689678;
+managed-work/jadx/sources/jp/konami/pesam/C2396R.java:3837:        public static final int TextAppearance_AppCompat_Light_SearchResult_Title = 2131689679;
+managed-work/jadx/sources/jp/konami/pesam/C2396R.java:3855:        public static final int TextAppearance_AppCompat_SearchResult_Subtitle = 2131689685;
+managed-work/jadx/sources/jp/konami/pesam/C2396R.java:3858:        public static final int TextAppearance_AppCompat_SearchResult_Title = 2131689686;
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:5:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:6:import com.android.billingclient.api.InAppMessageResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:30:            public void onAcknowledgeFinished(BillingResult billingResult) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:31:                KonamiIabBaseNativeActivity.this.nativeOnAcknowledgeFinished(billingResult);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:46:        nativeOnBuyFinished(BillingResult.newBuilder().setResponseCode(5).build(), null);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:56:        nativeOnBuyFinished(BillingResult.newBuilder().setResponseCode(5).build(), null);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:74:                    public void onConsumeFinished(BillingResult billingResult, Purchase purchase2) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:75:                        KonamiIabBaseNativeActivity.this.nativeOnConsumeFinished(billingResult, purchase2);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:89:            public void onGetBillingConfigFinished(BillingResult billingResult, BillingConfig billingConfig) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:90:                KonamiIabBaseNativeActivity.this.nativeOnGetBillingConfigFinished(billingResult, billingConfig);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:118:                    public void onGetInventoryFinished(BillingResult billingResult, List<Purchase> list) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:119:                        KonamiIabBaseNativeActivity.this.nativeOnGetInventoryFinished(billingResult, list);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:133:                    public void onGetItemProductDetailsFinished(BillingResult billingResult, List<ProductDetails> list) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:134:                        if (billingResult.getResponseCode() != 0 || list == null) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:135:                            Logger.m972w(KonamiIabBaseNativeActivity.TAG, "getItemProductDetails Failed Result:" + billingResult.getResponseCode());
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:137:                            Logger.m967d(KonamiIabBaseNativeActivity.TAG, "ProductDetails respond OK: " + billingResult.getResponseCode());
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:143:                        KonamiIabBaseNativeActivity.this.nativeOnGetItemProductDetailsFinished(billingResult, list);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:242:            public void onBuyFinished(final BillingResult billingResult, final Purchase purchase) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:246:                        KonamiIabBaseNativeActivity.this.nativeOnBuyFinished(billingResult, purchase);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:261:            public void onBuyFinished(final BillingResult billingResult, final Purchase purchase) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:265:                        KonamiIabBaseNativeActivity.this.nativeOnBuyFinished(billingResult, purchase);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:310:    public native void nativeOnAcknowledgeFinished(BillingResult billingResult);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:312:    public native void nativeOnBuyFinished(BillingResult billingResult, Purchase purchase);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:314:    public native void nativeOnConsumeFinished(BillingResult billingResult, Purchase purchase);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:316:    public native void nativeOnGetBillingConfigFinished(BillingResult billingResult, BillingConfig billingConfig);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:318:    public native void nativeOnGetInventoryFinished(BillingResult billingResult, List<Purchase> list);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:320:    public native void nativeOnGetItemDetailsFinished(BillingResult billingResult, List<SkuDetails> list);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:322:    public native void nativeOnGetItemProductDetailsFinished(BillingResult billingResult, List<ProductDetails> list);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:324:    public native void nativeOnQueryPurchaseHistoryAsyncFinished(BillingResult billingResult, List<PurchaseHistoryRecord> list);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:326:    public native void nativeOnShowInAppMessageFinished(InAppMessageResult inAppMessageResult);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:335:            public void onShowInAppMessageFinished(InAppMessageResult inAppMessageResult) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:336:                KonamiIabBaseNativeActivity.this.nativeOnShowInAppMessageFinished(inAppMessageResult);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:346:        nativeOnBuyFinished(BillingResult.newBuilder().setResponseCode(5).build(), null);
+managed-work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:58:        setResult(-1, this.OutputData);
+managed-work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:339:            setResult(-1, this.OutputData);
+managed-work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:363:        setResult(-1, this.OutputData);
+managed-work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:393:                    downloaderActivity2.setResult(-1, downloaderActivity2.OutputData);
+managed-work/jadx/sources/jp/konami/pesam/DownloaderActivity.java:407:                            DownloaderActivity.this.setResult(-1, DownloaderActivity.this.OutputData);
+managed-work/jadx/sources/jp/konami/android/common/iab/OnGetBillingConfigFinishedListener.java:4:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnGetBillingConfigFinishedListener.java:8:    void onGetBillingConfigFinished(BillingResult billingResult, BillingConfig billingConfig);
+managed-work/jadx/sources/jp/konami/android/common/iab/OnLaunchExternalLinkResponseFinishedListener.java:3:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnLaunchExternalLinkResponseFinishedListener.java:7:    void onLaunchExternalLinkResponseFinished(BillingResult billingResult);
+managed-work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:24:    protected void onActivityResult(int i, int i2, Intent intent) {
+managed-work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:39:            startActivityForResult(new Intent("android.bluetooth.adapter.action.REQUEST_ENABLE"), intExtra);
+managed-work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:50:            startActivityForResult(intent, intExtra);
+managed-work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:79:    public void onRequestPermissionsResult(int i, String[] strArr, int[] iArr) {
+managed-work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:80:        super.onRequestPermissionsResult(i, strArr, iArr);
+managed-work/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:83:            Logger.m967d(TAG, "onRequestPermissionsResult called [grantResults.length:" + iArr.length + "]");
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:19:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:28:import com.android.billingclient.api.InAppMessageResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:39:import com.android.billingclient.api.QueryProductDetailsResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:68:    private BillingResult launchBillingFlow(BillingFlowParams billingFlowParams) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:85:            public void onBillingSetupFinished(BillingResult billingResult) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:89:                    konamiIabInitializationFinishedListener2.onInitializationFinished(billingResult.getResponseCode() == 0);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:102:            public void onAcknowledgePurchaseResponse(BillingResult billingResult) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:103:                onAcknowledgeFinishedListener.onAcknowledgeFinished(billingResult);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:140:    BillingResult buyItem(SkuDetails skuDetails, String str, String str2) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:162:            public void onConsumeResponse(BillingResult billingResult, String str) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:163:                onConsumeFinishedListener.onConsumeFinished(billingResult, purchase);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:202:            public void onBillingConfigResponse(BillingResult billingResult, BillingConfig billingConfig) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:203:                onGetBillingConfigFinishedListener.onGetBillingConfigFinished(billingResult, billingConfig);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:219:            public void onCreateBillingProgramReportingDetailsResponse(BillingResult billingResult, BillingProgramReportingDetails billingProgramReportingDetails) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:220:                if (billingResult.getResponseCode() != 0 || billingProgramReportingDetails == null) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:221:                    onGetExternalTransactionTokenFinishedListener.onGetExternalTransactionTokenFinished(billingResult, null);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:223:                    onGetExternalTransactionTokenFinishedListener.onGetExternalTransactionTokenFinished(billingResult, billingProgramReportingDetails.getExternalTransactionToken());
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:233:            public void onQueryPurchasesResponse(BillingResult billingResult, List<Purchase> list) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:234:                onGetInventoryFinishedListener.onGetInventoryFinished(billingResult, list);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:248:            public void onProductDetailsResponse(BillingResult billingResult, QueryProductDetailsResult queryProductDetailsResult) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:249:                onGetItemProductDetailsFinishedListener.onGetItemProductDetailsFinished(billingResult, queryProductDetailsResult.getProductDetailsList());
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:298:            public void onPurchasesUpdated(BillingResult billingResult, List<Purchase> list) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:300:                    onBuyFinishedListener.onBuyFinished(billingResult, null);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:304:                    if (KonamiIabClient.isAcknowledgeOnPurchase.booleanValue() && billingResult.getResponseCode() == 0 && !purchase.isAcknowledged() && purchase.getPurchaseState() == 1) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:307:                            public void onAcknowledgeFinished(BillingResult billingResult2) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:308:                                onBuyFinishedListener.onBuyFinished(billingResult2, purchase);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:312:                        onBuyFinishedListener.onBuyFinished(billingResult, purchase);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:325:            public void onBillingProgramAvailabilityResponse(BillingResult billingResult, BillingProgramAvailabilityDetails billingProgramAvailabilityDetails) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:326:                onBillingProgramAvailabilityResponseFinishedListener.onBillingProgramAvailabilityResponseFinished(billingResult, billingProgramAvailabilityDetails);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:334:            public void onPurchasesUpdated(BillingResult billingResult, List<Purchase> list) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:336:                    onBuyFinishedListener.onBuyFinished(billingResult, null);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:340:                    if (KonamiIabClient.isAcknowledgeOnPurchase.booleanValue() && billingResult.getResponseCode() == 0 && !purchase.isAcknowledged() && purchase.getPurchaseState() == 1) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:343:                            public void onAcknowledgeFinished(BillingResult billingResult2) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:344:                                onBuyFinishedListener.onBuyFinished(billingResult2, purchase);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:348:                        onBuyFinishedListener.onBuyFinished(billingResult, purchase);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:371:            public void onBillingProgramAvailabilityResponse(BillingResult billingResult, BillingProgramAvailabilityDetails billingProgramAvailabilityDetails) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:372:                onBillingProgramAvailabilityResponseFinishedListener.onBillingProgramAvailabilityResponseFinished(billingResult, billingProgramAvailabilityDetails);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:408:            public void onLaunchExternalLinkResponse(BillingResult billingResult) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:409:                onLaunchExternalLinkResponseFinishedListener.onLaunchExternalLinkResponseFinished(billingResult);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:424:    public BillingResult showInAppMessages(final OnShowInAppMessageFinishedListener onShowInAppMessageFinishedListener) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:427:            public void onInAppMessageResponse(InAppMessageResult inAppMessageResult) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:428:                onShowInAppMessageFinishedListener.onShowInAppMessageFinished(inAppMessageResult);
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:433:    BillingResult upgradeSubscription(ProductDetails productDetails, String str, String str2, int i) {
+managed-work/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java:438:    BillingResult upgradeSubscription(ProductDetails productDetails, String str, String str2, String str3, int i) {
+managed-work/jadx/sources/jp/konami/android/common/iab/OnGetItemProductDetailsFinishedListener.java:3:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnGetItemProductDetailsFinishedListener.java:9:    void onGetItemProductDetailsFinished(BillingResult billingResult, List<ProductDetails> list);
+managed-work/jadx/sources/jp/konami/android/common/iab/OnBuyFinishedListener.java:3:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnBuyFinishedListener.java:8:    void onBuyFinished(BillingResult billingResult, Purchase purchase);
+managed-work/jadx/sources/jp/konami/android/common/iab/OnQueryPurchaseHistoryAsyncFinishedListener.java:3:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnQueryPurchaseHistoryAsyncFinishedListener.java:9:    void onQueryPurchaseHistoryAsyncFinished(BillingResult billingResult, List<PurchaseHistoryRecord> list);
+managed-work/jadx/sources/jp/konami/android/common/iab/OnGetInventoryFinishedListener.java:3:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/jp/konami/android/common/iab/OnGetInventoryFinishedListener.java:9:    void onGetInventoryFinished(BillingResult billingResult, List<Purchase> list);
+managed-work/jadx/sources/jp/konami/android/common/Achievements.java:72:                    activity.startActivityForResult(intent, 4000);
+managed-work/jadx/sources/jp/konami/android/common/GoogleImplementation.java:5:import com.google.android.gms.games.AuthenticationResult;
+managed-work/jadx/sources/jp/konami/android/common/GoogleImplementation.java:85:        s_playerId = ((Player) task.getResult()).getPlayerId();
+managed-work/jadx/sources/jp/konami/android/common/GoogleImplementation.java:146:    public static void updatePlayerId(Task<AuthenticationResult> task) {
+managed-work/jadx/sources/jp/konami/android/common/GoogleImplementation.java:147:        boolean z = task.isSuccessful() && task.getResult().isAuthenticated();
+managed-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:22:    protected void onActivityResult(int i, int i2, Intent intent) {
+managed-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:34:            startActivityForResult(new Intent("android.bluetooth.adapter.action.REQUEST_ENABLE"), intExtra);
+managed-work/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:89:    public void onRequestPermissionsResult(int i, String[] strArr, int[] iArr) {
+managed-work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:148:            ((Activity) context).startActivityForResult(new Intent(context, (Class<?>) DownloaderActivity.class), DownloadRequestCode);
+managed-work/jadx/sources/jp/konami/ExpansionDownloader/DownloaderManager.java:235:    public static boolean onActivityResult(int i) {
+managed-work/jadx/sources/jp/konami/android/common/Applilink.java:93:    public static void onActivityResult(int i, int i2, Intent intent) {
+managed-work/jadx/sources/jp/konami/android/common/Applilink.java:94:        ApplilinkNetwork.handleActivityResult(i, i2, intent);
+managed-work/jadx/sources/jp/konami/android/common/Applilink.java:340:        RecommendNetwork.openInterstitial(activity, "ADL_RESULT", new Point(i, i2), i3, ApplilinkConsts.AdVerticalAlign.TOP, new ApplilinkWebViewListener3() { // from class: jp.konami.android.common.Applilink.6
+managed-work/jadx/sources/jp/konami/android/common/Applilink.java:531:        RecommendNetwork.getUnreadCount(ApplilinkConsts.AdModel.INTERSTITIAL, "ADL_RESULT", new ApplilinkNetworkHandler() { // from class: jp.konami.android.common.Applilink.12
+managed-work/jadx/sources/jp/konami/AdMobReward.java:92:    private static int GOOGLE_CMP_PURPOSE_RESULT_OK = 0;
+managed-work/jadx/sources/jp/konami/AdMobReward.java:93:    private static int GOOGLE_CMP_PURPOSE_RESULT_STRING_ERROR = 1;
+managed-work/jadx/sources/jp/konami/AdMobReward.java:94:    private static int GOOGLE_CMP_PURPOSE_RESULT_DISAGREE = 2;
+managed-work/jadx/sources/jp/konami/AdMobReward.java:95:    private static int GOOGLE_CMP_PURPOSE_RESULT_NONPARSONALIZE = 3;
+managed-work/jadx/sources/jp/konami/AdMobReward.java:183:            Logger.m967d("eFootball_CMP_CheckGoogleCMPPurposeString", "GOOGLE_CMP_PURPOSE_RESULT_STRING_ERROR");
+managed-work/jadx/sources/jp/konami/AdMobReward.java:184:            return GOOGLE_CMP_PURPOSE_RESULT_STRING_ERROR;
+managed-work/jadx/sources/jp/konami/AdMobReward.java:187:            Logger.m967d("eFootball_CMP_CheckGoogleCMPPurposeString", "GOOGLE_CMP_PURPOSE_RESULT_DISAGREE");
+managed-work/jadx/sources/jp/konami/AdMobReward.java:188:            return GOOGLE_CMP_PURPOSE_RESULT_DISAGREE;
+managed-work/jadx/sources/jp/konami/AdMobReward.java:191:            return GOOGLE_CMP_PURPOSE_RESULT_OK;
+managed-work/jadx/sources/jp/konami/AdMobReward.java:193:        Logger.m967d("eFootball_CMP_CheckGoogleCMPPurposeString", "GOOGLE_CMP_PURPOSE_RESULT_NONPARSONALIZE");
+managed-work/jadx/sources/jp/konami/AdMobReward.java:194:        return GOOGLE_CMP_PURPOSE_RESULT_NONPARSONALIZE;
+managed-work/jadx/sources/jp/konami/AdMobReward.java:318:            if (CheckGoogleCMPPurposeString(context) == GOOGLE_CMP_PURPOSE_RESULT_OK) {
+managed-work/jadx/sources/jp/konami/AdMobReward.java:351:            ApplilinkSettings.forceOptOutInApp(iCheckGoogleCMPPurposeString != GOOGLE_CMP_PURPOSE_RESULT_OK);
+managed-work/jadx/sources/jp/konami/AdMobReward.java:352:            if (iCheckGoogleCMPPurposeString == GOOGLE_CMP_PURPOSE_RESULT_STRING_ERROR) {
+managed-work/jadx/sources/jp/konami/AdMobReward.java:359:            if (iCheckGoogleCMPPurposeString == GOOGLE_CMP_PURPOSE_RESULT_DISAGREE) {
+managed-work/jadx/sources/jp/konami/AdMobReward.java:366:            if (iCheckGoogleCMPPurposeString == GOOGLE_CMP_PURPOSE_RESULT_NONPARSONALIZE) {
+managed-work/jadx/sources/jp/konami/PermissionRequest.java:19:    private static boolean PermResult = false;
+managed-work/jadx/sources/jp/konami/PermissionRequest.java:114:                if (z && !PermResult) {
+managed-work/jadx/sources/jp/konami/PermissionRequest.java:183:            ((Activity) context).startActivityForResult(intent, PermRequestCode);
+managed-work/jadx/sources/jp/konami/PermissionRequest.java:187:            ((Activity) context).startActivityForResult(intent2, PermRequestCode);
+managed-work/jadx/sources/jp/konami/PermissionRequest.java:191:    public static boolean onActivityResult(int i) {
+managed-work/jadx/sources/jp/konami/PermissionRequest.java:199:    public static void onRequestPermissionsResult(int i, int[] iArr) {
+managed-work/jadx/sources/jp/konami/PermissionRequest.java:203:        PermResult = true;
+managed-work/jadx/sources/jp/konami/PermissionRequest.java:210:                PermResult = false;
+managed-work/jadx/sources/jp/konami/peerlink/ble/Central.java:14:import android.bluetooth.le.ScanResult;
+managed-work/jadx/sources/jp/konami/peerlink/ble/Central.java:1443:            public void onBatchScanResults(List<ScanResult> list) {
+managed-work/jadx/sources/jp/konami/peerlink/ble/Central.java:1444:                Iterator<ScanResult> it = list.iterator();
+managed-work/jadx/sources/jp/konami/peerlink/ble/Central.java:1446:                    Logger.m967d(Central.TAG, "BatchScanResults: result = " + it.next().toString());
+managed-work/jadx/sources/jp/konami/peerlink/ble/Central.java:1457:            public void onScanResult(int i, ScanResult scanResult) {
+managed-work/jadx/sources/jp/konami/peerlink/ble/Central.java:1458:                Logger.m967d(Central.TAG, "ScanResult: callbackType = " + i + ", result = " + scanResult.toString());
+managed-work/jadx/sources/jp/konami/peerlink/ble/Central.java:1459:                BluetoothDevice device = scanResult.getDevice();
+managed-work/jadx/sources/jp/konami/peerlink/ble/Central.java:1463:                Iterator<ParcelUuid> it = scanResult.getScanRecord().getServiceUuids().iterator();
+managed-work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:19:        private BroadcastReceiver.PendingResult pendingResult;
+managed-work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:21:        Task(BroadcastReceiver.PendingResult pendingResult, Context context) {
+managed-work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:22:            this.pendingResult = pendingResult;
+managed-work/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:93:            this.pendingResult.finish();
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:10:import com.android.billingclient.api.BillingResult;
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:19:import com.android.billingclient.api.QueryProductDetailsResult;
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:53:        void launchForResult(PendingIntent pendingIntent, int i);
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:63:            public void onPurchasesUpdated(BillingResult billingResult, List<Purchase> list) {
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:64:                if (billingResult.getResponseCode() != 0 || list == null) {
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:65:                    GooglePlayStoreHelper.this.Log.debug("[GooglePlayStoreHelper] - GooglePlayStoreHelper::UserCancelled Purchase " + billingResult.getDebugMessage());
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:66:                    GooglePlayStoreHelper.this.nativePurchaseComplete(billingResult.getResponseCode(), "", "", "", "");
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:70:                        GooglePlayStoreHelper.this.onPurchaseResult(billingResult, it.next());
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:83:            public void onBillingSetupFinished(BillingResult billingResult) {
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:84:                int responseCode = billingResult.getResponseCode();
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:87:                    googlePlayStoreHelper.Log.debug("In-app billing NOT supported for " + GooglePlayStoreHelper.this.gameActivity.getPackageName() + " error " + billingResult.getResponseCode());
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:141:            public void onProductDetailsResponse(BillingResult billingResult, QueryProductDetailsResult queryProductDetailsResult) {
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:142:                List<ProductDetails> productDetailsList = queryProductDetailsResult.getProductDetailsList();
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:143:                int responseCode = billingResult.getResponseCode();
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:171:                    public void onConsumeResponse(BillingResult billingResult, String str2) {
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:172:                        int responseCode = billingResult.getResponseCode();
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:177:                            GooglePlayStoreHelper.this.Log.debug("[GooglePlayStoreHelper] - ConsumePurchase failed with error " + GooglePlayStoreHelper.this.TranslateServerResponseCode(billingResult.getResponseCode()));
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:235:            public void onProductDetailsResponse(BillingResult billingResult, QueryProductDetailsResult queryProductDetailsResult) {
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:239:                List<ProductDetails> productDetailsList = queryProductDetailsResult.getProductDetailsList();
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:241:                int responseCode = billingResult.getResponseCode();
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:346:                            public void onConsumeResponse(BillingResult billingResult, String str) {
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:347:                                int responseCode = billingResult.getResponseCode();
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:355:                                    GooglePlayStoreHelper.this.Log.debug("[GooglePlayStoreHelper] - GooglePlayStoreHelper::RestorePurchases - consumePurchase failed for " + purchase.getSkus().get(0) + " with error " + billingResult.getResponseCode());
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:357:                                    arrayList6.add(Integer.valueOf(billingResult.getResponseCode()));
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:406:    public boolean onActivityResult(int i, int i2, Intent intent) {
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:407:        this.Log.debug("[GooglePlayStoreHelper] - GooglePlayStoreHelper::onActivityResult unimplemented on BillingApiV2");
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:419:    public boolean onPurchaseResult(BillingResult billingResult, final Purchase purchase) {
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:420:        this.Log.debug("[GooglePlayStoreHelper] - GooglePlayStoreHelper::onPurchaseResult");
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:421:        if (billingResult == null) {
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:422:            this.Log.debug("Null data in purchase activity result.");
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:426:        int responseCode = billingResult.getResponseCode();
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:428:            this.Log.debug("[GooglePlayStoreHelper] - GooglePlayStoreHelper::onActivityResult - Processing purchase result. Response Code: " + TranslateServerResponseCode(responseCode));
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:445:                logger.debug("[GooglePlayStoreHelper] - GooglePlayStoreHelper::onActivityResult - Purchase canceled." + TranslateServerResponseCode(responseCode));
+managed-work/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:448:                logger.debug("[GooglePlayStoreHelper] - GooglePlayStoreHelper::onActivityResult - Purchase failed. Result code: " + Integer.toString(responseCode) + ". Response: " + TranslateServerResponseCode(responseCode));
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:108:import com.google.android.gms.common.ConnectionResult;
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:198:    public static final String DOWNLOAD_RETURN_NAME = "Result";
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:291:    private int NumTimesScreenCaptureDisabled = 0;
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:1013:    private void SetDisableScreenCaptureInternal(boolean z) {
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:1018:                    GameActivity.Log.debug("==============> [JAVA] AndroidThunkJava_DisableScreenCapture(true) - Disabled screen captures");
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:1026:                    GameActivity.Log.debug("==============> [JAVA] AndroidThunkJava_DisableScreenCapture(false) - Enabled screen captures");
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:2457:    public void AndroidThunkJava_DisableScreenCapture(boolean z) {
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:2458:        boolean zAndroidThunkJava_IsScreenCaptureDisabled = AndroidThunkJava_IsScreenCaptureDisabled();
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:2459:        this.NumTimesScreenCaptureDisabled += z ? 1 : -1;
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:2460:        if (AndroidThunkJava_IsScreenCaptureDisabled() != zAndroidThunkJava_IsScreenCaptureDisabled) {
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:2461:            SetDisableScreenCaptureInternal(!zAndroidThunkJava_IsScreenCaptureDisabled);
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:2925:    public boolean AndroidThunkJava_IsScreenCaptureDisabled() {
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:2926:        return this.NumTimesScreenCaptureDisabled != 0;
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:3590:    public native void nativeOnActivityResult(GameActivity gameActivity, int i, int i2, Intent intent);
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:3628:    public native void nativeVirtualKeyboardResult(boolean z, String str);
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:3645:    protected void onActivityResult(int i, int i2, Intent intent) {
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:3648:        if (PermissionRequest.onActivityResult(i) || DownloaderManager.onActivityResult(i) || ExternalStorage.onActivityResult(i, i2, intent)) {
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:3692:            super.onActivityResult(i, i2, intent);
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:3695:            nativeOnActivityResult(this, i, i2, intent);
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:3697:        Applilink.onActivityResult(i, i2, intent);
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:3722:    public void onConnectionFailed(ConnectionResult connectionResult) {
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:3723:        Log.debug("Google Client Connect failed. Error Code: " + connectionResult.getErrorCode() + " Description: " + connectionResult.getErrorMessage());
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:4215:                    GameActivity.this.nativeVirtualKeyboardResult(true, GameActivity.this.virtualKeyboardInputBox.getText().toString());
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:4225:                    GameActivity.this.nativeVirtualKeyboardResult(false, " ");
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:4448:    public void onRequestPermissionsResult(int i, String[] strArr, int[] iArr) {
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:4449:        super.onRequestPermissionsResult(i, strArr, iArr);
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:4450:        PermissionRequest.onRequestPermissionsResult(i, iArr);
+managed-work/jadx/sources/com/epicgames/ue4/GameActivity.java:4497:        SetDisableScreenCaptureInternal(AndroidThunkJava_IsScreenCaptureDisabled());

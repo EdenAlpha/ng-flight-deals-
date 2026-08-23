@@ -1,0 +1,92 @@
+name: eFootball managed and asset analysis
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+      - name: Install tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y unzip file ripgrep openjdk-17-jre-headless binutils
+          curl -L --fail --retry 3 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.5/jadx-1.5.5.zip
+          sudo mkdir -p /opt/jadx && sudo unzip -q /tmp/jadx.zip -d /opt/jadx
+      - name: Download and unpack current bundle
+        run: |
+          set -euxo pipefail
+          rm -rf ma-work managed-asset-output
+          mkdir -p ma-work/bundle ma-work/apks ma-work/base ma-work/jadx ma-work/pads managed-asset-output
+          curl -L --fail --retry 5 --retry-delay 3 -A 'Mozilla/5.0' -o ma-work/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q ma-work/efootball.xapk -d ma-work/bundle
+          find ma-work/bundle -type f -name '*.apk' -exec cp '{}' ma-work/apks/ \;
+          BASE="$(find ma-work/apks -type f -name 'jp.konami.pesam.apk' | head -n1)"
+          test -n "$BASE"
+          unzip -q "$BASE" -d ma-work/base
+          /opt/jadx/bin/jadx --no-debug-info --show-bad-code --deobf -j 4 -d ma-work/jadx "$BASE" > managed-asset-output/jadx.log 2>&1 || true
+          echo "files=$(find ma-work/jadx -type f | wc -l)" > managed-asset-output/jadx_summary.txt
+          for p in ma-work/apks/pad_it_*.apk; do d="ma-work/pads/$(basename "$p" .apk)"; mkdir -p "$d"; unzip -q "$p" -d "$d" || true; done
+      - name: Manifest and Java/Kotlin focused search
+        run: |
+          set -euxo pipefail
+          TERMS='UE4|GameActivity|native|JNI|libUE4|OnlineSubsystem|network|socket|stun|turn|p2p|relay|match|result|score|winner|halftime|fulltime|screencap|Surface|Firebase|PlayIntegrity'
+          rg -n -i --hidden "$TERMS" ma-work/jadx > managed-asset-output/managed_hits.txt || true
+          find ma-work/jadx -type f -printf '%p\n' | sort > managed-asset-output/jadx_files.txt
+          ${ANDROID_HOME}/build-tools/36.0.0/aapt2 dump xmltree ma-work/apks/jp.konami.pesam.apk --file AndroidManifest.xml > managed-asset-output/manifest_tree.txt 2>&1 || true
+          ${ANDROID_HOME}/build-tools/36.0.0/aapt2 dump badging ma-work/apks/jp.konami.pesam.apk > managed-asset-output/base_badging.txt 2>&1 || true
+      - name: Asset container inventory and magic
+        run: |
+          set -euxo pipefail
+          find ma-work/pads -type f -printf '%p %s bytes\n' | sort -k2 -nr > managed-asset-output/pad_files.txt
+          : > managed-asset-output/container_magic.txt
+          while IFS= read -r f; do
+            case "$f" in *.cpk|*.pak|*.utoc|*.ucas|*.bin|*.dat)
+              echo "===== $f =====" >> managed-asset-output/container_magic.txt
+              file "$f" >> managed-asset-output/container_magic.txt || true
+              xxd -l 128 "$f" >> managed-asset-output/container_magic.txt || true
+            ;; esac
+          done < <(find ma-work/pads -type f)
+      - name: Search asset containers for match and network vocabulary
+        run: |
+          set -euxo pipefail
+          MATCH='MatchResult|match_result|MATCH_RESULT|HalfTime|HALFTIME|HALF_TIME|FullTime|FULL_TIME|ADDED_TIME|AddedTime|ExtraTime|m_isExtraTime|bIsWinner|CheckMatchResult|MatchResultTimeUpDemo|Winner|Victory|Defeat|FinalScore|Scoreboard|get_game_result|END_MATCH|NUM_LOCAL_GUESTS_END_MATCH'
+          NET='P2pFullMeshWithTurn|MATCHING_STATE_STUN_CHECK|HOST_DIRECT|HOST_RELAY|START_UDP_HOLE_PUNCHING|TURN_|STUN_|P2PTURNIO|pesam\.stun\.service\.konami\.net|ntl\.service\.konami\.net'
+          : > managed-asset-output/asset_match_hits.txt
+          : > managed-asset-output/asset_network_hits.txt
+          find ma-work/pads -type f \( -name '*.cpk' -o -name '*.pak' -o -name '*.utoc' -o -name '*.ucas' -o -name '*.bin' -o -name '*.dat' \) -print0 | while IFS= read -r -d '' f; do
+            strings -a -t x -n 4 "$f" | grep -Ei "$MATCH" | head -4000 | sed "s#^#$f:#" >> managed-asset-output/asset_match_hits.txt || true
+            strings -a -t x -n 4 "$f" | grep -Ei "$NET" | head -4000 | sed "s#^#$f:#" >> managed-asset-output/asset_network_hits.txt || true
+          done
+      - name: Build report
+        run: |
+          {
+            echo '# eFootball 11.0.1 managed-code + asset-container analysis'; date -u
+            echo; echo '## JADX summary'; cat managed-asset-output/jadx_summary.txt
+            echo; echo '## Base APK badging'; cat managed-asset-output/base_badging.txt
+            echo; echo '## JADX files'; sed -n '1,500p' managed-asset-output/jadx_files.txt
+            echo; echo '## Managed-code hits'; sed -n '1,3000p' managed-asset-output/managed_hits.txt
+            echo; echo '## Asset file inventory'; sed -n '1,500p' managed-asset-output/pad_files.txt
+            echo; echo '## Container magic'; sed -n '1,2000p' managed-asset-output/container_magic.txt
+            echo; echo '## Asset match-state hits'; sed -n '1,4000p' managed-asset-output/asset_match_hits.txt
+            echo; echo '## Asset network hits'; sed -n '1,4000p' managed-asset-output/asset_network_hits.txt
+            echo; echo '## JADX diagnostics'; tail -200 managed-asset-output/jadx.log
+          } > managed-asset-output/report.md
+      - name: Commit textual results
+        run: |
+          set -euxo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add managed-asset-output
+          git commit -m 'Add eFootball managed and asset analysis' || exit 0
+          git push origin HEAD:efootball-apk-analysis-2026-08-23

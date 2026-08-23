@@ -1,0 +1,4 @@
+oauth2.googleapis.com
+type.googleapis.com
+work/jadx/resources/AndroidManifest.xml:http://schemas.android.com/apk/res/android
+www.konami.com

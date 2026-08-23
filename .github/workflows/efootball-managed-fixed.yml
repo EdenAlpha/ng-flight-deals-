@@ -1,0 +1,60 @@
+name: eFootball managed glue fixed
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+      - name: Install JADX
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl openjdk-17-jre-headless ripgrep >/dev/null
+          curl -L --fail --retry 3 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.5/jadx-1.5.5.zip
+          sudo rm -rf /opt/jadx && sudo mkdir -p /opt/jadx
+          sudo unzip -q /tmp/jadx.zip -d /opt/jadx
+          sudo chmod +x /opt/jadx/bin/jadx
+      - name: Download and decompile base APK
+        run: |
+          set -euxo pipefail
+          rm -rf /tmp/mg managed-fixed-output
+          mkdir -p /tmp/mg/bundle /tmp/mg/jadx managed-fixed-output
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/mg/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/mg/efootball.xapk -d /tmp/mg/bundle
+          BASE="$(find /tmp/mg/bundle -type f -name 'jp.konami.pesam.apk' | head -n1)"
+          test -n "$BASE"
+          /opt/jadx/bin/jadx --no-debug-info --show-bad-code --deobf -j 4 -d /tmp/mg/jadx "$BASE" > managed-fixed-output/jadx.log 2>&1 || true
+          echo "files=$(find /tmp/mg/jadx -type f | wc -l)" > managed-fixed-output/summary.txt
+      - name: Extract only networking glue and native bridge evidence
+        run: |
+          set -euxo pipefail
+          {
+            echo '# peerlink-like package/class files'
+            find /tmp/mg/jadx/sources -type f | grep -Ei '/jp/konami/(peerlink|pesam|android/common)/|/com/epicgames/ue4/' | sort | head -3000
+            echo; echo '# targeted references'
+            rg -n -i 'WifiDirect|Wi-?Fi Direct|NetworkServiceDiscovery|BluetoothLowEnergy|BluetoothClassic|BluetoothSwitch|peerlink|P2P_ADHOC|LOCAL_GAMERELAY|native .*\(|System\.loadLibrary|JNI|GameActivity' /tmp/mg/jadx/sources/jp/konami /tmp/mg/jadx/sources/com/epicgames/ue4 2>/dev/null | head -12000 || true
+          } > managed-fixed-output/glue_hits.txt
+          {
+            echo '# exact jp.konami.peerlink source summaries'
+            find /tmp/mg/jadx/sources/jp/konami/peerlink -type f -name '*.java' 2>/dev/null | sort | while read f; do
+              echo; echo "===== $f ====="
+              rg -n 'class |interface |native |Wifi|Bluetooth|Network|Socket|Discovery|start|stop|connect|disconnect|send|recv|receive' "$f" || true
+            done
+          } > managed-fixed-output/peerlink_class_summary.txt
+      - name: Commit findings
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add managed-fixed-output
+          git commit -m 'Add fixed managed eFootball glue analysis' || exit 0
+          git push origin HEAD:efootball-apk-analysis-2026-08-23

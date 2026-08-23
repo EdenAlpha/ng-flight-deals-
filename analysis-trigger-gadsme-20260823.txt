@@ -1,0 +1,1 @@
+trigger libgadsme extraction for eFootball 11.0.1

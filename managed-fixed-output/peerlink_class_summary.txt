@@ -1,0 +1,1391 @@
+# exact jp.konami.peerlink source summaries
+
+===== /tmp/mg/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java =====
+14:public class AdvertisementHeader {
+
+===== /tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java =====
+4:import android.bluetooth.BluetoothAdapter;
+5:import android.bluetooth.BluetoothManager;
+18:public class BluetoothLowEnergy {
+23:    private static final String TAG = "BluetoothLowEnergy";
+25:    private BluetoothAdapter mBluetoothAdapter;
+26:    private BluetoothManager mBluetoothManager;
+33:    public static class Config {
+131:    private class Receiver extends BroadcastReceiver {
+137:            intentFilter.addAction(BluetoothLowEnergy.BLUETOOTH_DEVICE_ENABLED);
+138:            intentFilter.addAction(BluetoothLowEnergy.BLUETOOTH_DEVICE_DISABLED);
+139:            intentFilter.addAction(BluetoothLowEnergy.PERMISSION_GRANTED);
+140:            intentFilter.addAction(BluetoothLowEnergy.PERMISSION_DENIED);
+141:            BluetoothLowEnergy.this.mActivity.registerReceiver(this, intentFilter, 4);
+148:                BluetoothLowEnergy.this.mActivity.unregisterReceiver(this);
+159:            if (action.equals(BluetoothLowEnergy.BLUETOOTH_DEVICE_ENABLED)) {
+160:                Logger.m967d(BluetoothLowEnergy.TAG, "Bluetooth device enabled.");
+161:                BluetoothLowEnergy.this.requestPermission();
+164:            if (action.equals(BluetoothLowEnergy.BLUETOOTH_DEVICE_DISABLED)) {
+165:                Logger.m967d(BluetoothLowEnergy.TAG, "Bluetooth device disabled.");
+166:                BluetoothLowEnergy.this.mDeviceState = DeviceState.INACTIVATED;
+169:            if (!action.equals(BluetoothLowEnergy.PERMISSION_GRANTED)) {
+170:                if (action.equals(BluetoothLowEnergy.PERMISSION_DENIED)) {
+171:                    Logger.m967d(BluetoothLowEnergy.TAG, "Permission denied.");
+172:                    BluetoothLowEnergy.this.mDeviceState = DeviceState.INACTIVATED;
+177:            Logger.m967d(BluetoothLowEnergy.TAG, "Permission granted.");
+178:            if (BluetoothLowEnergy.this.initPeripheral() && BluetoothLowEnergy.this.initCentral()) {
+179:                BluetoothLowEnergy.this.mDeviceState = DeviceState.ACTIVATED;
+181:                Logger.m968e(BluetoothLowEnergy.TAG, "Failed to initialization.");
+182:                BluetoothLowEnergy.this.mDeviceState = DeviceState.INACTIVATED;
+187:    public BluetoothLowEnergy(Config config, Activity activity) throws IllegalArgumentException {
+200:        BluetoothManager bluetoothManager = (BluetoothManager) this.mActivity.getSystemService("bluetooth");
+201:        this.mBluetoothManager = bluetoothManager;
+207:        BluetoothAdapter adapter = this.mBluetoothManager.getAdapter();
+208:        this.mBluetoothAdapter = adapter;
+211:            enableBluetooth();
+218:    private void enableBluetooth() {
+222:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
+224:        this.mActivity.startActivity(intent);
+277:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
+279:        this.mActivity.startActivity(intent);
+283:        Receiver receiver = this.mReceiver;
+284:        if (receiver != null) {
+285:            receiver.destruct();
+306:    public List<BluetoothLowEnergySocket> getConnectionRequestedSocketList() {
+311:        return peripheral.getConnectionRequestedSocketList();
+314:    public List<BluetoothLowEnergySocket> getDetectedSocketList() {
+319:        return central.getDetectedSocketList();
+331:    public boolean startAdvertise() {
+336:        return peripheral.startAdvertise();
+339:    public boolean startScan() {
+344:        return central.startScan();
+347:    public boolean stopAdvertise() {
+352:        return peripheral.stopAdvertise();
+355:    public boolean stopScan() {
+360:        return central.stopScan();
+
+===== /tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergySocket.java =====
+8:public abstract class BluetoothLowEnergySocket implements Closeable {
+10:    public static class PeerInfo {
+86:    public boolean connect() {
+98:    public abstract byte[] recv();
+100:    public abstract boolean send(byte[] bArr);
+
+===== /tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java =====
+13:public class BluetoothSwitch extends Activity {
+19:    private static final String TAG = "ble/BluetoothSwitch";
+24:            sendBroadcast(new Intent(i2 == -1 ? "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_ENABLED" : "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_DISABLED"));
+34:            startActivityForResult(new Intent("android.bluetooth.adapter.action.REQUEST_ENABLE"), intExtra);
+61:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
+79:            sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
+106:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_DENIED"));
+109:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
+
+===== /tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java =====
+3:import android.bluetooth.BluetoothAdapter;
+4:import android.bluetooth.BluetoothDevice;
+5:import android.bluetooth.BluetoothGatt;
+6:import android.bluetooth.BluetoothGattCallback;
+7:import android.bluetooth.BluetoothGattCharacteristic;
+8:import android.bluetooth.BluetoothGattDescriptor;
+9:import android.bluetooth.BluetoothGattService;
+10:import android.bluetooth.BluetoothManager;
+11:import android.bluetooth.le.BluetoothLeScanner;
+37:import jp.konami.peerlink.ble.BluetoothLowEnergySocket;
+40:public class Central {
+51:    private BluetoothAdapter mBluetoothAdapter;
+52:    private BluetoothLeScanner mBluetoothLeScanner;
+53:    private BluetoothManager mBluetoothManager;
+60:    private static final AtomicLong mNextSocketObjectId = new AtomicLong();
+61:    private static final AtomicLong mNextSocketImplObjectId = new AtomicLong();
+64:    private final SocketMaps mSocketMaps = new SocketMaps();
+67:    public static class Config {
+157:    private static class ElapsedTime {
+178:    private static class PriorityQueueFifoEntry<T> implements Comparable<PriorityQueueFifoEntry<T>> {
+208:    private class Socket extends BluetoothLowEnergySocket {
+210:        private volatile SocketImpl mSocketImpl;
+212:        private class SocketImpl {
+217:            private final BluetoothDevice mBluetoothDevice;
+218:            private volatile BluetoothGatt mBluetoothGatt;
+219:            private final BluetoothGattCallback mBluetoothGattCallback;
+220:            private volatile BluetoothGattCharacteristic mDownlinkCharacteristic;
+223:            private volatile BluetoothLowEnergySocket.PeerInfo mPeerInfo;
+228:            private volatile BluetoothLowEnergySocket.State mState;
+229:            private volatile BluetoothGattCharacteristic mUplinkCharacteristic;
+231:            private class BluetoothGattCallbackImpl extends BluetoothGattCallback {
+232:                private BluetoothGattCallbackImpl() {
+236:                    synchronized (SocketImpl.this) {
+237:                        BluetoothGattService service = SocketImpl.this.mBluetoothGatt.getService(UUID.fromString(Central.this.mConfig.getServiceUuid()));
+238:                        SocketImpl socketImpl = SocketImpl.this;
+243:                        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(Central.this.mConfig.getPeripheralAdvertisementUuid()));
+244:                        SocketImpl socketImpl2 = SocketImpl.this;
+248:                            if (socketImpl2.mBluetoothGatt.readCharacteristic(characteristic)) {
+251:                            SocketImpl.this.abort();
+257:                    synchronized (SocketImpl.this) {
+258:                        BluetoothGattService service = SocketImpl.this.mBluetoothGatt.getService(UUID.fromString(Central.this.mConfig.getServiceUuid()));
+259:                        SocketImpl socketImpl = SocketImpl.this;
+264:                        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(Central.this.mConfig.getDownlinkUuid()));
+265:                        SocketImpl socketImpl2 = SocketImpl.this;
+270:                        if (!socketImpl2.mBluetoothGatt.setCharacteristicNotification(characteristic, true)) {
+271:                            SocketImpl.this.abort();
+274:                        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString(SocketImpl.CONFIG_UUID));
+276:                            SocketImpl.this.abort();
+279:                        boolean value = descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+280:                        SocketImpl socketImpl3 = SocketImpl.this;
+285:                        boolean zWriteDescriptor = socketImpl3.mBluetoothGatt.writeDescriptor(descriptor);
+286:                        SocketImpl socketImpl4 = SocketImpl.this;
+295:                @Override // android.bluetooth.BluetoothGattCallback
+296:                public void onCharacteristicChanged(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic bluetoothGattCharacteristic) {
+297:                    synchronized (SocketImpl.this) {
+298:                        if (!bluetoothGatt.equals(SocketImpl.this.mBluetoothGatt)) {
+299:                            Logger.m968e(Central.TAG, "Unknown error. (mBluetoothGatt = " + SocketImpl.this.mBluetoothGatt + ", gatt = " + bluetoothGatt + ")");
+302:                        if (SocketImpl.this.mState == BluetoothLowEnergySocket.State.ESTABLISHED) {
+303:                            if (SocketImpl.this.mDownlinkCharacteristic != null && bluetoothGattCharacteristic.getUuid().equals(SocketImpl.this.mDownlinkCharacteristic.getUuid())) {
+304:                                synchronized (SocketImpl.this.mRecvQueue) {
+305:                                    if (SocketImpl.this.mRecvQueue.size() >= 1000) {
+307:                                        SocketImpl.this.abort();
+309:                                    } else if (!SocketImpl.this.mRecvQueue.offer(bluetoothGattCharacteristic.getValue())) {
+310:                                        Logger.m968e(Central.TAG, "Failed to offer recv queue.");
+311:                                        SocketImpl.this.abort();
+316:                            SocketImpl.this.abort();
+321:                @Override // android.bluetooth.BluetoothGattCallback
+322:                public void onCharacteristicRead(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic bluetoothGattCharacteristic, int i) {
+323:                    synchronized (SocketImpl.this) {
+324:                        if (!bluetoothGatt.equals(SocketImpl.this.mBluetoothGatt)) {
+325:                            Logger.m968e(Central.TAG, "Unknown error. (mBluetoothGatt = " + SocketImpl.this.mBluetoothGatt + ", gatt = " + bluetoothGatt + ")");
+328:                        SocketImpl socketImpl = SocketImpl.this;
+333:                        if (socketImpl.mState == BluetoothLowEnergySocket.State.CONNECTING) {
+335:                                SocketImpl.this.abort();
+341:                                    SocketImpl.this.abort();
+344:                                BluetoothLowEnergySocket.PeerInfo peerInfo = new BluetoothLowEnergySocket.PeerInfo(advertisementHeader.getUuid(), advertisementHeader.getId(), advertisementHeader.getAttribute());
+345:                                if (SocketImpl.this.mPeerInfo != null && !SocketImpl.this.mPeerInfo.equals(peerInfo)) {
+347:                                    SocketImpl.this.abort();
+350:                                SocketImpl.this.mPeerInfo = peerInfo;
+351:                                Logger.m967d(Central.TAG, "Detected peripheral. (device = " + SocketImpl.this.mBluetoothDevice.toString() + ", uuid = " + SocketImpl.this.mPeerInfo.getUuid() + ", id = " + SocketImpl.this.mPeerInfo.getId() + ", attribute = " + SocketImpl.this.mPeerInfo.getAttribute().toString() + ")");
+352:                                boolean zIsRequestedConnection = Central.this.mSocketMaps.isRequestedConnection(SocketImpl.this.mPeerInfo.getUuid());
+353:                                SocketImpl socketImpl2 = SocketImpl.this;
+355:                                    if (Central.this.mSocketMaps.notifyDetected(SocketImpl.this.mBluetoothDevice, SocketImpl.this.mPeerInfo)) {
+356:                                        SocketImpl.this.close();
+360:                                        SocketImpl.this.abort();
+364:                                if (!Central.this.mSocketMaps.notifyConnected(Socket.this)) {
+365:                                    SocketImpl.this.abort();
+367:                                    Logger.m967d(Central.TAG, "Connected peripheral. (device = " + SocketImpl.this.mBluetoothDevice.toString() + ", uuid = " + SocketImpl.this.mPeerInfo.getUuid() + ", id = " + SocketImpl.this.mPeerInfo.getId() + ", attribute = " + SocketImpl.this.mPeerInfo.getAttribute().toString() + ")");
+373:                                SocketImpl.this.abort();
+379:                @Override // android.bluetooth.BluetoothGattCallback
+380:                public void onCharacteristicWrite(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic bluetoothGattCharacteristic, int i) {
+381:                    synchronized (SocketImpl.this) {
+382:                        if (!bluetoothGatt.equals(SocketImpl.this.mBluetoothGatt)) {
+383:                            Logger.m968e(Central.TAG, "Unknown error. (mBluetoothGatt = " + SocketImpl.this.mBluetoothGatt + ", gatt = " + bluetoothGatt + ")");
+386:                        SocketImpl socketImpl = SocketImpl.this;
+391:                        if (socketImpl.mState == BluetoothLowEnergySocket.State.CONNECTING) {
+393:                            SocketImpl socketImpl2 = SocketImpl.this;
+397:                                socketImpl2.mState = BluetoothLowEnergySocket.State.ESTABLISHED;
+398:                                Logger.m967d(Central.TAG, "Established peripheral. (device = " + SocketImpl.this.mBluetoothDevice.toString() + ", uuid = " + SocketImpl.this.mPeerInfo.getUuid() + ", id = " + SocketImpl.this.mPeerInfo.getId() + ", attribute = " + SocketImpl.this.mPeerInfo.getAttribute().toString() + ")");
+400:                        } else if (SocketImpl.this.mState == BluetoothLowEnergySocket.State.ESTABLISHED) {
+401:                            if (SocketImpl.this.mUplinkCharacteristic != null && bluetoothGattCharacteristic.getUuid().equals(SocketImpl.this.mUplinkCharacteristic.getUuid())) {
+402:                                SocketImpl.this.mSendingUplink.set(false);
+403:                                SocketImpl.this.requestSend();
+405:                            SocketImpl.this.abort();
+410:                @Override // android.bluetooth.BluetoothGattCallback
+411:                public void onConnectionStateChange(BluetoothGatt bluetoothGatt, int i, int i2) {
+413:                    synchronized (SocketImpl.this) {
+414:                        if (!bluetoothGatt.equals(SocketImpl.this.mBluetoothGatt)) {
+415:                            Logger.m968e(Central.TAG, "Unknown error. (mBluetoothGatt = " + SocketImpl.this.mBluetoothGatt.toString() + ", gatt = " + bluetoothGatt.toString() + ")");
+418:                        SocketImpl socketImpl = SocketImpl.this;
+427:                                    BluetoothLowEnergySocket.State state = SocketImpl.this.mState;
+428:                                    BluetoothLowEnergySocket.State state2 = BluetoothLowEnergySocket.State.CONNECTING;
+429:                                    SocketImpl socketImpl2 = SocketImpl.this;
+431:                                        if (!socketImpl2.mBluetoothGatt.requestConnectionPriority(1)) {
+432:                                            Logger.m968e(Central.TAG, "Failed to request connection priority.");
+434:                                        if (!SocketImpl.this.mBluetoothGatt.discoverServices()) {
+436:                                            SocketImpl.this.close();
+443:                                    SocketImpl.this.abort();
+446:                        } else if (SocketImpl.this.mState == BluetoothLowEnergySocket.State.CLOSING || SocketImpl.this.mState == BluetoothLowEnergySocket.State.CLOSED) {
+447:                            SocketImpl.this.mBluetoothGatt.close();
+448:                            SocketImpl.this.mState = BluetoothLowEnergySocket.State.CLOSED;
+450:                            SocketImpl.this.abort();
+455:                @Override // android.bluetooth.BluetoothGattCallback
+456:                public void onDescriptorWrite(BluetoothGatt bluetoothGatt, BluetoothGattDescriptor bluetoothGattDescriptor, int i) {
+457:                    synchronized (SocketImpl.this) {
+458:                        if (!bluetoothGatt.equals(SocketImpl.this.mBluetoothGatt)) {
+459:                            Logger.m968e(Central.TAG, "Unknown error. (mBluetoothGatt = " + SocketImpl.this.mBluetoothGatt + ", gatt = " + bluetoothGatt + ")");
+462:                        SocketImpl socketImpl = SocketImpl.this;
+467:                        if (socketImpl.mState == BluetoothLowEnergySocket.State.CONNECTING) {
+468:                            boolean zEquals = bluetoothGattDescriptor.getUuid().equals(UUID.fromString(SocketImpl.CONFIG_UUID));
+469:                            SocketImpl socketImpl2 = SocketImpl.this;
+474:                            BluetoothGattService service = socketImpl2.mBluetoothGatt.getService(UUID.fromString(Central.this.mConfig.getServiceUuid()));
+475:                            SocketImpl socketImpl3 = SocketImpl.this;
+480:                            BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(Central.this.mConfig.getUplinkUuid()));
+481:                            BluetoothGattCharacteristic characteristic2 = service.getCharacteristic(UUID.fromString(Central.this.mConfig.getCentralAdvertisementUuid()));
+485:                                    SocketImpl.this.abort();
+489:                                SocketImpl socketImpl4 = SocketImpl.this;
+494:                                boolean zWriteCharacteristic = socketImpl4.mBluetoothGatt.writeCharacteristic(characteristic2);
+495:                                SocketImpl socketImpl5 = SocketImpl.this;
+502:                            SocketImpl.this.abort();
+507:                @Override // android.bluetooth.BluetoothGattCallback
+508:                public void onMtuChanged(BluetoothGatt bluetoothGatt, int i, int i2) {
+509:                    synchronized (SocketImpl.this) {
+510:                        if (!bluetoothGatt.equals(SocketImpl.this.mBluetoothGatt)) {
+511:                            Logger.m968e(Central.TAG, "Unknown error. (mBluetoothGatt = " + SocketImpl.this.mBluetoothGatt + ", gatt = " + bluetoothGatt + ")");
+518:                                SocketImpl.this.mMtu = i - 3;
+519:                                Logger.m967d(Central.TAG, "Changed MTU. (mtu = " + SocketImpl.this.mMtu + ")");
+522:                        if (SocketImpl.this.mPeerInfo == null) {
+530:                @Override // android.bluetooth.BluetoothGattCallback
+531:                public void onServicesDiscovered(BluetoothGatt bluetoothGatt, int i) {
+532:                    synchronized (SocketImpl.this) {
+533:                        if (!bluetoothGatt.equals(SocketImpl.this.mBluetoothGatt)) {
+534:                            Logger.m968e(Central.TAG, "Unknown error. (mBluetoothGatt = " + SocketImpl.this.mBluetoothGatt + ", gatt = " + bluetoothGatt + ")");
+537:                        SocketImpl socketImpl = SocketImpl.this;
+542:                        BluetoothGattService service = socketImpl.mBluetoothGatt.getService(UUID.fromString(Central.this.mConfig.getServiceUuid()));
+543:                        SocketImpl socketImpl2 = SocketImpl.this;
+549:                            BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(Central.this.mConfig.getPeripheralAdvertisementUuid()));
+551:                                SocketImpl.this.abort();
+554:                            List<BluetoothGattDescriptor> descriptors = characteristic.getDescriptors();
+556:                                Iterator<BluetoothGattDescriptor> it = descriptors.iterator();
+561:                                    BluetoothLowEnergySocket.PeerInfo peerInfoFromDetected = Central.this.mSocketMaps.getPeerInfoFromDetected(it.next().getUuid());
+563:                                        SocketImpl.this.mPeerInfo = peerInfoFromDetected;
+564:                                        Logger.m967d(Central.TAG, "Detected peripheral. (device = " + SocketImpl.this.mBluetoothDevice.toString() + ", uuid = " + SocketImpl.this.mPeerInfo.getUuid() + ", id = " + SocketImpl.this.mPeerInfo.getId() + ", attribute = " + SocketImpl.this.mPeerInfo.getAttribute().toString() + ")");
+565:                                        boolean zIsRequestedConnection = Central.this.mSocketMaps.isRequestedConnection(SocketImpl.this.mPeerInfo.getUuid());
+566:                                        SocketImpl socketImpl3 = SocketImpl.this;
+568:                                            if (Central.this.mSocketMaps.notifyDetected(SocketImpl.this.mBluetoothDevice, SocketImpl.this.mPeerInfo)) {
+569:                                                SocketImpl.this.close();
+573:                                                SocketImpl.this.abort();
+577:                                        if (!Central.this.mSocketMaps.notifyConnected(Socket.this)) {
+578:                                            SocketImpl.this.abort();
+581:                                        Logger.m967d(Central.TAG, "Connected peripheral. (device = " + SocketImpl.this.mBluetoothDevice.toString() + ", uuid = " + SocketImpl.this.mPeerInfo.getUuid() + ", id = " + SocketImpl.this.mPeerInfo.getId() + ", attribute = " + SocketImpl.this.mPeerInfo.getAttribute().toString() + ")");
+585:                            SocketImpl.this.abort();
+588:                        if (!SocketImpl.this.mBluetoothGatt.requestMtu(512)) {
+590:                            if (SocketImpl.this.mPeerInfo == null) {
+600:            private SocketImpl(BluetoothDevice bluetoothDevice) {
+601:                this.mObjectId = Central.mNextSocketImplObjectId.getAndIncrement();
+606:                this.mState = BluetoothLowEnergySocket.State.OPEN;
+608:                this.mBluetoothGattCallback = new BluetoothGattCallbackImpl();
+610:                    this.mState = BluetoothLowEnergySocket.State.CLOSED;
+612:                this.mBluetoothDevice = bluetoothDevice;
+613:                this.mState = BluetoothLowEnergySocket.State.OPEN;
+616:            private SocketImpl(BluetoothDevice bluetoothDevice, BluetoothLowEnergySocket.PeerInfo peerInfo) {
+617:                this.mObjectId = Central.mNextSocketImplObjectId.getAndIncrement();
+622:                this.mState = BluetoothLowEnergySocket.State.OPEN;
+624:                this.mBluetoothGattCallback = new BluetoothGattCallbackImpl();
+626:                    this.mState = BluetoothLowEnergySocket.State.CLOSED;
+628:                this.mBluetoothDevice = bluetoothDevice;
+630:                this.mState = BluetoothLowEnergySocket.State.OPEN;
+646:                if (this.mBluetoothGatt != null) {
+647:                    this.mBluetoothGatt.disconnect();
+648:                    this.mBluetoothGatt.close();
+653:                this.mState = BluetoothLowEnergySocket.State.CLOSED;
+660:                    if (this.mState == BluetoothLowEnergySocket.State.CLOSED) {
+663:                    if (this.mBluetoothGatt == null) {
+671:                    this.mBluetoothGatt.disconnect();
+672:                    while (this.mState == BluetoothLowEnergySocket.State.CLOSING) {
+683:            private boolean internalEquals(SocketImpl socketImpl) {
+684:                BluetoothDevice bluetoothDevice = this.mBluetoothDevice;
+686:                    if (socketImpl.mBluetoothDevice != null) {
+689:                } else if (!bluetoothDevice.equals(socketImpl.mBluetoothDevice)) {
+692:                if (this.mBluetoothGatt == null) {
+693:                    if (socketImpl.mBluetoothGatt != null) {
+696:                } else if (!this.mBluetoothGatt.equals(socketImpl.mBluetoothGatt)) {
+760:                    if (this.mBluetoothGatt != null) {
+764:                    if (this.mState != BluetoothLowEnergySocket.State.CONNECTING) {
+771:                    this.mBluetoothGatt = this.mBluetoothDevice.connectGatt(Central.this.mContext, false, this.mBluetoothGattCallback);
+772:                    if (this.mBluetoothGatt == null) {
+778:                        while (this.mState == BluetoothLowEnergySocket.State.CONNECTING) {
+813:                        if (this.mBluetoothGatt.writeCharacteristic(this.mUplinkCharacteristic)) {
+823:                if (this.mState == BluetoothLowEnergySocket.State.CLOSED) {
+826:                if (this.mBluetoothGatt == null) {
+830:                this.mState = BluetoothLowEnergySocket.State.CLOSING;
+832:                    if (Central.this.mOperationQueue.offer(new PriorityQueueFifoEntry(2, new Runnable() { // from class: jp.konami.peerlink.ble.Central.Socket.SocketImpl.3
+835:                            SocketImpl.this.internalAbort();
+847:                if (this.mState != BluetoothLowEnergySocket.State.CLOSING && this.mState != BluetoothLowEnergySocket.State.CLOSED) {
+848:                    if (this.mBluetoothGatt == null) {
+852:                    this.mState = BluetoothLowEnergySocket.State.CLOSING;
+854:                        if (Central.this.mOperationQueue.offer(new PriorityQueueFifoEntry(1, new Runnable() { // from class: jp.konami.peerlink.ble.Central.Socket.SocketImpl.2
+857:                                SocketImpl.this.internalClose();
+869:            public synchronized boolean connect() {
+870:                if (this.mState == BluetoothLowEnergySocket.State.OPEN && this.mPeerInfo != null) {
+871:                    this.mState = BluetoothLowEnergySocket.State.CONNECTING;
+872:                    if (Central.this.mSocketMaps.requestConnection(Socket.this)) {
+875:                    this.mState = BluetoothLowEnergySocket.State.OPEN;
+894:                if (!(obj instanceof SocketImpl)) {
+897:                SocketImpl socketImpl = (SocketImpl) obj;
+919:            public BluetoothLowEnergySocket.PeerInfo getPeerInfo() {
+923:            public BluetoothLowEnergySocket.State getState() {
+928:                BluetoothGatt bluetoothGatt = this.mBluetoothGatt;
+929:                BluetoothGattCharacteristic bluetoothGattCharacteristic = this.mUplinkCharacteristic;
+930:                BluetoothGattCharacteristic bluetoothGattCharacteristic2 = this.mDownlinkCharacteristic;
+931:                BluetoothLowEnergySocket.PeerInfo peerInfo = this.mPeerInfo;
+936:                BluetoothLowEnergySocket.State state = this.mState;
+938:                BluetoothDevice bluetoothDevice = this.mBluetoothDevice;
+942:            public synchronized byte[] recv() {
+943:                if (this.mState != BluetoothLowEnergySocket.State.ESTABLISHED && this.mState != BluetoothLowEnergySocket.State.CLOSING) {
+950:                if (this.mState == BluetoothLowEnergySocket.State.OPEN && this.mPeerInfo == null) {
+951:                    this.mState = BluetoothLowEnergySocket.State.CONNECTING;
+953:                        if (Central.this.mOperationQueue.offer(new PriorityQueueFifoEntry(0, new Runnable() { // from class: jp.konami.peerlink.ble.Central.Socket.SocketImpl.1
+956:                                SocketImpl.this.internalScan();
+961:                        this.mState = BluetoothLowEnergySocket.State.OPEN;
+964:                        this.mState = BluetoothLowEnergySocket.State.OPEN;
+971:            public synchronized boolean send(byte[] bArr) {
+972:                if (this.mState != BluetoothLowEnergySocket.State.ESTABLISHED) {
+984:                        return this.mState == BluetoothLowEnergySocket.State.ESTABLISHED;
+991:        private Socket(BluetoothDevice bluetoothDevice) {
+992:            this.mObjectId = Central.mNextSocketObjectId.getAndIncrement();
+993:            this.mSocketImpl = new SocketImpl(bluetoothDevice);
+996:        private Socket(BluetoothDevice bluetoothDevice, BluetoothLowEnergySocket.PeerInfo peerInfo) {
+997:            this.mObjectId = Central.mNextSocketObjectId.getAndIncrement();
+998:            this.mSocketImpl = new SocketImpl(bluetoothDevice, peerInfo);
+1001:        private void internalSwap(Socket socket) {
+1002:            SocketImpl socketImpl = this.mSocketImpl;
+1003:            this.mSocketImpl = socket.mSocketImpl;
+1004:            socket.mSocketImpl = socketImpl;
+1007:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+1009:            this.mSocketImpl.abort();
+1012:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket, java.io.Closeable, java.lang.AutoCloseable
+1014:            this.mSocketImpl.close();
+1017:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+1018:        public boolean connect() {
+1019:            return this.mSocketImpl.connect();
+1022:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+1024:            this.mSocketImpl.destruct();
+1034:            if (!(obj instanceof Socket)) {
+1037:            SocketImpl socketImpl = this.mSocketImpl;
+1038:            SocketImpl socketImpl2 = ((Socket) obj).mSocketImpl;
+1042:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+1043:        public BluetoothLowEnergySocket.PeerInfo getPeerInfo() {
+1044:            return this.mSocketImpl.getPeerInfo();
+1047:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+1048:        public BluetoothLowEnergySocket.State getState() {
+1049:            return this.mSocketImpl.getState();
+1053:            SocketImpl socketImpl = this.mSocketImpl;
+1060:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+1061:        public byte[] recv() {
+1062:            return this.mSocketImpl.recv();
+1066:            return this.mSocketImpl.scan();
+1069:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+1070:        public boolean send(byte[] bArr) {
+1071:            return this.mSocketImpl.send(bArr);
+1074:        public void swap(Socket socket) {
+1096:    private class SocketMaps {
+1097:        private final ConcurrentMap<UUID, Socket> mConnectionMap;
+1098:        private final ConcurrentMap<UUID, DataWithTimeLimit<Socket>> mDetectedMap;
+1099:        private final ConcurrentMap<UUID, DataWithTimeLimit<Socket>> mRequestedConnectionMap;
+1100:        private final ConcurrentMap<BluetoothDevice, DataWithTimeLimit<Socket>> mScanningMap;
+1102:        private class DataWithTimeLimit<T> {
+1116:            public DataWithTimeLimit(SocketMaps socketMaps, long j, T t) {
+1138:        private SocketMaps() {
+1146:            Socket data;
+1147:            Socket data2;
+1148:            Socket data3;
+1149:            Iterator<Map.Entry<BluetoothDevice, DataWithTimeLimit<Socket>>> it = this.mScanningMap.entrySet().iterator();
+1151:                DataWithTimeLimit<Socket> value = it.next().getValue();
+1159:            Iterator<Map.Entry<UUID, DataWithTimeLimit<Socket>>> it2 = this.mDetectedMap.entrySet().iterator();
+1161:                DataWithTimeLimit<Socket> value2 = it2.next().getValue();
+1169:            Iterator<Map.Entry<UUID, DataWithTimeLimit<Socket>>> it3 = this.mRequestedConnectionMap.entrySet().iterator();
+1171:                DataWithTimeLimit<Socket> value3 = it3.next().getValue();
+1179:            Iterator<Map.Entry<UUID, Socket>> it4 = this.mConnectionMap.entrySet().iterator();
+1181:                Socket value4 = it4.next().getValue();
+1191:        private Socket getConnectionIfActivated(UUID uuid) {
+1192:            Socket socket = this.mConnectionMap.get(uuid);
+1199:        private DataWithTimeLimit<Socket> getDetectedIfActivated(UUID uuid) {
+1200:            DataWithTimeLimit<Socket> dataWithTimeLimit = this.mDetectedMap.get(uuid);
+1207:        private DataWithTimeLimit<Socket> getRequestedConnectionIfActivated(UUID uuid) {
+1208:            DataWithTimeLimit<Socket> dataWithTimeLimit = this.mRequestedConnectionMap.get(uuid);
+1215:        private DataWithTimeLimit<Socket> getScanningIfActivated(BluetoothDevice bluetoothDevice) {
+1216:            DataWithTimeLimit<Socket> dataWithTimeLimit = this.mScanningMap.get(bluetoothDevice);
+1223:        private boolean isConnectionActivated(Socket socket) {
+1227:            BluetoothLowEnergySocket.State state = socket.getState();
+1228:            return state == BluetoothLowEnergySocket.State.CONNECTING || state == BluetoothLowEnergySocket.State.ESTABLISHED || state == BluetoothLowEnergySocket.State.CLOSING;
+1231:        private boolean isDetectedActivated(DataWithTimeLimit<Socket> dataWithTimeLimit) {
+1232:            Socket data;
+1236:            BluetoothLowEnergySocket.State state = data.getState();
+1237:            if (state != BluetoothLowEnergySocket.State.CONNECTING) {
+1238:                return state == BluetoothLowEnergySocket.State.OPEN && !dataWithTimeLimit.isExpired();
+1243:        private boolean isRequestedConnectionActivated(DataWithTimeLimit<Socket> dataWithTimeLimit) {
+1244:            Socket data;
+1248:            BluetoothLowEnergySocket.State state = data.getState();
+1249:            if (state != BluetoothLowEnergySocket.State.ESTABLISHED) {
+1250:                return state == BluetoothLowEnergySocket.State.CONNECTING && !dataWithTimeLimit.isExpired();
+1255:        private boolean isScanningActivated(DataWithTimeLimit<Socket> dataWithTimeLimit) {
+1256:            Socket data;
+1257:            return (dataWithTimeLimit == null || (data = dataWithTimeLimit.getData()) == null || data.getState() != BluetoothLowEnergySocket.State.CONNECTING || dataWithTimeLimit.isExpired()) ? false : true;
+1264:        public List<BluetoothLowEnergySocket> getDetectedSocketList() {
+1265:            Socket data;
+1271:            for (DataWithTimeLimit<Socket> dataWithTimeLimit : this.mDetectedMap.values()) {
+1282:        public BluetoothLowEnergySocket.PeerInfo getPeerInfoFromDetected(UUID uuid) {
+1283:            Socket data;
+1284:            DataWithTimeLimit<Socket> detectedIfActivated = getDetectedIfActivated(uuid);
+1295:        public boolean isScanning(BluetoothDevice bluetoothDevice) {
+1299:        public boolean notifyConnected(Socket socket) {
+1300:            BluetoothLowEnergySocket.PeerInfo peerInfo = socket.getPeerInfo();
+1306:                DataWithTimeLimit<Socket> requestedConnectionIfActivated = getRequestedConnectionIfActivated(uuid);
+1310:                Socket data = requestedConnectionIfActivated.getData();
+1314:                if (socket.mSocketImpl != null && this.mScanningMap.remove(socket.mSocketImpl.mBluetoothDevice) != null) {
+1325:        public synchronized boolean notifyDetected(BluetoothDevice bluetoothDevice, BluetoothLowEnergySocket.PeerInfo peerInfo) throws Throwable {
+1334:                    Socket socket = new Socket(bluetoothDevice, peerInfo);
+1335:                    if (socket.getState() != BluetoothLowEnergySocket.State.OPEN) {
+1349:        public boolean notifyStartedScan(BluetoothDevice bluetoothDevice, Socket socket) {
+1353:        public boolean requestConnection(Socket socket) {
+1354:            BluetoothLowEnergySocket.PeerInfo peerInfo = socket.getPeerInfo();
+1381:            Iterator<Map.Entry<UUID, DataWithTimeLimit<Socket>>> it = this.mDetectedMap.entrySet().iterator();
+1427:                            Central.this.mSocketMaps.updateDetectedTimer();
+1430:                        Central.this.mSocketMaps.update();
+1452:                Logger.m968e(Central.TAG, "Failed to start scan. (errorCode = " + i + ")");
+1459:                BluetoothDevice device = scanResult.getDevice();
+1460:                if (Central.this.mSocketMaps.isScanning(device)) {
+1466:                        Socket socket = new Socket(device);
+1468:                            if (Central.this.mSocketMaps.notifyStartedScan(device, socket)) {
+1492:        BluetoothManager bluetoothManager = (BluetoothManager) this.mContext.getSystemService("bluetooth");
+1493:        this.mBluetoothManager = bluetoothManager;
+1498:        BluetoothAdapter adapter = bluetoothManager.getAdapter();
+1499:        this.mBluetoothAdapter = adapter;
+1504:        BluetoothLeScanner bluetoothLeScanner = this.mBluetoothAdapter.getBluetoothLeScanner();
+1505:        this.mBluetoothLeScanner = bluetoothLeScanner;
+1509:            thread.start();
+1519:        this.mBluetoothLeScanner.startScan(Arrays.asList(new ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(this.mConfig.getServiceUuid())).build()), new ScanSettings.Builder().setScanMode(2).build(), this.mScanCallback);
+1528:        this.mBluetoothLeScanner.stopScan(this.mScanCallback);
+1539:        if (!stopScan()) {
+1545:    public List<BluetoothLowEnergySocket> getDetectedSocketList() {
+1546:        return this.mSocketMaps.getDetectedSocketList();
+1557:    public boolean startScan() {
+1558:        if (this.mBluetoothLeScanner == null || this.mState != State.ACTIVATED || this.mScanState != ScanState.INACTIVATED) {
+1561:        this.mSocketMaps.clearDetected();
+1566:    public boolean stopScan() {
+1567:        if (this.mBluetoothLeScanner == null || this.mState != State.ACTIVATED || this.mScanState != ScanState.ACTIVATED) {
+1571:        this.mSocketMaps.clearDetected();
+
+===== /tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java =====
+3:import android.bluetooth.BluetoothAdapter;
+4:import android.bluetooth.BluetoothDevice;
+5:import android.bluetooth.BluetoothGattCharacteristic;
+6:import android.bluetooth.BluetoothGattDescriptor;
+7:import android.bluetooth.BluetoothGattServer;
+8:import android.bluetooth.BluetoothGattServerCallback;
+9:import android.bluetooth.BluetoothGattService;
+10:import android.bluetooth.BluetoothManager;
+14:import android.bluetooth.le.BluetoothLeAdvertiser;
+29:import jp.konami.peerlink.ble.BluetoothLowEnergySocket;
+32:public class Peripheral {
+38:    private BluetoothAdapter mBluetoothAdapter;
+39:    private BluetoothGattServer mBluetoothGattServer;
+40:    private final BluetoothGattServerCallback mBluetoothGattServerCallback;
+41:    private BluetoothLeAdvertiser mBluetoothLeAdvertiser;
+42:    private BluetoothManager mBluetoothManager;
+46:    private final Map<BluetoothDevice, Socket> mSocketMap;
+57:    public static class Config {
+147:    private class Sender {
+149:        private BluetoothGattCharacteristic mDownlinkCharacteristic;
+153:        private class SendData {
+154:            private BluetoothDevice mBluetoothDevice;
+157:            public SendData(BluetoothDevice bluetoothDevice, byte[] bArr) {
+158:                this.mBluetoothDevice = bluetoothDevice;
+162:            public BluetoothDevice getBluetoothDevice() {
+163:                return this.mBluetoothDevice;
+171:        public Sender(BluetoothGattCharacteristic bluetoothGattCharacteristic) {
+176:        public void onNotificationSent(BluetoothDevice bluetoothDevice, int i) {
+184:        public boolean push(BluetoothDevice bluetoothDevice, byte[] bArr) {
+197:            SendData sendDataPoll;
+198:            if (Peripheral.this.mBluetoothGattServer == null || this.mDownlinkCharacteristic == null) {
+204:                        sendDataPoll = this.mSendQueue.poll();
+208:                    if (sendDataPoll == null) {
+211:                    BluetoothDevice bluetoothDevice = sendDataPoll.getBluetoothDevice();
+216:                    byte[] data = sendDataPoll.getData();
+227:                    if (peripheral.mBluetoothGattServer.notifyCharacteristicChanged(bluetoothDevice, this.mDownlinkCharacteristic, false)) {
+237:    private class Socket extends BluetoothLowEnergySocket {
+239:        private BluetoothDevice mBluetoothDevice;
+242:        private BluetoothLowEnergySocket.PeerInfo mPeerInfo;
+244:        private BluetoothLowEnergySocket.State mState;
+247:        private class PreparedWriteBuffer {
+307:        private Socket(BluetoothDevice bluetoothDevice) {
+312:            this.mState = BluetoothLowEnergySocket.State.OPEN;
+314:                this.mState = BluetoothLowEnergySocket.State.CLOSED;
+316:            this.mBluetoothDevice = bluetoothDevice;
+317:            this.mState = BluetoothLowEnergySocket.State.OPEN;
+321:        public void onCharacteristicReadRequest(BluetoothDevice bluetoothDevice, int i, int i2, BluetoothGattCharacteristic bluetoothGattCharacteristic) {
+322:            if (!bluetoothDevice.equals(this.mBluetoothDevice)) {
+325:            } else if (this.mState != BluetoothLowEnergySocket.State.OPEN) {
+326:                if (!Peripheral.this.mBluetoothGattServer.sendResponse(bluetoothDevice, i, 257, i2, null)) {
+331:                if (!bluetoothGattCharacteristic.getUuid().equals(UUID.fromString(Peripheral.this.mConfig.getPeripheralAdvertisementUuid())) || Peripheral.this.mBluetoothGattServer.sendResponse(bluetoothDevice, i, 0, i2, bluetoothGattCharacteristic.getValue())) {
+340:        public void onCharacteristicWriteRequest(BluetoothDevice bluetoothDevice, int i, BluetoothGattCharacteristic bluetoothGattCharacteristic, boolean z, boolean z2, int i2, byte[] bArr) {
+341:            BluetoothDevice bluetoothDevice2;
+346:            if (!bluetoothDevice.equals(this.mBluetoothDevice)) {
+351:            if (this.mState != BluetoothLowEnergySocket.State.OPEN) {
+355:                if ((this.mState == BluetoothLowEnergySocket.State.CONNECTING || this.mState == BluetoothLowEnergySocket.State.ESTABLISHED) && bluetoothGattCharacteristic.getUuid().equals(UUID.fromString(Peripheral.this.mConfig.getUplinkUuid()))) {
+356:                    if (z2 && !Peripheral.this.mBluetoothGattServer.sendResponse(bluetoothDevice2, i3, 0, i4, null)) {
+378:                            Logger.m968e(Peripheral.TAG, "Failed to offer recv queue.");
+389:                        if (!Peripheral.this.mBluetoothGattServer.sendResponse(bluetoothDevice, i5, 0, i6, null)) {
+412:                            this.mPeerInfo = new BluetoothLowEnergySocket.PeerInfo(advertisementHeader.getUuid(), advertisementHeader.getId(), advertisementHeader.getAttribute());
+413:                            this.mState = BluetoothLowEnergySocket.State.CONNECTING;
+427:            if (!Peripheral.this.mBluetoothGattServer.sendResponse(bluetoothDevice2, i3, 257, i4, null)) {
+434:        public void onDescriptorReadRequest(BluetoothDevice bluetoothDevice, int i, int i2, BluetoothGattDescriptor bluetoothGattDescriptor) {
+439:        public void onDescriptorWriteRequest(BluetoothDevice bluetoothDevice, int i, BluetoothGattDescriptor bluetoothGattDescriptor, boolean z, boolean z2, int i2, byte[] bArr) {
+440:            if (!bluetoothDevice.equals(this.mBluetoothDevice)) {
+445:            if (this.mState != BluetoothLowEnergySocket.State.OPEN) {
+452:                if (!z2 || Peripheral.this.mBluetoothGattServer.sendResponse(bluetoothDevice, i, 0, i2, null)) {
+461:        public void onExecuteWrite(BluetoothDevice bluetoothDevice, int i, boolean z) {
+462:            if (!bluetoothDevice.equals(this.mBluetoothDevice)) {
+467:            if (this.mState == BluetoothLowEnergySocket.State.OPEN) {
+480:                            this.mPeerInfo = new BluetoothLowEnergySocket.PeerInfo(advertisementHeader.getUuid(), advertisementHeader.getId(), advertisementHeader.getAttribute());
+481:                            this.mState = BluetoothLowEnergySocket.State.CONNECTING;
+493:            if (this.mState == BluetoothLowEnergySocket.State.CONNECTING || this.mState == BluetoothLowEnergySocket.State.ESTABLISHED) {
+506:                            Logger.m968e(Peripheral.TAG, "Failed to offer recv queue.");
+517:        public void onMtuChanged(BluetoothDevice bluetoothDevice, int i) {
+518:            if (bluetoothDevice.equals(this.mBluetoothDevice)) {
+527:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+529:            if (Peripheral.this.mBluetoothGattServer != null && this.mBluetoothDevice != null) {
+530:                Peripheral.this.mBluetoothGattServer.cancelConnection(this.mBluetoothDevice);
+532:            this.mState = BluetoothLowEnergySocket.State.CLOSED;
+535:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+537:            if (this.mState != BluetoothLowEnergySocket.State.CONNECTING) {
+540:            this.mState = BluetoothLowEnergySocket.State.ESTABLISHED;
+544:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket, java.io.Closeable, java.lang.AutoCloseable
+546:            if (this.mState == BluetoothLowEnergySocket.State.CLOSING || this.mState == BluetoothLowEnergySocket.State.CLOSED) {
+549:            if (Peripheral.this.mBluetoothGattServer == null || this.mBluetoothDevice == null) {
+552:                Peripheral.this.mBluetoothGattServer.cancelConnection(this.mBluetoothDevice);
+553:                this.mState = BluetoothLowEnergySocket.State.CLOSING;
+557:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+566:            if (!(obj instanceof Socket)) {
+569:            Socket socket = (Socket) obj;
+570:            BluetoothDevice bluetoothDevice = this.mBluetoothDevice;
+571:            if (bluetoothDevice != null ? bluetoothDevice.equals(socket.mBluetoothDevice) : socket.mBluetoothDevice == null) {
+572:                BluetoothLowEnergySocket.PeerInfo peerInfo = this.mPeerInfo;
+581:                                    BluetoothLowEnergySocket.State state = this.mState;
+582:                                    BluetoothLowEnergySocket.State state2 = socket.mState;
+599:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+600:        public BluetoothLowEnergySocket.PeerInfo getPeerInfo() {
+604:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+605:        public BluetoothLowEnergySocket.State getState() {
+610:            BluetoothDevice bluetoothDevice = this.mBluetoothDevice;
+612:            BluetoothLowEnergySocket.PeerInfo peerInfo = this.mPeerInfo;
+620:            BluetoothLowEnergySocket.State state = this.mState;
+624:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+625:        public byte[] recv() {
+626:            if (this.mState != BluetoothLowEnergySocket.State.ESTABLISHED) {
+632:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+633:        public boolean send(byte[] bArr) {
+634:            if (this.mState != BluetoothLowEnergySocket.State.ESTABLISHED || bArr.length == 0 || bArr.length > this.mMtu || Peripheral.this.mSender == null || !Peripheral.this.mSender.push(this.mBluetoothDevice, bArr)) {
+656:        this.mSocketMap = new ConcurrentHashMap();
+660:                Logger.m968e(Peripheral.TAG, "Failed to start advertise. (errorCode = " + i + ")");
+666:                Logger.m968e(Peripheral.TAG, "Succeed in start advertise. (settingsInEffect = " + advertiseSettings.toString() + ")");
+670:        BluetoothGattServerCallback bluetoothGattServerCallback = new BluetoothGattServerCallback() { // from class: jp.konami.peerlink.ble.Peripheral.2
+671:            @Override // android.bluetooth.BluetoothGattServerCallback
+672:            public void onCharacteristicReadRequest(BluetoothDevice bluetoothDevice, int i, int i2, BluetoothGattCharacteristic bluetoothGattCharacteristic) {
+673:                if (Peripheral.this.mBluetoothGattServer == null) {
+677:                Socket socket = (Socket) Peripheral.this.mSocketMap.get(bluetoothDevice);
+685:            @Override // android.bluetooth.BluetoothGattServerCallback
+686:            public void onCharacteristicWriteRequest(BluetoothDevice bluetoothDevice, int i, BluetoothGattCharacteristic bluetoothGattCharacteristic, boolean z, boolean z2, int i2, byte[] bArr) {
+687:                if (Peripheral.this.mBluetoothGattServer == null) {
+691:                Socket socket = (Socket) Peripheral.this.mSocketMap.get(bluetoothDevice);
+699:            @Override // android.bluetooth.BluetoothGattServerCallback
+700:            public void onConnectionStateChange(BluetoothDevice bluetoothDevice, int i, int i2) {
+701:                if (Peripheral.this.mBluetoothGattServer == null) {
+710:                    Peripheral.this.unregisterSocket(bluetoothDevice);
+711:                } else if (i2 == 2 && !Peripheral.this.registerSocket(bluetoothDevice)) {
+716:            @Override // android.bluetooth.BluetoothGattServerCallback
+717:            public void onDescriptorReadRequest(BluetoothDevice bluetoothDevice, int i, int i2, BluetoothGattDescriptor bluetoothGattDescriptor) {
+718:                if (Peripheral.this.mBluetoothGattServer == null) {
+722:                Socket socket = (Socket) Peripheral.this.mSocketMap.get(bluetoothDevice);
+730:            @Override // android.bluetooth.BluetoothGattServerCallback
+731:            public void onDescriptorWriteRequest(BluetoothDevice bluetoothDevice, int i, BluetoothGattDescriptor bluetoothGattDescriptor, boolean z, boolean z2, int i2, byte[] bArr) {
+732:                if (Peripheral.this.mBluetoothGattServer == null) {
+736:                Socket socket = (Socket) Peripheral.this.mSocketMap.get(bluetoothDevice);
+744:            @Override // android.bluetooth.BluetoothGattServerCallback
+745:            public void onExecuteWrite(BluetoothDevice bluetoothDevice, int i, boolean z) {
+746:                if (Peripheral.this.mBluetoothGattServer == null) {
+750:                Socket socket = (Socket) Peripheral.this.mSocketMap.get(bluetoothDevice);
+758:            @Override // android.bluetooth.BluetoothGattServerCallback
+759:            public void onMtuChanged(BluetoothDevice bluetoothDevice, int i) {
+760:                if (Peripheral.this.mBluetoothGattServer == null) {
+764:                Socket socket = (Socket) Peripheral.this.mSocketMap.get(bluetoothDevice);
+772:            @Override // android.bluetooth.BluetoothGattServerCallback
+773:            public void onNotificationSent(BluetoothDevice bluetoothDevice, int i) {
+774:                if (Peripheral.this.mBluetoothGattServer == null) {
+783:            @Override // android.bluetooth.BluetoothGattServerCallback
+784:            public void onServiceAdded(int i, BluetoothGattService bluetoothGattService) {
+785:                if (Peripheral.this.mBluetoothGattServer == null) {
+792:        this.mBluetoothGattServerCallback = bluetoothGattServerCallback;
+803:        BluetoothManager bluetoothManager = (BluetoothManager) this.mContext.getSystemService("bluetooth");
+804:        this.mBluetoothManager = bluetoothManager;
+809:        BluetoothAdapter adapter = bluetoothManager.getAdapter();
+810:        this.mBluetoothAdapter = adapter;
+815:        if (!isCapableToAdvertise(this.mBluetoothAdapter)) {
+820:        BluetoothLeAdvertiser bluetoothLeAdvertiser = this.mBluetoothAdapter.getBluetoothLeAdvertiser();
+821:        this.mBluetoothLeAdvertiser = bluetoothLeAdvertiser;
+826:        BluetoothGattService bluetoothGattService = new BluetoothGattService(UUID.fromString(this.mConfig.getServiceUuid()), 0);
+827:        BluetoothGattCharacteristic bluetoothGattCharacteristic = new BluetoothGattCharacteristic(UUID.fromString(this.mConfig.getPeripheralAdvertisementUuid()), 2, 1);
+828:        BluetoothGattCharacteristic bluetoothGattCharacteristic2 = new BluetoothGattCharacteristic(UUID.fromString(this.mConfig.getCentralAdvertisementUuid()), 8, 16);
+829:        BluetoothGattCharacteristic bluetoothGattCharacteristic3 = new BluetoothGattCharacteristic(UUID.fromString(this.mConfig.getUplinkUuid()), 4, 16);
+830:        BluetoothGattCharacteristic bluetoothGattCharacteristic4 = new BluetoothGattCharacteristic(UUID.fromString(this.mConfig.getDownlinkUuid()), 16, 1);
+831:        BluetoothGattDescriptor bluetoothGattDescriptor = new BluetoothGattDescriptor(uuidRandomUUID, 0);
+832:        BluetoothGattDescriptor bluetoothGattDescriptor2 = new BluetoothGattDescriptor(UUID.fromString(CONFIG_UUID), 16);
+846:        BluetoothGattServer bluetoothGattServerOpenGattServer = this.mBluetoothManager.openGattServer(this.mContext, bluetoothGattServerCallback);
+847:        this.mBluetoothGattServer = bluetoothGattServerOpenGattServer;
+859:    public void abort(BluetoothDevice bluetoothDevice) {
+863:        BluetoothGattServer bluetoothGattServer = this.mBluetoothGattServer;
+867:        this.mSocketMap.remove(bluetoothDevice);
+870:    private static boolean isCapableToAdvertise(BluetoothAdapter bluetoothAdapter) {
+871:        return bluetoothAdapter != null && bluetoothAdapter.getBluetoothLeAdvertiser() != null && bluetoothAdapter.isMultipleAdvertisementSupported() && bluetoothAdapter.isOffloadedFilteringSupported() && bluetoothAdapter.isOffloadedScanBatchingSupported();
+875:    public boolean registerSocket(BluetoothDevice bluetoothDevice) {
+879:        synchronized (this.mSocketMap) {
+880:            if (this.mSocketMap.containsKey(bluetoothDevice)) {
+883:            Socket socket = new Socket(bluetoothDevice);
+884:            if (socket.getState() == BluetoothLowEnergySocket.State.CLOSED) {
+887:            this.mSocketMap.put(bluetoothDevice, socket);
+893:    public boolean unregisterSocket(BluetoothDevice bluetoothDevice) {
+897:        synchronized (this.mSocketMap) {
+898:            if (!this.mSocketMap.containsKey(bluetoothDevice)) {
+901:            Socket socketRemove = this.mSocketMap.remove(bluetoothDevice);
+911:        if (!stopAdvertise()) {
+914:        Iterator<Map.Entry<BluetoothDevice, Socket>> it = this.mSocketMap.entrySet().iterator();
+916:            Map.Entry<BluetoothDevice, Socket> next = it.next();
+917:            BluetoothDevice key = next.getKey();
+921:            Socket value = next.getValue();
+927:        BluetoothGattServer bluetoothGattServer = this.mBluetoothGattServer;
+930:            this.mBluetoothGattServer.close();
+939:    public List<BluetoothLowEnergySocket> getConnectionRequestedSocketList() {
+940:        if (this.mSocketMap.isEmpty()) {
+944:        for (Socket socket : this.mSocketMap.values()) {
+945:            if (socket != null && socket.getState() == BluetoothLowEnergySocket.State.CONNECTING) {
+959:    public boolean startAdvertise() {
+960:        if (this.mBluetoothLeAdvertiser == null || this.mState != State.ACTIVATED || this.mAdvertiseState != AdvertiseState.INACTIVATED) {
+963:        this.mBluetoothLeAdvertiser.startAdvertising(new AdvertiseSettings.Builder().setAdvertiseMode(2).setConnectable(true).setTimeout(0).setTxPowerLevel(3).build(), new AdvertiseData.Builder().addServiceUuid(new ParcelUuid(UUID.fromString(this.mConfig.getServiceUuid()))).build(), this.mAdvertiseCallback);
+968:    public boolean stopAdvertise() {
+969:        if (this.mBluetoothLeAdvertiser == null || this.mState != State.ACTIVATED || this.mAdvertiseState != AdvertiseState.ACTIVATED) {
+972:        this.mBluetoothLeAdvertiser.stopAdvertising(this.mAdvertiseCallback);
+
+===== /tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java =====
+5:import android.bluetooth.BluetoothAdapter;
+6:import android.bluetooth.BluetoothDevice;
+7:import android.bluetooth.BluetoothServerSocket;
+8:import android.bluetooth.BluetoothSocket;
+47:public class BluetoothClassic {
+61:    private static final String TAG = "BluetoothClassic";
+71:    private BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+72:    private DiscoveryState mDiscoveryState = DiscoveryState.INACTIVATED;
+76:    private class AdvertiseThread extends Thread {
+77:        private BluetoothServerSocket mSocket;
+80:            this.mSocket = BluetoothClassic.this.mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(BluetoothClassic.this.mConfig.getServiceId(), UUID.fromString(BluetoothClassic.this.mConfig.getControlConnectionUuid()));
+85:                this.mSocket.close();
+88:                Logger.m968e(BluetoothClassic.TAG, "Failed to close.");
+89:                this.mSocket = null;
+91:                this.mSocket = null;
+101:            BluetoothSocket bluetoothSocketAccept;
+103:                bluetoothSocketAccept = null;
+106:                        bluetoothSocketAccept = this.mSocket.accept();
+110:                                bluetoothSocketAccept.close();
+112:                                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+119:                    Logger.m968e(BluetoothClassic.TAG, "Advertise failed.");
+125:                    Logger.m968e(BluetoothClassic.TAG, "Advertise failed.");
+130:                if (bluetoothSocketAccept == null) {
+133:                DatagramBluetoothSocket datagramBluetoothSocket = BluetoothClassic.this.new DatagramBluetoothSocket(bluetoothSocketAccept);
+134:                Logger.m967d(BluetoothClassic.TAG, "Control connection accepted: " + datagramBluetoothSocket.getRemoteDevice().toString());
+135:                if (BluetoothClassic.this.sendAdvertise(datagramBluetoothSocket)) {
+138:                        if (!datagramBluetoothSocket.isConnected()) {
+141:                        if (System.currentTimeMillis() - jCurrentTimeMillis >= BluetoothClassic.this.mConfig.getAdvertiseTimeoutMs()) {
+142:                            Logger.m968e(BluetoothClassic.TAG, "Advertise timedout.");
+145:                        Thread.sleep(BluetoothClassic.this.mConfig.getAdvertiseTimeoutMs() < 100 ? BluetoothClassic.this.mConfig.getAdvertiseTimeoutMs() : 100L);
+148:                if (bluetoothSocketAccept != null) {
+150:                        bluetoothSocketAccept.close();
+152:                        Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+157:            if (bluetoothSocketAccept == null) {
+161:                bluetoothSocketAccept.close();
+163:                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+169:    public static class Config {
+239:    private class ConnectThread extends Thread {
+240:        private BluetoothSocket mSocket;
+242:        public ConnectThread(BluetoothDevice bluetoothDevice) throws IOException, IllegalArgumentException {
+246:            this.mSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(BluetoothClassic.this.mConfig.getDataConnectionUuid()));
+251:                BluetoothSocket bluetoothSocket = this.mSocket;
+252:                if (bluetoothSocket != null) {
+253:                    bluetoothSocket.close();
+257:                Logger.m968e(BluetoothClassic.TAG, "Failed to close.");
+258:                this.mSocket = null;
+260:                this.mSocket = null;
+270:            if (BluetoothClassic.this.mBluetoothAdapter.isDiscovering()) {
+271:                Logger.m968e(BluetoothClassic.TAG, "Can not connect in discovering.");
+275:                this.mSocket.connect();
+276:                DatagramBluetoothSocket datagramBluetoothSocket = BluetoothClassic.this.new DatagramBluetoothSocket(this.mSocket);
+277:                Logger.m967d(BluetoothClassic.TAG, "Connected to " + datagramBluetoothSocket.getRemoteDevice().toString());
+278:                if (!BluetoothClassic.this.sendAdvertise(datagramBluetoothSocket)) {
+279:                    Logger.m968e(BluetoothClassic.TAG, "Failed to send advertise.");
+280:                    datagramBluetoothSocket.close();
+282:                    BluetoothClassic.this.mConnectionThreadController = BluetoothClassic.this.new ConnectionThreadController(datagramBluetoothSocket);
+283:                    BluetoothClassic.this.mConnectionThreadController.start();
+286:                Logger.m968e(BluetoothClassic.TAG, "Connect failed.");
+289:                    this.mSocket.close();
+291:                    Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+305:    private class ConnectionThreadController {
+308:        private DatagramBluetoothSocket mSocket;
+312:        private class RecvThread extends Thread {
+314:            private DatagramBluetoothSocket mSocket;
+316:            public RecvThread(DatagramBluetoothSocket datagramBluetoothSocket, Queue<byte[]> queue) throws IllegalArgumentException {
+317:                if (datagramBluetoothSocket == null || !datagramBluetoothSocket.isConnected()) {
+323:                    Logger.m968e(BluetoothClassic.TAG, "Failed to set priority.");
+325:                this.mSocket = datagramBluetoothSocket;
+336:                    while (this.mSocket.isConnected()) {
+338:                            if (this.mRecvQueue.size() >= 100 || (bArrRecv = this.mSocket.recv()) == null || bArrRecv.length == 0) {
+349:                    this.mSocket.close();
+354:                    this.mSocket.close();
+363:        private class SendThread extends Thread {
+365:            private DatagramBluetoothSocket mSocket;
+367:            public SendThread(DatagramBluetoothSocket datagramBluetoothSocket, BlockingQueue<byte[]> blockingQueue) throws IllegalArgumentException {
+368:                if (datagramBluetoothSocket == null || !datagramBluetoothSocket.isConnected()) {
+374:                    Logger.m968e(BluetoothClassic.TAG, "Failed to set priority.");
+376:                this.mSocket = datagramBluetoothSocket;
+382:                DatagramBluetoothSocket datagramBluetoothSocket;
+387:                            boolean zIsConnected = this.mSocket.isConnected();
+388:                            datagramBluetoothSocket = this.mSocket;
+391:                            } else if (!datagramBluetoothSocket.send(this.mSendQueue.take())) {
+392:                                Logger.m968e(BluetoothClassic.TAG, "Failed to send.");
+395:                        datagramBluetoothSocket.close();
+398:                        this.mSocket.close();
+402:                    this.mSocket.close();
+409:        public ConnectionThreadController(DatagramBluetoothSocket datagramBluetoothSocket) throws IllegalArgumentException {
+410:            this.mSocket = datagramBluetoothSocket;
+411:            this.mSendThread = new SendThread(this.mSocket, this.mSendQueue);
+412:            this.mRecvThread = new RecvThread(this.mSocket, this.mRecvQueue);
+417:                DatagramBluetoothSocket datagramBluetoothSocket = this.mSocket;
+418:                if (datagramBluetoothSocket != null) {
+419:                    datagramBluetoothSocket.close();
+425:                this.mSocket = null;
+437:        public void start() {
+438:            this.mSendThread.start();
+439:            this.mRecvThread.start();
+443:    private class DatagramBluetoothSocket {
+448:        private BluetoothSocket mSocket;
+450:        public DatagramBluetoothSocket(BluetoothSocket bluetoothSocket) throws IOException {
+457:            this.mSocket = bluetoothSocket;
+458:            if (bluetoothSocket != null) {
+460:                    outputStream = bluetoothSocket.getOutputStream();
+466:                    inputStream = this.mSocket.getInputStream();
+470:                    Logger.m968e(BluetoothClassic.TAG, "Failed to initialize.");
+484:            BluetoothSocket bluetoothSocket = this.mSocket;
+485:            if (bluetoothSocket == null) {
+489:                bluetoothSocket.close();
+491:                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+494:            this.mSocket = null;
+501:        public BluetoothDevice getRemoteDevice() {
+503:                return this.mSocket.getRemoteDevice();
+509:            BluetoothSocket bluetoothSocket = this.mSocket;
+510:            return bluetoothSocket != null && bluetoothSocket.isConnected();
+513:        public byte[] recv() {
+515:                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+536:                    Logger.m968e(BluetoothClassic.TAG, "Failed to recv.");
+549:                Logger.m968e(BluetoothClassic.TAG, "Protocol violation.");
+555:        public boolean send(byte[] bArr) {
+559:                    Logger.m968e(BluetoothClassic.TAG, "Failed to serialize.");
+569:                        Logger.m968e(BluetoothClassic.TAG, "Failed to send.");
+574:                Logger.m968e(BluetoothClassic.TAG, "Failed to serialize.");
+580:    public static class DeviceInfo {
+582:        private BluetoothDevice mDevice;
+585:        private DeviceInfo(BluetoothDevice bluetoothDevice, String str, Map map) {
+592:        public BluetoothDevice getDevice() {
+604:            BluetoothDevice bluetoothDevice = this.mDevice;
+631:            BluetoothDevice bluetoothDevice = this.mDevice;
+655:    public enum DiscoveryState {
+662:    private class ListenThread extends Thread {
+663:        private final BlockingQueue<BluetoothSocket> mAcceptedQueue = new ArrayBlockingQueue(1);
+664:        private BluetoothServerSocket mSocket;
+667:            this.mSocket = BluetoothClassic.this.mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(BluetoothClassic.this.mConfig.getServiceId(), UUID.fromString(BluetoothClassic.this.mConfig.getDataConnectionUuid()));
+671:            if (BluetoothClassic.this.mConnectionThreadController != null) {
+675:                BluetoothSocket bluetoothSocketPoll = this.mAcceptedQueue.poll();
+676:                if (bluetoothSocketPoll == null) {
+679:                DatagramBluetoothSocket datagramBluetoothSocket = BluetoothClassic.this.new DatagramBluetoothSocket(bluetoothSocketPoll);
+680:                DeviceInfo deviceInfoRecvAdvertise = BluetoothClassic.this.recvAdvertise(datagramBluetoothSocket);
+682:                    BluetoothClassic.this.mConnectionThreadController = BluetoothClassic.this.new ConnectionThreadController(datagramBluetoothSocket);
+683:                    BluetoothClassic.this.mConnectionThreadController.start();
+684:                    Logger.m967d(BluetoothClassic.TAG, "Data connection accepted: " + deviceInfoRecvAdvertise.getDevice().toString());
+687:                datagramBluetoothSocket.close();
+693:                this.mSocket.close();
+697:                Logger.m968e(BluetoothClassic.TAG, "Failed to close.");
+698:                this.mSocket = null;
+700:                this.mSocket = null;
+711:                BluetoothSocket bluetoothSocketAccept = null;
+713:                    bluetoothSocketAccept = this.mSocket.accept();
+715:                    Logger.m968e(BluetoothClassic.TAG, "Accept failed.");
+717:                    if (bluetoothSocketAccept != null) {
+719:                            bluetoothSocketAccept.close();
+722:                            Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+731:                if (bluetoothSocketAccept == null) {
+734:                    this.mAcceptedQueue.put(bluetoothSocketAccept);
+740:    private class ProtocolHeader {
+798:    private class Receiver extends BroadcastReceiver {
+804:            intentFilter.addAction(BluetoothClassic.BLUETOOTH_DEVICE_ENABLED);
+805:            intentFilter.addAction(BluetoothClassic.BLUETOOTH_DEVICE_DISABLED);
+806:            intentFilter.addAction(BluetoothClassic.BLUETOOTH_DISCOVERABLE_MODE_ENABLED);
+807:            intentFilter.addAction(BluetoothClassic.BLUETOOTH_DISCOVERABLE_MODE_DISABLED);
+808:            intentFilter.addAction(BluetoothClassic.PERMISSION_GRANTED);
+809:            intentFilter.addAction(BluetoothClassic.PERMISSION_DENIED);
+810:            intentFilter.addAction(BluetoothClassic.PERMISSION_EXPLANATION_REQUIERED);
+811:            intentFilter.addAction(BluetoothClassic.PERMISSION_REQUEST);
+812:            BluetoothClassic.this.mActivity.registerReceiver(this, intentFilter, 4);
+822:            BluetoothClassic.this.mActivity.registerReceiver(this, intentFilter2, 2);
+829:                BluetoothClassic.this.mActivity.unregisterReceiver(this);
+840:            if (action.equals(BluetoothClassic.BLUETOOTH_DEVICE_ENABLED)) {
+841:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth device enabled.");
+842:                BluetoothClassic.this.checkPermission();
+845:            if (action.equals(BluetoothClassic.BLUETOOTH_DEVICE_DISABLED)) {
+846:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth device disabled.");
+847:                BluetoothClassic.this.mDeviceState = DeviceState.INACTIVATED;
+850:            if (action.equals(BluetoothClassic.BLUETOOTH_DISCOVERABLE_MODE_ENABLED)) {
+853:            if (action.equals(BluetoothClassic.BLUETOOTH_DISCOVERABLE_MODE_DISABLED)) {
+854:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth discoverable mode refused.");
+855:                BluetoothClassic.this.stopDiscoverableThread();
+856:                BluetoothClassic.this.mDiscoverableState = DiscoverableState.INACTIVATED;
+860:                Logger.m967d(BluetoothClassic.TAG, "Started discovery.");
+861:                DiscoveryState discoveryState = BluetoothClassic.this.mDiscoveryState;
+862:                DiscoveryState discoveryState2 = DiscoveryState.ACTIVATING;
+863:                BluetoothClassic bluetoothClassic = BluetoothClassic.this;
+865:                    Logger.m968e(BluetoothClassic.TAG, "Unknown error. (state = " + bluetoothClassic.mDiscoveryState + ")");
+868:                    bluetoothClassic.mScanThread = BluetoothClassic.this.new ScanThread();
+869:                    BluetoothClassic.this.mDiscoveryState = DiscoveryState.ACTIVATED;
+874:                Logger.m967d(BluetoothClassic.TAG, "Finished discovery.");
+875:                ScanThread scanThread = BluetoothClassic.this.mScanThread;
+876:                BluetoothClassic bluetoothClassic2 = BluetoothClassic.this;
+878:                    if (bluetoothClassic2.getDiscoveryState() != DiscoveryState.INACTIVATED) {
+879:                        Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+880:                        BluetoothClassic.this.stopDiscovery();
+886:                    bluetoothClassic2.mScanThread.start();
+891:                    Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+892:                    BluetoothClassic.this.stopDiscovery();
+900:                    Logger.m967d(BluetoothClassic.TAG, "Scan mode changed: Unknown error. (" + intExtra + " -> " + intExtra2 + ")");
+902:                    Logger.m967d(BluetoothClassic.TAG, "Scan mode changed: " + intExtra + " -> " + intExtra2);
+905:                    if (BluetoothClassic.this.mDiscoverableState == DiscoverableState.ACTIVATING) {
+906:                        Logger.m967d(BluetoothClassic.TAG, "Bluetooth discoverable mode enabled.");
+907:                        BluetoothClassic.this.mDiscoverableState = DiscoverableState.ACTIVATED;
+912:                if ((intExtra2 == 20 || intExtra2 == 21) && BluetoothClassic.this.mDiscoverableState != DiscoverableState.INACTIVATED) {
+913:                    Logger.m967d(BluetoothClassic.TAG, "Bluetooth discoverable mode disabled.");
+914:                    if (!BluetoothClassic.this.stopDiscoverableThread()) {
+915:                        Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+917:                    BluetoothClassic.this.mDiscoverableState = DiscoverableState.INACTIVATED;
+926:                    Logger.m967d(BluetoothClassic.TAG, "State changed: Unknown error. (" + intExtra3 + " -> " + intExtra4 + ")");
+929:                    Logger.m967d(BluetoothClassic.TAG, "State changed: " + intExtra3 + " -> " + intExtra4);
+934:                Logger.m967d(BluetoothClassic.TAG, "Change name: " + intent.getStringExtra("android.bluetooth.adapter.extra.LOCAL_NAME"));
+938:                Logger.m967d(BluetoothClassic.TAG, "Device found: " + ((BluetoothDevice) intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE")).toString());
+942:                BluetoothDevice bluetoothDevice = (BluetoothDevice) intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
+943:                Logger.m967d(BluetoothClassic.TAG, "Device name changed: " + bluetoothDevice.toString());
+944:                if (BluetoothClassic.this.mScanThread == null) {
+945:                    Logger.m967d(BluetoothClassic.TAG, "Ignore device: " + bluetoothDevice.toString());
+948:                    BluetoothClassic.this.mScanThread.pushFoundDevice(bluetoothDevice);
+953:                if (BluetoothClassic.this.mScanThread == null) {
+954:                    if (BluetoothClassic.this.getDiscoveryState() != DiscoveryState.INACTIVATED) {
+955:                        Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+956:                        BluetoothClassic.this.stopDiscovery();
+961:                BluetoothDevice bluetoothDevice2 = (BluetoothDevice) intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
+969:                BluetoothClassic.this.mScanThread.pushUuid(bluetoothDevice2, uuidArr);
+972:            if (action.equals(BluetoothClassic.PERMISSION_GRANTED)) {
+973:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth Permission Guaranteed.");
+974:                if (BluetoothClassic.this.mBluetoothAdapter.isEnabled()) {
+975:                    Logger.m967d(BluetoothClassic.TAG, "Activated Bluetooth.");
+976:                    BluetoothClassic.this.mDeviceState = DeviceState.ACTIVATED;
+979:                    Logger.m967d(BluetoothClassic.TAG, "Activate Bluetooth.");
+980:                    BluetoothClassic.this.mDeviceState = DeviceState.INACTIVATED;
+981:                    BluetoothClassic.this.enableBluetooth();
+985:            if (action.equals(BluetoothClassic.PERMISSION_DENIED)) {
+986:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth Permission Denied.");
+987:                BluetoothClassic.this.mDeviceState = DeviceState.INACTIVATED;
+988:            } else if (action.equals(BluetoothClassic.PERMISSION_EXPLANATION_REQUIERED)) {
+989:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth Permission Explanation Required.");
+990:                BluetoothClassic.this.requestPermissionExplanation();
+991:            } else if (action.equals(BluetoothClassic.PERMISSION_REQUEST)) {
+992:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth Permission Requested.");
+993:                BluetoothClassic.this.requestPermission();
+998:    private class ScanThread extends Thread {
+1000:        private final Set<BluetoothDevice> mFoundDevices = new HashSet();
+1001:        private BluetoothDevice mFetchingDevice = null;
+1006:        private class UuidInfo {
+1007:            private BluetoothDevice mDevice;
+1010:            UuidInfo(BluetoothDevice bluetoothDevice, UUID[] uuidArr) {
+1030:                    Logger.m967d(BluetoothClassic.TAG, "UUID: device = " + uuidInfo.mDevice.toString() + ", uuid = " + uuid.toString());
+1032:                        BluetoothClassic bluetoothClassic = BluetoothClassic.this;
+1036:                        BluetoothClassic bluetoothClassic2 = BluetoothClassic.this;
+1061:            jp.konami.Logger.m968e(jp.konami.peerlink.btc.BluetoothClassic.TAG, "Fetch UUID timed out.");
+1081:            jp.konami.Logger.m967d(jp.konami.peerlink.btc.BluetoothClassic.TAG, "Fetching UUID. (device = " + r1.toString() + ")");
+1089:        private BluetoothDevice popScanDevice() {
+1092:                    Iterator<BluetoothDevice> it = this.mFoundDevices.iterator();
+1095:                            BluetoothDevice next = it.next();
+1099:                            Logger.m968e(BluetoothClassic.TAG, "Failed to fetchUuidsWithSdp()");
+1108:            if (BluetoothClassic.this.mBluetoothAdapter.isDiscovering()) {
+1109:                Logger.m968e(BluetoothClassic.TAG, "Can not scan in discovering.");
+1113:                BluetoothDevice bluetoothDevicePopScanDevice = popScanDevice();
+1115:                    Logger.m967d(BluetoothClassic.TAG, "Finished scan.");
+1119:                    Logger.m968e(BluetoothClassic.TAG, "Failed to scan.");
+1125:        private boolean scan(BluetoothDevice bluetoothDevice) {
+1130:            Logger.m967d(BluetoothClassic.TAG, "Try to scan. (device = " + bluetoothDevice.toString() + ")");
+1131:            synchronized (BluetoothClassic.this.mFoundNodes) {
+1132:                Iterator it = BluetoothClassic.this.mFoundNodes.iterator();
+1134:                    BluetoothDevice device = ((DeviceInfo) it.next()).getDevice();
+1136:                        Logger.m967d(BluetoothClassic.TAG, "Already scanned. (device = " + bluetoothDevice.toString() + ")");
+1140:                BluetoothSocket bluetoothSocketCreateInsecureRfcommSocketToServiceRecord = null;
+1142:                    bluetoothSocketCreateInsecureRfcommSocketToServiceRecord = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(BluetoothClassic.this.mConfig.getControlConnectionUuid()));
+1143:                    this.mFuture = this.mService.schedule(new Runnable(bluetoothSocketCreateInsecureRfcommSocketToServiceRecord) { // from class: jp.konami.peerlink.btc.BluetoothClassic.ScanThread.1Task
+1144:                        private BluetoothSocket mSocket;
+1147:                            this.mSocket = bluetoothSocketCreateInsecureRfcommSocketToServiceRecord;
+1153:                                this.mSocket.close();
+1155:                                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+1160:                    bluetoothSocketCreateInsecureRfcommSocketToServiceRecord.connect();
+1162:                        DatagramBluetoothSocket datagramBluetoothSocket = BluetoothClassic.this.new DatagramBluetoothSocket(bluetoothSocketCreateInsecureRfcommSocketToServiceRecord);
+1163:                        Logger.m967d(BluetoothClassic.TAG, "Scanning for " + datagramBluetoothSocket.getRemoteDevice().toString());
+1164:                        DeviceInfo deviceInfoRecvAdvertise = BluetoothClassic.this.recvAdvertise(datagramBluetoothSocket);
+1166:                            Logger.m967d(BluetoothClassic.TAG, "Scan succeeded: address = " + deviceInfoRecvAdvertise.getDevice().getAddress() + ", id = " + deviceInfoRecvAdvertise.getId() + ", attribute = " + (deviceInfoRecvAdvertise.getAttribute() == null ? "" : deviceInfoRecvAdvertise.getAttribute().toString()));
+1167:                            synchronized (BluetoothClassic.this.mFoundNodes) {
+1168:                                BluetoothClassic.this.mFoundNodes.add(deviceInfoRecvAdvertise);
+1173:                        Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+1190:                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+1200:        public boolean pushFoundDevice(BluetoothDevice bluetoothDevice) {
+1211:        public boolean pushUuid(BluetoothDevice bluetoothDevice, UUID[] uuidArr) {
+1213:                BluetoothDevice bluetoothDevice2 = this.mFetchingDevice;
+1218:                    Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+1233:            BluetoothClassic.this.mDiscoveryState = DiscoveryState.INACTIVATED;
+1237:    public BluetoothClassic(Config config, Activity activity) throws IllegalArgumentException {
+1246:        if (this.mBluetoothAdapter == null) {
+1265:        for (String str : BluetoothSwitch.BLUETOOTH_PERMISSIONS) {
+1269:                    Logger.m967d("btc/BluetoothSwitch ", str + " priviledge UI requested!");
+1278:            this.mActivity.sendBroadcast(new Intent(PERMISSION_GRANTED));
+1280:            this.mActivity.sendBroadcast(new Intent(PERMISSION_EXPLANATION_REQUIERED));
+1282:            this.mActivity.sendBroadcast(new Intent(PERMISSION_REQUEST));
+1290:        this.mActivity.runOnUiThread(new Runnable() { // from class: jp.konami.peerlink.btc.BluetoothClassic.1
+1293:                AlertDialog.Builder builder = new AlertDialog.Builder(BluetoothClassic.this.mActivity);
+1296:                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() { // from class: jp.konami.peerlink.btc.BluetoothClassic.1.1
+1299:                        Logger.m967d(BluetoothClassic.TAG, "finish DispExplanationDialog");
+1300:                        BluetoothClassic.this.mActivity.sendBroadcast(new Intent(BluetoothClassic.PERMISSION_REQUEST));
+1310:    public void enableBluetooth() {
+1311:        Logger.m967d(TAG, "enableBluetooth()");
+1315:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
+1317:        this.mActivity.startActivity(intent);
+1383:        return new jp.konami.peerlink.btc.BluetoothClassic.DeviceInfo(r10.getRemoteDevice(), new java.lang.String(r2), r3, r0);
+1398:    public DeviceInfo recvAdvertise(DatagramBluetoothSocket datagramBluetoothSocket) {
+1402:                byte[] bArrRecv = datagramBluetoothSocket.recv();
+1411:                if (!datagramBluetoothSocket.isConnected()) {
+1432:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
+1433:        intent.putExtra("BLUETOOTH_SWITCH", BluetoothSwitch.REQUEST_PERMISSIONS);
+1434:        this.mActivity.startActivity(intent);
+1443:    public boolean sendAdvertise(DatagramBluetoothSocket datagramBluetoothSocket) {
+1465:            if (datagramBluetoothSocket.send(Arrays.copyOfRange(byteBufferAllocate.array(), 0, byteBufferAllocate.position()))) {
+1468:            Logger.m968e(TAG, "Failed to send advertise.");
+1476:    private boolean startDiscoverableThread() {
+1488:                advertiseThread.start();
+1491:                    listenThread.start();
+1509:    public boolean stopDiscoverableThread() {
+1540:        if (this.mConnectThread != null && deviceInfo.getDevice().equals(this.mConnectThread.mSocket.getRemoteDevice())) {
+1545:        if (this.mConnectionThreadController == null || !deviceInfo.getDevice().equals(this.mConnectionThreadController.mSocket.getRemoteDevice())) {
+1553:    public boolean connect(DeviceInfo deviceInfo) {
+1556:                ConnectThread connectThread = new ConnectThread(deviceInfo.getDevice());
+1557:                this.mConnectThread = connectThread;
+1558:                connectThread.start();
+1569:        Receiver receiver = this.mReceiver;
+1570:        if (receiver != null) {
+1571:            receiver.destruct();
+1574:        if (!stopDiscoverableMode()) {
+1586:        if (!stopDiscovery() && (scanThread = this.mScanThread) != null) {
+1590:        ConnectThread connectThread = this.mConnectThread;
+1591:        if (connectThread != null) {
+1592:            connectThread.cancel();
+1595:        ConnectionThreadController connectionThreadController = this.mConnectionThreadController;
+1596:        if (connectionThreadController != null) {
+1597:            connectionThreadController.cancel();
+1600:        if (this.mBluetoothAdapter != null) {
+1603:            } else if (this.mBluetoothAdapter.isDiscovering()) {
+1604:                this.mBluetoothAdapter.cancelDiscovery();
+1606:            this.mBluetoothAdapter = null;
+1612:        this.mDiscoveryState = DiscoveryState.INACTIVATED;
+1620:        ConnectionThreadController connectionThreadController = this.mConnectionThreadController;
+1621:        if (connectionThreadController != null && connectionThreadController.isAlive() && deviceInfo.getDevice().equals(this.mConnectionThreadController.mSocket.getRemoteDevice())) {
+1624:        ConnectThread connectThread = this.mConnectThread;
+1625:        if (connectThread != null && connectThread.isAlive() && deviceInfo.getDevice().equals(this.mConnectThread.mSocket.getRemoteDevice())) {
+1654:    public DiscoveryState getDiscoveryState() {
+1655:        return this.mDiscoveryState;
+1658:    public byte[] recv(DeviceInfo deviceInfo) {
+1660:        ConnectionThreadController connectionThreadController = this.mConnectionThreadController;
+1661:        if (connectionThreadController == null || !connectionThreadController.isAlive() || deviceInfo == null || !deviceInfo.getDevice().equals(this.mConnectionThreadController.mSocket.getRemoteDevice())) {
+1670:    public boolean send(DeviceInfo deviceInfo, byte[] bArr) {
+1671:        ConnectionThreadController connectionThreadController = this.mConnectionThreadController;
+1672:        if (connectionThreadController == null || !connectionThreadController.isAlive() || deviceInfo == null || !deviceInfo.getDevice().equals(this.mConnectionThreadController.mSocket.getRemoteDevice()) || bArr == null || bArr.length == 0 || bArr.length > 1500) {
+1678:    public boolean startDiscoverableMode() {
+1679:        if (this.mDiscoverableState != DiscoverableState.INACTIVATED || this.mBluetoothAdapter == null || this.mDeviceState != DeviceState.ACTIVATED) {
+1682:        if (!startDiscoverableThread()) {
+1683:            Logger.m968e(TAG, "Failed to startDiscoverableThread()");
+1686:        if (this.mBluetoothAdapter.getScanMode() == 23) {
+1687:            Logger.m967d(TAG, "Bluetooth discoverable mode already enabled.");
+1691:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
+1693:        this.mActivity.startActivity(intent);
+1698:    public boolean startDiscovery() {
+1699:        if (this.mDiscoveryState != DiscoveryState.INACTIVATED || this.mBluetoothAdapter == null || this.mDeviceState != DeviceState.ACTIVATED) {
+1702:        stopDiscovery();
+1703:        if ((this.mBluetoothAdapter.isDiscovering() && !this.mBluetoothAdapter.cancelDiscovery()) || !this.mBluetoothAdapter.startDiscovery()) {
+1709:        this.mDiscoveryState = DiscoveryState.ACTIVATING;
+1713:    public boolean stopDiscoverableMode() {
+1714:        if (this.mDiscoverableState == DiscoverableState.INACTIVATED || this.mBluetoothAdapter == null || !stopDiscoverableThread()) {
+1721:    public boolean stopDiscovery() {
+1722:        if (this.mDiscoveryState == DiscoveryState.INACTIVATED) {
+1725:        this.mDiscoveryState = DiscoveryState.INACTIVATING;
+1726:        if (this.mBluetoothAdapter == null) {
+1734:        if (this.mBluetoothAdapter.isDiscovering() && !this.mBluetoothAdapter.cancelDiscovery()) {
+1740:        this.mDiscoveryState = DiscoveryState.INACTIVATED;
+
+===== /tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java =====
+11:public class BluetoothSwitch extends Activity {
+21:    private static final String TAG = "btc/BluetoothSwitch";
+26:            sendBroadcast(new Intent(i2 == -1 ? "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DEVICE_ENABLED" : "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DEVICE_DISABLED"));
+29:            sendBroadcast(new Intent(i2 != 0 ? "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DISCOVERABLE_MODE_ENABLED" : "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DISCOVERABLE_MODE_DISABLED"));
+39:            startActivityForResult(new Intent("android.bluetooth.adapter.action.REQUEST_ENABLE"), intExtra);
+50:            startActivityForResult(intent, intExtra);
+64:            sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_GRANTED"));
+92:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_DENIED"));
+96:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_GRANTED"));
+
+===== /tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java =====
+4:import android.net.wifi.WifiManager;
+9:import java.net.NetworkInterface;
+27:public class NetworkServiceDiscovery {
+30:    private WifiManager.MulticastLock mMulticastLock;
+33:    private final Set<DiscoveryServiceInfo> mDiscoveryServiceInfoSet = new HashSet();
+36:    public static class DetectedServiceInfo {
+175:    public static class DiscoveryServiceInfo {
+178:        public DiscoveryServiceInfo() {
+181:        public DiscoveryServiceInfo(DiscoveryServiceInfo discoveryServiceInfo) {
+195:            if (!(obj instanceof DiscoveryServiceInfo)) {
+199:            String str2 = ((DiscoveryServiceInfo) obj).mServiceType;
+220:    public static class ServiceInfo {
+333:    public NetworkServiceDiscovery(Activity activity) {
+334:        WifiManager wifiManager;
+335:        if (activity == null || (wifiManager = (WifiManager) activity.getSystemService("wifi")) == null) {
+338:        WifiManager.MulticastLock multicastLockCreateMulticastLock = wifiManager.createMulticastLock("NetworkServiceDiscovery");
+346:            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+370:        stopServiceDiscovery();
+371:        WifiManager.MulticastLock multicastLock = this.mMulticastLock;
+380:        this.mExecutorService.execute(new Runnable() { // from class: jp.konami.peerlink.nsd.NetworkServiceDiscovery.1
+454:        this.mExecutorService.execute(new Runnable() { // from class: jp.konami.peerlink.nsd.NetworkServiceDiscovery.2
+460:                    if (NetworkServiceDiscovery.this.mJmDNS4 != null) {
+461:                        NetworkServiceDiscovery.this.mJmDNS4.registerService(serviceInfoCreate);
+463:                    if (NetworkServiceDiscovery.this.mJmDNS6 != null) {
+464:                        NetworkServiceDiscovery.this.mJmDNS6.registerService(serviceInfoClone);
+466:                    Logger.m967d("NetworkServiceDiscovery", "Registered service: \n" + serviceInfoClone.toString());
+468:                        Logger.m967d("NetworkServiceDiscovery", "Changed service name: " + serviceInfo.getServiceName() + " -> " + serviceInfoClone.getName());
+471:                    synchronized (NetworkServiceDiscovery.this.mRegisteredServiceInfoSet) {
+472:                        if (!NetworkServiceDiscovery.this.mRegisteredServiceInfoSet.add(serviceInfo)) {
+473:                            Logger.m968e("NetworkServiceDiscovery", "Unknown error.");
+477:                    Logger.m968e("NetworkServiceDiscovery", "Registration failed.");
+485:    public boolean startServiceDiscovery(DiscoveryServiceInfo discoveryServiceInfo) {
+493:        synchronized (this.mDiscoveryServiceInfoSet) {
+494:            if (!this.mDiscoveryServiceInfoSet.add(discoveryServiceInfo)) {
+497:            ServiceListener serviceListener = new ServiceListener() { // from class: jp.konami.peerlink.nsd.NetworkServiceDiscovery.4
+500:                    Logger.m967d("NetworkServiceDiscovery", "Found service: \n" + serviceEvent.toString());
+501:                    synchronized (NetworkServiceDiscovery.this.mRegisteredServiceInfoSet) {
+502:                        Iterator it = NetworkServiceDiscovery.this.mRegisteredServiceInfoSet.iterator();
+508:                        DiscoveryServiceInfo discoveryServiceInfo2 = new DiscoveryServiceInfo();
+510:                        synchronized (NetworkServiceDiscovery.this.mDiscoveryServiceInfoSet) {
+511:                            if (!NetworkServiceDiscovery.this.mDiscoveryServiceInfoSet.contains(discoveryServiceInfo2)) {
+512:                                Logger.m967d("NetworkServiceDiscovery", "Unknown service type. (service type = " + serviceEvent.getType() + ")");
+517:                                Logger.m968e("NetworkServiceDiscovery", "Unknown error.");
+519:                                Logger.m967d("NetworkServiceDiscovery", "Resolving...: \n" + serviceEvent.toString());
+528:                    Logger.m967d("NetworkServiceDiscovery", "Lost service: \n" + serviceEvent.toString());
+529:                    synchronized (NetworkServiceDiscovery.this.mDetectedServiceInfoMap) {
+530:                        NetworkServiceDiscovery.this.mDetectedServiceInfoMap.remove(new AbstractMap.SimpleImmutableEntry(serviceEvent.getType(), serviceEvent.getName()));
+539:                        Logger.m968e("NetworkServiceDiscovery", "Resolve failed: \n" + serviceEvent.toString());
+542:                    Logger.m967d("NetworkServiceDiscovery", "Resolved service: \n" + serviceEvent.toString());
+562:                    synchronized (NetworkServiceDiscovery.this.mDetectedServiceInfoMap) {
+563:                        NetworkServiceDiscovery.this.mDetectedServiceInfoMap.put(new AbstractMap.SimpleImmutableEntry(serviceEvent.getType(), serviceEvent.getName()), detectedServiceInfo);
+580:    public boolean stopServiceDiscovery() {
+584:        synchronized (this.mDiscoveryServiceInfoSet) {
+585:            for (DiscoveryServiceInfo discoveryServiceInfo : this.mDiscoveryServiceInfoSet) {
+586:                ServiceListener serviceListener = new ServiceListener() { // from class: jp.konami.peerlink.nsd.NetworkServiceDiscovery.5
+609:        synchronized (this.mDiscoveryServiceInfoSet) {
+610:            this.mDiscoveryServiceInfoSet.clear();
+622:        this.mExecutorService.execute(new Runnable() { // from class: jp.konami.peerlink.nsd.NetworkServiceDiscovery.3
+625:                if (NetworkServiceDiscovery.this.mJmDNS4 != null) {
+626:                    NetworkServiceDiscovery.this.mJmDNS4.unregisterAllServices();
+628:                if (NetworkServiceDiscovery.this.mJmDNS6 != null) {
+629:                    NetworkServiceDiscovery.this.mJmDNS6.unregisterAllServices();
+631:                synchronized (NetworkServiceDiscovery.this.mRegisteredServiceInfoSet) {
+632:                    NetworkServiceDiscovery.this.mRegisteredServiceInfoSet.clear();
+634:                Logger.m967d("NetworkServiceDiscovery", "Unregistered service.");
+
+===== /tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java =====
+8:import android.net.wifi.p2p.WifiP2pConfig;
+9:import android.net.wifi.p2p.WifiP2pDevice;
+10:import android.net.wifi.p2p.WifiP2pInfo;
+11:import android.net.wifi.p2p.WifiP2pManager;
+23:import jp.konami.peerlink.wifidirect.WifiDirectNsd;
+28:public class WifiDirect {
+34:    private WifiP2pManager.Channel mChannel;
+37:    private NetworkInfo mNetworkInfo;
+39:    private WifiDirectNsd mWifiDirectNsd;
+40:    private WifiP2pManager mWifiP2pManager;
+49:    public static class Config {
+106:    public enum DiscoveryState {
+113:    public static class NetworkInfo {
+120:        private WifiP2pInfo mWifiP2pInfo;
+130:        private class Task implements Runnable {
+136:                NetworkInfo.this.init();
+140:        private NetworkInfo(Config config) {
+144:            this.mWifiP2pInfo = null;
+152:        public synchronized void changeConnectionState(ConnectionState connectionState) {
+153:            this.mConnectionState = connectionState;
+160:            this.mWifiP2pInfo = null;
+164:        public synchronized void set(WifiP2pInfo wifiP2pInfo) {
+165:            this.mWifiP2pInfo = new WifiP2pInfo(wifiP2pInfo);
+174:        public void stopDelayDisconnect() {
+182:        public synchronized boolean tryDelayDisconnect() {
+211:            WifiP2pInfo wifiP2pInfo = this.mWifiP2pInfo;
+213:                return this.mWifiP2pInfo.groupOwnerAddress.getHostName();
+247:            WifiP2pInfo wifiP2pInfo = this.mWifiP2pInfo;
+249:                return this.mWifiP2pInfo.isGroupOwner;
+255:    private class Receiver extends BroadcastReceiver {
+264:            WifiDirect.this.mActivity.registerReceiver(this, intentFilter, 4);
+271:                WifiDirect.this.mActivity.unregisterReceiver(this);
+284:                WifiDirect wifiDirect = WifiDirect.this;
+287:                    Logger.m967d("WifiDirect", "Enabled WifiP2p.");
+291:                    Logger.m967d("WifiDirect", "Disabled WifiP2p.");
+297:                    Logger.m967d("WifiDirect", "Device changed: \n" + ((WifiP2pDevice) intent.getParcelableExtra("wifiP2pDevice")).toString());
+302:            android.net.NetworkInfo networkInfo = (android.net.NetworkInfo) intent.getParcelableExtra("networkInfo");
+303:            if (WifiDirect.this.mDeviceState == DeviceState.ACTIVATING) {
+305:                WifiDirect wifiDirect2 = WifiDirect.this;
+307:                    wifiDirect2.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.1
+308:                        @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+310:                            Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+313:                        @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+315:                            Logger.m967d("WifiDirect", "Closed.");
+324:            Logger.m967d("WifiDirect", "Connection changed: \n" + networkInfo.toString());
+326:            WifiDirect wifiDirect3 = WifiDirect.this;
+328:                if (wifiDirect3.mNetworkInfo.tryDelayDisconnect()) {
+331:                WifiDirect.this.mNetworkInfo.init();
+334:            wifiDirect3.mNetworkInfo.stopDelayDisconnect();
+335:            NetworkInfo.ConnectionState connectionState = WifiDirect.this.mNetworkInfo.getConnectionState();
+336:            if (connectionState != NetworkInfo.ConnectionState.OPEN && connectionState != NetworkInfo.ConnectionState.CLOSED) {
+337:                WifiDirect.this.mWifiP2pManager.requestConnectionInfo(WifiDirect.this.mChannel, new WifiP2pManager.ConnectionInfoListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.3
+338:                    @Override // android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener
+339:                    public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
+340:                        Logger.m967d("WifiDirect", "Connection info availed: \n" + wifiP2pInfo.toString());
+341:                        NetworkInfo.ConnectionState connectionState2 = WifiDirect.this.mNetworkInfo.getConnectionState();
+342:                        if (!(connectionState2 == NetworkInfo.ConnectionState.CREATING && wifiP2pInfo.isGroupOwner) && (!(connectionState2 == NetworkInfo.ConnectionState.ESTABLISHED && WifiDirect.this.mNetworkInfo.isGroupOwner() && wifiP2pInfo.isGroupOwner) && (connectionState2 != NetworkInfo.ConnectionState.CONNECTING || wifiP2pInfo.isGroupOwner))) {
+343:                            Logger.m968e("WifiDirect", "Unknown error.");
+344:                            WifiDirect.this.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.3.1
+345:                                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+347:                                    Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+350:                                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+352:                                    Logger.m967d("WifiDirect", "Closed.");
+356:                            WifiDirect.this.mNetworkInfo.set(wifiP2pInfo);
+357:                            WifiDirect.this.mNetworkInfo.changeConnectionState(NetworkInfo.ConnectionState.ESTABLISHED);
+362:                Logger.m968e("WifiDirect", "Unknown error.");
+363:                WifiDirect.this.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.2
+364:                    @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+366:                        Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+369:                    @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+371:                        Logger.m967d("WifiDirect", "Closed.");
+378:    public static class ServiceInfo {
+379:        private WifiDirectNsd.DetectedServiceInfo mDetectedServiceInfo;
+385:        private ServiceInfo(WifiDirectNsd.DetectedServiceInfo detectedServiceInfo) {
+386:            this.mDetectedServiceInfo = new WifiDirectNsd.DetectedServiceInfo(detectedServiceInfo);
+390:        public WifiP2pDevice getDevice() {
+401:            WifiDirectNsd.DetectedServiceInfo detectedServiceInfo = this.mDetectedServiceInfo;
+402:            WifiDirectNsd.DetectedServiceInfo detectedServiceInfo2 = ((ServiceInfo) obj).mDetectedServiceInfo;
+409:            if (attribute == null || (str = attribute.get(WifiDirect.ATTRIBUTE_KEY_USER_ATTRIBUTE)) == null) {
+432:            return attribute == null ? "" : attribute.get(WifiDirect.ATTRIBUTE_KEY_ID);
+438:            if (attribute == null || (str = attribute.get(WifiDirect.ATTRIBUTE_KEY_PORT)) == null) {
+449:    public WifiDirect(Config config, Activity activity) throws IllegalArgumentException {
+452:            Logger.m967d("WifiDirect", "Invalid argument.");
+456:        WifiP2pManager wifiP2pManager = (WifiP2pManager) activity.getSystemService("wifip2p");
+463:        this.mWifiP2pManager = wifiP2pManager;
+464:        this.mChannel = wifiP2pManager.initialize(activity, activity.getMainLooper(), new WifiP2pManager.ChannelListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.1
+465:            @Override // android.net.wifi.p2p.WifiP2pManager.ChannelListener
+466:            public void onChannelDisconnected() {
+467:                Logger.m967d("WifiDirect", "The channel has been disconnected.");
+468:                WifiDirect.this.mDeviceState = DeviceState.INACTIVATED;
+471:        this.mWifiDirectNsd = new WifiDirectNsd(this.mWifiP2pManager, this.mChannel);
+472:        this.mNetworkInfo = new NetworkInfo(this.mConfig);
+477:        if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() == NetworkInfo.ConnectionState.OPEN || this.mNetworkInfo.getConnectionState() == NetworkInfo.ConnectionState.CLOSED) {
+480:        NetworkInfo.ConnectionState connectionState = this.mNetworkInfo.getConnectionState();
+481:        NetworkInfo.ConnectionState connectionState2 = NetworkInfo.ConnectionState.CONNECTING;
+482:        WifiP2pManager wifiP2pManager = this.mWifiP2pManager;
+483:        if (connectionState == connectionState2) {
+484:            wifiP2pManager.cancelConnect(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.4
+485:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+487:                    Logger.m968e("WifiDirect", "Failed to cancelConnect. (error = " + i + ")");
+490:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+492:                    Logger.m967d("WifiDirect", "Canceled.");
+496:            wifiP2pManager.removeGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.5
+497:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+499:                    Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+502:                @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+504:                    Logger.m967d("WifiDirect", "Closed.");
+508:        this.mNetworkInfo.changeConnectionState(NetworkInfo.ConnectionState.CLOSED);
+512:    public boolean connect(ServiceInfo serviceInfo) {
+513:        if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() != NetworkInfo.ConnectionState.OPEN) {
+517:        final WifiP2pDevice device = serviceInfo2.getDevice();
+522:            Logger.m968e("WifiDirect", "WPS push button configuration is not supported.");
+525:        WifiP2pConfig wifiP2pConfig = new WifiP2pConfig();
+528:        this.mWifiP2pManager.connect(this.mChannel, wifiP2pConfig, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.3
+529:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+531:                Logger.m968e("WifiDirect", "Failed to connect. (error = " + i + ")");
+532:                WifiDirect.this.mNetworkInfo.init();
+535:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+537:                Logger.m967d("WifiDirect", "Connecting to: \n" + device.toString());
+538:                WifiDirect.this.mNetworkInfo.set(serviceInfo2);
+541:        this.mNetworkInfo.changeConnectionState(NetworkInfo.ConnectionState.CONNECTING);
+546:        if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() != NetworkInfo.ConnectionState.OPEN) {
+549:        this.mWifiP2pManager.createGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.2
+550:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+552:                Logger.m968e("WifiDirect", "Failed to createGroup. (error = " + i + ")");
+553:                WifiDirect.this.mNetworkInfo.init();
+556:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+558:                Logger.m967d("WifiDirect", "Creating group...");
+561:        this.mNetworkInfo.changeConnectionState(NetworkInfo.ConnectionState.CREATING);
+566:        Receiver receiver = this.mReceiver;
+567:        if (receiver != null) {
+568:            receiver.destruct();
+571:        stopAdvertisement();
+572:        stopDiscovery();
+573:        WifiDirectNsd wifiDirectNsd = this.mWifiDirectNsd;
+579:        this.mWifiP2pManager = null;
+581:        this.mNetworkInfo.init();
+588:        WifiDirectNsd.ServiceInfo serviceInfo = new WifiDirectNsd.ServiceInfo();
+602:        WifiDirectNsd.RegisterServiceState registerServiceState = this.mWifiDirectNsd.getRegisterServiceState(serviceInfo);
+603:        return registerServiceState == WifiDirectNsd.RegisterServiceState.ACTIVATING ? AdvertisementState.ACTIVATING : registerServiceState == WifiDirectNsd.RegisterServiceState.ACTIVATED ? AdvertisementState.ACTIVATED : registerServiceState == WifiDirectNsd.RegisterServiceState.INACTIVATING ? AdvertisementState.INACTIVATING : registerServiceState == WifiDirectNsd.RegisterServiceState.INACTIVATED ? AdvertisementState.INACTIVATED : AdvertisementState.INACTIVATED;
+607:        List<WifiDirectNsd.DetectedServiceInfo> detectedServiceInfoList;
+608:        if (this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || (detectedServiceInfoList = this.mWifiDirectNsd.getDetectedServiceInfoList()) == null || detectedServiceInfoList.size() == 0) {
+612:        Iterator<WifiDirectNsd.DetectedServiceInfo> it = detectedServiceInfoList.iterator();
+626:    public DiscoveryState getDiscoveryState() {
+628:            return DiscoveryState.INACTIVATED;
+630:        WifiDirectNsd.DiscoveryServiceInfo discoveryServiceInfo = new WifiDirectNsd.DiscoveryServiceInfo();
+632:        WifiDirectNsd.RegisterDiscoveryServiceState registerDiscoveryServiceState = this.mWifiDirectNsd.getRegisterDiscoveryServiceState(discoveryServiceInfo);
+633:        return registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.ACTIVATING ? DiscoveryState.ACTIVATING : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.ACTIVATED ? DiscoveryState.ACTIVATED : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.INACTIVATING ? DiscoveryState.INACTIVATING : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.INACTIVATED ? DiscoveryState.INACTIVATED : DiscoveryState.INACTIVATED;
+636:    public NetworkInfo getNetworkInfo() {
+637:        return this.mNetworkInfo;
+640:    public boolean startAdvertisement() {
+644:        WifiDirectNsd.ServiceInfo serviceInfo = new WifiDirectNsd.ServiceInfo();
+658:        return this.mWifiDirectNsd.registerService(serviceInfo);
+661:    public boolean startDiscovery() {
+665:        WifiDirectNsd.DiscoveryServiceInfo discoveryServiceInfo = new WifiDirectNsd.DiscoveryServiceInfo();
+667:        if (!this.mWifiDirectNsd.registerDiscoveryService(discoveryServiceInfo)) {
+670:        if (this.mWifiDirectNsd.startDiscovery()) {
+673:        if (!this.mWifiDirectNsd.unregisterDiscoveryService()) {
+674:            Logger.m968e("WifiDirect", "Unknown error.");
+679:    public boolean stopAdvertisement() {
+680:        return (this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || !this.mWifiDirectNsd.unregisterService()) ? false : true;
+683:    public boolean stopDiscovery() {
+684:        return this.mDeviceState != DeviceState.UNSUPPORTED && this.mDeviceState != DeviceState.INACTIVATED && this.mWifiDirectNsd.stopDiscovery() && this.mWifiDirectNsd.unregisterDiscoveryService();
+
+===== /tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java =====
+3:import android.net.wifi.p2p.WifiP2pDevice;
+4:import android.net.wifi.p2p.WifiP2pManager;
+5:import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
+6:import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
+7:import android.net.wifi.p2p.nsd.WifiP2pServiceInfo;
+8:import android.net.wifi.p2p.nsd.WifiP2pServiceRequest;
+23:public class WifiDirectNsd {
+24:    private WifiP2pManager.Channel mChannel;
+25:    private WifiP2pManager mWifiP2pManager;
+26:    private final Map<ServiceInfo, WifiP2pServiceInfo> mRegisteredService = new HashMap();
+27:    private final Map<DiscoveryServiceInfo, WifiP2pServiceRequest> mRegisteredDiscoveryService = new HashMap();
+32:    public static class DetectedServiceInfo {
+34:        private WifiP2pDevice mDevice;
+60:            this.mDevice = new WifiP2pDevice(detectedServiceInfo.mDevice);
+85:        public void setDevice(WifiP2pDevice wifiP2pDevice) {
+89:                this.mDevice = new WifiP2pDevice(wifiP2pDevice);
+117:                        WifiP2pDevice wifiP2pDevice = this.mDevice;
+118:                        WifiP2pDevice wifiP2pDevice2 = detectedServiceInfo.mDevice;
+136:        public WifiP2pDevice getDevice() {
+158:    private class DiscoverService {
+164:        private class Task implements Runnable {
+170:                synchronized (WifiDirectNsd.this.mDiscoveredService) {
+171:                    Iterator it = WifiDirectNsd.this.mDiscoveredService.entrySet().iterator();
+174:                        WifiDirectNsd.this.mDiscoveredService.put((DiscoveredServiceInfo) entry.getKey(), Integer.valueOf(((Integer) entry.getValue()).intValue() + 1));
+180:                WifiDirectNsd.this.mWifiP2pManager.discoverServices(WifiDirectNsd.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.DiscoverService.Task.1
+181:                    @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+183:                        Logger.m968e("WifiDirectNsd", "Discover service failed. (error = " + String.valueOf(i) + ")");
+186:                    @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+188:                        Logger.m967d("WifiDirectNsd", "Discover service.");
+211:        public boolean start() {
+220:        public void stop() {
+228:    private static class DiscoveredServiceInfo {
+229:        private WifiP2pDevice mDevice;
+233:        DiscoveredServiceInfo(String str, String str2, WifiP2pDevice wifiP2pDevice) {
+237:                this.mDevice = new WifiP2pDevice(wifiP2pDevice);
+253:                    WifiP2pDevice wifiP2pDevice = this.mDevice;
+254:                    WifiP2pDevice wifiP2pDevice2 = discoveredServiceInfo.mDevice;
+275:    public static class DiscoveryServiceInfo {
+278:        public DiscoveryServiceInfo() {
+281:        public DiscoveryServiceInfo(DiscoveryServiceInfo discoveryServiceInfo) {
+287:            return WifiDirectNsd.isServiceTypeValid(this.mServiceType);
+294:            if (!(obj instanceof DiscoveryServiceInfo)) {
+298:            String str2 = ((DiscoveryServiceInfo) obj).mServiceType;
+319:    public enum RegisterDiscoveryServiceState {
+333:    public static class ServiceInfo {
+364:            return WifiDirectNsd.isServiceNameValid(this.mServiceName) && WifiDirectNsd.isServiceTypeValid(this.mServiceType);
+430:    private static class TxtRecordInfo {
+431:        private WifiP2pDevice mDevice;
+434:        TxtRecordInfo(Map map, WifiP2pDevice wifiP2pDevice) {
+451:                this.mDevice = new WifiP2pDevice(wifiP2pDevice);
+456:    public WifiDirectNsd(WifiP2pManager wifiP2pManager, WifiP2pManager.Channel channel) {
+457:        this.mWifiP2pManager = wifiP2pManager;
+459:        wifiP2pManager.setDnsSdResponseListeners(channel, new WifiP2pManager.DnsSdServiceResponseListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.1
+460:            @Override // android.net.wifi.p2p.WifiP2pManager.DnsSdServiceResponseListener
+461:            public void onDnsSdServiceAvailable(String str, String str2, WifiP2pDevice wifiP2pDevice) {
+462:                Logger.m967d("WifiDirectNsd", "DnsSdService available: instance = " + str + ", registration = " + str2 + ", device = " + wifiP2pDevice.toString());
+463:                synchronized (WifiDirectNsd.this.mDiscoveredService) {
+464:                    WifiDirectNsd.this.mDiscoveredService.put(new DiscoveredServiceInfo(str, str2, wifiP2pDevice), 0);
+467:        }, new WifiP2pManager.DnsSdTxtRecordListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.2
+468:            @Override // android.net.wifi.p2p.WifiP2pManager.DnsSdTxtRecordListener
+469:            public void onDnsSdTxtRecordAvailable(String str, Map<String, String> map, WifiP2pDevice wifiP2pDevice) {
+470:                Logger.m967d("WifiDirectNsd", "DnsSdTxtRecord available: domain = " + str + ", record = " + map.toString() + ", device = " + wifiP2pDevice.toString());
+471:                WifiDirectNsd.this.mTxtRecord.put(str, new TxtRecordInfo(map, wifiP2pDevice));
+488:        unregisterDiscoveryService();
+491:        this.mRegisteredDiscoveryService.clear();
+497:        this.mWifiP2pManager = null;
+505:                Iterator<DiscoveryServiceInfo> it = this.mRegisteredDiscoveryService.keySet().iterator();
+508:                        if (discoveredServiceInfo.mRegistrationType.startsWith(it.next().getServiceType())) {
+529:    public RegisterDiscoveryServiceState getRegisterDiscoveryServiceState(DiscoveryServiceInfo discoveryServiceInfo) {
+530:        return !this.mRegisteredDiscoveryService.containsKey(discoveryServiceInfo) ? RegisterDiscoveryServiceState.INACTIVATED : RegisterDiscoveryServiceState.ACTIVATED;
+537:    public boolean registerDiscoveryService(DiscoveryServiceInfo discoveryServiceInfo) {
+538:        if (this.mWifiP2pManager == null || this.mChannel == null || !discoveryServiceInfo.isValid() || this.mRegisteredDiscoveryService.containsKey(discoveryServiceInfo)) {
+541:        final DiscoveryServiceInfo discoveryServiceInfo2 = new DiscoveryServiceInfo(discoveryServiceInfo);
+542:        WifiP2pDnsSdServiceRequest wifiP2pDnsSdServiceRequestNewInstance = WifiP2pDnsSdServiceRequest.newInstance();
+543:        this.mRegisteredDiscoveryService.put(discoveryServiceInfo2, wifiP2pDnsSdServiceRequestNewInstance);
+544:        this.mWifiP2pManager.addServiceRequest(this.mChannel, wifiP2pDnsSdServiceRequestNewInstance, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.6
+545:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+547:                WifiDirectNsd.this.mRegisteredDiscoveryService.remove(discoveryServiceInfo2);
+548:                Logger.m968e("WifiDirectNsd", "Register request failed. (error = " + String.valueOf(i) + ")");
+551:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+553:                Logger.m967d("WifiDirectNsd", "Registered request.");
+560:        if (this.mWifiP2pManager == null || this.mChannel == null || !serviceInfo.isValid() || this.mRegisteredService.containsKey(serviceInfo)) {
+564:        WifiP2pDnsSdServiceInfo wifiP2pDnsSdServiceInfoNewInstance = WifiP2pDnsSdServiceInfo.newInstance(serviceInfo2.getServiceName(), serviceInfo2.getServiceType(), serviceInfo2.getAttribute());
+566:        this.mWifiP2pManager.addLocalService(this.mChannel, wifiP2pDnsSdServiceInfoNewInstance, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.3
+567:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+569:                WifiDirectNsd.this.mRegisteredService.remove(serviceInfo2);
+570:                Logger.m968e("WifiDirectNsd", "Register service failed. (error = " + String.valueOf(i) + ")");
+573:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+575:                Logger.m967d("WifiDirectNsd", "Registered service.");
+581:    public boolean startDiscovery() {
+585:        return this.mDiscoverService.start();
+588:    public boolean stopDiscovery() {
+589:        this.mDiscoverService.stop();
+596:    public boolean unregisterDiscoveryService() {
+597:        WifiP2pManager.Channel channel;
+598:        WifiP2pManager wifiP2pManager = this.mWifiP2pManager;
+602:        wifiP2pManager.clearServiceRequests(channel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.8
+603:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+605:                Logger.m968e("WifiDirectNsd", "Stop discovery services failed. (error = " + String.valueOf(i) + ")");
+608:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+610:                WifiDirectNsd.this.mRegisteredDiscoveryService.clear();
+611:                Logger.m967d("WifiDirectNsd", "Stopped discovery services.");
+617:    public boolean unregisterDiscoveryService(DiscoveryServiceInfo discoveryServiceInfo) {
+618:        final DiscoveryServiceInfo discoveryServiceInfo2;
+619:        WifiP2pServiceRequest wifiP2pServiceRequest;
+620:        if (this.mWifiP2pManager == null || this.mChannel == null || (wifiP2pServiceRequest = this.mRegisteredDiscoveryService.get((discoveryServiceInfo2 = new DiscoveryServiceInfo(discoveryServiceInfo)))) == null) {
+623:        this.mWifiP2pManager.removeServiceRequest(this.mChannel, wifiP2pServiceRequest, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.7
+624:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+626:                Logger.m968e("WifiDirectNsd", "Stop discovery service failed. (error = " + String.valueOf(i) + ")");
+629:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+631:                WifiDirectNsd.this.mRegisteredDiscoveryService.remove(discoveryServiceInfo2);
+632:                Logger.m967d("WifiDirectNsd", "Stopped discovery service.");
+639:        WifiP2pManager.Channel channel;
+640:        WifiP2pManager wifiP2pManager = this.mWifiP2pManager;
+644:        wifiP2pManager.clearLocalServices(channel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.5
+645:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+647:                Logger.m968e("WifiDirectNsd", "Unregister services failed. (error = " + String.valueOf(i) + ")");
+650:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+652:                WifiDirectNsd.this.mRegisteredService.clear();
+653:                Logger.m967d("WifiDirectNsd", "Unregistered services.");
+661:        WifiP2pServiceInfo wifiP2pServiceInfo;
+662:        if (this.mWifiP2pManager == null || this.mChannel == null || (wifiP2pServiceInfo = this.mRegisteredService.get((serviceInfo2 = new ServiceInfo(serviceInfo)))) == null) {
+665:        this.mWifiP2pManager.removeLocalService(this.mChannel, wifiP2pServiceInfo, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.4
+666:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+668:                Logger.m968e("WifiDirectNsd", "Unregister service failed. (error = " + String.valueOf(i) + ")");
+671:            @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+673:                WifiDirectNsd.this.mRegisteredService.remove(serviceInfo2);
+674:                Logger.m967d("WifiDirectNsd", "Unregistered service.");

@@ -1,0 +1,85 @@
+name: eFootball compact wire semantics
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  compact:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+          fetch-depth: 1
+      - name: Extract compact semantic sections
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('wire-output/command_wire_report.txt')
+          text=p.read_text(errors='ignore')
+          targets=[
+            'CMD_ADD_SCORE','CMD_CHANGE_GAMEPHASE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT',
+            'P2P_ADHOC_LAN','P2P_ADHOC_LAN_LOW_LEVEL','P2P_ADHOC_LAN_HIGH_LEVEL',
+            'P2P_ADHOC_WIFIDIRECTLAN','P2P_ADHOC_WIFIDIRECTLAN_LOW_LEVEL','P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL',
+            'CMD_SET_LOCAL_GAMERELAY_LIST','TaskEvCompeLocalGamerelay','direct_online_turn_mode','LinkUpMode'
+          ]
+          # split report into TARGET sections
+          chunks=re.split(r'\n#{40,}\nTARGET ', text)
+          sections={}
+          for c in chunks[1:]:
+            name=c.splitlines()[0].strip()
+            sections[name]=c
+          out=[]
+          for t in targets:
+            c=sections.get(t,'')
+            out.append('\n'+'='*100+'\nTARGET '+t)
+            if not c:
+              out.append('NO SECTION')
+              continue
+            lines=c.splitlines()[1:]
+            out.extend([x for x in lines if x.startswith(('string_vas=','xref_count='))])
+            # For each xref: function, same-function strings, and only the marked materialization neighborhood.
+            starts=[i for i,x in enumerate(lines) if x.startswith('XREF[')]
+            starts.append(len(lines))
+            for a,b in zip(starts,starts[1:]):
+              block=lines[a:b]
+              if not block: continue
+              out.append(block[0])
+              # same function strings
+              try:
+                s=block.index('SAME_FUNCTION_STRINGS:')
+                e=next((j for j in range(s+1,len(block)) if block[j].endswith(':') and not block[j].startswith('  ')),len(block))
+                sf=[x for x in block[s+1:e] if x.strip()]
+                out.append('SAME_FUNCTION_STRINGS:')
+                out.extend(sf[:80])
+              except ValueError:
+                pass
+              # marked instruction neighborhoods
+              marks=[i for i,x in enumerate(block) if x.startswith('>>')]
+              if marks:
+                lo=max(0,min(marks)-12); hi=min(len(block),max(marks)+20)
+                out.append('MARKED_XREF_NEIGHBORHOOD:')
+                out.extend(block[lo:hi])
+              # immediates and calls near xref can reveal selector enum values
+              imm=[]
+              for x in block:
+                if re.search(r'\b(cmp|mov|movk|tst|tbz|tbnz)\b',x) and '#' in x:
+                  imm.append(x)
+              if imm:
+                out.append('IMMEDIATE_HINTS:')
+                out.extend(imm[:60])
+          Path('wire-output/compact_semantics.txt').write_text('\n'.join(out))
+          PY
+      - name: Commit compact report
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add wire-output/compact_semantics.txt
+          git commit -m 'Add compact eFootball wire semantics' || exit 0
+          git push origin HEAD:efootball-apk-analysis-2026-08-23

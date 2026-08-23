@@ -1,0 +1,11 @@
+work/unpacked/apk4/classes3.dex 080A_be=1579 090A_be=390 080B_be=425 090B_be=173 080C_be=290 090C_be=105 080A_le=836 090A_le=235 080B_le=146 090B_le=86 080C_le=1361 090C_le=592
+work/unpacked/apk4/classes2.dex 080A_be=326 090A_be=294 080B_be=163 090B_be=175 080C_be=239 090C_be=178 080A_le=1083 090A_le=725 080B_le=340 090B_le=308 080C_le=1575 090C_le=1238
+work/unpacked/apk4/classes.dex 080A_be=811 090A_be=238 080B_be=153 090B_be=103 080C_be=194 090C_be=170 080A_le=787 090A_le=503 080B_le=138 090B_le=155 080C_le=1064 090C_le=744
+work/unpacked/apk6/assets/pc0000_mobile_and.pak 080A_be=1298 090A_be=1348 080B_be=1320 090B_be=1307 080C_be=1712 090C_be=1244 080A_le=1470 090A_le=1457 080B_le=1504 090B_le=1337 080C_le=1282 090C_le=1370
+work/unpacked/apk1/lib/arm64-v8a/libplaycore.so 080A_be=2 090A_be=8 080B_be=16 090B_be=18 080C_be=71 090C_be=52 080A_le=34 090A_le=19 080B_le=3 090B_le=29 080C_le=4 090C_le=2
+work/unpacked/apk1/lib/arm64-v8a/libgadsme.so 080A_be=1454 090A_be=116 080B_be=3808 090B_be=276 080C_be=481 090C_be=377 080A_le=180 090A_le=164 080B_le=4213 090B_le=153 080C_le=116 090C_le=532
+work/unpacked/apk1/lib/arm64-v8a/libcrashlytics.so 080A_be=56 090A_be=2 080B_be=4 090B_be=0 080C_be=139 090C_be=26 080A_le=7 090A_le=20 080B_le=4 090B_le=2 080C_le=31 090C_le=3
+work/unpacked/apk1/lib/arm64-v8a/libcrashlytics-common.so 080A_be=230 090A_be=23 080B_be=41 090B_be=42 080C_be=249 090C_be=105 080A_le=28 090A_le=37 080B_le=21 090B_le=15 080C_le=48 090C_le=9
+work/unpacked/apk1/lib/arm64-v8a/libUE4.so 080A_be=76480 090A_be=14455 080B_be=15960 090B_be=22088 080C_be=17817 090C_be=6538 080A_le=7221 090A_le=10095 080B_le=23338 090B_le=3249 080C_le=9609 090C_le=1226
+work/unpacked/apk1/lib/arm64-v8a/libdatastore_shared_counter.so 080A_be=0 090A_be=0 080B_be=1 090B_be=0 080C_be=0 090C_be=0 080A_le=0 090A_le=0 080B_le=0 090B_le=0 080C_le=0 090C_le=0
+work/unpacked/apk1/lib/arm64-v8a/libcrashlytics-handler.so 080A_be=55 090A_be=2 080B_be=4 090B_be=0 080C_be=139 090C_be=26 080A_le=7 090A_le=20 080B_le=4 090B_le=2 080C_le=31 090C_le=3

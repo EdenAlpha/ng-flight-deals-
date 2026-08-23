@@ -1,0 +1,1199 @@
+# peerlink-like package/class files
+/tmp/mg/jadx/sources/com/epicgames/ue4/AudioDecoder.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/BatteryReceiver.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/C0928x5c9a8c85.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameApplication.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameApplication_LifecycleAdapter.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayLicensing.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/JavaBuildSettings.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/LocalNotificationReceiver.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/Logger.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/MessageBox01.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/MulticastBroadcastReceiver.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/StoreHelper.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/VolumeReceiver.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewPositionLayout.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/network/NetworkChangedManager.java
+/tmp/mg/jadx/sources/com/epicgames/ue4/network/NetworkConnectivityClient.java
+/tmp/mg/jadx/sources/jp/konami/android/common/Achievements.java
+/tmp/mg/jadx/sources/jp/konami/android/common/AppStore.java
+/tmp/mg/jadx/sources/jp/konami/android/common/Applilink.java
+/tmp/mg/jadx/sources/jp/konami/android/common/BroadcastPermitter.java
+/tmp/mg/jadx/sources/jp/konami/android/common/Cronet.java
+/tmp/mg/jadx/sources/jp/konami/android/common/CronetRequestCallback.java
+/tmp/mg/jadx/sources/jp/konami/android/common/CustomParameter.java
+/tmp/mg/jadx/sources/jp/konami/android/common/FirebaseAnalyticsImpl.java
+/tmp/mg/jadx/sources/jp/konami/android/common/FirebaseCrashlyticsImpl.java
+/tmp/mg/jadx/sources/jp/konami/android/common/FirebaseImplementation.java
+/tmp/mg/jadx/sources/jp/konami/android/common/FirebaseMessagingServiceDerived.java
+/tmp/mg/jadx/sources/jp/konami/android/common/GameController$$ExternalSyntheticBackport0.java
+/tmp/mg/jadx/sources/jp/konami/android/common/GameController.java
+/tmp/mg/jadx/sources/jp/konami/android/common/GetMyIpAddress.java
+/tmp/mg/jadx/sources/jp/konami/android/common/GetRooting.java
+/tmp/mg/jadx/sources/jp/konami/android/common/GetThermalStats.java
+/tmp/mg/jadx/sources/jp/konami/android/common/GetTrafficStats.java
+/tmp/mg/jadx/sources/jp/konami/android/common/GetVersionName.java
+/tmp/mg/jadx/sources/jp/konami/android/common/GetWifiManager.java
+/tmp/mg/jadx/sources/jp/konami/android/common/GoogleImplementation.java
+/tmp/mg/jadx/sources/jp/konami/android/common/GranularOption.java
+/tmp/mg/jadx/sources/jp/konami/android/common/HttpDownloadImpl.java
+/tmp/mg/jadx/sources/jp/konami/android/common/HttpImpl.java
+/tmp/mg/jadx/sources/jp/konami/android/common/IabBroadcastReceiver.java
+/tmp/mg/jadx/sources/jp/konami/android/common/IconSwitcherImpl.java
+/tmp/mg/jadx/sources/jp/konami/android/common/KWebDialog.java
+/tmp/mg/jadx/sources/jp/konami/android/common/KonamiId.java
+/tmp/mg/jadx/sources/jp/konami/android/common/MailSend.java
+/tmp/mg/jadx/sources/jp/konami/android/common/NotificationAlarmReceiver.java
+/tmp/mg/jadx/sources/jp/konami/android/common/NotificationSender.java
+/tmp/mg/jadx/sources/jp/konami/android/common/Reachability.java
+/tmp/mg/jadx/sources/jp/konami/android/common/SystemInfo.java
+/tmp/mg/jadx/sources/jp/konami/android/common/TrackThirdPartySharingOption.java
+/tmp/mg/jadx/sources/jp/konami/android/common/Tracking.java
+/tmp/mg/jadx/sources/jp/konami/android/common/WebBrowser.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabClient.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabInitializationFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnAcknowledgeFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnBillingProgramAvailabilityResponseFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnBuyFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnConsumeFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnDeveloperProvidedBillingFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnGetBillingConfigFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnGetExternalTransactionTokenFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnGetInventoryFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnGetItemDetailsFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnGetItemProductDetailsFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnLaunchExternalLinkResponseFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnQueryPurchaseHistoryAsyncFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/OnShowInAppMessageFinishedListener.java
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergySocket.java
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java
+/tmp/mg/jadx/sources/jp/konami/pesam/C2396R.java
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java
+
+# targeted references
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayLicensing.java:15:    private GameActivity gameActivity;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayLicensing.java:25:            if (GooglePlayLicensing.this.gameActivity.isFinishing()) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayLicensing.java:33:            if (GooglePlayLicensing.this.gameActivity.isFinishing()) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayLicensing.java:41:            if (GooglePlayLicensing.this.gameActivity.isFinishing()) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayLicensing.java:50:        String string = Settings.Secure.getString(this.gameActivity.getApplicationContext().getContentResolver(), "android_id");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayLicensing.java:52:        LicenseChecker licenseChecker = new LicenseChecker(this.gameActivity.getApplicationContext(), new ServerManagedPolicy(this.gameActivity.getApplicationContext(), new AESObfuscator(SALT, this.gameActivity.getApplicationContext().getPackageName(), string)), str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayLicensing.java:57:    public void Init(GameActivity gameActivity, Logger logger) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayLicensing.java:58:        this.gameActivity = gameActivity;
+/tmp/mg/jadx/sources/jp/konami/Logger.java:7:    public static native void PrintNative(int i, String str);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:1:package jp.konami.peerlink.btc;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:11:public class BluetoothSwitch extends Activity {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:21:    private static final String TAG = "btc/BluetoothSwitch";
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:26:            sendBroadcast(new Intent(i2 == -1 ? "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DEVICE_ENABLED" : "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DEVICE_DISABLED"));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:29:            sendBroadcast(new Intent(i2 != 0 ? "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DISCOVERABLE_MODE_ENABLED" : "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DISCOVERABLE_MODE_DISABLED"));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:64:            sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_GRANTED"));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:92:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_DENIED"));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothSwitch.java:96:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_GRANTED"));
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:5:    public static native void AllowJavaBackButtonEvent(boolean z);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:7:    public static native void AllowSleep(String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:9:    public static native void CallNativeToEmbedded(String str, int i, String str2, String str3, String[] strArr, String str4);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:11:    public static native void ForwardNotification(String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:13:    public static native void HandleCustomTouchEvent(int i, int i2, int i3, int i4, float f, float f2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:15:    public static native void KeepAwake(String str, boolean z);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:17:    public static native void RouteServiceIntent(String str, String str2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:19:    public static native void SetNamedObject(String str, Object obj);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:21:    public static native void UELogError(String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:23:    public static native void UELogLog(String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:25:    public static native void UELogVerbose(String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:27:    public static native void UELogWarning(String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/NativeCalls.java:29:    public static native void WebViewVisible(boolean z);
+/tmp/mg/jadx/sources/jp/konami/AndroidUtil.java:72:    public static native void OnPauseCallback();
+/tmp/mg/jadx/sources/jp/konami/AndroidUtil.java:74:    public static native void OnResumeCallback();
+/tmp/mg/jadx/sources/com/epicgames/ue4/LocalNotificationReceiver.java:41:        Intent intent2 = new Intent(context, (Class<?>) GameActivity.class);
+/tmp/mg/jadx/sources/com/epicgames/ue4/LocalNotificationReceiver.java:63:            GameActivity.LocalNotificationRemoveDetails(context, intExtra);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1:package jp.konami.peerlink.btc;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:47:public class BluetoothClassic {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:48:    static final String BLUETOOTH_DEVICE_DISABLED = "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DEVICE_DISABLED";
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:49:    static final String BLUETOOTH_DEVICE_ENABLED = "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DEVICE_ENABLED";
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:50:    static final String BLUETOOTH_DISCOVERABLE_MODE_DISABLED = "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DISCOVERABLE_MODE_DISABLED";
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:51:    static final String BLUETOOTH_DISCOVERABLE_MODE_ENABLED = "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_BLUETOOTH_DISCOVERABLE_MODE_ENABLED";
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:57:    static final String PERMISSION_DENIED = "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_DENIED";
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:58:    static final String PERMISSION_EXPLANATION_REQUIERED = "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_EPLANATION_REQUIERED";
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:59:    static final String PERMISSION_GRANTED = "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_GRANTED";
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:60:    static final String PERMISSION_REQUEST = "JP_KONAMI_PEERLINK_BTC_BLUETOOTHCLASSIC_PERMISSION_REQUEST";
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:61:    private static final String TAG = "BluetoothClassic";
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:80:            this.mSocket = BluetoothClassic.this.mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(BluetoothClassic.this.mConfig.getServiceId(), UUID.fromString(BluetoothClassic.this.mConfig.getControlConnectionUuid()));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:88:                Logger.m968e(BluetoothClassic.TAG, "Failed to close.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:112:                                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:119:                    Logger.m968e(BluetoothClassic.TAG, "Advertise failed.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:125:                    Logger.m968e(BluetoothClassic.TAG, "Advertise failed.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:133:                DatagramBluetoothSocket datagramBluetoothSocket = BluetoothClassic.this.new DatagramBluetoothSocket(bluetoothSocketAccept);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:134:                Logger.m967d(BluetoothClassic.TAG, "Control connection accepted: " + datagramBluetoothSocket.getRemoteDevice().toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:135:                if (BluetoothClassic.this.sendAdvertise(datagramBluetoothSocket)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:141:                        if (System.currentTimeMillis() - jCurrentTimeMillis >= BluetoothClassic.this.mConfig.getAdvertiseTimeoutMs()) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:142:                            Logger.m968e(BluetoothClassic.TAG, "Advertise timedout.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:145:                        Thread.sleep(BluetoothClassic.this.mConfig.getAdvertiseTimeoutMs() < 100 ? BluetoothClassic.this.mConfig.getAdvertiseTimeoutMs() : 100L);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:152:                        Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:163:                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:246:            this.mSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(BluetoothClassic.this.mConfig.getDataConnectionUuid()));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:257:                Logger.m968e(BluetoothClassic.TAG, "Failed to close.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:270:            if (BluetoothClassic.this.mBluetoothAdapter.isDiscovering()) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:271:                Logger.m968e(BluetoothClassic.TAG, "Can not connect in discovering.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:276:                DatagramBluetoothSocket datagramBluetoothSocket = BluetoothClassic.this.new DatagramBluetoothSocket(this.mSocket);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:277:                Logger.m967d(BluetoothClassic.TAG, "Connected to " + datagramBluetoothSocket.getRemoteDevice().toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:278:                if (!BluetoothClassic.this.sendAdvertise(datagramBluetoothSocket)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:279:                    Logger.m968e(BluetoothClassic.TAG, "Failed to send advertise.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:282:                    BluetoothClassic.this.mConnectionThreadController = BluetoothClassic.this.new ConnectionThreadController(datagramBluetoothSocket);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:283:                    BluetoothClassic.this.mConnectionThreadController.start();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:286:                Logger.m968e(BluetoothClassic.TAG, "Connect failed.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:291:                    Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:323:                    Logger.m968e(BluetoothClassic.TAG, "Failed to set priority.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:374:                    Logger.m968e(BluetoothClassic.TAG, "Failed to set priority.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:392:                                Logger.m968e(BluetoothClassic.TAG, "Failed to send.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:470:                    Logger.m968e(BluetoothClassic.TAG, "Failed to initialize.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:491:                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:515:                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:536:                    Logger.m968e(BluetoothClassic.TAG, "Failed to recv.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:549:                Logger.m968e(BluetoothClassic.TAG, "Protocol violation.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:559:                    Logger.m968e(BluetoothClassic.TAG, "Failed to serialize.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:569:                        Logger.m968e(BluetoothClassic.TAG, "Failed to send.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:574:                Logger.m968e(BluetoothClassic.TAG, "Failed to serialize.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:667:            this.mSocket = BluetoothClassic.this.mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(BluetoothClassic.this.mConfig.getServiceId(), UUID.fromString(BluetoothClassic.this.mConfig.getDataConnectionUuid()));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:671:            if (BluetoothClassic.this.mConnectionThreadController != null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:679:                DatagramBluetoothSocket datagramBluetoothSocket = BluetoothClassic.this.new DatagramBluetoothSocket(bluetoothSocketPoll);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:680:                DeviceInfo deviceInfoRecvAdvertise = BluetoothClassic.this.recvAdvertise(datagramBluetoothSocket);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:682:                    BluetoothClassic.this.mConnectionThreadController = BluetoothClassic.this.new ConnectionThreadController(datagramBluetoothSocket);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:683:                    BluetoothClassic.this.mConnectionThreadController.start();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:684:                    Logger.m967d(BluetoothClassic.TAG, "Data connection accepted: " + deviceInfoRecvAdvertise.getDevice().toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:697:                Logger.m968e(BluetoothClassic.TAG, "Failed to close.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:715:                    Logger.m968e(BluetoothClassic.TAG, "Accept failed.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:722:                            Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:804:            intentFilter.addAction(BluetoothClassic.BLUETOOTH_DEVICE_ENABLED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:805:            intentFilter.addAction(BluetoothClassic.BLUETOOTH_DEVICE_DISABLED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:806:            intentFilter.addAction(BluetoothClassic.BLUETOOTH_DISCOVERABLE_MODE_ENABLED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:807:            intentFilter.addAction(BluetoothClassic.BLUETOOTH_DISCOVERABLE_MODE_DISABLED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:808:            intentFilter.addAction(BluetoothClassic.PERMISSION_GRANTED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:809:            intentFilter.addAction(BluetoothClassic.PERMISSION_DENIED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:810:            intentFilter.addAction(BluetoothClassic.PERMISSION_EXPLANATION_REQUIERED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:811:            intentFilter.addAction(BluetoothClassic.PERMISSION_REQUEST);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:812:            BluetoothClassic.this.mActivity.registerReceiver(this, intentFilter, 4);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:822:            BluetoothClassic.this.mActivity.registerReceiver(this, intentFilter2, 2);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:829:                BluetoothClassic.this.mActivity.unregisterReceiver(this);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:840:            if (action.equals(BluetoothClassic.BLUETOOTH_DEVICE_ENABLED)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:841:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth device enabled.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:842:                BluetoothClassic.this.checkPermission();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:845:            if (action.equals(BluetoothClassic.BLUETOOTH_DEVICE_DISABLED)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:846:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth device disabled.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:847:                BluetoothClassic.this.mDeviceState = DeviceState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:850:            if (action.equals(BluetoothClassic.BLUETOOTH_DISCOVERABLE_MODE_ENABLED)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:853:            if (action.equals(BluetoothClassic.BLUETOOTH_DISCOVERABLE_MODE_DISABLED)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:854:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth discoverable mode refused.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:855:                BluetoothClassic.this.stopDiscoverableThread();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:856:                BluetoothClassic.this.mDiscoverableState = DiscoverableState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:860:                Logger.m967d(BluetoothClassic.TAG, "Started discovery.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:861:                DiscoveryState discoveryState = BluetoothClassic.this.mDiscoveryState;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:863:                BluetoothClassic bluetoothClassic = BluetoothClassic.this;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:865:                    Logger.m968e(BluetoothClassic.TAG, "Unknown error. (state = " + bluetoothClassic.mDiscoveryState + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:868:                    bluetoothClassic.mScanThread = BluetoothClassic.this.new ScanThread();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:869:                    BluetoothClassic.this.mDiscoveryState = DiscoveryState.ACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:874:                Logger.m967d(BluetoothClassic.TAG, "Finished discovery.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:875:                ScanThread scanThread = BluetoothClassic.this.mScanThread;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:876:                BluetoothClassic bluetoothClassic2 = BluetoothClassic.this;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:878:                    if (bluetoothClassic2.getDiscoveryState() != DiscoveryState.INACTIVATED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:879:                        Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:880:                        BluetoothClassic.this.stopDiscovery();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:886:                    bluetoothClassic2.mScanThread.start();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:891:                    Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:892:                    BluetoothClassic.this.stopDiscovery();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:900:                    Logger.m967d(BluetoothClassic.TAG, "Scan mode changed: Unknown error. (" + intExtra + " -> " + intExtra2 + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:902:                    Logger.m967d(BluetoothClassic.TAG, "Scan mode changed: " + intExtra + " -> " + intExtra2);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:905:                    if (BluetoothClassic.this.mDiscoverableState == DiscoverableState.ACTIVATING) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:906:                        Logger.m967d(BluetoothClassic.TAG, "Bluetooth discoverable mode enabled.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:907:                        BluetoothClassic.this.mDiscoverableState = DiscoverableState.ACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:912:                if ((intExtra2 == 20 || intExtra2 == 21) && BluetoothClassic.this.mDiscoverableState != DiscoverableState.INACTIVATED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:913:                    Logger.m967d(BluetoothClassic.TAG, "Bluetooth discoverable mode disabled.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:914:                    if (!BluetoothClassic.this.stopDiscoverableThread()) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:915:                        Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:917:                    BluetoothClassic.this.mDiscoverableState = DiscoverableState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:926:                    Logger.m967d(BluetoothClassic.TAG, "State changed: Unknown error. (" + intExtra3 + " -> " + intExtra4 + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:929:                    Logger.m967d(BluetoothClassic.TAG, "State changed: " + intExtra3 + " -> " + intExtra4);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:934:                Logger.m967d(BluetoothClassic.TAG, "Change name: " + intent.getStringExtra("android.bluetooth.adapter.extra.LOCAL_NAME"));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:938:                Logger.m967d(BluetoothClassic.TAG, "Device found: " + ((BluetoothDevice) intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE")).toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:943:                Logger.m967d(BluetoothClassic.TAG, "Device name changed: " + bluetoothDevice.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:944:                if (BluetoothClassic.this.mScanThread == null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:945:                    Logger.m967d(BluetoothClassic.TAG, "Ignore device: " + bluetoothDevice.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:948:                    BluetoothClassic.this.mScanThread.pushFoundDevice(bluetoothDevice);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:953:                if (BluetoothClassic.this.mScanThread == null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:954:                    if (BluetoothClassic.this.getDiscoveryState() != DiscoveryState.INACTIVATED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:955:                        Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:956:                        BluetoothClassic.this.stopDiscovery();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:969:                BluetoothClassic.this.mScanThread.pushUuid(bluetoothDevice2, uuidArr);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:972:            if (action.equals(BluetoothClassic.PERMISSION_GRANTED)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:973:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth Permission Guaranteed.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:974:                if (BluetoothClassic.this.mBluetoothAdapter.isEnabled()) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:975:                    Logger.m967d(BluetoothClassic.TAG, "Activated Bluetooth.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:976:                    BluetoothClassic.this.mDeviceState = DeviceState.ACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:979:                    Logger.m967d(BluetoothClassic.TAG, "Activate Bluetooth.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:980:                    BluetoothClassic.this.mDeviceState = DeviceState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:981:                    BluetoothClassic.this.enableBluetooth();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:985:            if (action.equals(BluetoothClassic.PERMISSION_DENIED)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:986:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth Permission Denied.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:987:                BluetoothClassic.this.mDeviceState = DeviceState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:988:            } else if (action.equals(BluetoothClassic.PERMISSION_EXPLANATION_REQUIERED)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:989:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth Permission Explanation Required.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:990:                BluetoothClassic.this.requestPermissionExplanation();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:991:            } else if (action.equals(BluetoothClassic.PERMISSION_REQUEST)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:992:                Logger.m967d(BluetoothClassic.TAG, "Bluetooth Permission Requested.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:993:                BluetoothClassic.this.requestPermission();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1030:                    Logger.m967d(BluetoothClassic.TAG, "UUID: device = " + uuidInfo.mDevice.toString() + ", uuid = " + uuid.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1032:                        BluetoothClassic bluetoothClassic = BluetoothClassic.this;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1033:                        zIsEqual = bluetoothClassic.isEqual(uuid, UUID.fromString(bluetoothClassic.mConfig.getControlConnectionUuid()));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1036:                        BluetoothClassic bluetoothClassic2 = BluetoothClassic.this;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1037:                        zIsEqual2 = bluetoothClassic2.isEqual(uuid, UUID.fromString(bluetoothClassic2.mConfig.getDataConnectionUuid()));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1061:            jp.konami.Logger.m968e(jp.konami.peerlink.btc.BluetoothClassic.TAG, "Fetch UUID timed out.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1081:            jp.konami.Logger.m967d(jp.konami.peerlink.btc.BluetoothClassic.TAG, "Fetching UUID. (device = " + r1.toString() + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1099:                            Logger.m968e(BluetoothClassic.TAG, "Failed to fetchUuidsWithSdp()");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1108:            if (BluetoothClassic.this.mBluetoothAdapter.isDiscovering()) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1109:                Logger.m968e(BluetoothClassic.TAG, "Can not scan in discovering.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1115:                    Logger.m967d(BluetoothClassic.TAG, "Finished scan.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1119:                    Logger.m968e(BluetoothClassic.TAG, "Failed to scan.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1130:            Logger.m967d(BluetoothClassic.TAG, "Try to scan. (device = " + bluetoothDevice.toString() + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1131:            synchronized (BluetoothClassic.this.mFoundNodes) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1132:                Iterator it = BluetoothClassic.this.mFoundNodes.iterator();
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1136:                        Logger.m967d(BluetoothClassic.TAG, "Already scanned. (device = " + bluetoothDevice.toString() + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1142:                    bluetoothSocketCreateInsecureRfcommSocketToServiceRecord = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(BluetoothClassic.this.mConfig.getControlConnectionUuid()));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1143:                    this.mFuture = this.mService.schedule(new Runnable(bluetoothSocketCreateInsecureRfcommSocketToServiceRecord) { // from class: jp.konami.peerlink.btc.BluetoothClassic.ScanThread.1Task
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1155:                                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1162:                        DatagramBluetoothSocket datagramBluetoothSocket = BluetoothClassic.this.new DatagramBluetoothSocket(bluetoothSocketCreateInsecureRfcommSocketToServiceRecord);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1163:                        Logger.m967d(BluetoothClassic.TAG, "Scanning for " + datagramBluetoothSocket.getRemoteDevice().toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1164:                        DeviceInfo deviceInfoRecvAdvertise = BluetoothClassic.this.recvAdvertise(datagramBluetoothSocket);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1166:                            Logger.m967d(BluetoothClassic.TAG, "Scan succeeded: address = " + deviceInfoRecvAdvertise.getDevice().getAddress() + ", id = " + deviceInfoRecvAdvertise.getId() + ", attribute = " + (deviceInfoRecvAdvertise.getAttribute() == null ? "" : deviceInfoRecvAdvertise.getAttribute().toString()));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1167:                            synchronized (BluetoothClassic.this.mFoundNodes) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1168:                                BluetoothClassic.this.mFoundNodes.add(deviceInfoRecvAdvertise);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1173:                        Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1190:                Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1218:                    Logger.m968e(BluetoothClassic.TAG, "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1233:            BluetoothClassic.this.mDiscoveryState = DiscoveryState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1237:    public BluetoothClassic(Config config, Activity activity) throws IllegalArgumentException {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1265:        for (String str : BluetoothSwitch.BLUETOOTH_PERMISSIONS) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1269:                    Logger.m967d("btc/BluetoothSwitch ", str + " priviledge UI requested!");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1290:        this.mActivity.runOnUiThread(new Runnable() { // from class: jp.konami.peerlink.btc.BluetoothClassic.1
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1293:                AlertDialog.Builder builder = new AlertDialog.Builder(BluetoothClassic.this.mActivity);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1296:                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() { // from class: jp.konami.peerlink.btc.BluetoothClassic.1.1
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1299:                        Logger.m967d(BluetoothClassic.TAG, "finish DispExplanationDialog");
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1300:                        BluetoothClassic.this.mActivity.sendBroadcast(new Intent(BluetoothClassic.PERMISSION_REQUEST));
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1315:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1383:        return new jp.konami.peerlink.btc.BluetoothClassic.DeviceInfo(r10.getRemoteDevice(), new java.lang.String(r2), r3, r0);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1432:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1433:        intent.putExtra("BLUETOOTH_SWITCH", BluetoothSwitch.REQUEST_PERMISSIONS);
+/tmp/mg/jadx/sources/jp/konami/peerlink/btc/BluetoothClassic.java:1691:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:24:    private Intent GameActivityIntent;
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:135:            z2 = bundle2.containsKey("com.epicgames.ue4.GameActivity.bShouldHideUI") ? bundle2.getBoolean("com.epicgames.ue4.GameActivity.bShouldHideUI") : false;
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:137:                z = bundle2.containsKey("com.epicgames.ue4.GameActivity.bUseDisplayCutout") ? bundle2.getBoolean("com.epicgames.ue4.GameActivity.bUseDisplayCutout") : false;
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:139:                    if (bundle2.containsKey("com.epicgames.ue4.GameActivity.BuildConfiguration")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:140:                        bundle2.getString("com.epicgames.ue4.GameActivity.BuildConfiguration").equals("Shipping");
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:142:                    if (bundle2.containsKey("com.epicgames.ue4.GameActivity.bUseExternalFilesDir")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:143:                        bundle2.getBoolean("com.epicgames.ue4.GameActivity.bUseExternalFilesDir");
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:145:                    if (bundle2.containsKey("com.epicgames.ue4.GameActivity.StartupPermissions")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:146:                        this.permissionsRequiredAtStart = filterRequiredPermissions(bundle2.getString("com.epicgames.ue4.GameActivity.StartupPermissions"));
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:193:        Intent intent = new Intent(this, (Class<?>) GameActivity.class);
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:194:        this.GameActivityIntent = intent;
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:196:        this.GameActivityIntent.addFlags(65536);
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:197:        this.GameActivityIntent.putExtra("UseSplashScreen", "true");
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:199:            this.GameActivityIntent.putExtra("ShouldHideUI", "true");
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:202:            this.GameActivityIntent.putExtra("UseDisplayCutout", "true");
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:207:            this.GameActivityIntent.putExtras(extras);
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:211:            this.GameActivityIntent.setAction(action);
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:221:        startActivity(this.GameActivityIntent);
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:255:        startActivity(this.GameActivityIntent);
+/tmp/mg/jadx/sources/com/epicgames/ue4/SplashActivity.java:301:                            SplashActivity.this.startActivity(SplashActivity.this.GameActivityIntent);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:1:package jp.konami.peerlink.wifidirect;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:23:public class WifiDirectNsd {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:170:                synchronized (WifiDirectNsd.this.mDiscoveredService) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:171:                    Iterator it = WifiDirectNsd.this.mDiscoveredService.entrySet().iterator();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:174:                        WifiDirectNsd.this.mDiscoveredService.put((DiscoveredServiceInfo) entry.getKey(), Integer.valueOf(((Integer) entry.getValue()).intValue() + 1));
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:180:                WifiDirectNsd.this.mWifiP2pManager.discoverServices(WifiDirectNsd.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.DiscoverService.Task.1
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:183:                        Logger.m968e("WifiDirectNsd", "Discover service failed. (error = " + String.valueOf(i) + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:188:                        Logger.m967d("WifiDirectNsd", "Discover service.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:287:            return WifiDirectNsd.isServiceTypeValid(this.mServiceType);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:364:            return WifiDirectNsd.isServiceNameValid(this.mServiceName) && WifiDirectNsd.isServiceTypeValid(this.mServiceType);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:456:    public WifiDirectNsd(WifiP2pManager wifiP2pManager, WifiP2pManager.Channel channel) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:459:        wifiP2pManager.setDnsSdResponseListeners(channel, new WifiP2pManager.DnsSdServiceResponseListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.1
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:462:                Logger.m967d("WifiDirectNsd", "DnsSdService available: instance = " + str + ", registration = " + str2 + ", device = " + wifiP2pDevice.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:463:                synchronized (WifiDirectNsd.this.mDiscoveredService) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:464:                    WifiDirectNsd.this.mDiscoveredService.put(new DiscoveredServiceInfo(str, str2, wifiP2pDevice), 0);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:467:        }, new WifiP2pManager.DnsSdTxtRecordListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.2
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:470:                Logger.m967d("WifiDirectNsd", "DnsSdTxtRecord available: domain = " + str + ", record = " + map.toString() + ", device = " + wifiP2pDevice.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:471:                WifiDirectNsd.this.mTxtRecord.put(str, new TxtRecordInfo(map, wifiP2pDevice));
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:544:        this.mWifiP2pManager.addServiceRequest(this.mChannel, wifiP2pDnsSdServiceRequestNewInstance, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.6
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:547:                WifiDirectNsd.this.mRegisteredDiscoveryService.remove(discoveryServiceInfo2);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:548:                Logger.m968e("WifiDirectNsd", "Register request failed. (error = " + String.valueOf(i) + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:553:                Logger.m967d("WifiDirectNsd", "Registered request.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:566:        this.mWifiP2pManager.addLocalService(this.mChannel, wifiP2pDnsSdServiceInfoNewInstance, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.3
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:569:                WifiDirectNsd.this.mRegisteredService.remove(serviceInfo2);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:570:                Logger.m968e("WifiDirectNsd", "Register service failed. (error = " + String.valueOf(i) + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:575:                Logger.m967d("WifiDirectNsd", "Registered service.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:602:        wifiP2pManager.clearServiceRequests(channel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.8
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:605:                Logger.m968e("WifiDirectNsd", "Stop discovery services failed. (error = " + String.valueOf(i) + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:610:                WifiDirectNsd.this.mRegisteredDiscoveryService.clear();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:611:                Logger.m967d("WifiDirectNsd", "Stopped discovery services.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:623:        this.mWifiP2pManager.removeServiceRequest(this.mChannel, wifiP2pServiceRequest, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.7
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:626:                Logger.m968e("WifiDirectNsd", "Stop discovery service failed. (error = " + String.valueOf(i) + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:631:                WifiDirectNsd.this.mRegisteredDiscoveryService.remove(discoveryServiceInfo2);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:632:                Logger.m967d("WifiDirectNsd", "Stopped discovery service.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:644:        wifiP2pManager.clearLocalServices(channel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.5
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:647:                Logger.m968e("WifiDirectNsd", "Unregister services failed. (error = " + String.valueOf(i) + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:652:                WifiDirectNsd.this.mRegisteredService.clear();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:653:                Logger.m967d("WifiDirectNsd", "Unregistered services.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:665:        this.mWifiP2pManager.removeLocalService(this.mChannel, wifiP2pServiceInfo, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.4
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:668:                Logger.m968e("WifiDirectNsd", "Unregister service failed. (error = " + String.valueOf(i) + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:673:                WifiDirectNsd.this.mRegisteredService.remove(serviceInfo2);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirectNsd.java:674:                Logger.m967d("WifiDirectNsd", "Unregistered service.");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:114:                    GameActivity.Log.debug("WebViewControl: disabled shared GL context on " + strGlGetString);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:279:                GameActivity.Log.warn("Failed to complete framebuffer attachment (" + iGlCheckFramebufferStatus + ")");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:370:                    GameActivity.Log.error("Could not compile shader " + i + ":");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:371:                    GameActivity.Log.error(GLES20.glGetShaderInfoLog(iGlCreateShader));
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:406:                    GameActivity.Log.error("unable to get EGL14 display");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:412:                    GameActivity.Log.error("unable to initialize EGL14 display");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:436:                GameActivity.Log.error("mTextureID <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:450:                GameActivity.Log.error("mFBO <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:457:                GameActivity.Log.error("mBlitVertexShaderID == 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:463:                GameActivity.Log.error("mBlitFragmentShaderID == 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:470:                GameActivity.Log.error("mProgram <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:480:                GameActivity.Log.error("Could not link program: ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:481:                GameActivity.Log.error(GLES20.glGetProgramInfoLog(this.mProgram));
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:494:                GameActivity.Log.error("mBlitBuffer <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:531:                    GameActivity.Log.error("WebViewControl$BitmapRenderer: " + str + ": glGetError GL_INVALID_ENUM");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:534:                    GameActivity.Log.error("WebViewControl$BitmapRenderer: " + str + ": glGetError GL_INVALID_VALUE");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:537:                    GameActivity.Log.error("WebViewControl$BitmapRenderer: " + str + ": glGetError GL_INVALID_OPERATION");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:540:                    GameActivity.Log.error("WebViewControl$BitmapRenderer: " + str + ": glGetError GL_OUT_OF_MEMORY");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:543:                    GameActivity.Log.error("WebViewControl$BitmapRenderer: " + str + ": glGetError GL_INVALID_FRAMEBUFFER_OPERATION");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:546:                    GameActivity.Log.error("WebViewControl$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:549:                    GameActivity.Log.error("WebViewControl$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:552:                    GameActivity.Log.error("WebViewControl$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_UNSUPPORTED");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:555:                    GameActivity.Log.error("WebViewControl$BitmapRenderer: " + str + ": glGetError " + i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:705:            GameActivity.Log.warn(consoleMessage.message() + " -- From line " + consoleMessage.lineNumber() + " of " + consoleMessage.sourceId());
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:711:            WebView webView2 = new WebView(GameActivity._activity);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:719:        public native boolean onJsAlert(WebView webView, String str, String str2, JsResult jsResult);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:722:        public native boolean onJsBeforeUnload(WebView webView, String str, String str2, JsResult jsResult);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:725:        public native boolean onJsConfirm(WebView webView, String str, String str2, JsResult jsResult);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:728:        public native boolean onJsPrompt(WebView webView, String str, String str2, String str3, JsPromptResult jsPromptResult);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:731:        public native void onReceivedTitle(WebView webView, String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:936:        private native byte[] shouldInterceptRequestImpl(String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:948:        public native void onPageLoad(String str, boolean z, int i, int i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:957:        public native void onReceivedError(WebView webView, int i, String str, String str2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:969:        public native boolean shouldOverrideUrlLoading(WebView webView, String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:982:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.1
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:985:                WebView.setWebContentsDebuggingEnabled(z3 && !GameActivity._activity.nativeIsShippingBuild());
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:986:                WebViewControl.this.webView = WebViewControl.this.new GLWebView(GameActivity._activity);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1004:                WebViewControl.this.positionLayout = new WebViewPositionLayout(GameActivity._activity, this);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1027:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.12
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1045:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.13
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1059:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.11
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1079:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.4
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1094:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.9
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1103:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.6
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1113:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.5
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1123:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.8
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1133:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.2
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1143:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.3
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1152:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.7
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1161:        GameActivity._activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.WebViewControl.10
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1171:                    GameActivity._activity.addContentView(WebViewControl.this.positionLayout, new ViewGroup.LayoutParams(-1, -1));
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1263:        GameActivity.Log.warn("initBitmapRenderer failed to alloc mBitmapRenderer ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1267:    public native void nativeClearCachedAttributeState(int i, int i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/WebViewControl.java:1301:            GameActivity.Log.warn("updateVideoFrame failed to alloc mOESTextureRenderer ");
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:14:import com.epicgames.ue4.GameActivity;
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:53:        if (GameActivity.Get().VerifyOBBOnStartUp && !expansionFilesUptoData()) {
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:57:        this.OutputData.putExtra(GameActivity.DOWNLOAD_RETURN_NAME, 1);
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:141:                    GameActivity.Log.debug("Splitting dataLine => " + str);
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:146:                GameActivity.Log.debug("Exception thrown during file details reading.");
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:161:        GameActivity.Log.debug("Starting DownloaderActivity...");
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:165:        GameActivity.Log.debug("... UI setup. Checking for files.");
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:167:            GameActivity.Log.debug("... Whoops... missing; go go go download system!");
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:170:        GameActivity.Log.debug("... Can has! Check 'em Dano!");
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:335:        GameActivity.Log.debug("In onPause");
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:336:        if (this.OutputData.getIntExtra(GameActivity.DOWNLOAD_RETURN_NAME, 0) == 0) {
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:337:            GameActivity.Log.debug("onPause returning that user quit the download.");
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:338:            this.OutputData.putExtra(GameActivity.DOWNLOAD_RETURN_NAME, 3);
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:388:                        GameActivity.Log.debug("Exception thrown during file details writing.");
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:391:                    DownloaderActivity.this.OutputData.putExtra(GameActivity.DOWNLOAD_RETURN_NAME, 1);
+/tmp/mg/jadx/sources/jp/konami/pesam/DownloaderActivity.java:406:                            DownloaderActivity.this.OutputData.putExtra(GameActivity.DOWNLOAD_RETURN_NAME, 5);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:1:package jp.konami.peerlink.wifidirect;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:23:import jp.konami.peerlink.wifidirect.WifiDirectNsd;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:28:public class WifiDirect {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:39:    private WifiDirectNsd mWifiDirectNsd;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:264:            WifiDirect.this.mActivity.registerReceiver(this, intentFilter, 4);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:271:                WifiDirect.this.mActivity.unregisterReceiver(this);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:284:                WifiDirect wifiDirect = WifiDirect.this;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:286:                    wifiDirect.mDeviceState = DeviceState.ACTIVATING;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:287:                    Logger.m967d("WifiDirect", "Enabled WifiP2p.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:290:                    wifiDirect.mDeviceState = DeviceState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:291:                    Logger.m967d("WifiDirect", "Disabled WifiP2p.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:297:                    Logger.m967d("WifiDirect", "Device changed: \n" + ((WifiP2pDevice) intent.getParcelableExtra("wifiP2pDevice")).toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:303:            if (WifiDirect.this.mDeviceState == DeviceState.ACTIVATING) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:305:                WifiDirect wifiDirect2 = WifiDirect.this;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:307:                    wifiDirect2.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.1
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:310:                            Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:315:                            Logger.m967d("WifiDirect", "Closed.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:320:                    wifiDirect2.mDeviceState = DeviceState.ACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:324:            Logger.m967d("WifiDirect", "Connection changed: \n" + networkInfo.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:326:            WifiDirect wifiDirect3 = WifiDirect.this;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:328:                if (wifiDirect3.mNetworkInfo.tryDelayDisconnect()) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:331:                WifiDirect.this.mNetworkInfo.init();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:334:            wifiDirect3.mNetworkInfo.stopDelayDisconnect();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:335:            NetworkInfo.ConnectionState connectionState = WifiDirect.this.mNetworkInfo.getConnectionState();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:337:                WifiDirect.this.mWifiP2pManager.requestConnectionInfo(WifiDirect.this.mChannel, new WifiP2pManager.ConnectionInfoListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.3
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:340:                        Logger.m967d("WifiDirect", "Connection info availed: \n" + wifiP2pInfo.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:341:                        NetworkInfo.ConnectionState connectionState2 = WifiDirect.this.mNetworkInfo.getConnectionState();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:342:                        if (!(connectionState2 == NetworkInfo.ConnectionState.CREATING && wifiP2pInfo.isGroupOwner) && (!(connectionState2 == NetworkInfo.ConnectionState.ESTABLISHED && WifiDirect.this.mNetworkInfo.isGroupOwner() && wifiP2pInfo.isGroupOwner) && (connectionState2 != NetworkInfo.ConnectionState.CONNECTING || wifiP2pInfo.isGroupOwner))) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:343:                            Logger.m968e("WifiDirect", "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:344:                            WifiDirect.this.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.3.1
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:347:                                    Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:352:                                    Logger.m967d("WifiDirect", "Closed.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:356:                            WifiDirect.this.mNetworkInfo.set(wifiP2pInfo);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:357:                            WifiDirect.this.mNetworkInfo.changeConnectionState(NetworkInfo.ConnectionState.ESTABLISHED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:362:                Logger.m968e("WifiDirect", "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:363:                WifiDirect.this.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.2
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:366:                        Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:371:                        Logger.m967d("WifiDirect", "Closed.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:379:        private WifiDirectNsd.DetectedServiceInfo mDetectedServiceInfo;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:385:        private ServiceInfo(WifiDirectNsd.DetectedServiceInfo detectedServiceInfo) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:386:            this.mDetectedServiceInfo = new WifiDirectNsd.DetectedServiceInfo(detectedServiceInfo);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:401:            WifiDirectNsd.DetectedServiceInfo detectedServiceInfo = this.mDetectedServiceInfo;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:402:            WifiDirectNsd.DetectedServiceInfo detectedServiceInfo2 = ((ServiceInfo) obj).mDetectedServiceInfo;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:409:            if (attribute == null || (str = attribute.get(WifiDirect.ATTRIBUTE_KEY_USER_ATTRIBUTE)) == null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:432:            return attribute == null ? "" : attribute.get(WifiDirect.ATTRIBUTE_KEY_ID);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:438:            if (attribute == null || (str = attribute.get(WifiDirect.ATTRIBUTE_KEY_PORT)) == null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:449:    public WifiDirect(Config config, Activity activity) throws IllegalArgumentException {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:452:            Logger.m967d("WifiDirect", "Invalid argument.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:464:        this.mChannel = wifiP2pManager.initialize(activity, activity.getMainLooper(), new WifiP2pManager.ChannelListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.1
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:467:                Logger.m967d("WifiDirect", "The channel has been disconnected.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:468:                WifiDirect.this.mDeviceState = DeviceState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:471:        this.mWifiDirectNsd = new WifiDirectNsd(this.mWifiP2pManager, this.mChannel);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:484:            wifiP2pManager.cancelConnect(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.4
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:487:                    Logger.m968e("WifiDirect", "Failed to cancelConnect. (error = " + i + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:492:                    Logger.m967d("WifiDirect", "Canceled.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:496:            wifiP2pManager.removeGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.5
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:499:                    Logger.m968e("WifiDirect", "Failed to removeGroup. (error = " + i + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:504:                    Logger.m967d("WifiDirect", "Closed.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:522:            Logger.m968e("WifiDirect", "WPS push button configuration is not supported.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:528:        this.mWifiP2pManager.connect(this.mChannel, wifiP2pConfig, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.3
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:531:                Logger.m968e("WifiDirect", "Failed to connect. (error = " + i + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:532:                WifiDirect.this.mNetworkInfo.init();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:537:                Logger.m967d("WifiDirect", "Connecting to: \n" + device.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:538:                WifiDirect.this.mNetworkInfo.set(serviceInfo2);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:549:        this.mWifiP2pManager.createGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.2
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:552:                Logger.m968e("WifiDirect", "Failed to createGroup. (error = " + i + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:553:                WifiDirect.this.mNetworkInfo.init();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:558:                Logger.m967d("WifiDirect", "Creating group...");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:573:        WifiDirectNsd wifiDirectNsd = this.mWifiDirectNsd;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:574:        if (wifiDirectNsd != null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:575:            wifiDirectNsd.destruct();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:588:        WifiDirectNsd.ServiceInfo serviceInfo = new WifiDirectNsd.ServiceInfo();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:602:        WifiDirectNsd.RegisterServiceState registerServiceState = this.mWifiDirectNsd.getRegisterServiceState(serviceInfo);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:603:        return registerServiceState == WifiDirectNsd.RegisterServiceState.ACTIVATING ? AdvertisementState.ACTIVATING : registerServiceState == WifiDirectNsd.RegisterServiceState.ACTIVATED ? AdvertisementState.ACTIVATED : registerServiceState == WifiDirectNsd.RegisterServiceState.INACTIVATING ? AdvertisementState.INACTIVATING : registerServiceState == WifiDirectNsd.RegisterServiceState.INACTIVATED ? AdvertisementState.INACTIVATED : AdvertisementState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:607:        List<WifiDirectNsd.DetectedServiceInfo> detectedServiceInfoList;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:608:        if (this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || (detectedServiceInfoList = this.mWifiDirectNsd.getDetectedServiceInfoList()) == null || detectedServiceInfoList.size() == 0) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:612:        Iterator<WifiDirectNsd.DetectedServiceInfo> it = detectedServiceInfoList.iterator();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:630:        WifiDirectNsd.DiscoveryServiceInfo discoveryServiceInfo = new WifiDirectNsd.DiscoveryServiceInfo();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:632:        WifiDirectNsd.RegisterDiscoveryServiceState registerDiscoveryServiceState = this.mWifiDirectNsd.getRegisterDiscoveryServiceState(discoveryServiceInfo);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:633:        return registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.ACTIVATING ? DiscoveryState.ACTIVATING : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.ACTIVATED ? DiscoveryState.ACTIVATED : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.INACTIVATING ? DiscoveryState.INACTIVATING : registerDiscoveryServiceState == WifiDirectNsd.RegisterDiscoveryServiceState.INACTIVATED ? DiscoveryState.INACTIVATED : DiscoveryState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:644:        WifiDirectNsd.ServiceInfo serviceInfo = new WifiDirectNsd.ServiceInfo();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:658:        return this.mWifiDirectNsd.registerService(serviceInfo);
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:665:        WifiDirectNsd.DiscoveryServiceInfo discoveryServiceInfo = new WifiDirectNsd.DiscoveryServiceInfo();
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:667:        if (!this.mWifiDirectNsd.registerDiscoveryService(discoveryServiceInfo)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:670:        if (this.mWifiDirectNsd.startDiscovery()) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:673:        if (!this.mWifiDirectNsd.unregisterDiscoveryService()) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:674:            Logger.m968e("WifiDirect", "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:680:        return (this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || !this.mWifiDirectNsd.unregisterService()) ? false : true;
+/tmp/mg/jadx/sources/jp/konami/peerlink/wifidirect/WifiDirect.java:684:        return this.mDeviceState != DeviceState.UNSUPPORTED && this.mDeviceState != DeviceState.INACTIVATED && this.mWifiDirectNsd.stopDiscovery() && this.mWifiDirectNsd.unregisterDiscoveryService();
+/tmp/mg/jadx/sources/com/epicgames/ue4/BootCompleteReceiver.java:47:                            if (!GameActivity.LocalNotificationScheduleAtTime(context, i, jSONObject2.getString("local-notification-targetDateTime"), jSONObject2.getBoolean("local-notification-localTime"), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_TITLE), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_BODY), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_ACTION), jSONObject2.getString(LocalNotificationReceiver.KEY_LOCAL_NOTIFICATION_ACTION_EVENT))) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:9:    private GameActivity gameActivity;
+/tmp/mg/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:11:    public ConsoleCmdReceiver(GameActivity gameActivity) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:12:        this.gameActivity = gameActivity;
+/tmp/mg/jadx/sources/com/epicgames/ue4/ConsoleCmdReceiver.java:22:        this.gameActivity.nativeConsoleCommand(stringExtra);
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:1:package jp.konami.peerlink.ble;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:14:import jp.konami.peerlink.ble.Central;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:15:import jp.konami.peerlink.ble.Peripheral;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:18:public class BluetoothLowEnergy {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:19:    static final String BLUETOOTH_DEVICE_DISABLED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_DISABLED";
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:20:    static final String BLUETOOTH_DEVICE_ENABLED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_ENABLED";
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:21:    static final String PERMISSION_DENIED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_DENIED";
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:22:    static final String PERMISSION_GRANTED = "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED";
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:23:    private static final String TAG = "BluetoothLowEnergy";
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:137:            intentFilter.addAction(BluetoothLowEnergy.BLUETOOTH_DEVICE_ENABLED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:138:            intentFilter.addAction(BluetoothLowEnergy.BLUETOOTH_DEVICE_DISABLED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:139:            intentFilter.addAction(BluetoothLowEnergy.PERMISSION_GRANTED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:140:            intentFilter.addAction(BluetoothLowEnergy.PERMISSION_DENIED);
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:141:            BluetoothLowEnergy.this.mActivity.registerReceiver(this, intentFilter, 4);
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:148:                BluetoothLowEnergy.this.mActivity.unregisterReceiver(this);
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:159:            if (action.equals(BluetoothLowEnergy.BLUETOOTH_DEVICE_ENABLED)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:160:                Logger.m967d(BluetoothLowEnergy.TAG, "Bluetooth device enabled.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:161:                BluetoothLowEnergy.this.requestPermission();
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:164:            if (action.equals(BluetoothLowEnergy.BLUETOOTH_DEVICE_DISABLED)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:165:                Logger.m967d(BluetoothLowEnergy.TAG, "Bluetooth device disabled.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:166:                BluetoothLowEnergy.this.mDeviceState = DeviceState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:169:            if (!action.equals(BluetoothLowEnergy.PERMISSION_GRANTED)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:170:                if (action.equals(BluetoothLowEnergy.PERMISSION_DENIED)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:171:                    Logger.m967d(BluetoothLowEnergy.TAG, "Permission denied.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:172:                    BluetoothLowEnergy.this.mDeviceState = DeviceState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:177:            Logger.m967d(BluetoothLowEnergy.TAG, "Permission granted.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:178:            if (BluetoothLowEnergy.this.initPeripheral() && BluetoothLowEnergy.this.initCentral()) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:179:                BluetoothLowEnergy.this.mDeviceState = DeviceState.ACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:181:                Logger.m968e(BluetoothLowEnergy.TAG, "Failed to initialization.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:182:                BluetoothLowEnergy.this.mDeviceState = DeviceState.INACTIVATED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:187:    public BluetoothLowEnergy(Config config, Activity activity) throws IllegalArgumentException {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:222:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:277:        Intent intent = new Intent(this.mActivity, (Class<?>) BluetoothSwitch.class);
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:306:    public List<BluetoothLowEnergySocket> getConnectionRequestedSocketList() {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergy.java:314:    public List<BluetoothLowEnergySocket> getDetectedSocketList() {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:1:package jp.konami.peerlink.ble;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:13:public class BluetoothSwitch extends Activity {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:19:    private static final String TAG = "ble/BluetoothSwitch";
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:24:            sendBroadcast(new Intent(i2 == -1 ? "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_ENABLED" : "JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_BLUETOOTH_DEVICE_DISABLED"));
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:61:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:79:            sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:106:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_DENIED"));
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothSwitch.java:109:                sendBroadcast(new Intent("JP_KONAMI_PEERLINK_BLE_BLUETOOTHLOWENERGY_PERMISSION_GRANTED"));
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:28:    private GameActivity gameActivity;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:56:    public GooglePlayStoreHelper(String str, GameActivity gameActivity, Logger logger) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:59:        this.gameActivity = gameActivity;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:61:        BillingClient billingClientBuild = BillingClient.newBuilder(this.gameActivity).setListener(new PurchasesUpdatedListener() { // from class: com.epicgames.ue4.GooglePlayStoreHelper.1
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:87:                    googlePlayStoreHelper.Log.debug("In-app billing NOT supported for " + GooglePlayStoreHelper.this.gameActivity.getPackageName() + " error " + billingResult.getResponseCode());
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:90:                    GooglePlayStoreHelper.this.Log.debug("In-app billing supported for " + GooglePlayStoreHelper.this.gameActivity.getPackageName());
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:150:                    GooglePlayStoreHelper.this.mBillingClient.launchBillingFlow(GooglePlayStoreHelper.this.gameActivity, BillingFlowParams.newBuilder().setObfuscatedAccountId(this.ObfuscatedAccountId).setProductDetailsParamsList(C0928x5c9a8c85.m69m(new Object[]{BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productDetails).setOfferToken(productDetails.getOneTimePurchaseOfferDetails().getOfferToken()).build()})).build()).getResponseCode();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:397:    public native void nativePurchaseComplete(int i, String str, String str2, String str3, String str4);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:399:    public native void nativeQueryComplete(int i, String[] strArr, String[] strArr2, String[] strArr3, String[] strArr4, float[] fArr, String[] strArr5, String[] strArr6);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:401:    public native void nativeQueryExistingPurchasesComplete(int i, String[] strArr, String[] strArr2, String[] strArr3, String[] strArr4);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GooglePlayStoreHelper.java:403:    public native void nativeRestorePurchasesComplete(int i, String[] strArr, String[] strArr2, String[] strArr3, String[] strArr4);
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:1:package jp.konami.peerlink.ble;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:29:import jp.konami.peerlink.ble.BluetoothLowEnergySocket;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:237:    private class Socket extends BluetoothLowEnergySocket {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:242:        private BluetoothLowEnergySocket.PeerInfo mPeerInfo;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:244:        private BluetoothLowEnergySocket.State mState;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:312:            this.mState = BluetoothLowEnergySocket.State.OPEN;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:314:                this.mState = BluetoothLowEnergySocket.State.CLOSED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:317:            this.mState = BluetoothLowEnergySocket.State.OPEN;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:325:            } else if (this.mState != BluetoothLowEnergySocket.State.OPEN) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:351:            if (this.mState != BluetoothLowEnergySocket.State.OPEN) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:355:                if ((this.mState == BluetoothLowEnergySocket.State.CONNECTING || this.mState == BluetoothLowEnergySocket.State.ESTABLISHED) && bluetoothGattCharacteristic.getUuid().equals(UUID.fromString(Peripheral.this.mConfig.getUplinkUuid()))) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:412:                            this.mPeerInfo = new BluetoothLowEnergySocket.PeerInfo(advertisementHeader.getUuid(), advertisementHeader.getId(), advertisementHeader.getAttribute());
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:413:                            this.mState = BluetoothLowEnergySocket.State.CONNECTING;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:445:            if (this.mState != BluetoothLowEnergySocket.State.OPEN) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:467:            if (this.mState == BluetoothLowEnergySocket.State.OPEN) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:480:                            this.mPeerInfo = new BluetoothLowEnergySocket.PeerInfo(advertisementHeader.getUuid(), advertisementHeader.getId(), advertisementHeader.getAttribute());
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:481:                            this.mState = BluetoothLowEnergySocket.State.CONNECTING;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:493:            if (this.mState == BluetoothLowEnergySocket.State.CONNECTING || this.mState == BluetoothLowEnergySocket.State.ESTABLISHED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:527:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:532:            this.mState = BluetoothLowEnergySocket.State.CLOSED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:535:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:537:            if (this.mState != BluetoothLowEnergySocket.State.CONNECTING) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:540:            this.mState = BluetoothLowEnergySocket.State.ESTABLISHED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:544:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket, java.io.Closeable, java.lang.AutoCloseable
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:546:            if (this.mState == BluetoothLowEnergySocket.State.CLOSING || this.mState == BluetoothLowEnergySocket.State.CLOSED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:553:                this.mState = BluetoothLowEnergySocket.State.CLOSING;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:557:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:572:                BluetoothLowEnergySocket.PeerInfo peerInfo = this.mPeerInfo;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:581:                                    BluetoothLowEnergySocket.State state = this.mState;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:582:                                    BluetoothLowEnergySocket.State state2 = socket.mState;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:599:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:600:        public BluetoothLowEnergySocket.PeerInfo getPeerInfo() {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:604:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:605:        public BluetoothLowEnergySocket.State getState() {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:612:            BluetoothLowEnergySocket.PeerInfo peerInfo = this.mPeerInfo;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:620:            BluetoothLowEnergySocket.State state = this.mState;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:624:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:626:            if (this.mState != BluetoothLowEnergySocket.State.ESTABLISHED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:632:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:634:            if (this.mState != BluetoothLowEnergySocket.State.ESTABLISHED || bArr.length == 0 || bArr.length > this.mMtu || Peripheral.this.mSender == null || !Peripheral.this.mSender.push(this.mBluetoothDevice, bArr)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:657:        this.mAdvertiseCallback = new AdvertiseCallback() { // from class: jp.konami.peerlink.ble.Peripheral.1
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:670:        BluetoothGattServerCallback bluetoothGattServerCallback = new BluetoothGattServerCallback() { // from class: jp.konami.peerlink.ble.Peripheral.2
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:884:            if (socket.getState() == BluetoothLowEnergySocket.State.CLOSED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:939:    public List<BluetoothLowEnergySocket> getConnectionRequestedSocketList() {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Peripheral.java:945:            if (socket != null && socket.getState() == BluetoothLowEnergySocket.State.CONNECTING) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:112:                    GameActivity.Log.debug("MediaPlayer14: disabled shared GL context on " + strGlGetString);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:278:                GameActivity.Log.warn("Failed to complete framebuffer attachment (" + iGlCheckFramebufferStatus + ")");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:369:                    GameActivity.Log.error("Could not compile shader " + i + ":");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:370:                    GameActivity.Log.error(GLES20.glGetShaderInfoLog(iGlCreateShader));
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:407:                    GameActivity.Log.error("unable to get EGL14 display");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:413:                    GameActivity.Log.error("unable to initialize EGL14 display");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:421:                    GameActivity.Log.debug("MediaPlayer14: Existing GL context is version " + iArr[0] + "." + iArr2[0]);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:423:                    GameActivity.Log.debug("MediaPlayer14: Existing GL context is version " + iArr[0]);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:425:                    GameActivity.Log.debug("MediaPlayer14: Existing GL context version not detected");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:451:                GameActivity.Log.error("mTextureID <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:464:                GameActivity.Log.error("mFBO <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:471:                GameActivity.Log.error("mBlitVertexShaderID == 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:477:                GameActivity.Log.error("mBlitFragmentShaderID == 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:484:                GameActivity.Log.error("mProgram <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:494:                GameActivity.Log.error("Could not link program: ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:495:                GameActivity.Log.error(GLES20.glGetProgramInfoLog(this.mProgram));
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:508:                GameActivity.Log.error("mBlitBuffer <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:545:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_ENUM");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:548:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_VALUE");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:551:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_OPERATION");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:554:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_OUT_OF_MEMORY");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:557:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_FRAMEBUFFER_OPERATION");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:560:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:563:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:566:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_UNSUPPORTED");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:569:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError " + i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:918:                GameActivity.Log.debug("MediaPlayer14: onError returned what=" + i + ", extra=" + i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1324:        GameActivity.Log.warn("initBitmapRenderer failed to alloc mBitmapRenderer ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1341:    public native void nativeClearCachedAttributeState(int i, int i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1343:    public native int nativeReadAt(long j, long j2, ByteBuffer byteBuffer, int i, int i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1354:                    GameActivity.Log.debug("MediaPlayer14: Prepare Exception: " + e.toString());
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1358:                GameActivity.Log.debug("MediaPlayer14: Prepare IOException: " + e2.toString());
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1361:                GameActivity.Log.debug("MediaPlayer14: Prepare IllegalStateExecption: " + e3.toString());
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1486:            GameActivity.Log.debug("setDataSource (asset): Exception = " + e);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1517:            GameActivity.Log.debug("setDataSource (file): Exception = " + e);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1558:                GameActivity.Log.debug("setDataSource (archive): Exception = " + e);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1590:                    GameActivity.Log.debug("setDataSourceURL: Exception = " + e);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1591:                    GameActivity.Log.debug("setDataSourceURL: Continuing without track info");
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1597:            GameActivity.Log.debug("setDataSourceURL: Exception = " + e2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MediaPlayer14.java:1647:            GameActivity.Log.warn("updateVideoFrame failed to alloc mOESTextureRenderer ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:18:        GameActivity.Log.debug("Registering headset receiver");
+/tmp/mg/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:27:        GameActivity.Log.debug("startHeadsetReceiver: " + intExtra);
+/tmp/mg/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:31:    private static native void stateChanged(int i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:34:        GameActivity.Log.debug("Unregistering headset receiver");
+/tmp/mg/jadx/sources/com/epicgames/ue4/HeadsetReceiver.java:40:        GameActivity.Log.debug("headsetReceiver::onReceive");
+/tmp/mg/jadx/sources/jp/konami/ExpansionDownloader/DownloaderActivity.java:13:import com.epicgames.ue4.GameActivity;
+/tmp/mg/jadx/sources/jp/konami/ExpansionDownloader/DownloaderActivity.java:302:                DownloaderActivity.this.startActivity(new Intent(DownloaderActivity.this.getApplicationContext(), (Class<?>) GameActivity.class));
+/tmp/mg/jadx/sources/com/epicgames/ue4/AudioDecoder.java:32:                    GameActivity.Log.warn("Android Audio Decoder: CreateCodec failed!");
+/tmp/mg/jadx/sources/com/epicgames/ue4/AudioDecoder.java:62:                    GameActivity.Log.debug("Android Audio Decoder: INFO_OUTPUT_BUFFERS_CHANGED");
+/tmp/mg/jadx/sources/com/epicgames/ue4/AudioDecoder.java:64:                    GameActivity.Log.debug("Android Audio Decoder: New format " + this.mAudioCodec.getOutputFormat());
+/tmp/mg/jadx/sources/com/epicgames/ue4/AudioDecoder.java:72:                    GameActivity.Log.debug("Android Audio Decoder: dequeueOutputBuffer timed out!");
+/tmp/mg/jadx/sources/com/epicgames/ue4/AudioDecoder.java:101:            GameActivity.Log.warn("Android Audio Decoder: updateConfig channelCount:" + i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/MessageBox01.java:36:        AlertDialog.Builder builder = new AlertDialog.Builder(GameActivity.Get());
+/tmp/mg/jadx/sources/com/epicgames/ue4/MessageBox01.java:47:        GameActivity.Get().runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.MessageBox01.2
+/tmp/mg/jadx/sources/com/epicgames/ue4/MessageBox01.java:77:                                Button button2 = new Button(GameActivity.Get());
+/tmp/mg/jadx/sources/com/epicgames/ue4/MessageBox01.java:137:            GameActivity.Get().runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.MessageBox01.1
+/tmp/mg/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:22:        GameActivity.Log.debug("Registering volume receiver");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:33:        GameActivity.Log.debug("startVolumeReceiver: " + streamVolume);
+/tmp/mg/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:38:        GameActivity.Log.debug("Unregistering volume receiver");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:42:    private static native void volumeChanged(int i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:46:        GameActivity.Log.debug("OnReceive VOLUME_CHANGED_ACTION");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VolumeReceiver.java:52:            GameActivity.Log.debug("skipping volume change from stream " + iIntValue);
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1:package jp.konami.peerlink.ble;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:37:import jp.konami.peerlink.ble.BluetoothLowEnergySocket;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:208:    private class Socket extends BluetoothLowEnergySocket {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:223:            private volatile BluetoothLowEnergySocket.PeerInfo mPeerInfo;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:228:            private volatile BluetoothLowEnergySocket.State mState;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:302:                        if (SocketImpl.this.mState == BluetoothLowEnergySocket.State.ESTABLISHED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:333:                        if (socketImpl.mState == BluetoothLowEnergySocket.State.CONNECTING) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:344:                                BluetoothLowEnergySocket.PeerInfo peerInfo = new BluetoothLowEnergySocket.PeerInfo(advertisementHeader.getUuid(), advertisementHeader.getId(), advertisementHeader.getAttribute());
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:391:                        if (socketImpl.mState == BluetoothLowEnergySocket.State.CONNECTING) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:397:                                socketImpl2.mState = BluetoothLowEnergySocket.State.ESTABLISHED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:400:                        } else if (SocketImpl.this.mState == BluetoothLowEnergySocket.State.ESTABLISHED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:427:                                    BluetoothLowEnergySocket.State state = SocketImpl.this.mState;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:428:                                    BluetoothLowEnergySocket.State state2 = BluetoothLowEnergySocket.State.CONNECTING;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:446:                        } else if (SocketImpl.this.mState == BluetoothLowEnergySocket.State.CLOSING || SocketImpl.this.mState == BluetoothLowEnergySocket.State.CLOSED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:448:                            SocketImpl.this.mState = BluetoothLowEnergySocket.State.CLOSED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:467:                        if (socketImpl.mState == BluetoothLowEnergySocket.State.CONNECTING) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:561:                                    BluetoothLowEnergySocket.PeerInfo peerInfoFromDetected = Central.this.mSocketMaps.getPeerInfoFromDetected(it.next().getUuid());
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:606:                this.mState = BluetoothLowEnergySocket.State.OPEN;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:610:                    this.mState = BluetoothLowEnergySocket.State.CLOSED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:613:                this.mState = BluetoothLowEnergySocket.State.OPEN;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:616:            private SocketImpl(BluetoothDevice bluetoothDevice, BluetoothLowEnergySocket.PeerInfo peerInfo) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:622:                this.mState = BluetoothLowEnergySocket.State.OPEN;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:626:                    this.mState = BluetoothLowEnergySocket.State.CLOSED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:630:                this.mState = BluetoothLowEnergySocket.State.OPEN;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:653:                this.mState = BluetoothLowEnergySocket.State.CLOSED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:660:                    if (this.mState == BluetoothLowEnergySocket.State.CLOSED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:672:                    while (this.mState == BluetoothLowEnergySocket.State.CLOSING) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:764:                    if (this.mState != BluetoothLowEnergySocket.State.CONNECTING) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:778:                        while (this.mState == BluetoothLowEnergySocket.State.CONNECTING) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:823:                if (this.mState == BluetoothLowEnergySocket.State.CLOSED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:830:                this.mState = BluetoothLowEnergySocket.State.CLOSING;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:832:                    if (Central.this.mOperationQueue.offer(new PriorityQueueFifoEntry(2, new Runnable() { // from class: jp.konami.peerlink.ble.Central.Socket.SocketImpl.3
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:847:                if (this.mState != BluetoothLowEnergySocket.State.CLOSING && this.mState != BluetoothLowEnergySocket.State.CLOSED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:852:                    this.mState = BluetoothLowEnergySocket.State.CLOSING;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:854:                        if (Central.this.mOperationQueue.offer(new PriorityQueueFifoEntry(1, new Runnable() { // from class: jp.konami.peerlink.ble.Central.Socket.SocketImpl.2
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:870:                if (this.mState == BluetoothLowEnergySocket.State.OPEN && this.mPeerInfo != null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:871:                    this.mState = BluetoothLowEnergySocket.State.CONNECTING;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:875:                    this.mState = BluetoothLowEnergySocket.State.OPEN;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:919:            public BluetoothLowEnergySocket.PeerInfo getPeerInfo() {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:923:            public BluetoothLowEnergySocket.State getState() {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:931:                BluetoothLowEnergySocket.PeerInfo peerInfo = this.mPeerInfo;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:936:                BluetoothLowEnergySocket.State state = this.mState;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:943:                if (this.mState != BluetoothLowEnergySocket.State.ESTABLISHED && this.mState != BluetoothLowEnergySocket.State.CLOSING) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:950:                if (this.mState == BluetoothLowEnergySocket.State.OPEN && this.mPeerInfo == null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:951:                    this.mState = BluetoothLowEnergySocket.State.CONNECTING;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:953:                        if (Central.this.mOperationQueue.offer(new PriorityQueueFifoEntry(0, new Runnable() { // from class: jp.konami.peerlink.ble.Central.Socket.SocketImpl.1
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:961:                        this.mState = BluetoothLowEnergySocket.State.OPEN;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:964:                        this.mState = BluetoothLowEnergySocket.State.OPEN;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:972:                if (this.mState != BluetoothLowEnergySocket.State.ESTABLISHED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:984:                        return this.mState == BluetoothLowEnergySocket.State.ESTABLISHED;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:996:        private Socket(BluetoothDevice bluetoothDevice, BluetoothLowEnergySocket.PeerInfo peerInfo) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1007:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1012:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket, java.io.Closeable, java.lang.AutoCloseable
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1017:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1022:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1042:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1043:        public BluetoothLowEnergySocket.PeerInfo getPeerInfo() {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1047:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1048:        public BluetoothLowEnergySocket.State getState() {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1060:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1069:        @Override // jp.konami.peerlink.ble.BluetoothLowEnergySocket
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1227:            BluetoothLowEnergySocket.State state = socket.getState();
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1228:            return state == BluetoothLowEnergySocket.State.CONNECTING || state == BluetoothLowEnergySocket.State.ESTABLISHED || state == BluetoothLowEnergySocket.State.CLOSING;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1236:            BluetoothLowEnergySocket.State state = data.getState();
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1237:            if (state != BluetoothLowEnergySocket.State.CONNECTING) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1238:                return state == BluetoothLowEnergySocket.State.OPEN && !dataWithTimeLimit.isExpired();
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1248:            BluetoothLowEnergySocket.State state = data.getState();
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1249:            if (state != BluetoothLowEnergySocket.State.ESTABLISHED) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1250:                return state == BluetoothLowEnergySocket.State.CONNECTING && !dataWithTimeLimit.isExpired();
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1257:            return (dataWithTimeLimit == null || (data = dataWithTimeLimit.getData()) == null || data.getState() != BluetoothLowEnergySocket.State.CONNECTING || dataWithTimeLimit.isExpired()) ? false : true;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1264:        public List<BluetoothLowEnergySocket> getDetectedSocketList() {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1282:        public BluetoothLowEnergySocket.PeerInfo getPeerInfoFromDetected(UUID uuid) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1300:            BluetoothLowEnergySocket.PeerInfo peerInfo = socket.getPeerInfo();
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1325:        public synchronized boolean notifyDetected(BluetoothDevice bluetoothDevice, BluetoothLowEnergySocket.PeerInfo peerInfo) throws Throwable {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1335:                    if (socket.getState() != BluetoothLowEnergySocket.State.OPEN) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1354:            BluetoothLowEnergySocket.PeerInfo peerInfo = socket.getPeerInfo();
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1403:        Thread thread = new Thread(new Runnable() { // from class: jp.konami.peerlink.ble.Central.1
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1441:        this.mScanCallback = new ScanCallback() { // from class: jp.konami.peerlink.ble.Central.2
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/Central.java:1545:    public List<BluetoothLowEnergySocket> getDetectedSocketList() {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:170:public class GameActivity extends KonamiIabBaseNativeActivity implements SurfaceHolder.Callback2, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, SensorEventListener, Logger.ILoggerCallback, ComponentCallbacks2 {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:205:    static GameActivity _activity = null;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:263:    public static Logger Log = new Logger("UE4", "GameActivity");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:337:    private Runnable restoreImmersiveModeRunnable = new Runnable() { // from class: com.epicgames.ue4.GameActivity.12
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:340:            GameActivity.this.restoreTransparentBars();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:344:    /* JADX INFO: renamed from: com.epicgames.ue4.GameActivity$42 */
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:346:        static final /* synthetic */ int[] $SwitchMap$com$epicgames$ue4$GameActivity$EAlertDialogType;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:347:        static final /* synthetic */ int[] $SwitchMap$com$epicgames$ue4$GameActivity$VirtualKeyboardCommand;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:351:            $SwitchMap$com$epicgames$ue4$GameActivity$VirtualKeyboardCommand = iArr;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:357:                $SwitchMap$com$epicgames$ue4$GameActivity$VirtualKeyboardCommand[VirtualKeyboardCommand.VK_CMD_HIDE.ordinal()] = 2;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:361:            $SwitchMap$com$epicgames$ue4$GameActivity$EAlertDialogType = iArr2;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:367:                $SwitchMap$com$epicgames$ue4$GameActivity$EAlertDialogType[EAlertDialogType.Console.ordinal()] = 2;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:537:                GameActivity.this.AndroidThunkJava_HideVirtualKeyboardInput();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:538:                GameActivity.this.nativeVirtualKeyboardSendKey(66);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:572:                GameActivity.this.AndroidThunkJava_HideVirtualKeyboardInput();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:573:                GameActivity.this.nativeVirtualKeyboardSendKey(4);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:580:            GameActivity.this.nativeVirtualKeyboardSendSelection(i, i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:604:    public GameActivity() {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:605:        System.loadLibrary("playcore");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:606:        System.loadLibrary("UE4");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:634:        this.virtualKeyboardHandler.postDelayed(new Runnable() { // from class: com.epicgames.ue4.GameActivity.29
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:638:                    if (GameActivity.this.bKeyboardShowing && GameActivity.this.newVirtualKeyboardInput.getY() < 0.0f) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:639:                        GameActivity.this.mainView.requestLayout();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:791:    public static GameActivity Get() {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:937:    public static native void OnSetBackEventNavigation();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1015:            _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.22
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1018:                    GameActivity.Log.debug("==============> [JAVA] AndroidThunkJava_DisableScreenCapture(true) - Disabled screen captures");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1019:                    GameActivity._activity.getWindow().addFlags(8192);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1023:            _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.23
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1026:                    GameActivity.Log.debug("==============> [JAVA] AndroidThunkJava_DisableScreenCapture(false) - Enabled screen captures");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1027:                    GameActivity._activity.getWindow().clearFlags(8192);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1059:        this.newVirtualKeyboardInput.setOnEditorActionListener(new TextView.OnEditorActionListener() { // from class: com.epicgames.ue4.GameActivity.39
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1065:                GameActivity.this.AndroidThunkJava_HideVirtualKeyboardInput();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1066:                GameActivity.this.nativeVirtualKeyboardSendKey(66);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1070:        this.newVirtualKeyboardInput.addTextChangedListener(new TextWatcher() { // from class: com.epicgames.ue4.GameActivity.40
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1072:                Editable text = GameActivity.this.newVirtualKeyboardInput.getText();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1095:                if (GameActivity.this.newVirtualKeyboardInput.getY() > 0.0f || GameActivity.this.bUsesVrKeyboard) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1097:                    GameActivity gameActivity = GameActivity.this;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1099:                        gameActivity.virtualKeyboardHandler.postDelayed(new Runnable() { // from class: com.epicgames.ue4.GameActivity.40.1
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1102:                                GameActivity.this.nativeVirtualKeyboardChanged(GameActivity.this.newVirtualKeyboardInput.getText().toString());
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1106:                        gameActivity.virtualKeyboardHandler.postDelayed(new Runnable() { // from class: com.epicgames.ue4.GameActivity.40.2
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1109:                                String string = GameActivity.this.newVirtualKeyboardInput.getText().toString();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1110:                                if (GameActivity.this.newVirtualKeyboardInput.getMaxLines() == 1 && string.contains("\n")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1112:                                    GameActivity.this.newVirtualKeyboardInput.setText(string);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1114:                                GameActivity.this.nativeVirtualKeyboardChanged(string);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1572:            decorView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() { // from class: com.epicgames.ue4.GameActivity.13
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1575:                    GameActivity.Log.debug("=== Restoring Transparent Bars due to Visibility Change ===");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1576:                    GameActivity.this.restoreTransparentBars();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1579:            decorView.setOnFocusChangeListener(new View.OnFocusChangeListener() { // from class: com.epicgames.ue4.GameActivity.14
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1582:                    GameActivity.Log.debug("=== Restoring Transparent Bars due to Focus Change ===");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:1583:                    GameActivity.this.restoreTransparentBars();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2773:        this.virtualKeyboardHandler.postDelayed(new Runnable() { // from class: com.epicgames.ue4.GameActivity.27
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2776:                if (GameActivity.lastVirtualKeyboardCommand == VirtualKeyboardCommand.VK_CMD_HIDE) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2777:                    GameActivity.this.processLastVirtualKeyboardCommand();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2785:            _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.25
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2788:                    if (GameActivity.this.virtualKeyboardAlert.isShowing()) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2789:                        GameActivity.Log.debug("Virtual keyboard hiding");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2790:                        GameActivity.this.virtualKeyboardInputBox.setText(" ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2791:                        GameActivity.this.virtualKeyboardAlert.dismiss();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2792:                        GameActivity.this.CurrentDialogType = EAlertDialogType.None;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2860:            _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.32
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2863:                    GameActivity.this.IapStoreHelper.QueryInAppPurchases(GameActivity.this.CachedQueryProductIDs);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2895:        _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.31
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2898:                GameActivity.this.nativeInitHMDs();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2936:            _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.20
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2939:                    GameActivity.Log.debug("==============> [JAVA] AndroidThunkJava_KeepScreenOn(true) - Disabled screen saver");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2940:                    GameActivity._activity.getWindow().addFlags(128);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2944:            _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.21
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2947:                    GameActivity.Log.debug("==============> [JAVA] AndroidThunkJava_KeepScreenOn(false) - Enabled screen saver");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:2948:                    GameActivity._activity.getWindow().clearFlags(128);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3121:        Runnable runnable = new Runnable() { // from class: com.epicgames.ue4.GameActivity.41
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3124:                GameActivity.this.RestartApplication(str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3194:        _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.36
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3197:                GameActivity.this.MySurfaceView.getHolder().setFixedSize(GameActivity.this.DesiredHolderWidth, GameActivity.this.DesiredHolderHeight);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3214:                    _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.37
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3217:                            Window window = GameActivity.this.getWindow();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3236:            _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.38
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3240:                        Window.class.getMethod("setSustainedPerformanceMode", Boolean.TYPE).invoke(GameActivity._activity.getWindow(), Boolean.valueOf(z));
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3242:                        GameActivity.Log.debug("SetSustainedPerformanceMode: failed " + e.getMessage());
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3282:        _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.24
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3285:                if (GameActivity.this.consoleAlert.isShowing()) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3288:                GameActivity.Log.debug("Console not showing yet");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3289:                GameActivity.this.consoleAlert.show();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3290:                GameActivity.this.CurrentDialogType = EAlertDialogType.Console;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3298:            _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.19
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3301:                    int i = C092142.$SwitchMap$com$epicgames$ue4$GameActivity$EAlertDialogType[GameActivity.this.CurrentDialogType.ordinal()];
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3303:                        GameActivity.this.virtualKeyboardAlert.show();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3305:                        GameActivity.Log.debug("ERROR: Unknown EAlertDialogType!");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3307:                        GameActivity.this.consoleAlert.show();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3315:        _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.33
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3319:                GameActivity gameActivity = GameActivity.this;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3321:                    gameActivity.mProgressDialog.dismiss();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3322:                    GameActivity.this.mProgressDialog = null;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3325:                gameActivity.mProgressDialog = new ProgressDialog(GameActivity._activity);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3326:                GameActivity.this.mProgressDialog.setMessage(str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3327:                GameActivity.this.mProgressDialog.setProgress(0);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3328:                GameActivity.this.mProgressDialog.setMax(i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3329:                GameActivity.this.mProgressDialog.setProgressStyle(z2 ? 1 : 0);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3330:                GameActivity.this.mProgressDialog.getWindow().setFlags(8, 8);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3331:                GameActivity.this.mProgressDialog.show();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3341:        this.virtualKeyboardHandler.postDelayed(new Runnable() { // from class: com.epicgames.ue4.GameActivity.28
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3344:                if (GameActivity.lastVirtualKeyboardCommand == VirtualKeyboardCommand.VK_CMD_SHOW) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3345:                    GameActivity.this.processLastVirtualKeyboardCommand();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3355:            _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.26
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3358:                    GameActivity.this.virtualKeyboardAlert.setTitle(str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3359:                    GameActivity.this.virtualKeyboardInputBox.setRawInputType(i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3360:                    GameActivity.this.virtualKeyboardInputBox.setTransformationMethod((i & 128) == 0 ? null : PasswordTransformationMethod.getInstance());
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3361:                    GameActivity.this.virtualKeyboardInputBox.setText("");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3362:                    GameActivity.this.virtualKeyboardInputBox.append(str2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3363:                    GameActivity.this.virtualKeyboardPreviousContents = str2;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3364:                    if (GameActivity.this.virtualKeyboardAlert.isShowing()) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3367:                    GameActivity.Log.debug("Virtual keyboard not showing yet");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3368:                    GameActivity.this.virtualKeyboardAlert.show();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3369:                    GameActivity.this.CurrentDialogType = EAlertDialogType.Keyboard;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3379:        _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.34
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3382:                if (GameActivity.this.mProgressDialog != null) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3383:                    GameActivity.this.mProgressDialog.setProgress(i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3398:        _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.35
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3401:                GameActivity.this.MySurfaceView.getHolder().setFixedSize(GameActivity.this.DesiredHolderWidth, GameActivity.this.DesiredHolderHeight);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3578:    public native void nativeConsoleCommand(String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3580:    public native int nativeGetCPUFamily();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3582:    public native void nativeGoogleClientConnectCompleted(boolean z, String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3584:    public native void nativeHandleSensorEvents(float[] fArr, float[] fArr2, float[] fArr3, float[] fArr4);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3586:    public native void nativeInitHMDs();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3588:    public native boolean nativeIsShippingBuild();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3590:    public native void nativeOnActivityResult(GameActivity gameActivity, int i, int i2, Intent intent);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3592:    public native void nativeOnConfigurationChanged(boolean z);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3594:    public native void nativeOnInitialDownloadCompleted();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3596:    public native void nativeOnInitialDownloadStarted();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3598:    public native void nativeOnMemoryWarningChanged(GameActivity gameActivity, int i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3600:    public native void nativeOnThermalStatusChangedListener(GameActivity gameActivity, int i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3602:    public native void nativeResumeMainInit();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3604:    public native void nativeSetAffinityInfo(boolean z, int i, int i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3606:    public native void nativeSetAndroidStartupState(boolean z);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3608:    public native void nativeSetAndroidVersionInformation(String str, int i, String str2, String str3, String str4, String str5);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3610:    public native void nativeSetConfigRulesVariables(String[] strArr);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3612:    public native void nativeSetGlobalActivity(boolean z, boolean z2, String str, String str2, boolean z3, String str3);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3614:    public native void nativeSetObbFilePaths(String str, String str2, String str3, String str4);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3616:    public native void nativeSetObbInfo(String str, String str2, int i, int i2, String str3);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3618:    public native void nativeSetSafezoneInfo(boolean z, float f, float f2, float f3, float f4);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3620:    public native void nativeSetSurfaceViewInfo(int i, int i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3622:    public native void nativeSetWindowInfo(boolean z, int i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3624:    public native boolean nativeSupportsNEON();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3626:    public native void nativeVirtualKeyboardChanged(String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3628:    public native void nativeVirtualKeyboardResult(boolean z, String str);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3630:    public native void nativeVirtualKeyboardSendKey(int i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3632:    public native void nativeVirtualKeyboardSendSelection(int i, int i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3634:    public native void nativeVirtualKeyboardSendTextSelection(String str, int i, int i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3636:    public native void nativeVirtualKeyboardShown(int i, int i2, int i3, int i4);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3638:    public native void nativeVirtualKeyboardVisible(boolean z);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3712:            new Thread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.30
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3715:                    GameActivity.this.nativeGoogleClientConnectCompleted(true, "NOT_ACQUIRED");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3765:            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(0, new OnBackInvokedCallback() { // from class: com.epicgames.ue4.GameActivity$$ExternalSyntheticLambda0
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3768:                    GameActivity.lambda$onCreate$0();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3828:        this.memoryRunnable = new Runnable() { // from class: com.epicgames.ue4.GameActivity.1
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3837:                if (jCurrentTimeMillis - GameActivity.this.LastMemoryInfoPollTime >= WorkRequest.MIN_BACKOFF_MILLIS) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3838:                    Debug.MemoryInfo[] processMemoryInfo = ((ActivityManager) GameActivity._activity.getSystemService("activity")).getProcessMemoryInfo(new int[]{Process.myPid()});
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3844:                    GameActivity.Log.debug("Used memory: " + i4 + " (" + GameActivity.this.FindLineFromStatus("VmRSS:") + ")");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3845:                    GameActivity.this.LastMemoryInfoPollTime = jCurrentTimeMillis;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3847:                synchronized (GameActivity._activity) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3849:                        GameActivity._activity.UsedMemory = i4;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3850:                        if (GameActivity._activity.memoryHandler != null) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3851:                            Handler handler = GameActivity._activity.memoryHandler;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3852:                            GameActivity gameActivity = GameActivity._activity;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3855:                    } else if (GameActivity._activity.memoryHandler != null) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3933:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.DepthBufferPreference")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3934:                this.DepthBufferPreference = bundle2.getInt("com.epicgames.ue4.GameActivity.DepthBufferPreference");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3939:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.bPackageDataInsideApk")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3940:                PackageDataInsideApkValue = bundle2.getBoolean("com.epicgames.ue4.GameActivity.bPackageDataInsideApk") ? 1 : 0;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3946:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.ProjectName")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3947:                strSubstring3 = bundle2.getString("com.epicgames.ue4.GameActivity.ProjectName");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3952:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.AppType")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3953:                string = bundle2.getString("com.epicgames.ue4.GameActivity.AppType");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3967:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.bHasOBBFiles")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3968:                HasOBBFiles = bundle2.getBoolean("com.epicgames.ue4.GameActivity.bHasOBBFiles") ? 1 : 0;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3974:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.bVerifyOBBOnStartUp")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3975:                this.VerifyOBBOnStartUp = bundle2.getBoolean("com.epicgames.ue4.GameActivity.bVerifyOBBOnStartUp");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3981:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.bShouldHideUI")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3982:                this.ShouldHideUI = bundle2.getBoolean("com.epicgames.ue4.GameActivity.bShouldHideUI");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3988:                if (bundle2.containsKey("com.epicgames.ue4.GameActivity.bUseDisplayCutout")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3989:                    this.UseDisplayCutout = bundle2.getBoolean("com.epicgames.ue4.GameActivity.bUseDisplayCutout");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3995:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.BuildConfiguration")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:3996:                this.BuildConfiguration = bundle2.getString("com.epicgames.ue4.GameActivity.BuildConfiguration");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4001:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.bUseExternalFilesDir")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4002:                this.UseExternalFilesDir = bundle2.getBoolean("com.epicgames.ue4.GameActivity.bUseExternalFilesDir");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4007:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.bPublicLogFiles")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4008:                this.PublicLogFiles = bundle2.getBoolean("com.epicgames.ue4.GameActivity.bPublicLogFiles");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4013:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.bAllowIMU")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4014:                this.bAllowIMU = bundle2.getBoolean("com.epicgames.ue4.GameActivity.bAllowIMU");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4017:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.bSupportsVulkan")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4018:                this.bSupportsVulkan = bundle2.getBoolean("com.epicgames.ue4.GameActivity.bSupportsVulkan");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4021:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.EngineBranch")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4022:                this.EngineBranch = bundle2.getString("com.epicgames.ue4.GameActivity.EngineBranch");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4024:            if (bundle2.containsKey("com.epicgames.ue4.GameActivity.ProjectVersion")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4025:                this.ProjectVersion = bundle2.getString("com.epicgames.ue4.GameActivity.ProjectVersion");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4092:            this.consoleInputBox.setOnTouchListener(new View.OnTouchListener() { // from class: com.epicgames.ue4.GameActivity.2
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4102:                        GameActivity.this.consoleInputBox.requestFocus();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4111:                    if (fAbs <= GameActivity.this.consoleDistance || fAbs <= jCurrentTimeMillis * GameActivity.this.consoleVelocity) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4123:                    if (GameActivity.this.consoleHistoryList.isEmpty() || GameActivity.this.consoleHistoryIndex + 1 >= GameActivity.this.consoleHistoryList.size()) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4126:                    EditText editText2 = GameActivity.this.consoleInputBox;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4127:                    ArrayList<String> arrayList = GameActivity.this.consoleHistoryList;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4128:                    GameActivity gameActivity = GameActivity.this;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4129:                    int i9 = gameActivity.consoleHistoryIndex + 1;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4130:                    gameActivity.consoleHistoryIndex = i9;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4135:                    if (GameActivity.this.consoleHistoryList.isEmpty() || GameActivity.this.consoleHistoryIndex <= 0) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4138:                    EditText editText2 = GameActivity.this.consoleInputBox;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4139:                    ArrayList<String> arrayList = GameActivity.this.consoleHistoryList;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4140:                    GameActivity gameActivity = GameActivity.this;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4141:                    int i9 = gameActivity.consoleHistoryIndex - 1;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4142:                    gameActivity.consoleHistoryIndex = i9;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4150:            this.consoleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() { // from class: com.epicgames.ue4.GameActivity.3
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4154:                        GameActivity.this.consoleInputBox.setText(adapterView.getItemAtPosition(i9).toString());
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4160:                    GameActivity.this.consoleInputBox.setText("");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4161:                    GameActivity.this.consoleSpinner.setSelection(0);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4170:            builder.setTitle("Console Window - Enter Command").setMessage("").setView(this.consoleAlertLayout).setPositiveButton("Ok", new DialogInterface.OnClickListener() { // from class: com.epicgames.ue4.GameActivity.5
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4173:                    String strTrim = GameActivity.this.consoleInputBox.getText().toString().trim();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4174:                    int iIndexOf5 = GameActivity.this.consoleHistoryList.indexOf(strTrim);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4176:                        GameActivity.this.consoleHistoryList.remove(iIndexOf5);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4178:                    GameActivity.this.consoleHistoryList.add(strTrim);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4179:                    GameActivity.this.nativeConsoleCommand(strTrim);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4180:                    GameActivity.this.consoleInputBox.setText(" ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4181:                    GameActivity.this.consoleSpinner.setSelection(0);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4183:                    GameActivity.this.CurrentDialogType = EAlertDialogType.None;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4185:            }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() { // from class: com.epicgames.ue4.GameActivity.4
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4188:                    GameActivity.this.consoleInputBox.setText(" ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4189:                    GameActivity.this.consoleSpinner.setSelection(0);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4191:                    GameActivity.this.CurrentDialogType = EAlertDialogType.None;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4197:            editText2.addTextChangedListener(new TextWatcher() { // from class: com.epicgames.ue4.GameActivity.6
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4200:                    GameActivity.this.nativeVirtualKeyboardChanged(GameActivity.this.virtualKeyboardInputBox.getText().toString());
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4212:            builder2.setTitle("").setView(this.virtualKeyboardInputBox).setPositiveButton("Ok", new DialogInterface.OnClickListener() { // from class: com.epicgames.ue4.GameActivity.8
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4215:                    GameActivity.this.nativeVirtualKeyboardResult(true, GameActivity.this.virtualKeyboardInputBox.getText().toString());
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4216:                    GameActivity.this.virtualKeyboardInputBox.setText(" ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4218:                    GameActivity.this.CurrentDialogType = EAlertDialogType.None;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4220:            }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() { // from class: com.epicgames.ue4.GameActivity.7
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4223:                    GameActivity gameActivity = GameActivity.this;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4224:                    gameActivity.nativeVirtualKeyboardChanged(gameActivity.virtualKeyboardPreviousContents);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4225:                    GameActivity.this.nativeVirtualKeyboardResult(false, " ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4226:                    GameActivity.this.virtualKeyboardInputBox.setText(" ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4228:                    GameActivity.this.CurrentDialogType = EAlertDialogType.None;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4253:            this.mainDecorView.findViewById(R.id.content).getRootView().setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() { // from class: com.epicgames.ue4.GameActivity.9
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4259:                        GameActivity.this.mainDecorView.getDrawingRect(GameActivity.this.mainDecorViewRect);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4260:                        Display defaultDisplay = GameActivity.this.getWindowManager().getDefaultDisplay();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4265:                        RectF rectF = GameActivity.this.safezoneF;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4266:                        Rect rect = GameActivity.this.safezone;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4270:                        RectF rectF2 = GameActivity.this.safezoneF;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4271:                        Rect rect2 = GameActivity.this.safezone;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4275:                        RectF rectF3 = GameActivity.this.safezoneF;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4276:                        Rect rect3 = GameActivity.this.safezone;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4280:                        RectF rectF4 = GameActivity.this.safezoneF;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4281:                        Rect rect4 = GameActivity.this.safezone;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4285:                        GameActivity.this.nativeSetSafezoneInfo(point.y > point.x, GameActivity.this.safezoneF.left, GameActivity.this.safezoneF.top, GameActivity.this.safezoneF.right, GameActivity.this.safezoneF.bottom);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4291:            this.mainView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() { // from class: com.epicgames.ue4.GameActivity.10
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4295:                    GameActivity.this.mainView.getRootView().getWindowVisibleDisplayFrame(rect);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4296:                    GameActivity.this.mainDecorView.getDrawingRect(GameActivity.this.mainDecorViewRect);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4297:                    int iAbs = Math.abs(GameActivity.this.mainDecorViewRect.left - rect.left);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4298:                    int iAbs2 = Math.abs(GameActivity.this.mainDecorViewRect.top - rect.top);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4299:                    int iAbs3 = Math.abs(GameActivity.this.mainDecorViewRect.right - rect.right);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4300:                    int iAbs4 = Math.abs(GameActivity.this.mainDecorViewRect.bottom - rect.bottom);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4302:                    rect2.left = iAbs3 > 0 ? rect.right : GameActivity.this.mainDecorViewRect.left;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4303:                    rect2.top = iAbs4 > 0 ? rect.bottom : GameActivity.this.mainDecorViewRect.top;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4304:                    rect2.right = iAbs > 0 ? rect.left : GameActivity.this.mainDecorViewRect.right;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4305:                    rect2.bottom = iAbs2 > 0 ? rect.top : GameActivity.this.mainDecorViewRect.bottom;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4306:                    int height = rect.bottom - GameActivity.this.newVirtualKeyboardInput.getHeight();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4308:                        height = rect.top + GameActivity.this.newVirtualKeyboardInput.getHeight();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4314:                        if (GameActivity.this.bKeyboardShowing) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4315:                            GameActivity.this.nativeVirtualKeyboardShown(rect2.left, rect2.top, rect2.right, rect2.bottom);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4316:                            if (GameActivity.this.newVirtualKeyboardInput.getY() > 0.0f) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4317:                                GameActivity.this.newVirtualKeyboardInput.setVisibility(8);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4318:                                GameActivity.this.newVirtualKeyboardInput.setY(-1000.0f);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4321:                        GameActivity.this.AndroidThunkJava_ResizeKeyboard(false, rect2, rect);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4324:                    if (GameActivity.this.bKeyboardShowing) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4325:                        GameActivity.this.nativeVirtualKeyboardShown(rect2.left, rect2.top, rect2.right, rect2.bottom);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4326:                        GameActivity.this.newVirtualKeyboardInput.getLayoutParams().width = Math.abs(rect.right - rect.left);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4327:                        GameActivity.this.newVirtualKeyboardInput.setX(iAbs);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4328:                        GameActivity.this.newVirtualKeyboardInput.setY(height);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4329:                        GameActivity.this.newVirtualKeyboardInput.setVisibility(0);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4330:                        GameActivity.this.newVirtualKeyboardInput.requestFocus();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4332:                    GameActivity.this.AndroidThunkJava_ResizeKeyboard(true, rect2, rect);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4337:                ((PowerManager) getSystemService("power")).addThermalStatusListener(getMainExecutor(), new PowerManager.OnThermalStatusChangedListener() { // from class: com.epicgames.ue4.GameActivity.11
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4340:                        GameActivity.Log.debug("=== Thermal status changed to " + i9);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4341:                        GameActivity.this.nativeOnThermalStatusChangedListener(null, i9);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4428:            _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.18
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4431:                    int i = C092142.$SwitchMap$com$epicgames$ue4$GameActivity$EAlertDialogType[GameActivity.this.CurrentDialogType.ordinal()];
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4433:                        GameActivity.this.virtualKeyboardAlert.hide();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4435:                        GameActivity.Log.debug("ERROR: Unknown EAlertDialogType!");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4437:                        GameActivity.this.consoleAlert.hide();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4474:            decorView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() { // from class: com.epicgames.ue4.GameActivity.15
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4477:                    GameActivity.Log.debug("=== Restoring Transparent Bars due to Visibility Change ===");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4478:                    GameActivity.this.restoreTransparentBars();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4481:            decorView.setOnFocusChangeListener(new View.OnFocusChangeListener() { // from class: com.epicgames.ue4.GameActivity.16
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4484:                    GameActivity.Log.debug("=== Restoring Transparent Bars due to Focus Change ===");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4485:                    GameActivity.this.restoreTransparentBars();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4499:            _activity.runOnUiThread(new Runnable() { // from class: com.epicgames.ue4.GameActivity.17
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4502:                    if (GameActivity.this.ForceGameDialog != null) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4505:                    AlertDialog.Builder builder = new AlertDialog.Builder(GameActivity._activity);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4507:                    builder.setTitle(GameActivity.this.ForceExitCaption);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4508:                    builder.setMessage(GameActivity.this.ForceExitMessage);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4509:                    if (!GameActivity.this.ForceExitLink.equals("")) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4510:                        builder.setNeutralButton(GameActivity.this.ForceExitHelpButtonText, new DialogInterface.OnClickListener() { // from class: com.epicgames.ue4.GameActivity.17.1
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4514:                                GameActivity.this.AndroidThunkJava_LaunchURL(GameActivity.this.ForceExitLink);
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4515:                                GameActivity.this.AndroidThunkJava_ForceQuit();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4519:                    if (GameActivity.this.bForceGameEndWithWarning) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4520:                        builder.setNegativeButton(GameActivity.this.ForceExitContinueButtonText, new DialogInterface.OnClickListener() { // from class: com.epicgames.ue4.GameActivity.17.2
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4524:                                GameActivity.this.ForceGameDialog = null;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4525:                                GameActivity.this.bForceGameEndWithWarning = false;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4526:                                GameActivity.this.onResumeBody();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4530:                    boolean zEquals = GameActivity.this.ForceExitUpdateButtonText.equals("");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4531:                    GameActivity gameActivity = GameActivity.this;
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4533:                        builder.setPositiveButton(gameActivity.ForceExitQuitButtonText, new DialogInterface.OnClickListener() { // from class: com.epicgames.ue4.GameActivity.17.4
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4537:                                GameActivity.this.AndroidThunkJava_ForceQuit();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4541:                        builder.setPositiveButton(gameActivity.ForceExitUpdateButtonText, new DialogInterface.OnClickListener() { // from class: com.epicgames.ue4.GameActivity.17.3
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4545:                                if (GameActivity.ANDROID_BUILD_VERSION < 16 || GameActivity.ANDROID_BUILD_VERSION >= 19) {
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4546:                                    boolean zAndroidThunkJava_isIntentActionAvailable = GameActivity.this.AndroidThunkJava_isIntentActionAvailable("android.settings.SYSTEM_UPDATE_SETTINGS");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4549:                                        GameActivity.this.AndroidThunkJava_OpenIntentAction("android.settings.SYSTEM_UPDATE_SETTINGS");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4551:                                        GameActivity.this.AndroidThunkJava_OpenIntentAction("android.settings.SETTINGS");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4554:                                    GameActivity.this.AndroidThunkJava_OpenIntentAction("android.settings.SETTINGS");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4556:                                GameActivity.this.AndroidThunkJava_ForceQuit();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4560:                    GameActivity.this.ForceGameDialog = builder.create();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4561:                    GameActivity.this.ForceGameDialog.show();
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4667:        Log.debug("==================================> Inside onStart function in GameActivity");
+/tmp/mg/jadx/sources/com/epicgames/ue4/GameActivity.java:4715:            int i2 = C092142.$SwitchMap$com$epicgames$ue4$GameActivity$VirtualKeyboardCommand[lastVirtualKeyboardCommand.ordinal()];
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/AdvertisementHeader.java:1:package jp.konami.peerlink.ble;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergySocket.java:1:package jp.konami.peerlink.ble;
+/tmp/mg/jadx/sources/jp/konami/peerlink/ble/BluetoothLowEnergySocket.java:8:public abstract class BluetoothLowEnergySocket implements Closeable {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:1:package jp.konami.peerlink.nsd;
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:27:public class NetworkServiceDiscovery {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:333:    public NetworkServiceDiscovery(Activity activity) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:338:        WifiManager.MulticastLock multicastLockCreateMulticastLock = wifiManager.createMulticastLock("NetworkServiceDiscovery");
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:380:        this.mExecutorService.execute(new Runnable() { // from class: jp.konami.peerlink.nsd.NetworkServiceDiscovery.1
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:454:        this.mExecutorService.execute(new Runnable() { // from class: jp.konami.peerlink.nsd.NetworkServiceDiscovery.2
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:460:                    if (NetworkServiceDiscovery.this.mJmDNS4 != null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:461:                        NetworkServiceDiscovery.this.mJmDNS4.registerService(serviceInfoCreate);
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:463:                    if (NetworkServiceDiscovery.this.mJmDNS6 != null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:464:                        NetworkServiceDiscovery.this.mJmDNS6.registerService(serviceInfoClone);
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:466:                    Logger.m967d("NetworkServiceDiscovery", "Registered service: \n" + serviceInfoClone.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:468:                        Logger.m967d("NetworkServiceDiscovery", "Changed service name: " + serviceInfo.getServiceName() + " -> " + serviceInfoClone.getName());
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:471:                    synchronized (NetworkServiceDiscovery.this.mRegisteredServiceInfoSet) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:472:                        if (!NetworkServiceDiscovery.this.mRegisteredServiceInfoSet.add(serviceInfo)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:473:                            Logger.m968e("NetworkServiceDiscovery", "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:477:                    Logger.m968e("NetworkServiceDiscovery", "Registration failed.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:497:            ServiceListener serviceListener = new ServiceListener() { // from class: jp.konami.peerlink.nsd.NetworkServiceDiscovery.4
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:500:                    Logger.m967d("NetworkServiceDiscovery", "Found service: \n" + serviceEvent.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:501:                    synchronized (NetworkServiceDiscovery.this.mRegisteredServiceInfoSet) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:502:                        Iterator it = NetworkServiceDiscovery.this.mRegisteredServiceInfoSet.iterator();
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:510:                        synchronized (NetworkServiceDiscovery.this.mDiscoveryServiceInfoSet) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:511:                            if (!NetworkServiceDiscovery.this.mDiscoveryServiceInfoSet.contains(discoveryServiceInfo2)) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:512:                                Logger.m967d("NetworkServiceDiscovery", "Unknown service type. (service type = " + serviceEvent.getType() + ")");
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:517:                                Logger.m968e("NetworkServiceDiscovery", "Unknown error.");
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:519:                                Logger.m967d("NetworkServiceDiscovery", "Resolving...: \n" + serviceEvent.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:528:                    Logger.m967d("NetworkServiceDiscovery", "Lost service: \n" + serviceEvent.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:529:                    synchronized (NetworkServiceDiscovery.this.mDetectedServiceInfoMap) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:530:                        NetworkServiceDiscovery.this.mDetectedServiceInfoMap.remove(new AbstractMap.SimpleImmutableEntry(serviceEvent.getType(), serviceEvent.getName()));
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:539:                        Logger.m968e("NetworkServiceDiscovery", "Resolve failed: \n" + serviceEvent.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:542:                    Logger.m967d("NetworkServiceDiscovery", "Resolved service: \n" + serviceEvent.toString());
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:562:                    synchronized (NetworkServiceDiscovery.this.mDetectedServiceInfoMap) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:563:                        NetworkServiceDiscovery.this.mDetectedServiceInfoMap.put(new AbstractMap.SimpleImmutableEntry(serviceEvent.getType(), serviceEvent.getName()), detectedServiceInfo);
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:586:                ServiceListener serviceListener = new ServiceListener() { // from class: jp.konami.peerlink.nsd.NetworkServiceDiscovery.5
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:622:        this.mExecutorService.execute(new Runnable() { // from class: jp.konami.peerlink.nsd.NetworkServiceDiscovery.3
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:625:                if (NetworkServiceDiscovery.this.mJmDNS4 != null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:626:                    NetworkServiceDiscovery.this.mJmDNS4.unregisterAllServices();
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:628:                if (NetworkServiceDiscovery.this.mJmDNS6 != null) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:629:                    NetworkServiceDiscovery.this.mJmDNS6.unregisterAllServices();
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:631:                synchronized (NetworkServiceDiscovery.this.mRegisteredServiceInfoSet) {
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:632:                    NetworkServiceDiscovery.this.mRegisteredServiceInfoSet.clear();
+/tmp/mg/jadx/sources/jp/konami/peerlink/nsd/NetworkServiceDiscovery.java:634:                Logger.m967d("NetworkServiceDiscovery", "Unregistered service.");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:92:                GameActivity.Log.debug("BitmapRenderer: mSwizzlePixels");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:95:                GameActivity.Log.debug("BitmapRenderer 2" + strGlGetString);
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:97:                    GameActivity.Log.debug("VideoDecoder: disabled shared GL context on " + strGlGetString);
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:102:                GameActivity.Log.debug("BitmapRenderer 3");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:104:                GameActivity.Log.debug("BitmapRenderer 4");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:106:                GameActivity.Log.debug("BitmapRenderer 5");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:108:                GameActivity.Log.debug("BitmapRenderer 6");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:110:                GameActivity.Log.debug("BitmapRenderer 7");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:113:                GameActivity.Log.debug("BitmapRenderer 8");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:116:            GameActivity.Log.debug("BitmapRenderer 9");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:268:                GameActivity.Log.warn("Failed to complete framebuffer attachment (" + iGlCheckFramebufferStatus + ")");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:356:                    GameActivity.Log.error("Could not compile shader " + i + ":");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:357:                    GameActivity.Log.error(GLES20.glGetShaderInfoLog(iGlCreateShader));
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:394:                    GameActivity.Log.error("unable to get EGL14 display");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:400:                    GameActivity.Log.error("unable to initialize EGL14 display");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:408:                    GameActivity.Log.debug("VideoDecoder: Existing GL context is version " + iArr[0] + "." + iArr2[0]);
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:410:                    GameActivity.Log.debug("VideoDecoder: Existing GL context is version " + iArr[0]);
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:412:                    GameActivity.Log.debug("VideoDecoder: Existing GL context version not detected");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:438:                GameActivity.Log.error("mTextureID <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:451:                GameActivity.Log.error("mFBO <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:458:                GameActivity.Log.error("mBlitVertexShaderID == 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:464:                GameActivity.Log.error("mBlitFragmentShaderID == 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:471:                GameActivity.Log.error("mProgram <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:481:                GameActivity.Log.error("Could not link program: ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:482:                GameActivity.Log.error(GLES20.glGetProgramInfoLog(this.mProgram));
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:495:                GameActivity.Log.error("mBlitBuffer <= 0");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:532:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_ENUM");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:535:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_VALUE");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:538:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_OPERATION");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:541:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_OUT_OF_MEMORY");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:544:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_INVALID_FRAMEBUFFER_OPERATION");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:547:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:550:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:553:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError GL_FRAMEBUFFER_UNSUPPORTED");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:556:                    GameActivity.Log.error("MediaPlayer$BitmapRenderer: " + str + ": glGetError " + i);
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:887:            GameActivity.Log.warn("Android Video Decoder: CreateCodec failed!");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:947:                        GameActivity.Log.debug("Android Video Decoder: INFO_OUTPUT_BUFFERS_CHANGED");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:949:                        GameActivity.Log.debug("Android Video Decoder: New format" + this.mVideoCodec.getOutputFormat());
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:954:                        GameActivity.Log.debug("Android Video Decoder: dequeueOutputBuffer timed out!");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:957:                        GameActivity.Log.warn("OutputBuffer BUFFER_FLAG_END_OF_STREAM");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:1043:        GameActivity.Log.warn("initBitmapRenderer failed to alloc mBitmapRenderer ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:1051:    public native void nativeClearCachedAttributeState(int i, int i2);
+/tmp/mg/jadx/sources/com/epicgames/ue4/VideoDecoder.java:1112:            GameActivity.Log.warn("updateVideoFrame failed to alloc mOESTextureRenderer ");
+/tmp/mg/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:22:    private static native void dispatchEvent(int i, int i2, int i3);
+/tmp/mg/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:37:            GameActivity.Log.debug("Battery: status = " + intExtra + ", rawlevel = " + intExtra2 + ", scale = " + intExtra3);
+/tmp/mg/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:46:        GameActivity.Log.debug("Registering battery receiver");
+/tmp/mg/jadx/sources/com/epicgames/ue4/BatteryReceiver.java:58:        GameActivity.Log.debug("Unregistering battery receiver");
+/tmp/mg/jadx/sources/jp/konami/android/common/NotificationSender.java:16:import com.epicgames.ue4.GameActivity;
+/tmp/mg/jadx/sources/jp/konami/android/common/NotificationSender.java:134:        Intent intent = new Intent(context, (Class<?>) GameActivity.class);
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:308:    public native void nativeKonamiIabInitializationFinished(boolean z);
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:310:    public native void nativeOnAcknowledgeFinished(BillingResult billingResult);
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:312:    public native void nativeOnBuyFinished(BillingResult billingResult, Purchase purchase);
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:314:    public native void nativeOnConsumeFinished(BillingResult billingResult, Purchase purchase);
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:316:    public native void nativeOnGetBillingConfigFinished(BillingResult billingResult, BillingConfig billingConfig);
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:318:    public native void nativeOnGetInventoryFinished(BillingResult billingResult, List<Purchase> list);
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:320:    public native void nativeOnGetItemDetailsFinished(BillingResult billingResult, List<SkuDetails> list);
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:322:    public native void nativeOnGetItemProductDetailsFinished(BillingResult billingResult, List<ProductDetails> list);
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:324:    public native void nativeOnQueryPurchaseHistoryAsyncFinished(BillingResult billingResult, List<PurchaseHistoryRecord> list);
+/tmp/mg/jadx/sources/jp/konami/android/common/iab/KonamiIabBaseNativeActivity.java:326:    public native void nativeOnShowInAppMessageFinished(InAppMessageResult inAppMessageResult);
+/tmp/mg/jadx/sources/jp/konami/android/common/Achievements.java:279:    private static native void onAchievementsSynced(String[] strArr, int[] iArr, boolean[] zArr, int[] iArr2, int[] iArr3, int i);
+/tmp/mg/jadx/sources/jp/konami/android/common/Achievements.java:306:            Logger.m967d("Achievements", "pushSnapshotToNative() native not linked: " + e.getMessage());
+/tmp/mg/jadx/sources/jp/konami/android/common/IabBroadcastReceiver.java:9:    public native void nativeOnReceivePurchasesUpdated();
+/tmp/mg/jadx/sources/jp/konami/android/common/KWebDialog.java:116:    static native void callbackOnClickingUrl(String str);
+/tmp/mg/jadx/sources/jp/konami/android/common/KWebDialog.java:118:    static native void callbackOnFinishNavigation();
+/tmp/mg/jadx/sources/jp/konami/android/common/KWebDialog.java:120:    static native void callbackOnFinishNavigationWithError(boolean z);
