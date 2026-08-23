@@ -21,7 +21,7 @@ jobs:
           curl -L --retry 3 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.5/jadx-1.5.5.zip
           mkdir -p /opt/jadx && unzip -q /tmp/jadx.zip -d /opt/jadx
           echo /opt/jadx/bin >> "$GITHUB_PATH"
-          python3 -m pip install --break-system-packages androguard==4.1.3 lief==0.17.0
+          python3 -m pip install --break-system-packages androguard==4.1.3 lief==0.17.0 pyelftools==0.32 capstone==5.0.6
       - name: Download eFootball 11.0.1 XAPK
         run: |
           set -euxo pipefail
@@ -83,6 +83,60 @@ jobs:
               if any(c.values()): r.append(f'{p} size={len(d)} '+' '.join(f'{k}={v}' for k,v in c.items()))
           Path('hits/connectivity_constants.txt').write_text('\n'.join(r))
           PY
+      - name: Resolve live LAN and result code references
+        run: |
+          set -euxo pipefail
+          SO="$(find work/unpacked -type f -name libUE4.so | head -n1)"
+          export SO
+          python3 - <<'PY'
+          import os,re
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM,arm64
+          p=Path(os.environ['SO']); d=p.read_bytes()
+          terms=['P2P_ADHOC_WIFIDIRECTLAN','P2P_ADHOC_LAN','direct_online_turn_mode','LOCAL_GAMERELAY','CMD_SET_LOCAL_GAMERELAY_LIST','TaskEvCompeLocalGamerelay','CMD_CHANGE_GAMEPHASE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT','CMD_ADD_SCORE','MatchScoreChanged','m_homeScore','m_awayScore','GetGameScore','SetHomeScore','SetAwayScore','EPKR_GamePhase::GameplayFinished','EPKR_GamePhase::ResultPresentation','EMatchFlowTask::SendServerMatchEnd','MatchResultTimeUpDemo','Match/End/MatchEnd','ROOM_GAME_PHASE_END','NUM_GUESTS_END_MATCH','ADDED_TIME','m_isExtraTime','HOST_DIRECT','HOST_RELAY','PUNCHING_FINISHED','START_UDP_HOLE_PUNCHING','OnlineSystemMultiplaySessionStrategyP2pFullMeshWithTurn.cpp']
+          with p.open('rb') as f:
+            e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr'])
+            loads=[(int(s['p_offset']),int(s['p_filesz']),int(s['p_vaddr'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          def ova(o):
+            for po,sz,va in loads:
+              if po<=o<po+sz:return va+o-po
+          inst=[]
+          for t in terms:
+            s=0
+            while True:
+              o=d.find(t.encode(),s)
+              if o<0:break
+              inst.append((t,o,ova(o)));s=o+1
+          labels={va:(t,o) for t,o,va in inst if va is not None};pages={a&~0xfff for a in labels}
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM);md.detail=True;regs={};refs=[];n=0
+          for i in md.disasm(tb,tva):
+            n+=1
+            for r,(pg,k) in list(regs.items()):
+              if n-k>8:regs.pop(r,None)
+            ops=i.operands
+            if i.mnemonic=='adrp' and len(ops)>=2 and ops[0].type==arm64.ARM64_OP_REG and ops[1].type==arm64.ARM64_OP_IMM:
+              pg=int(ops[1].imm)
+              if pg in pages:regs[ops[0].reg]=(pg,n)
+            elif i.mnemonic=='add' and len(ops)>=3 and ops[1].type==arm64.ARM64_OP_REG and ops[2].type==arm64.ARM64_OP_IMM and ops[1].reg in regs:
+              a=regs[ops[1].reg][0]+int(ops[2].imm)
+              if a in labels:refs.append((i.address,a,'ADRP+ADD'))
+            elif i.mnemonic=='adr' and len(ops)>=2 and ops[1].type==arm64.ARM64_OP_IMM:
+              a=int(ops[1].imm)
+              if a in labels:refs.append((i.address,a,'ADR'))
+          by={}
+          for pc,a,k in refs:by.setdefault(a,[]).append((pc,k))
+          out=['=== TARGETS / CODE XREFS ===']
+          for t,o,va in inst:
+            rr=by.get(va,[]);out.append(f'{t}\toff=0x{o:x}\tva=0x{va:x}\txrefs={len(rr)}\t'+','.join(f'0x{x:x}:{k}' for x,k in rr[:30]))
+          out.append('\n=== NEARBY ENUM/CONFIG STRINGS ===')
+          for t,o,va in inst:
+            out.append(f'\n--- {t} @ 0x{o:x} ---')
+            lo=max(0,o-450);hi=min(len(d),o+450)
+            for m in re.finditer(rb'[ -~]{4,}',d[lo:hi]):out.append(f'0x{lo+m.start():x} '+m.group().decode('ascii','ignore'))
+          Path('hits/xref_direct.txt').write_text('\n'.join(out),errors='ignore')
+          print('\n'.join(out))
+          PY
       - name: Assemble report
         run: |
           {
@@ -93,6 +147,7 @@ jobs:
             echo '## Largest files'; sed -n '1,180p' hits/largest_files.txt
             echo '## Endpoints'; cat hits/endpoints.txt
             echo '## Connectivity constant counts'; cat hits/connectivity_constants.txt
+            echo '## Direct LAN/result xrefs'; cat hits/xref_direct.txt
             echo '## Java/resource high-value hits'; sed -n '1,1800p' hits/jadx_hits.txt
             echo '## Native high-value hits'; sed -n '1,3500p' hits/native_hits.txt
             echo '## JADX tail'; tail -200 hits/jadx.log
