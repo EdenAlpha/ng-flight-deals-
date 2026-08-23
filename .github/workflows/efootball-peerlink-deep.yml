@@ -17,6 +17,7 @@ jobs:
           sudo apt-get install -y -qq unzip curl file binutils openjdk-17-jre-headless >/dev/null
           curl -L --fail --retry 4 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.1/jadx-1.5.1.zip
           mkdir -p /tmp/jadx && unzip -q /tmp/jadx.zip -d /tmp/jadx
+          chmod +x /tmp/jadx/bin/jadx /tmp/jadx/bin/jadx-gui || true
       - name: Download current eFootball bundle
         run: |
           mkdir -p /tmp/ef/bundle /tmp/ef/base /tmp/ef/native /tmp/out
