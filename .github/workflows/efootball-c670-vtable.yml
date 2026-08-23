@@ -69,11 +69,14 @@ jobs:
           out=[]
 
           # ---- step 1: relocations whose addend == TARGET => vtable slots
+          # parse raw RELA entries: 24B each = r_offset,r_info,r_addend ; type=r_info&0xffffffff
           slots=[]
           for s in relsecs:
-              for r in s.iter_relocations():
-                  if r['r_info_type']==1027 and r['r_addend']==TARGET:  # R_AARCH64_RELATIVE=1027
-                      slots.append(int(r['r_offset']))
+              d=s.data()
+              for o in range(0,len(d)-23,24):
+                  r_off,r_info,r_add=struct.unpack_from('<QQq',d,o)
+                  if (r_info & 0xFFFFFFFF)==1027 and r_add==TARGET:
+                      slots.append(r_off)
           out.append(f'RELOC_SLOTS_FOR_{hex(TARGET)}: {len(slots)} -> {[hex(x) for x in slots]}')
 
           def rd64(va):
