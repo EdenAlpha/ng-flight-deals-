@@ -1,0 +1,26 @@
+name: PCAP transfer notifier
+
+on:
+  push:
+    branches:
+      - pcap-transfer-bridge-2026-08-24
+    paths:
+      - .github/workflows/pcap-transfer-notify.yml
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 772,
+              body: 'Automated PCAP transfer mailbox ping from GitHub Actions.'
+            })
