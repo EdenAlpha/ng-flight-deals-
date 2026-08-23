@@ -3,6 +3,9 @@ name: eFootball transport selector caller trace
 on:
   push:
     branches: [ efootball-apk-analysis-2026-08-23 ]
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
@@ -41,8 +44,6 @@ jobs:
           ins=list(md.disasm(data,base))
           targets={0x7bfdbf4:'selector_hi',0x7bfe4e0:'selector_lo',0x7c08db8:'LinkUpMode_xref_site',0x7c0e444:'direct_online_turn_mode_xref_site'}
           out=[]
-          # instruction index map
-          idx={x.address:i for i,x in enumerate(ins)}
           for tgt,name in targets.items():
             out.append(f'\n######## CALLERS OF {name} {tgt:#x} ########')
             calls=[]
@@ -55,7 +56,6 @@ jobs:
               for y in ins[max(0,i-100):min(len(ins),i+101)]:
                 mark='>>' if y.address==x.address else '  '
                 out.append(f'{mark} {y.address:#x}: {y.mnemonic:9} {y.op_str}')
-          # Full selector functions, larger windows
           for start,end,name in [(0x7bfdbf4,0x7bfe4e0,'selector_hi_full'),(0x7bfe4e0,0x7bfed40,'selector_lo_full')]:
             out.append(f'\n######## {name} ########')
             for y in ins:
@@ -69,6 +69,7 @@ jobs:
           SO=selector-work/native/lib/arm64-v8a/libUE4.so
           strings -a -t x -n 4 "$SO" | grep -Ei 'P2P_ADHOC|WIFIDIRECTLAN|LinkUpMode|direct_online_turn_mode|is_local_gamerelay|LOCAL_GAMERELAY|NetworkQualityTestForP2pFullMesh|BindNTLAddress|GET_PEER_NAME|canUseWiFi|SESSION_MODE|GAME_MODE|COMMUNICATION_MODE|P2P_HIGH_LEVEL|P2P_LOW_LEVEL' > selector-output/reachability_strings.txt || true
       - name: Commit textual results
+        if: github.event_name == 'push'
         run: |
           set -euxo pipefail
           git config user.name 'github-actions[bot]'
@@ -76,3 +77,7 @@ jobs:
           git add selector-output
           git commit -m 'Add eFootball transport selector caller trace' || exit 0
           git push origin HEAD:efootball-apk-analysis-2026-08-23
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-selector-output
+          path: selector-output/
