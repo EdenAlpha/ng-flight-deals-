@@ -1,0 +1,3310 @@
+
+====================================================================================================
+TARGET CMD_ADD_SCORE
+string_vas=0xbef67e,0xc15175
+xref_count=4
+XREF[0] pc=0x75adb78 function~=0x75adb2c-0x75adcdc
+SAME_FUNCTION_STRINGS:
+  pc=0x75adb78 va=0xc15175 CMD_ADD_SCORE
+  pc=0x75adbe0 va=0x9d9601 CmdAddScore.php
+  pc=0x75adc28 va=0xb42c54 NotImplement
+MARKED_XREF_NEIGHBORHOOD:
+   0x75adb28: ret      
+   0x75adb2c: stp      x29, x30, [sp, #-0x20]!
+   0x75adb30: stp      x20, x19, [sp, #0x10]
+   0x75adb34: mov      x29, sp
+   0x75adb38: mov      x19, x0
+   0x75adb3c: add      x0, x0, #8
+   0x75adb40: adrp     x8, #0x97a2000
+   0x75adb44: add      x8, x8, #0x600
+   0x75adb48: str      x8, [x19]
+   0x75adb4c: bl       #0x2f8e028
+   0x75adb50: add      x0, x19, #0xc8
+   0x75adb54: bl       #0x2f93838
+>> 0x75adb58: add      x0, x19, #0xf0
+>> 0x75adb5c: mov      w1, wzr
+>> 0x75adb60: bl       #0x2f912cc
+>> 0x75adb64: mov      w0, #0x2000
+>> 0x75adb68: strb     wzr, [x19, #0x108]
+>> 0x75adb6c: mov      w20, #0x2000
+>> 0x75adb70: bl       #0x8b35650
+>> 0x75adb74: mov      w8, #0x1a
+>> 0x75adb78: adrp     x9, #0xc15000
+>> 0x75adb7c: add      x9, x9, #0x175
+>> 0x75adb80: str      xzr, [x19, #0x1e0]
+>> 0x75adb84: movi     v0.2d, #0000000000000000
+>> 0x75adb88: str      x20, [x19, #0x128]
+>> 0x75adb8c: strb     w8, [x19, #0x138]
+>> 0x75adb90: add      x8, x19, #0x139
+>> 0x75adb94: ldur     x10, [x9, #5]
+>> 0x75adb98: stp      xzr, x0, [x19, #0x118]
+   0x75adb9c: ldr      x9, [x9]
+   0x75adba0: stp      q0, q0, [x19, #0x140]
+   0x75adba4: stp      q0, q0, [x19, #0x160]
+   0x75adba8: stp      q0, q0, [x19, #0x180]
+   0x75adbac: stp      q0, q0, [x19, #0x1a0]
+   0x75adbb0: stp      q0, q0, [x19, #0x1c0]
+   0x75adbb4: stur     x10, [x8, #5]
+   0x75adbb8: ldrb     w10, [x19, #0x170]
+   0x75adbbc: str      x9, [x8]
+   0x75adbc0: tbnz     w10, #0, #0x75adbd4
+   0x75adbc4: mov      w9, #0x1e
+   0x75adbc8: add      x8, x19, #0x171
+   0x75adbcc: strb     w9, [x19, #0x170]
+   0x75adbd0: b        #0x75adbe0
+   0x75adbd4: mov      w9, #0xf
+   0x75adbd8: ldr      x8, [x19, #0x180]
+   0x75adbdc: str      x9, [x19, #0x178]
+   0x75adbe0: adrp     x9, #0x9d9000
+   0x75adbe4: add      x9, x9, #0x601
+IMMEDIATE_HINTS:
+   0x75ada8c: mov      w0, #1
+   0x75adab8: mov      w0, #1
+   0x75adac4: mov      w0, #1
+>> 0x75adb64: mov      w0, #0x2000
+>> 0x75adb6c: mov      w20, #0x2000
+>> 0x75adb74: mov      w8, #0x1a
+   0x75adbc0: tbnz     w10, #0, #0x75adbd4
+   0x75adbc4: mov      w9, #0x1e
+   0x75adbd4: mov      w9, #0xf
+   0x75adbf4: mov      w12, #0x656d
+   0x75adbfc: movk     w12, #0x746e, lsl #16
+   0x75adc50: mov      w9, #0x18
+XREF[1] pc=0x75af748 function~=0x75af6b0-0x75af7e4
+SAME_FUNCTION_STRINGS:
+  pc=0x75af748 va=0xc15175 CMD_ADD_SCORE
+  pc=0x75af798 va=0x9d9601 CmdAddScore.php
+MARKED_XREF_NEIGHBORHOOD:
+   0x75af6f8: movi     v0.2d, #0000000000000000
+   0x75af6fc: stp      x0, x20, [x19, #0x120]
+   0x75af700: add      x0, x19, #0x708
+   0x75af704: mov      w1, wzr
+   0x75af708: mov      w2, #0x258
+   0x75af70c: str      xzr, [x19, #0x118]
+   0x75af710: add      x20, x19, #0x1f0
+   0x75af714: str      xzr, [x19, #0x1e0]
+   0x75af718: stp      q0, q0, [x19, #0x140]
+   0x75af71c: stp      q0, q0, [x19, #0x160]
+   0x75af720: stp      q0, q0, [x19, #0x180]
+   0x75af724: stp      q0, q0, [x19, #0x1a0]
+>> 0x75af728: stp      q0, q0, [x19, #0x1c0]
+>> 0x75af72c: bl       #0x8b35360
+>> 0x75af730: mov      x0, x20
+>> 0x75af734: mov      w1, wzr
+>> 0x75af738: mov      w2, #0x514
+>> 0x75af73c: bl       #0x8b35360
+>> 0x75af740: adrp     x8, #0x98de000
+>> 0x75af744: mov      w9, #0x1a
+>> 0x75af748: adrp     x10, #0xc15000
+>> 0x75af74c: add      x10, x10, #0x175
+>> 0x75af750: add      x11, x19, #0x139
+>> 0x75af754: ldr      x8, [x8, #0xa98]
+>> 0x75af758: strb     w9, [x19, #0x138]
+>> 0x75af75c: ldr      x12, [x10]
+>> 0x75af760: ldur     x10, [x10, #5]
+>> 0x75af764: add      x8, x8, #0x10
+>> 0x75af768: ldrb     w9, [x19, #0x170]
+   0x75af76c: str      x12, [x11]
+   0x75af770: stur     x10, [x11, #5]
+   0x75af774: str      x8, [x19]
+   0x75af778: tbnz     w9, #0, #0x75af78c
+   0x75af77c: mov      w9, #0x1e
+   0x75af780: add      x8, x19, #0x171
+   0x75af784: strb     w9, [x19, #0x170]
+   0x75af788: b        #0x75af798
+   0x75af78c: mov      w9, #0xf
+   0x75af790: ldr      x8, [x19, #0x180]
+   0x75af794: str      x9, [x19, #0x178]
+   0x75af798: adrp     x9, #0x9d9000
+   0x75af79c: add      x9, x9, #0x601
+   0x75af7a0: adrp     x11, #0x97cb000
+   0x75af7a4: add      x11, x11, #0xb18
+   0x75af7a8: strb     wzr, [x8, #0xf]
+   0x75af7ac: ldr      x10, [x9]
+   0x75af7b0: ldur     x9, [x9, #7]
+   0x75af7b4: str      x10, [x8]
+IMMEDIATE_HINTS:
+   0x75af660: mov      w0, #1
+   0x75af6a4: mov      w0, #1
+   0x75af6e8: mov      w0, #0x2000
+   0x75af6f0: mov      w20, #0x2000
+   0x75af708: mov      w2, #0x258
+>> 0x75af738: mov      w2, #0x514
+>> 0x75af744: mov      w9, #0x1a
+   0x75af778: tbnz     w9, #0, #0x75af78c
+   0x75af77c: mov      w9, #0x1e
+   0x75af78c: mov      w9, #0xf
+   0x75af830: tbnz     w8, #0, #0x75af840
+   0x75af870: cmp      w1, #0x5c
+   0x75af87c: mov      w0, #1
+   0x75af8c0: mov      w0, #0x38
+XREF[2] pc=0x7d2ce60 function~=0x7d2c954-0x7d2c9e8
+SAME_FUNCTION_STRINGS:
+MARKED_XREF_NEIGHBORHOOD:
+   0x7d2ce10: str      w27, [x20, #0x2c]
+   0x7d2ce14: str      xzr, [x20, #0x40]
+   0x7d2ce18: stur     q0, [x20, #0x31]
+   0x7d2ce1c: strb     w8, [x20, #0x41]
+   0x7d2ce20: strh     w21, [x20, #0x48]
+   0x7d2ce24: strb     w19, [x20, #0x4a]
+   0x7d2ce28: stur     x22, [x20, #0x4c]
+   0x7d2ce2c: str      w27, [x20, #0x54]
+   0x7d2ce30: stp      xzr, xzr, [x20, #0x60]
+   0x7d2ce34: str      xzr, [x0, #0x58]!
+   0x7d2ce38: bl       #0x2efb614
+   0x7d2ce3c: adrp     x0, #0x7d2c000
+>> 0x7d2ce40: add      x0, x0, #0x824
+>> 0x7d2ce44: mov      x1, xzr
+>> 0x7d2ce48: mov      x2, x23
+>> 0x7d2ce4c: strh     w21, [x20, #0x70]
+>> 0x7d2ce50: strb     w19, [x20, #0x72]
+>> 0x7d2ce54: stur     x22, [x20, #0x74]
+>> 0x7d2ce58: str      w27, [x20, #0x7c]
+>> 0x7d2ce5c: bl       #0x8b35240
+>> 0x7d2ce60: adrp     x8, #0xc15000
+>> 0x7d2ce64: add      x8, x8, #0x175
+>> 0x7d2ce68: strb     w28, [x20, #0x80]!
+>> 0x7d2ce6c: stp      xzr, xzr, [x20, #8]
+>> 0x7d2ce70: mov      w10, #0x1e02
+>> 0x7d2ce74: ldur     x9, [x8, #5]
+>> 0x7d2ce78: stp      xzr, xzr, [x20, #0x30]
+>> 0x7d2ce7c: ldr      x8, [x8]
+>> 0x7d2ce80: str      xzr, [x20, #0x60]
+   0x7d2ce84: strb     w19, [x20, #0x1a]
+   0x7d2ce88: mov      w23, #0x18
+   0x7d2ce8c: stur     x9, [x20, #6]
+   0x7d2ce90: mov      w9, #0x4f46
+   0x7d2ce94: stur     x8, [x20, #1]
+   0x7d2ce98: adrp     x8, #0xb7b000
+   0x7d2ce9c: add      x8, x8, #0x728
+   0x7d2cea0: movk     w9, #0x4c55, lsl #16
+   0x7d2cea4: strb     w19, [x20, #0x42]
+   0x7d2cea8: mov      w11, #0x26
+   0x7d2ceac: strb     w19, [x20, #0x6a]
+   0x7d2ceb0: adrp     x0, #0x7d2c000
+   0x7d2ceb4: add      x0, x0, #0x898
+   0x7d2ceb8: ldr      x8, [x8]
+   0x7d2cebc: stur     w9, [x20, #0x31]
+   0x7d2cec0: adrp     x9, #0x9ec000
+   0x7d2cec4: add      x9, x9, #0xee0
+   0x7d2cec8: strb     w19, [x20, #0x92]
+   0x7d2cecc: stur     x8, [x20, #0x29]
+IMMEDIATE_HINTS:
+   0x7d2cda8: mov      w8, #6
+   0x7d2cdac: mov      w9, #0x4c41
+   0x7d2cdb4: mov      x22, #0x3e8
+   0x7d2cdb8: movk     x22, #0x999a, lsl #32
+   0x7d2cdbc: mov      w21, #0x2802
+   0x7d2cdc4: mov      w8, #0x22
+   0x7d2cdd8: mov      w19, #0x2d
+   0x7d2cddc: movk     x22, #0x3e99, lsl #48
+   0x7d2cde0: mov      w27, #0x2710
+   0x7d2cdec: mov      w8, #0x4f
+   0x7d2cdfc: mov      w2, #0x1e
+>> 0x7d2ce70: mov      w10, #0x1e02
+   0x7d2ce88: mov      w23, #0x18
+   0x7d2ce90: mov      w9, #0x4f46
+   0x7d2cea0: movk     w9, #0x4c55, lsl #16
+   0x7d2cea8: mov      w11, #0x26
+   0x7d2ced0: mov      w8, #0x4148
+   0x7d2ced4: movk     w8, #0x4553, lsl #16
+   0x7d2cee0: mov      w9, #0x28
+   0x7d2cf10: mov      w8, #0x5553
+   0x7d2cf14: movk     w8, #0x544c, lsl #16
+   0x7d2cf30: mov      w28, #0x26
+   0x7d2cfa4: mov      w8, #0x454e
+   0x7d2cfc0: mov      w10, #0x14
+   0x7d2cfd0: mov      w8, #0x4f44
+   0x7d2cfd4: movk     w8, #0x4e57, lsl #16
+XREF[3] pc=0x7d36a0c function~=0x7d36850-0x7d369bc
+SAME_FUNCTION_STRINGS:
+MARKED_XREF_NEIGHBORHOOD:
+   0x7d369bc: add      x0, sp, #0x10
+   0x7d369c0: mov      w1, wzr
+   0x7d369c4: mov      x2, x19
+   0x7d369c8: bl       #0x7d36e00
+   0x7d369cc: ldrb     w8, [sp, #0x10]
+   0x7d369d0: tbz      w8, #0, #0x7d36998
+   0x7d369d4: ldr      x0, [sp, #0x20]
+   0x7d369d8: bl       #0x2efa56c
+   0x7d369dc: ldr      x8, [x22, #0x28]
+   0x7d369e0: ldur     x9, [x29, #-8]
+   0x7d369e4: cmp      x8, x9
+   0x7d369e8: b.eq     #0x7d369a8
+>> 0x7d369ec: bl       #0x8b35290
+>> 0x7d369f0: adrp     x21, #0xa4af000
+>> 0x7d369f4: add      x21, x21, #0xc70
+>> 0x7d369f8: mov      x0, x21
+>> 0x7d369fc: bl       #0x8b35310
+>> 0x7d36a00: cbz      w0, #0x7d36954
+>> 0x7d36a04: str      x22, [sp, #8]
+>> 0x7d36a08: mov      x22, x21
+>> 0x7d36a0c: adrp     x1, #0xbef000
+>> 0x7d36a10: add      x1, x1, #0x67e
+>> 0x7d36a14: mov      w2, #0x139
+>> 0x7d36a18: stp      xzr, xzr, [x21, #0x10]
+>> 0x7d36a1c: str      xzr, [x22, #8]!
+>> 0x7d36a20: mov      x0, x22
+>> 0x7d36a24: bl       #0x2efb614
+>> 0x7d36a28: adrp     x0, #0x2ef7000
+>> 0x7d36a2c: add      x0, x0, #0xb54
+   0x7d36a30: adrp     x2, #0x8b75000
+   0x7d36a34: add      x2, x2, #0x140
+   0x7d36a38: mov      x1, x22
+   0x7d36a3c: ldr      x22, [sp, #8]
+   0x7d36a40: bl       #0x8b35240
+   0x7d36a44: mov      x0, x21
+   0x7d36a48: bl       #0x8b35320
+   0x7d36a4c: b        #0x7d36954
+   0x7d36a50: stp      x29, x30, [sp, #-0x30]!
+   0x7d36a54: str      x21, [sp, #0x10]
+   0x7d36a58: stp      x20, x19, [sp, #0x20]
+   0x7d36a5c: mov      x29, sp
+   0x7d36a60: mov      x19, x0
+   0x7d36a64: ldrb     w8, [x0, #8]
+   0x7d36a68: tbnz     w8, #0, #0x7d36a74
+   0x7d36a6c: strh     wzr, [x19, #8]
+   0x7d36a70: b        #0x7d36a80
+   0x7d36a74: ldr      x8, [x19, #0x18]
+   0x7d36a78: strb     wzr, [x8]
+IMMEDIATE_HINTS:
+   0x7d36950: tbz      w8, #0, #0x7d369f0
+   0x7d36968: tst      w9, #1
+   0x7d3698c: tbnz     w0, #0, #0x7d369bc
+   0x7d36994: tbnz     w8, #0, #0x7d369d4
+   0x7d369d0: tbz      w8, #0, #0x7d36998
+>> 0x7d36a14: mov      w2, #0x139
+   0x7d36a68: tbnz     w8, #0, #0x7d36a74
+   0x7d36a88: mov      w9, #1
+   0x7d36b38: tbnz     w9, #0, #0x7d36b48
+   0x7d36b68: mov      x9, #1
+   0x7d36b6c: movk     x9, #0x1662, lsl #16
+   0x7d36b74: movk     x9, #0x1663, lsl #32
+
+====================================================================================================
+TARGET CMD_CHANGE_GAMEPHASE
+string_vas=0x9ecee0,0xbef67e
+xref_count=4
+XREF[0] pc=0x75bfedc function~=0x75bfe84-0x75c0040
+SAME_FUNCTION_STRINGS:
+  pc=0x75bfedc va=0x9ecee0 CMD_CHANGE_GAMEPHASE
+  pc=0x75bff44 va=0xbeeb63 CmdChangeGamephase.php
+  pc=0x75bff50 va=0xb42c54 NotImplement
+MARKED_XREF_NEIGHBORHOOD:
+   0x75bfe8c: stp      x20, x19, [sp, #0x20]
+   0x75bfe90: mov      x29, sp
+   0x75bfe94: mov      x19, x0
+   0x75bfe98: add      x20, x0, #0x278
+   0x75bfe9c: add      x0, x0, #8
+   0x75bfea0: adrp     x8, #0x97a2000
+   0x75bfea4: add      x8, x8, #0x600
+   0x75bfea8: str      x8, [x19]
+   0x75bfeac: bl       #0x2f8e028
+   0x75bfeb0: add      x0, x19, #0xc8
+   0x75bfeb4: bl       #0x2f93838
+   0x75bfeb8: add      x0, x19, #0xf0
+>> 0x75bfebc: mov      w1, wzr
+>> 0x75bfec0: bl       #0x2f912cc
+>> 0x75bfec4: mov      w0, #0x2000
+>> 0x75bfec8: strb     wzr, [x19, #0x108]
+>> 0x75bfecc: mov      w21, #0x2000
+>> 0x75bfed0: bl       #0x8b35650
+>> 0x75bfed4: movi     v0.2d, #0000000000000000
+>> 0x75bfed8: add      x8, x19, #0x148
+>> 0x75bfedc: adrp     x11, #0x9ec000
+>> 0x75bfee0: add      x11, x11, #0xee0
+>> 0x75bfee4: mov      w10, #0x4148
+>> 0x75bfee8: add      x9, x19, #0x139
+>> 0x75bfeec: movk     w10, #0x4553, lsl #16
+>> 0x75bfef0: str      x21, [x19, #0x128]
+>> 0x75bfef4: stp      q0, q0, [x8]
+>> 0x75bfef8: stp      q0, q0, [x8, #0x20]
+>> 0x75bfefc: stp      q0, q0, [x8, #0x40]
+   0x75bff00: stp      q0, q0, [x8, #0x60]
+   0x75bff04: stp      q0, q0, [x8, #0x80]
+   0x75bff08: mov      w8, #0x28
+   0x75bff0c: ldr      q0, [x11]
+   0x75bff10: str      w10, [x9, #0x10]
+   0x75bff14: stp      xzr, x0, [x19, #0x118]
+   0x75bff18: strb     w8, [x19, #0x138]
+   0x75bff1c: ldrb     w8, [x19, #0x170]
+   0x75bff20: str      q0, [x9]
+   0x75bff24: tbnz     w8, #0, #0x75bff38
+   0x75bff28: mov      w9, #0x2c
+   0x75bff2c: add      x8, x19, #0x171
+   0x75bff30: strb     w9, [x19, #0x170]
+   0x75bff34: b        #0x75bff44
+   0x75bff38: mov      w9, #0x16
+   0x75bff3c: ldr      x8, [x19, #0x180]
+   0x75bff40: str      x9, [x19, #0x178]
+   0x75bff44: adrp     x9, #0xbee000
+   0x75bff48: add      x9, x9, #0xb63
+IMMEDIATE_HINTS:
+   0x75bfde4: tbnz     w8, #0, #0x75bfd8c
+   0x75bfdec: mov      w8, #0x41
+   0x75bfdf0: mov      w9, #0x41
+   0x75bfdf4: mov      w10, #0x41
+   0x75bfdf8: mov      w11, #0x41
+   0x75bfe14: mov      w9, #0xa0
+   0x75bfe18: movk     w9, #0x105, lsl #16
+   0x75bfe48: mov      w8, #1
+>> 0x75bfec4: mov      w0, #0x2000
+>> 0x75bfecc: mov      w21, #0x2000
+>> 0x75bfee4: mov      w10, #0x4148
+>> 0x75bfeec: movk     w10, #0x4553, lsl #16
+   0x75bff08: mov      w8, #0x28
+   0x75bff24: tbnz     w8, #0, #0x75bff38
+   0x75bff28: mov      w9, #0x2c
+   0x75bff38: mov      w9, #0x16
+   0x75bffa0: mov      w9, #0x18
+   0x75bffac: mov      w8, #0x656d
+   0x75bffb0: movk     w8, #0x746e, lsl #16
+   0x75bffc0: mov      w9, #0x4f4e
+   0x75bfff0: mov      w8, #4
+XREF[1] pc=0x75c37f4 function~=0x75c3758-0x75c3894
+SAME_FUNCTION_STRINGS:
+  pc=0x75c37f4 va=0x9ecee0 CMD_CHANGE_GAMEPHASE
+  pc=0x75c3848 va=0xbeeb63 CmdChangeGamephase.php
+MARKED_XREF_NEIGHBORHOOD:
+   0x75c37a4: add      x8, x19, #0x148
+   0x75c37a8: stp      x0, x20, [x19, #0x120]
+   0x75c37ac: mov      w1, wzr
+   0x75c37b0: mov      w2, #0x258
+   0x75c37b4: add      x20, x19, #0x1f0
+   0x75c37b8: str      xzr, [x19, #0x118]
+   0x75c37bc: stp      q0, q0, [x8]
+   0x75c37c0: stp      q0, q0, [x8, #0x20]
+   0x75c37c4: stp      q0, q0, [x8, #0x40]
+   0x75c37c8: stp      q0, q0, [x8, #0x60]
+   0x75c37cc: stp      q0, q0, [x8, #0x80]
+   0x75c37d0: add      x8, x19, #0x708
+>> 0x75c37d4: mov      x0, x8
+>> 0x75c37d8: bl       #0x8b35360
+>> 0x75c37dc: mov      x0, x20
+>> 0x75c37e0: mov      w1, wzr
+>> 0x75c37e4: mov      w2, #0x514
+>> 0x75c37e8: bl       #0x8b35360
+>> 0x75c37ec: adrp     x8, #0x98de000
+>> 0x75c37f0: mov      w9, #0x28
+>> 0x75c37f4: adrp     x12, #0x9ec000
+>> 0x75c37f8: add      x12, x12, #0xee0
+>> 0x75c37fc: mov      w11, #0x4148
+>> 0x75c3800: add      x10, x19, #0x139
+>> 0x75c3804: ldr      x8, [x8, #0xa98]
+>> 0x75c3808: movk     w11, #0x4553, lsl #16
+>> 0x75c380c: ldr      q0, [x12]
+>> 0x75c3810: strb     w9, [x19, #0x138]
+>> 0x75c3814: ldrb     w9, [x19, #0x170]
+   0x75c3818: add      x8, x8, #0x10
+   0x75c381c: str      w11, [x10, #0x10]
+   0x75c3820: str      q0, [x10]
+   0x75c3824: str      x8, [x19]
+   0x75c3828: tbnz     w9, #0, #0x75c383c
+   0x75c382c: mov      w9, #0x2c
+   0x75c3830: add      x8, x19, #0x171
+   0x75c3834: strb     w9, [x19, #0x170]
+   0x75c3838: b        #0x75c3848
+   0x75c383c: mov      w9, #0x16
+   0x75c3840: ldr      x8, [x19, #0x180]
+   0x75c3844: str      x9, [x19, #0x178]
+   0x75c3848: adrp     x9, #0xbee000
+   0x75c384c: add      x9, x9, #0xb63
+   0x75c3850: adrp     x10, #0x97cc000
+   0x75c3854: add      x10, x10, #0x9b8
+   0x75c3858: strb     wzr, [x8, #0x16]
+   0x75c385c: ldr      q0, [x9]
+   0x75c3860: ldur     x9, [x9, #0xe]
+IMMEDIATE_HINTS:
+   0x75c3708: mov      w0, #1
+   0x75c374c: mov      w0, #1
+   0x75c3790: mov      w0, #0x2000
+   0x75c3798: mov      w20, #0x2000
+   0x75c37b0: mov      w2, #0x258
+>> 0x75c37e4: mov      w2, #0x514
+>> 0x75c37f0: mov      w9, #0x28
+>> 0x75c37fc: mov      w11, #0x4148
+>> 0x75c3808: movk     w11, #0x4553, lsl #16
+   0x75c3828: tbnz     w9, #0, #0x75c383c
+   0x75c382c: mov      w9, #0x2c
+   0x75c383c: mov      w9, #0x16
+   0x75c38e0: tbnz     w8, #0, #0x75c38f0
+   0x75c3920: cmp      w1, #0x5c
+   0x75c392c: mov      w0, #1
+   0x75c3970: mov      w0, #0x38
+XREF[2] pc=0x7d2cec0 function~=0x7d2c954-0x7d2c9e8
+SAME_FUNCTION_STRINGS:
+MARKED_XREF_NEIGHBORHOOD:
+   0x7d2ce70: mov      w10, #0x1e02
+   0x7d2ce74: ldur     x9, [x8, #5]
+   0x7d2ce78: stp      xzr, xzr, [x20, #0x30]
+   0x7d2ce7c: ldr      x8, [x8]
+   0x7d2ce80: str      xzr, [x20, #0x60]
+   0x7d2ce84: strb     w19, [x20, #0x1a]
+   0x7d2ce88: mov      w23, #0x18
+   0x7d2ce8c: stur     x9, [x20, #6]
+   0x7d2ce90: mov      w9, #0x4f46
+   0x7d2ce94: stur     x8, [x20, #1]
+   0x7d2ce98: adrp     x8, #0xb7b000
+   0x7d2ce9c: add      x8, x8, #0x728
+>> 0x7d2cea0: movk     w9, #0x4c55, lsl #16
+>> 0x7d2cea4: strb     w19, [x20, #0x42]
+>> 0x7d2cea8: mov      w11, #0x26
+>> 0x7d2ceac: strb     w19, [x20, #0x6a]
+>> 0x7d2ceb0: adrp     x0, #0x7d2c000
+>> 0x7d2ceb4: add      x0, x0, #0x898
+>> 0x7d2ceb8: ldr      x8, [x8]
+>> 0x7d2cebc: stur     w9, [x20, #0x31]
+>> 0x7d2cec0: adrp     x9, #0x9ec000
+>> 0x7d2cec4: add      x9, x9, #0xee0
+>> 0x7d2cec8: strb     w19, [x20, #0x92]
+>> 0x7d2cecc: stur     x8, [x20, #0x29]
+>> 0x7d2ced0: mov      w8, #0x4148
+>> 0x7d2ced4: movk     w8, #0x4553, lsl #16
+>> 0x7d2ced8: strb     w19, [x20, #0xba]
+>> 0x7d2cedc: ldr      q0, [x9]
+>> 0x7d2cee0: mov      w9, #0x28
+   0x7d2cee4: adrp     x19, #0x8b75000
+   0x7d2cee8: add      x19, x19, #0x140
+   0x7d2ceec: stur     w8, [x20, #0x61]
+   0x7d2cef0: adrp     x8, #0xba1000
+   0x7d2cef4: add      x8, x8, #0x96a
+   0x7d2cef8: strb     w9, [x20, #0x50]
+   0x7d2cefc: stur     q0, [x20, #0x51]
+   0x7d2cf00: adrp     x9, #0xaf6000
+   0x7d2cf04: add      x9, x9, #0xd0e
+   0x7d2cf08: str      xzr, [x20, #0x88]
+   0x7d2cf0c: ldr      q0, [x8]
+   0x7d2cf10: mov      w8, #0x5553
+   0x7d2cf14: movk     w8, #0x544c, lsl #16
+   0x7d2cf18: mov      x1, xzr
+   0x7d2cf1c: mov      x2, x19
+   0x7d2cf20: strh     w10, [x20, #0x18]
+   0x7d2cf24: stur     q0, [x20, #0x79]
+   0x7d2cf28: ldr      q0, [x9]
+   0x7d2cf2c: stur     x22, [x20, #0x1c]
+IMMEDIATE_HINTS:
+   0x7d2cdc4: mov      w8, #0x22
+   0x7d2cdd8: mov      w19, #0x2d
+   0x7d2cddc: movk     x22, #0x3e99, lsl #48
+   0x7d2cde0: mov      w27, #0x2710
+   0x7d2cdec: mov      w8, #0x4f
+   0x7d2cdfc: mov      w2, #0x1e
+   0x7d2ce70: mov      w10, #0x1e02
+   0x7d2ce88: mov      w23, #0x18
+   0x7d2ce90: mov      w9, #0x4f46
+>> 0x7d2cea0: movk     w9, #0x4c55, lsl #16
+>> 0x7d2cea8: mov      w11, #0x26
+>> 0x7d2ced0: mov      w8, #0x4148
+>> 0x7d2ced4: movk     w8, #0x4553, lsl #16
+>> 0x7d2cee0: mov      w9, #0x28
+   0x7d2cf10: mov      w8, #0x5553
+   0x7d2cf14: movk     w8, #0x544c, lsl #16
+   0x7d2cf30: mov      w28, #0x26
+   0x7d2cfa4: mov      w8, #0x454e
+   0x7d2cfc0: mov      w10, #0x14
+   0x7d2cfd0: mov      w8, #0x4f44
+   0x7d2cfd4: movk     w8, #0x4e57, lsl #16
+   0x7d2d014: mov      w10, #0x16
+   0x7d2d028: mov      w8, #0x5952
+XREF[3] pc=0x7d36a0c function~=0x7d36850-0x7d369bc
+SAME_FUNCTION_STRINGS:
+MARKED_XREF_NEIGHBORHOOD:
+   0x7d369bc: add      x0, sp, #0x10
+   0x7d369c0: mov      w1, wzr
+   0x7d369c4: mov      x2, x19
+   0x7d369c8: bl       #0x7d36e00
+   0x7d369cc: ldrb     w8, [sp, #0x10]
+   0x7d369d0: tbz      w8, #0, #0x7d36998
+   0x7d369d4: ldr      x0, [sp, #0x20]
+   0x7d369d8: bl       #0x2efa56c
+   0x7d369dc: ldr      x8, [x22, #0x28]
+   0x7d369e0: ldur     x9, [x29, #-8]
+   0x7d369e4: cmp      x8, x9
+   0x7d369e8: b.eq     #0x7d369a8
+>> 0x7d369ec: bl       #0x8b35290
+>> 0x7d369f0: adrp     x21, #0xa4af000
+>> 0x7d369f4: add      x21, x21, #0xc70
+>> 0x7d369f8: mov      x0, x21
+>> 0x7d369fc: bl       #0x8b35310
+>> 0x7d36a00: cbz      w0, #0x7d36954
+>> 0x7d36a04: str      x22, [sp, #8]
+>> 0x7d36a08: mov      x22, x21
+>> 0x7d36a0c: adrp     x1, #0xbef000
+>> 0x7d36a10: add      x1, x1, #0x67e
+>> 0x7d36a14: mov      w2, #0x139
+>> 0x7d36a18: stp      xzr, xzr, [x21, #0x10]
+>> 0x7d36a1c: str      xzr, [x22, #8]!
+>> 0x7d36a20: mov      x0, x22
+>> 0x7d36a24: bl       #0x2efb614
+>> 0x7d36a28: adrp     x0, #0x2ef7000
+>> 0x7d36a2c: add      x0, x0, #0xb54
+   0x7d36a30: adrp     x2, #0x8b75000
+   0x7d36a34: add      x2, x2, #0x140
+   0x7d36a38: mov      x1, x22
+   0x7d36a3c: ldr      x22, [sp, #8]
+   0x7d36a40: bl       #0x8b35240
+   0x7d36a44: mov      x0, x21
+   0x7d36a48: bl       #0x8b35320
+   0x7d36a4c: b        #0x7d36954
+   0x7d36a50: stp      x29, x30, [sp, #-0x30]!
+   0x7d36a54: str      x21, [sp, #0x10]
+   0x7d36a58: stp      x20, x19, [sp, #0x20]
+   0x7d36a5c: mov      x29, sp
+   0x7d36a60: mov      x19, x0
+   0x7d36a64: ldrb     w8, [x0, #8]
+   0x7d36a68: tbnz     w8, #0, #0x7d36a74
+   0x7d36a6c: strh     wzr, [x19, #8]
+   0x7d36a70: b        #0x7d36a80
+   0x7d36a74: ldr      x8, [x19, #0x18]
+   0x7d36a78: strb     wzr, [x8]
+IMMEDIATE_HINTS:
+   0x7d36950: tbz      w8, #0, #0x7d369f0
+   0x7d36968: tst      w9, #1
+   0x7d3698c: tbnz     w0, #0, #0x7d369bc
+   0x7d36994: tbnz     w8, #0, #0x7d369d4
+   0x7d369d0: tbz      w8, #0, #0x7d36998
+>> 0x7d36a14: mov      w2, #0x139
+   0x7d36a68: tbnz     w8, #0, #0x7d36a74
+   0x7d36a88: mov      w9, #1
+   0x7d36b38: tbnz     w9, #0, #0x7d36b48
+   0x7d36b68: mov      x9, #1
+   0x7d36b6c: movk     x9, #0x1662, lsl #16
+   0x7d36b74: movk     x9, #0x1663, lsl #32
+
+====================================================================================================
+TARGET CMD_GET_GAME_RESULT
+string_vas=0xaf6d0e
+xref_count=4
+XREF[0] pc=0x7621ad8 function~=0x7621a70-0x7621b08
+SAME_FUNCTION_STRINGS:
+  pc=0x7621ad8 va=0xaf6d0e CMD_GET_GAME_RESULT
+MARKED_XREF_NEIGHBORHOOD:
+   0x7621a88: adrp     x8, #0x97ce000
+   0x7621a8c: add      x8, x8, #0xc90
+   0x7621a90: str      xzr, [x19, #0x410]
+   0x7621a94: str      x8, [x19]
+   0x7621a98: bl       #0x813fe80
+   0x7621a9c: bl       #0x813fed0
+   0x7621aa0: tbz      w0, #0, #0x7621ab4
+   0x7621aa4: mov      w8, #1
+   0x7621aa8: mov      x0, x19
+   0x7621aac: strb     w8, [x19, #0x7d]
+   0x7621ab0: bl       #0x7b1f680
+   0x7621ab4: mov      w8, #3
+>> 0x7621ab8: mov      x0, x19
+>> 0x7621abc: mov      w1, #1
+>> 0x7621ac0: strb     wzr, [x19, #0x78]
+>> 0x7621ac4: str      w8, [x19, #0x74]
+>> 0x7621ac8: bl       #0x7b21b08
+>> 0x7621acc: bl       #0x7d2bf4c
+>> 0x7621ad0: cbz      x0, #0x7621afc
+>> 0x7621ad4: ldr      x0, [x0, #0x10]
+>> 0x7621ad8: adrp     x1, #0xaf6000
+>> 0x7621adc: add      x1, x1, #0xd0e
+>> 0x7621ae0: bl       #0x7d375e0
+>> 0x7621ae4: cbz      w0, #0x7621afc
+>> 0x7621ae8: mov      w1, w0
+>> 0x7621aec: mov      x0, x19
+>> 0x7621af0: ldr      x19, [sp, #0x10]
+>> 0x7621af4: ldp      x29, x30, [sp], #0x20
+>> 0x7621af8: b        #0x7b21afc
+   0x7621afc: ldr      x19, [sp, #0x10]
+   0x7621b00: ldp      x29, x30, [sp], #0x20
+   0x7621b04: ret      
+   0x7621b08: b        #0x7b20ecc
+   0x7621b0c: stp      x29, x30, [sp, #-0x20]!
+   0x7621b10: str      x19, [sp, #0x10]
+   0x7621b14: mov      x29, sp
+   0x7621b18: mov      x19, x0
+   0x7621b1c: bl       #0x7b20ecc
+   0x7621b20: mov      x0, x19
+   0x7621b24: ldr      x19, [sp, #0x10]
+   0x7621b28: ldp      x29, x30, [sp], #0x20
+   0x7621b2c: b        #0x8b352c0
+   0x7621b30: stp      x29, x30, [sp, #-0x30]!
+   0x7621b34: str      x21, [sp, #0x10]
+   0x7621b38: stp      x20, x19, [sp, #0x20]
+   0x7621b3c: mov      x29, sp
+   0x7621b40: mov      x19, x0
+   0x7621b44: mov      w0, #0x1f0
+IMMEDIATE_HINTS:
+   0x76219e8: mov      w10, #0x752a
+   0x76219f0: mov      w8, #0xa
+   0x76219f4: mov      w9, #0x72
+   0x76219f8: movk     w10, #0x6573, lsl #16
+   0x7621a20: mov      w8, #-1
+   0x7621a4c: mov      w0, #0x418
+   0x7621aa0: tbz      w0, #0, #0x7621ab4
+   0x7621aa4: mov      w8, #1
+   0x7621ab4: mov      w8, #3
+>> 0x7621abc: mov      w1, #1
+   0x7621b44: mov      w0, #0x1f0
+   0x7621b54: mov      w0, #0x2be8
+   0x7621ba0: mov      w0, #1
+   0x7621bc0: mov      w0, #1
+   0x7621c08: mov      w0, #1
+   0x7621c18: tst      w8, #1
+   0x7621c34: tst      w8, #1
+XREF[1] pc=0x7621ec8 function~=0x7621e78-0x7621f7c
+SAME_FUNCTION_STRINGS:
+  pc=0x7621ec8 va=0xaf6d0e CMD_GET_GAME_RESULT
+  pc=0x7621f30 va=0xbc949f CmdGetGameResult.php
+MARKED_XREF_NEIGHBORHOOD:
+   0x7621e78: stp      x29, x30, [sp, #-0x20]!
+   0x7621e7c: stp      x20, x19, [sp, #0x10]
+   0x7621e80: mov      x29, sp
+   0x7621e84: mov      x19, x0
+   0x7621e88: add      x0, x0, #8
+   0x7621e8c: adrp     x8, #0x97a2000
+   0x7621e90: add      x8, x8, #0x600
+   0x7621e94: str      x8, [x19]
+   0x7621e98: bl       #0x2f8e028
+   0x7621e9c: add      x0, x19, #0xc8
+   0x7621ea0: bl       #0x2f93838
+   0x7621ea4: add      x0, x19, #0xf0
+>> 0x7621ea8: mov      w1, wzr
+>> 0x7621eac: bl       #0x2f912cc
+>> 0x7621eb0: mov      w0, #0x2000
+>> 0x7621eb4: strb     wzr, [x19, #0x108]
+>> 0x7621eb8: mov      w20, #0x2000
+>> 0x7621ebc: bl       #0x8b35650
+>> 0x7621ec0: movi     v0.2d, #0000000000000000
+>> 0x7621ec4: add      x8, x19, #0x148
+>> 0x7621ec8: adrp     x9, #0xaf6000
+>> 0x7621ecc: add      x9, x9, #0xd0e
+>> 0x7621ed0: stp      x0, x20, [x19, #0x120]
+>> 0x7621ed4: str      xzr, [x19, #0x118]
+>> 0x7621ed8: stp      q0, q0, [x8]
+>> 0x7621edc: stp      q0, q0, [x8, #0x20]
+>> 0x7621ee0: stp      q0, q0, [x8, #0x40]
+>> 0x7621ee4: stp      q0, q0, [x8, #0x60]
+>> 0x7621ee8: stp      q0, q0, [x8, #0x80]
+   0x7621eec: mov      w8, #0x26
+   0x7621ef0: ldr      q0, [x9]
+   0x7621ef4: add      x9, x19, #0x139
+   0x7621ef8: strb     w8, [x19, #0x138]
+   0x7621efc: mov      w8, #0x5553
+   0x7621f00: str      q0, [x9]
+   0x7621f04: movk     w8, #0x544c, lsl #16
+   0x7621f08: ldrb     w9, [x19, #0x170]
+   0x7621f0c: str      w8, [x19, #0x148]
+   0x7621f10: tbnz     w9, #0, #0x7621f24
+   0x7621f14: mov      w9, #0x28
+   0x7621f18: add      x8, x19, #0x171
+   0x7621f1c: strb     w9, [x19, #0x170]
+   0x7621f20: b        #0x7621f30
+   0x7621f24: mov      w9, #0x14
+   0x7621f28: ldr      x8, [x19, #0x180]
+   0x7621f2c: str      x9, [x19, #0x178]
+   0x7621f30: adrp     x10, #0xbc9000
+   0x7621f34: add      x10, x10, #0x49f
+IMMEDIATE_HINTS:
+   0x7621e04: mov      w9, #0x2bb8
+   0x7621e08: mov      w8, #0x2ba0
+   0x7621e28: mov      w8, #0x2bd0
+   0x7621e48: mov      w0, #1
+   0x7621e70: mov      w0, #1
+>> 0x7621eb0: mov      w0, #0x2000
+>> 0x7621eb8: mov      w20, #0x2000
+   0x7621eec: mov      w8, #0x26
+   0x7621efc: mov      w8, #0x5553
+   0x7621f04: movk     w8, #0x544c, lsl #16
+   0x7621f10: tbnz     w9, #0, #0x7621f24
+   0x7621f14: mov      w9, #0x28
+   0x7621f24: mov      w9, #0x14
+   0x7621f38: mov      w9, #0x702e
+   0x7621f40: movk     w9, #0x7068, lsl #16
+   0x7621ff0: mov      w0, #1
+   0x762200c: mov      w0, #1
+   0x762203c: mov      w2, #1
+XREF[2] pc=0x7622240 function~=0x7622190-0x76225cc
+SAME_FUNCTION_STRINGS:
+  pc=0x7622240 va=0xaf6d0e CMD_GET_GAME_RESULT
+  pc=0x7622298 va=0xbc949f CmdGetGameResult.php
+  pc=0x762233c va=0xb42c54 NotImplement
+  pc=0x7622458 va=0xa5280d MATERIAL_KEY_NONE
+MARKED_XREF_NEIGHBORHOOD:
+   0x76221f0: add      x8, x19, #0x148
+   0x76221f4: stp      x0, x20, [x19, #0x120]
+   0x76221f8: mov      w1, wzr
+   0x76221fc: mov      w2, #0x258
+   0x7622200: add      x20, x19, #0x1f0
+   0x7622204: str      xzr, [x19, #0x118]
+   0x7622208: stp      q0, q0, [x8]
+   0x762220c: stp      q0, q0, [x8, #0x20]
+   0x7622210: stp      q0, q0, [x8, #0x40]
+   0x7622214: stp      q0, q0, [x8, #0x60]
+   0x7622218: stp      q0, q0, [x8, #0x80]
+   0x762221c: add      x8, x19, #0x708
+>> 0x7622220: mov      x0, x8
+>> 0x7622224: bl       #0x8b35360
+>> 0x7622228: mov      x0, x20
+>> 0x762222c: mov      w1, wzr
+>> 0x7622230: mov      w2, #0x514
+>> 0x7622234: bl       #0x8b35360
+>> 0x7622238: adrp     x8, #0x98de000
+>> 0x762223c: mov      w9, #0x26
+>> 0x7622240: adrp     x12, #0xaf6000
+>> 0x7622244: add      x12, x12, #0xd0e
+>> 0x7622248: mov      w11, #0x5553
+>> 0x762224c: add      x10, x19, #0x139
+>> 0x7622250: ldr      x8, [x8, #0xa98]
+>> 0x7622254: movk     w11, #0x544c, lsl #16
+>> 0x7622258: ldr      q0, [x12]
+>> 0x762225c: strb     w9, [x19, #0x138]
+>> 0x7622260: ldrb     w9, [x19, #0x170]
+   0x7622264: add      x8, x8, #0x10
+   0x7622268: str      w11, [x19, #0x148]
+   0x762226c: str      q0, [x10]
+   0x7622270: str      x8, [x19]
+   0x7622274: tbnz     w9, #0, #0x7622288
+   0x7622278: mov      w9, #0x28
+   0x762227c: add      x8, x19, #0x171
+   0x7622280: strb     w9, [x19, #0x170]
+   0x7622284: b        #0x7622294
+   0x7622288: mov      w9, #0x14
+   0x762228c: ldr      x8, [x19, #0x180]
+   0x7622290: str      x9, [x19, #0x178]
+   0x7622294: mov      w9, #0x702e
+   0x7622298: adrp     x10, #0xbc9000
+   0x762229c: add      x10, x10, #0x49f
+   0x76222a0: movk     w9, #0x7068, lsl #16
+   0x76222a4: movi     v1.2d, #0000000000000000
+   0x76222a8: strb     wzr, [x8, #0x14]
+   0x76222ac: mov      w13, #0x544f
+IMMEDIATE_HINTS:
+   0x7622154: mov      w0, #1
+   0x7622184: mov      w0, #1
+   0x76221a4: mov      w8, #0x2bb8
+   0x76221dc: mov      w0, #0x2000
+   0x76221e4: mov      w20, #0x2000
+   0x76221fc: mov      w2, #0x258
+>> 0x7622230: mov      w2, #0x514
+>> 0x762223c: mov      w9, #0x26
+>> 0x7622248: mov      w11, #0x5553
+>> 0x7622254: movk     w11, #0x544c, lsl #16
+   0x7622274: tbnz     w9, #0, #0x7622288
+   0x7622278: mov      w9, #0x28
+   0x7622288: mov      w9, #0x14
+   0x7622294: mov      w9, #0x702e
+   0x76222a0: movk     w9, #0x7068, lsl #16
+   0x76222ac: mov      w13, #0x544f
+   0x76222c8: movk     w13, #0x4548, lsl #16
+   0x76222d8: mov      w23, #0x656d
+   0x76222f0: mov      w11, #0xa
+   0x76222f8: movk     w23, #0x746e, lsl #16
+   0x7622308: mov      w14, #0x52
+   0x7622310: mov      w20, #0x18
+   0x7622320: mov      w13, #0x4f4e
+   0x7622328: movk     w13, #0x5245, lsl #16
+   0x7622354: mov      w13, #0x4559
+   0x7622364: mov      w8, #4
+   0x76223a0: mov      w9, #0x4f4e
+XREF[3] pc=0x7d2cf00 function~=0x7d2c954-0x7d2c9e8
+SAME_FUNCTION_STRINGS:
+MARKED_XREF_NEIGHBORHOOD:
+   0x7d2ceb0: adrp     x0, #0x7d2c000
+   0x7d2ceb4: add      x0, x0, #0x898
+   0x7d2ceb8: ldr      x8, [x8]
+   0x7d2cebc: stur     w9, [x20, #0x31]
+   0x7d2cec0: adrp     x9, #0x9ec000
+   0x7d2cec4: add      x9, x9, #0xee0
+   0x7d2cec8: strb     w19, [x20, #0x92]
+   0x7d2cecc: stur     x8, [x20, #0x29]
+   0x7d2ced0: mov      w8, #0x4148
+   0x7d2ced4: movk     w8, #0x4553, lsl #16
+   0x7d2ced8: strb     w19, [x20, #0xba]
+   0x7d2cedc: ldr      q0, [x9]
+>> 0x7d2cee0: mov      w9, #0x28
+>> 0x7d2cee4: adrp     x19, #0x8b75000
+>> 0x7d2cee8: add      x19, x19, #0x140
+>> 0x7d2ceec: stur     w8, [x20, #0x61]
+>> 0x7d2cef0: adrp     x8, #0xba1000
+>> 0x7d2cef4: add      x8, x8, #0x96a
+>> 0x7d2cef8: strb     w9, [x20, #0x50]
+>> 0x7d2cefc: stur     q0, [x20, #0x51]
+>> 0x7d2cf00: adrp     x9, #0xaf6000
+>> 0x7d2cf04: add      x9, x9, #0xd0e
+>> 0x7d2cf08: str      xzr, [x20, #0x88]
+>> 0x7d2cf0c: ldr      q0, [x8]
+>> 0x7d2cf10: mov      w8, #0x5553
+>> 0x7d2cf14: movk     w8, #0x544c, lsl #16
+>> 0x7d2cf18: mov      x1, xzr
+>> 0x7d2cf1c: mov      x2, x19
+>> 0x7d2cf20: strh     w10, [x20, #0x18]
+   0x7d2cf24: stur     q0, [x20, #0x79]
+   0x7d2cf28: ldr      q0, [x9]
+   0x7d2cf2c: stur     x22, [x20, #0x1c]
+   0x7d2cf30: mov      w28, #0x26
+   0x7d2cf34: str      w27, [x20, #0x24]
+   0x7d2cf38: strb     w23, [x20, #0x28]
+   0x7d2cf3c: strh     w10, [x20, #0x40]
+   0x7d2cf40: stur     x22, [x20, #0x44]
+   0x7d2cf44: str      w27, [x20, #0x4c]
+   0x7d2cf48: strh     w10, [x20, #0x68]
+   0x7d2cf4c: stur     x22, [x20, #0x6c]
+   0x7d2cf50: str      w27, [x20, #0x74]
+   0x7d2cf54: strb     w11, [x20, #0x78]
+   0x7d2cf58: str      w8, [x20, #0x88]
+   0x7d2cf5c: strh     w10, [x20, #0x90]
+   0x7d2cf60: stur     x22, [x20, #0x94]
+   0x7d2cf64: str      w27, [x20, #0x9c]
+   0x7d2cf68: str      xzr, [x20, #0xb0]
+   0x7d2cf6c: strb     w11, [x20, #0xa0]
+IMMEDIATE_HINTS:
+   0x7d2ce70: mov      w10, #0x1e02
+   0x7d2ce88: mov      w23, #0x18
+   0x7d2ce90: mov      w9, #0x4f46
+   0x7d2cea0: movk     w9, #0x4c55, lsl #16
+   0x7d2cea8: mov      w11, #0x26
+   0x7d2ced0: mov      w8, #0x4148
+   0x7d2ced4: movk     w8, #0x4553, lsl #16
+>> 0x7d2cee0: mov      w9, #0x28
+>> 0x7d2cf10: mov      w8, #0x5553
+>> 0x7d2cf14: movk     w8, #0x544c, lsl #16
+   0x7d2cf30: mov      w28, #0x26
+   0x7d2cfa4: mov      w8, #0x454e
+   0x7d2cfc0: mov      w10, #0x14
+   0x7d2cfd0: mov      w8, #0x4f44
+   0x7d2cfd4: movk     w8, #0x4e57, lsl #16
+   0x7d2d014: mov      w10, #0x16
+   0x7d2d028: mov      w8, #0x5952
+   0x7d2d048: mov      w8, #0x4f45
+   0x7d2d04c: movk     w8, #0x5455, lsl #16
+   0x7d2d064: mov      w8, #0x12
+
+====================================================================================================
+TARGET CMD_SET_GAME_RESULT
+string_vas=0xba196a
+xref_count=3
+XREF[0] pc=0x76d42c8 function~=0x76d4270-0x76d455c
+SAME_FUNCTION_STRINGS:
+  pc=0x76d42c8 va=0xba196a CMD_SET_GAME_RESULT
+  pc=0x76d4330 va=0xb8ee08 CmdSetGameResult.php
+  pc=0x76d43a0 va=0xb42c54 NotImplement
+MARKED_XREF_NEIGHBORHOOD:
+   0x76d4278: stp      x20, x19, [sp, #0x20]
+   0x76d427c: mov      x29, sp
+   0x76d4280: mov      x19, x0
+   0x76d4284: add      x20, x0, #0x209
+   0x76d4288: add      x0, x0, #8
+   0x76d428c: adrp     x8, #0x97a2000
+   0x76d4290: add      x8, x8, #0x600
+   0x76d4294: str      x8, [x19]
+   0x76d4298: bl       #0x2f8e028
+   0x76d429c: add      x0, x19, #0xc8
+   0x76d42a0: bl       #0x2f93838
+   0x76d42a4: add      x0, x19, #0xf0
+>> 0x76d42a8: mov      w1, wzr
+>> 0x76d42ac: bl       #0x2f912cc
+>> 0x76d42b0: mov      w0, #0x2000
+>> 0x76d42b4: strb     wzr, [x19, #0x108]
+>> 0x76d42b8: mov      w21, #0x2000
+>> 0x76d42bc: bl       #0x8b35650
+>> 0x76d42c0: movi     v0.2d, #0000000000000000
+>> 0x76d42c4: add      x8, x19, #0x148
+>> 0x76d42c8: adrp     x9, #0xba1000
+>> 0x76d42cc: add      x9, x9, #0x96a
+>> 0x76d42d0: stp      x0, x21, [x19, #0x120]
+>> 0x76d42d4: str      xzr, [x19, #0x118]
+>> 0x76d42d8: stp      q0, q0, [x8]
+>> 0x76d42dc: stp      q0, q0, [x8, #0x20]
+>> 0x76d42e0: stp      q0, q0, [x8, #0x40]
+>> 0x76d42e4: stp      q0, q0, [x8, #0x60]
+>> 0x76d42e8: stp      q0, q0, [x8, #0x80]
+   0x76d42ec: mov      w8, #0x26
+   0x76d42f0: ldr      q0, [x9]
+   0x76d42f4: add      x9, x19, #0x139
+   0x76d42f8: strb     w8, [x19, #0x138]
+   0x76d42fc: mov      w8, #0x5553
+   0x76d4300: str      q0, [x9]
+   0x76d4304: movk     w8, #0x544c, lsl #16
+   0x76d4308: ldrb     w9, [x19, #0x170]
+   0x76d430c: str      w8, [x19, #0x148]
+   0x76d4310: tbnz     w9, #0, #0x76d4324
+   0x76d4314: mov      w9, #0x28
+   0x76d4318: add      x8, x19, #0x171
+   0x76d431c: strb     w9, [x19, #0x170]
+   0x76d4320: b        #0x76d4330
+   0x76d4324: mov      w9, #0x14
+   0x76d4328: ldr      x8, [x19, #0x180]
+   0x76d432c: str      x9, [x19, #0x178]
+   0x76d4330: adrp     x10, #0xb8e000
+   0x76d4334: add      x10, x10, #0xe08
+IMMEDIATE_HINTS:
+   0x76d41c8: mov      w9, #0xa0
+   0x76d41cc: movk     w9, #0x105, lsl #16
+   0x76d41d8: mov      w8, #0x1418
+   0x76d4210: mov      w9, #1
+>> 0x76d42b0: mov      w0, #0x2000
+>> 0x76d42b8: mov      w21, #0x2000
+   0x76d42ec: mov      w8, #0x26
+   0x76d42fc: mov      w8, #0x5553
+   0x76d4304: movk     w8, #0x544c, lsl #16
+   0x76d4310: tbnz     w9, #0, #0x76d4324
+   0x76d4314: mov      w9, #0x28
+   0x76d4324: mov      w9, #0x14
+   0x76d4338: mov      w9, #0x702e
+   0x76d4340: movk     w9, #0x7068, lsl #16
+   0x76d4344: mov      w11, #0x4f4e
+   0x76d4350: movk     w11, #0x5245, lsl #16
+   0x76d435c: mov      w12, #0x4f4e
+   0x76d4384: mov      w8, #0xa
+   0x76d4394: mov      w9, #0x52
+   0x76d43ac: mov      w9, #0x656d
+   0x76d43b4: movk     w9, #0x746e, lsl #16
+   0x76d43c8: mov      w11, #4
+XREF[1] pc=0x76e0250 function~=0x76e01b4-0x76e02f4
+SAME_FUNCTION_STRINGS:
+  pc=0x76e0250 va=0xba196a CMD_SET_GAME_RESULT
+  pc=0x76e02a4 va=0xb8ee08 CmdSetGameResult.php
+MARKED_XREF_NEIGHBORHOOD:
+   0x76e0200: add      x8, x19, #0x148
+   0x76e0204: stp      x0, x20, [x19, #0x120]
+   0x76e0208: mov      w1, wzr
+   0x76e020c: mov      w2, #0x258
+   0x76e0210: add      x20, x19, #0x1f0
+   0x76e0214: str      xzr, [x19, #0x118]
+   0x76e0218: stp      q0, q0, [x8]
+   0x76e021c: stp      q0, q0, [x8, #0x20]
+   0x76e0220: stp      q0, q0, [x8, #0x40]
+   0x76e0224: stp      q0, q0, [x8, #0x60]
+   0x76e0228: stp      q0, q0, [x8, #0x80]
+   0x76e022c: add      x8, x19, #0x708
+>> 0x76e0230: mov      x0, x8
+>> 0x76e0234: bl       #0x8b35360
+>> 0x76e0238: mov      x0, x20
+>> 0x76e023c: mov      w1, wzr
+>> 0x76e0240: mov      w2, #0x514
+>> 0x76e0244: bl       #0x8b35360
+>> 0x76e0248: adrp     x8, #0x98de000
+>> 0x76e024c: mov      w9, #0x26
+>> 0x76e0250: adrp     x12, #0xba1000
+>> 0x76e0254: add      x12, x12, #0x96a
+>> 0x76e0258: mov      w11, #0x5553
+>> 0x76e025c: add      x10, x19, #0x139
+>> 0x76e0260: ldr      x8, [x8, #0xa98]
+>> 0x76e0264: movk     w11, #0x544c, lsl #16
+>> 0x76e0268: ldr      q0, [x12]
+>> 0x76e026c: strb     w9, [x19, #0x138]
+>> 0x76e0270: ldrb     w9, [x19, #0x170]
+   0x76e0274: add      x8, x8, #0x10
+   0x76e0278: str      w11, [x19, #0x148]
+   0x76e027c: str      q0, [x10]
+   0x76e0280: str      x8, [x19]
+   0x76e0284: tbnz     w9, #0, #0x76e0298
+   0x76e0288: mov      w9, #0x28
+   0x76e028c: add      x8, x19, #0x171
+   0x76e0290: strb     w9, [x19, #0x170]
+   0x76e0294: b        #0x76e02a4
+   0x76e0298: mov      w9, #0x14
+   0x76e029c: ldr      x8, [x19, #0x180]
+   0x76e02a0: str      x9, [x19, #0x178]
+   0x76e02a4: adrp     x10, #0xb8e000
+   0x76e02a8: add      x10, x10, #0xe08
+   0x76e02ac: mov      w9, #0x702e
+   0x76e02b0: strb     wzr, [x8, #0x14]
+   0x76e02b4: movk     w9, #0x7068, lsl #16
+   0x76e02b8: ldr      q0, [x10]
+   0x76e02bc: adrp     x10, #0x97d8000
+IMMEDIATE_HINTS:
+   0x76e01a8: mov      w0, #1
+   0x76e01ec: mov      w0, #0x2000
+   0x76e01f4: mov      w20, #0x2000
+   0x76e020c: mov      w2, #0x258
+>> 0x76e0240: mov      w2, #0x514
+>> 0x76e024c: mov      w9, #0x26
+>> 0x76e0258: mov      w11, #0x5553
+>> 0x76e0264: movk     w11, #0x544c, lsl #16
+   0x76e0284: tbnz     w9, #0, #0x76e0298
+   0x76e0288: mov      w9, #0x28
+   0x76e0298: mov      w9, #0x14
+   0x76e02ac: mov      w9, #0x702e
+   0x76e02b4: movk     w9, #0x7068, lsl #16
+   0x76e0340: tbnz     w8, #0, #0x76e0350
+   0x76e0380: cmp      w1, #0x5c
+   0x76e038c: mov      w0, #1
+XREF[2] pc=0x7d2cef0 function~=0x7d2c954-0x7d2c9e8
+SAME_FUNCTION_STRINGS:
+MARKED_XREF_NEIGHBORHOOD:
+   0x7d2cea0: movk     w9, #0x4c55, lsl #16
+   0x7d2cea4: strb     w19, [x20, #0x42]
+   0x7d2cea8: mov      w11, #0x26
+   0x7d2ceac: strb     w19, [x20, #0x6a]
+   0x7d2ceb0: adrp     x0, #0x7d2c000
+   0x7d2ceb4: add      x0, x0, #0x898
+   0x7d2ceb8: ldr      x8, [x8]
+   0x7d2cebc: stur     w9, [x20, #0x31]
+   0x7d2cec0: adrp     x9, #0x9ec000
+   0x7d2cec4: add      x9, x9, #0xee0
+   0x7d2cec8: strb     w19, [x20, #0x92]
+   0x7d2cecc: stur     x8, [x20, #0x29]
+>> 0x7d2ced0: mov      w8, #0x4148
+>> 0x7d2ced4: movk     w8, #0x4553, lsl #16
+>> 0x7d2ced8: strb     w19, [x20, #0xba]
+>> 0x7d2cedc: ldr      q0, [x9]
+>> 0x7d2cee0: mov      w9, #0x28
+>> 0x7d2cee4: adrp     x19, #0x8b75000
+>> 0x7d2cee8: add      x19, x19, #0x140
+>> 0x7d2ceec: stur     w8, [x20, #0x61]
+>> 0x7d2cef0: adrp     x8, #0xba1000
+>> 0x7d2cef4: add      x8, x8, #0x96a
+>> 0x7d2cef8: strb     w9, [x20, #0x50]
+>> 0x7d2cefc: stur     q0, [x20, #0x51]
+>> 0x7d2cf00: adrp     x9, #0xaf6000
+>> 0x7d2cf04: add      x9, x9, #0xd0e
+>> 0x7d2cf08: str      xzr, [x20, #0x88]
+>> 0x7d2cf0c: ldr      q0, [x8]
+>> 0x7d2cf10: mov      w8, #0x5553
+   0x7d2cf14: movk     w8, #0x544c, lsl #16
+   0x7d2cf18: mov      x1, xzr
+   0x7d2cf1c: mov      x2, x19
+   0x7d2cf20: strh     w10, [x20, #0x18]
+   0x7d2cf24: stur     q0, [x20, #0x79]
+   0x7d2cf28: ldr      q0, [x9]
+   0x7d2cf2c: stur     x22, [x20, #0x1c]
+   0x7d2cf30: mov      w28, #0x26
+   0x7d2cf34: str      w27, [x20, #0x24]
+   0x7d2cf38: strb     w23, [x20, #0x28]
+   0x7d2cf3c: strh     w10, [x20, #0x40]
+   0x7d2cf40: stur     x22, [x20, #0x44]
+   0x7d2cf44: str      w27, [x20, #0x4c]
+   0x7d2cf48: strh     w10, [x20, #0x68]
+   0x7d2cf4c: stur     x22, [x20, #0x6c]
+   0x7d2cf50: str      w27, [x20, #0x74]
+   0x7d2cf54: strb     w11, [x20, #0x78]
+   0x7d2cf58: str      w8, [x20, #0x88]
+   0x7d2cf5c: strh     w10, [x20, #0x90]
+IMMEDIATE_HINTS:
+   0x7d2cdfc: mov      w2, #0x1e
+   0x7d2ce70: mov      w10, #0x1e02
+   0x7d2ce88: mov      w23, #0x18
+   0x7d2ce90: mov      w9, #0x4f46
+   0x7d2cea0: movk     w9, #0x4c55, lsl #16
+   0x7d2cea8: mov      w11, #0x26
+>> 0x7d2ced0: mov      w8, #0x4148
+>> 0x7d2ced4: movk     w8, #0x4553, lsl #16
+>> 0x7d2cee0: mov      w9, #0x28
+>> 0x7d2cf10: mov      w8, #0x5553
+   0x7d2cf14: movk     w8, #0x544c, lsl #16
+   0x7d2cf30: mov      w28, #0x26
+   0x7d2cfa4: mov      w8, #0x454e
+   0x7d2cfc0: mov      w10, #0x14
+   0x7d2cfd0: mov      w8, #0x4f44
+   0x7d2cfd4: movk     w8, #0x4e57, lsl #16
+   0x7d2d014: mov      w10, #0x16
+   0x7d2d028: mov      w8, #0x5952
+   0x7d2d048: mov      w8, #0x4f45
+   0x7d2d04c: movk     w8, #0x5455, lsl #16
+   0x7d2d064: mov      w8, #0x12
+
+====================================================================================================
+TARGET P2P_ADHOC_LAN
+string_vas=0xabeaa9,0xabeac2,0xb43a84,0xb55ad1
+xref_count=8
+XREF[0] pc=0x7bfe314 function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe2c4: mov      x0, x26
+   0x7bfe2c8: mov      x1, x21
+   0x7bfe2cc: bl       #0x7d2ad08
+   0x7bfe2d0: mov      w25, w0
+   0x7bfe2d4: mov      x0, x19
+   0x7bfe2d8: bl       #0x8b38640
+   0x7bfe2dc: and      w8, w25, #1
+   0x7bfe2e0: cmp      w23, #2
+   0x7bfe2e4: sturb    w8, [x29, #-0x50]
+   0x7bfe2e8: b.eq     #0x7bfe458
+   0x7bfe2ec: cmp      w23, #1
+   0x7bfe2f0: b.eq     #0x7bfe46c
+>> 0x7bfe2f4: cbnz     w23, #0x7bfe364
+>> 0x7bfe2f8: mov      x0, x27
+>> 0x7bfe2fc: bl       #0x2efc42c
+>> 0x7bfe300: adrp     x2, #0xabe000
+>> 0x7bfe304: add      x2, x2, #0xa90
+>> 0x7bfe308: b        #0x7bfe4a4
+>> 0x7bfe30c: mov      x0, x27
+>> 0x7bfe310: bl       #0x2efc42c
+>> 0x7bfe314: adrp     x2, #0xb43000
+>> 0x7bfe318: add      x2, x2, #0xa84
+>> 0x7bfe31c: mov      x0, x26
+>> 0x7bfe320: mov      x1, x21
+>> 0x7bfe324: bl       #0x7d2ad08
+>> 0x7bfe328: mov      w25, w0
+>> 0x7bfe32c: mov      x0, x19
+>> 0x7bfe330: bl       #0x8b38640
+>> 0x7bfe334: and      w8, w25, #1
+   0x7bfe338: cmp      w23, #2
+   0x7bfe33c: sturb    w8, [x29, #-0x50]
+   0x7bfe340: b.eq     #0x7bfe480
+   0x7bfe344: cmp      w23, #1
+   0x7bfe348: b.eq     #0x7bfe494
+   0x7bfe34c: cbnz     w23, #0x7bfe364
+   0x7bfe350: mov      x0, x27
+   0x7bfe354: bl       #0x2efc42c
+   0x7bfe358: adrp     x2, #0xabe000
+   0x7bfe35c: add      x2, x2, #0xaa9
+   0x7bfe360: b        #0x7bfe4a4
+   0x7bfe364: mov      x0, x22
+   0x7bfe368: bl       #0x2f91730
+   0x7bfe36c: mov      x0, x21
+   0x7bfe370: bl       #0x2f91730
+   0x7bfe374: mov      x0, x20
+   0x7bfe378: bl       #0x2f91730
+   0x7bfe37c: ldr      x27, [sp, #8]
+   0x7bfe380: cmp      w23, #2
+IMMEDIATE_HINTS:
+   0x7bfe230: cmp      w23, #2
+   0x7bfe23c: cmp      w23, #1
+   0x7bfe288: cmp      w23, #2
+   0x7bfe294: cmp      w23, #1
+   0x7bfe2e0: cmp      w23, #2
+   0x7bfe2ec: cmp      w23, #1
+   0x7bfe338: cmp      w23, #2
+   0x7bfe344: cmp      w23, #1
+   0x7bfe380: cmp      w23, #2
+   0x7bfe394: mov      w0, #1
+XREF[1] pc=0x7bfe358 function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe308: b        #0x7bfe4a4
+   0x7bfe30c: mov      x0, x27
+   0x7bfe310: bl       #0x2efc42c
+   0x7bfe314: adrp     x2, #0xb43000
+   0x7bfe318: add      x2, x2, #0xa84
+   0x7bfe31c: mov      x0, x26
+   0x7bfe320: mov      x1, x21
+   0x7bfe324: bl       #0x7d2ad08
+   0x7bfe328: mov      w25, w0
+   0x7bfe32c: mov      x0, x19
+   0x7bfe330: bl       #0x8b38640
+   0x7bfe334: and      w8, w25, #1
+>> 0x7bfe338: cmp      w23, #2
+>> 0x7bfe33c: sturb    w8, [x29, #-0x50]
+>> 0x7bfe340: b.eq     #0x7bfe480
+>> 0x7bfe344: cmp      w23, #1
+>> 0x7bfe348: b.eq     #0x7bfe494
+>> 0x7bfe34c: cbnz     w23, #0x7bfe364
+>> 0x7bfe350: mov      x0, x27
+>> 0x7bfe354: bl       #0x2efc42c
+>> 0x7bfe358: adrp     x2, #0xabe000
+>> 0x7bfe35c: add      x2, x2, #0xaa9
+>> 0x7bfe360: b        #0x7bfe4a4
+>> 0x7bfe364: mov      x0, x22
+>> 0x7bfe368: bl       #0x2f91730
+>> 0x7bfe36c: mov      x0, x21
+>> 0x7bfe370: bl       #0x2f91730
+>> 0x7bfe374: mov      x0, x20
+>> 0x7bfe378: bl       #0x2f91730
+   0x7bfe37c: ldr      x27, [sp, #8]
+   0x7bfe380: cmp      w23, #2
+   0x7bfe384: b.hi     #0x7bfe3c8
+   0x7bfe388: add      x1, sp, #0x10
+   0x7bfe38c: mov      x0, x27
+   0x7bfe390: bl       #0x7b461b4
+   0x7bfe394: mov      w0, #1
+   0x7bfe398: ldr      x8, [x28, #0x28]
+   0x7bfe39c: ldur     x9, [x29, #-0x10]
+   0x7bfe3a0: cmp      x8, x9
+   0x7bfe3a4: b.ne     #0x7bfe3dc
+   0x7bfe3a8: add      sp, sp, #0x600
+   0x7bfe3ac: ldp      x20, x19, [sp, #0x50]
+   0x7bfe3b0: ldp      x22, x21, [sp, #0x40]
+   0x7bfe3b4: ldp      x24, x23, [sp, #0x30]
+   0x7bfe3b8: ldp      x26, x25, [sp, #0x20]
+   0x7bfe3bc: ldp      x28, x27, [sp, #0x10]
+   0x7bfe3c0: ldp      x29, x30, [sp], #0x60
+   0x7bfe3c4: ret      
+IMMEDIATE_HINTS:
+   0x7bfe288: cmp      w23, #2
+   0x7bfe294: cmp      w23, #1
+   0x7bfe2e0: cmp      w23, #2
+   0x7bfe2ec: cmp      w23, #1
+>> 0x7bfe338: cmp      w23, #2
+>> 0x7bfe344: cmp      w23, #1
+   0x7bfe380: cmp      w23, #2
+   0x7bfe394: mov      w0, #1
+XREF[2] pc=0x7bfe488 function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe438: adrp     x2, #0xbef000
+   0x7bfe43c: add      x2, x2, #0x38a
+   0x7bfe440: b        #0x7bfe4a4
+   0x7bfe444: mov      x0, x27
+   0x7bfe448: bl       #0x2efc42c
+   0x7bfe44c: adrp     x2, #0xb1d000
+   0x7bfe450: add      x2, x2, #0x5fd
+   0x7bfe454: b        #0x7bfe4a4
+   0x7bfe458: mov      x0, x27
+   0x7bfe45c: bl       #0x2efc42c
+   0x7bfe460: adrp     x2, #0xbc9000
+   0x7bfe464: add      x2, x2, #0xb3f
+>> 0x7bfe468: b        #0x7bfe4a4
+>> 0x7bfe46c: mov      x0, x27
+>> 0x7bfe470: bl       #0x2efc42c
+>> 0x7bfe474: adrp     x2, #0x9c6000
+>> 0x7bfe478: add      x2, x2, #0xc0a
+>> 0x7bfe47c: b        #0x7bfe4a4
+>> 0x7bfe480: mov      x0, x27
+>> 0x7bfe484: bl       #0x2efc42c
+>> 0x7bfe488: adrp     x2, #0xabe000
+>> 0x7bfe48c: add      x2, x2, #0xac2
+>> 0x7bfe490: b        #0x7bfe4a4
+>> 0x7bfe494: mov      x0, x27
+>> 0x7bfe498: bl       #0x2efc42c
+>> 0x7bfe49c: adrp     x2, #0xb55000
+>> 0x7bfe4a0: add      x2, x2, #0xad1
+>> 0x7bfe4a4: mov      x0, x26
+>> 0x7bfe4a8: mov      x1, x22
+   0x7bfe4ac: bl       #0x7d2ad08
+   0x7bfe4b0: mov      w23, w0
+   0x7bfe4b4: mov      x0, x19
+   0x7bfe4b8: bl       #0x8b38640
+   0x7bfe4bc: and      w8, w23, #1
+   0x7bfe4c0: sturb    w8, [x29, #-0x70]
+   0x7bfe4c4: ldurb    w8, [x29, #-0x30]
+   0x7bfe4c8: cbnz     w8, #0x7bfe19c
+   0x7bfe4cc: mov      w23, wzr
+   0x7bfe4d0: ldurb    w8, [x29, #-0x50]
+   0x7bfe4d4: ldr      x27, [sp, #8]
+   0x7bfe4d8: cbnz     w8, #0x7bfe1b8
+   0x7bfe4dc: b        #0x7bfe1c8
+   0x7bfe4e0: stp      x29, x30, [sp, #-0x60]!
+   0x7bfe4e4: stp      x28, x27, [sp, #0x10]
+   0x7bfe4e8: stp      x26, x25, [sp, #0x20]
+   0x7bfe4ec: stp      x24, x23, [sp, #0x30]
+   0x7bfe4f0: stp      x22, x21, [sp, #0x40]
+   0x7bfe4f4: stp      x20, x19, [sp, #0x50]
+IMMEDIATE_HINTS:
+   0x7bfe394: mov      w0, #1
+   0x7bfe5c0: cmp      w11, #9
+   0x7bfe600: cmp      w25, #3
+XREF[3] pc=0x7bfe49c function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe44c: adrp     x2, #0xb1d000
+   0x7bfe450: add      x2, x2, #0x5fd
+   0x7bfe454: b        #0x7bfe4a4
+   0x7bfe458: mov      x0, x27
+   0x7bfe45c: bl       #0x2efc42c
+   0x7bfe460: adrp     x2, #0xbc9000
+   0x7bfe464: add      x2, x2, #0xb3f
+   0x7bfe468: b        #0x7bfe4a4
+   0x7bfe46c: mov      x0, x27
+   0x7bfe470: bl       #0x2efc42c
+   0x7bfe474: adrp     x2, #0x9c6000
+   0x7bfe478: add      x2, x2, #0xc0a
+>> 0x7bfe47c: b        #0x7bfe4a4
+>> 0x7bfe480: mov      x0, x27
+>> 0x7bfe484: bl       #0x2efc42c
+>> 0x7bfe488: adrp     x2, #0xabe000
+>> 0x7bfe48c: add      x2, x2, #0xac2
+>> 0x7bfe490: b        #0x7bfe4a4
+>> 0x7bfe494: mov      x0, x27
+>> 0x7bfe498: bl       #0x2efc42c
+>> 0x7bfe49c: adrp     x2, #0xb55000
+>> 0x7bfe4a0: add      x2, x2, #0xad1
+>> 0x7bfe4a4: mov      x0, x26
+>> 0x7bfe4a8: mov      x1, x22
+>> 0x7bfe4ac: bl       #0x7d2ad08
+>> 0x7bfe4b0: mov      w23, w0
+>> 0x7bfe4b4: mov      x0, x19
+>> 0x7bfe4b8: bl       #0x8b38640
+>> 0x7bfe4bc: and      w8, w23, #1
+   0x7bfe4c0: sturb    w8, [x29, #-0x70]
+   0x7bfe4c4: ldurb    w8, [x29, #-0x30]
+   0x7bfe4c8: cbnz     w8, #0x7bfe19c
+   0x7bfe4cc: mov      w23, wzr
+   0x7bfe4d0: ldurb    w8, [x29, #-0x50]
+   0x7bfe4d4: ldr      x27, [sp, #8]
+   0x7bfe4d8: cbnz     w8, #0x7bfe1b8
+   0x7bfe4dc: b        #0x7bfe1c8
+   0x7bfe4e0: stp      x29, x30, [sp, #-0x60]!
+   0x7bfe4e4: stp      x28, x27, [sp, #0x10]
+   0x7bfe4e8: stp      x26, x25, [sp, #0x20]
+   0x7bfe4ec: stp      x24, x23, [sp, #0x30]
+   0x7bfe4f0: stp      x22, x21, [sp, #0x40]
+   0x7bfe4f4: stp      x20, x19, [sp, #0x50]
+   0x7bfe4f8: mov      x29, sp
+   0x7bfe4fc: sub      sp, sp, #0x610
+   0x7bfe500: mrs      x19, tpidr_el0
+   0x7bfe504: add      x9, sp, #0x2e0
+   0x7bfe508: movi     v0.2d, #0000000000000000
+IMMEDIATE_HINTS:
+   0x7bfe5c0: cmp      w11, #9
+   0x7bfe600: cmp      w25, #3
+   0x7bfe608: cmp      w24, #2
+XREF[4] pc=0x7bfeb68 function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfeb18: mov      x0, x26
+   0x7bfeb1c: ldr      x1, [sp, #0x18]
+   0x7bfeb20: bl       #0x7d2ad08
+   0x7bfeb24: mov      w25, w0
+   0x7bfeb28: mov      x0, x22
+   0x7bfeb2c: bl       #0x8b38640
+   0x7bfeb30: and      w8, w25, #1
+   0x7bfeb34: cmp      w24, #2
+   0x7bfeb38: sturb    w8, [x29, #-0x50]
+   0x7bfeb3c: b.eq     #0x7bfeca8
+   0x7bfeb40: cmp      w24, #1
+   0x7bfeb44: b.eq     #0x7bfecbc
+>> 0x7bfeb48: cbnz     w24, #0x7bfebb8
+>> 0x7bfeb4c: mov      x0, x28
+>> 0x7bfeb50: bl       #0x2efc42c
+>> 0x7bfeb54: adrp     x2, #0xabe000
+>> 0x7bfeb58: add      x2, x2, #0xa90
+>> 0x7bfeb5c: b        #0x7bfecf4
+>> 0x7bfeb60: mov      x0, x28
+>> 0x7bfeb64: bl       #0x2efc42c
+>> 0x7bfeb68: adrp     x2, #0xb43000
+>> 0x7bfeb6c: add      x2, x2, #0xa84
+>> 0x7bfeb70: mov      x0, x26
+>> 0x7bfeb74: ldr      x1, [sp, #0x18]
+>> 0x7bfeb78: bl       #0x7d2ad08
+>> 0x7bfeb7c: mov      w25, w0
+>> 0x7bfeb80: mov      x0, x22
+>> 0x7bfeb84: bl       #0x8b38640
+>> 0x7bfeb88: and      w8, w25, #1
+   0x7bfeb8c: cmp      w24, #2
+   0x7bfeb90: sturb    w8, [x29, #-0x50]
+   0x7bfeb94: b.eq     #0x7bfecd0
+   0x7bfeb98: cmp      w24, #1
+   0x7bfeb9c: b.eq     #0x7bfece4
+   0x7bfeba0: cbnz     w24, #0x7bfebb8
+   0x7bfeba4: mov      x0, x28
+   0x7bfeba8: bl       #0x2efc42c
+   0x7bfebac: adrp     x2, #0xabe000
+   0x7bfebb0: add      x2, x2, #0xaa9
+   0x7bfebb4: b        #0x7bfecf4
+   0x7bfebb8: mov      x0, x23
+   0x7bfebbc: bl       #0x2f91730
+   0x7bfebc0: ldr      x0, [sp, #0x18]
+   0x7bfebc4: bl       #0x2f91730
+   0x7bfebc8: mov      x0, x21
+   0x7bfebcc: bl       #0x2f91730
+   0x7bfebd0: ldr      x21, [sp, #0x10]
+   0x7bfebd4: cbz      w20, #0x7bfec18
+IMMEDIATE_HINTS:
+   0x7bfea84: cmp      w24, #2
+   0x7bfea90: cmp      w24, #1
+   0x7bfeadc: cmp      w24, #2
+   0x7bfeae8: cmp      w24, #1
+   0x7bfeb34: cmp      w24, #2
+   0x7bfeb40: cmp      w24, #1
+   0x7bfeb8c: cmp      w24, #2
+   0x7bfeb98: cmp      w24, #1
+   0x7bfebe4: mov      w0, #1
+XREF[5] pc=0x7bfebac function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfeb5c: b        #0x7bfecf4
+   0x7bfeb60: mov      x0, x28
+   0x7bfeb64: bl       #0x2efc42c
+   0x7bfeb68: adrp     x2, #0xb43000
+   0x7bfeb6c: add      x2, x2, #0xa84
+   0x7bfeb70: mov      x0, x26
+   0x7bfeb74: ldr      x1, [sp, #0x18]
+   0x7bfeb78: bl       #0x7d2ad08
+   0x7bfeb7c: mov      w25, w0
+   0x7bfeb80: mov      x0, x22
+   0x7bfeb84: bl       #0x8b38640
+   0x7bfeb88: and      w8, w25, #1
+>> 0x7bfeb8c: cmp      w24, #2
+>> 0x7bfeb90: sturb    w8, [x29, #-0x50]
+>> 0x7bfeb94: b.eq     #0x7bfecd0
+>> 0x7bfeb98: cmp      w24, #1
+>> 0x7bfeb9c: b.eq     #0x7bfece4
+>> 0x7bfeba0: cbnz     w24, #0x7bfebb8
+>> 0x7bfeba4: mov      x0, x28
+>> 0x7bfeba8: bl       #0x2efc42c
+>> 0x7bfebac: adrp     x2, #0xabe000
+>> 0x7bfebb0: add      x2, x2, #0xaa9
+>> 0x7bfebb4: b        #0x7bfecf4
+>> 0x7bfebb8: mov      x0, x23
+>> 0x7bfebbc: bl       #0x2f91730
+>> 0x7bfebc0: ldr      x0, [sp, #0x18]
+>> 0x7bfebc4: bl       #0x2f91730
+>> 0x7bfebc8: mov      x0, x21
+>> 0x7bfebcc: bl       #0x2f91730
+   0x7bfebd0: ldr      x21, [sp, #0x10]
+   0x7bfebd4: cbz      w20, #0x7bfec18
+   0x7bfebd8: add      x1, sp, #0x20
+   0x7bfebdc: mov      x0, x21
+   0x7bfebe0: bl       #0x7b461b4
+   0x7bfebe4: mov      w0, #1
+   0x7bfebe8: ldr      x8, [x19, #0x28]
+   0x7bfebec: ldur     x9, [x29, #-0x10]
+   0x7bfebf0: cmp      x8, x9
+   0x7bfebf4: b.ne     #0x7bfec2c
+   0x7bfebf8: add      sp, sp, #0x610
+   0x7bfebfc: ldp      x20, x19, [sp, #0x50]
+   0x7bfec00: ldp      x22, x21, [sp, #0x40]
+   0x7bfec04: ldp      x24, x23, [sp, #0x30]
+   0x7bfec08: ldp      x26, x25, [sp, #0x20]
+   0x7bfec0c: ldp      x28, x27, [sp, #0x10]
+   0x7bfec10: ldp      x29, x30, [sp], #0x60
+   0x7bfec14: ret      
+   0x7bfec18: mov      w0, wzr
+IMMEDIATE_HINTS:
+   0x7bfeadc: cmp      w24, #2
+   0x7bfeae8: cmp      w24, #1
+   0x7bfeb34: cmp      w24, #2
+   0x7bfeb40: cmp      w24, #1
+>> 0x7bfeb8c: cmp      w24, #2
+>> 0x7bfeb98: cmp      w24, #1
+   0x7bfebe4: mov      w0, #1
+XREF[6] pc=0x7bfecd8 function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfec88: adrp     x2, #0xbef000
+   0x7bfec8c: add      x2, x2, #0x38a
+   0x7bfec90: b        #0x7bfecf4
+   0x7bfec94: mov      x0, x28
+   0x7bfec98: bl       #0x2efc42c
+   0x7bfec9c: adrp     x2, #0xb1d000
+   0x7bfeca0: add      x2, x2, #0x5fd
+   0x7bfeca4: b        #0x7bfecf4
+   0x7bfeca8: mov      x0, x28
+   0x7bfecac: bl       #0x2efc42c
+   0x7bfecb0: adrp     x2, #0xbc9000
+   0x7bfecb4: add      x2, x2, #0xb3f
+>> 0x7bfecb8: b        #0x7bfecf4
+>> 0x7bfecbc: mov      x0, x28
+>> 0x7bfecc0: bl       #0x2efc42c
+>> 0x7bfecc4: adrp     x2, #0x9c6000
+>> 0x7bfecc8: add      x2, x2, #0xc0a
+>> 0x7bfeccc: b        #0x7bfecf4
+>> 0x7bfecd0: mov      x0, x28
+>> 0x7bfecd4: bl       #0x2efc42c
+>> 0x7bfecd8: adrp     x2, #0xabe000
+>> 0x7bfecdc: add      x2, x2, #0xac2
+>> 0x7bfece0: b        #0x7bfecf4
+>> 0x7bfece4: mov      x0, x28
+>> 0x7bfece8: bl       #0x2efc42c
+>> 0x7bfecec: adrp     x2, #0xb55000
+>> 0x7bfecf0: add      x2, x2, #0xad1
+>> 0x7bfecf4: mov      x0, x26
+>> 0x7bfecf8: mov      x1, x23
+   0x7bfecfc: bl       #0x7d2ad08
+   0x7bfed00: mov      w24, w0
+   0x7bfed04: mov      x0, x22
+   0x7bfed08: bl       #0x8b38640
+   0x7bfed0c: and      w8, w24, #1
+   0x7bfed10: ldr      w22, [sp, #0xc]
+   0x7bfed14: sturb    w8, [x29, #-0x70]
+   0x7bfed18: ldurb    w8, [x29, #-0x30]
+   0x7bfed1c: cbnz     w8, #0x7bfe9d0
+   0x7bfed20: mov      w24, wzr
+   0x7bfed24: ldr      x25, [sp, #0x18]
+   0x7bfed28: ldurb    w8, [x29, #-0x50]
+   0x7bfed2c: cbnz     w8, #0x7bfe9f0
+   0x7bfed30: b        #0x7bfea04
+   0x7bfed34: stp      d13, d12, [sp, #-0x90]!
+   0x7bfed38: stp      d11, d10, [sp, #0x10]
+   0x7bfed3c: stp      d9, d8, [sp, #0x20]
+   0x7bfed40: stp      x29, x30, [sp, #0x30]
+   0x7bfed44: stp      x28, x27, [sp, #0x40]
+IMMEDIATE_HINTS:
+   0x7bfebe4: mov      w0, #1
+   0x7bfedb4: cmp      w2, #3
+XREF[7] pc=0x7bfecec function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfec9c: adrp     x2, #0xb1d000
+   0x7bfeca0: add      x2, x2, #0x5fd
+   0x7bfeca4: b        #0x7bfecf4
+   0x7bfeca8: mov      x0, x28
+   0x7bfecac: bl       #0x2efc42c
+   0x7bfecb0: adrp     x2, #0xbc9000
+   0x7bfecb4: add      x2, x2, #0xb3f
+   0x7bfecb8: b        #0x7bfecf4
+   0x7bfecbc: mov      x0, x28
+   0x7bfecc0: bl       #0x2efc42c
+   0x7bfecc4: adrp     x2, #0x9c6000
+   0x7bfecc8: add      x2, x2, #0xc0a
+>> 0x7bfeccc: b        #0x7bfecf4
+>> 0x7bfecd0: mov      x0, x28
+>> 0x7bfecd4: bl       #0x2efc42c
+>> 0x7bfecd8: adrp     x2, #0xabe000
+>> 0x7bfecdc: add      x2, x2, #0xac2
+>> 0x7bfece0: b        #0x7bfecf4
+>> 0x7bfece4: mov      x0, x28
+>> 0x7bfece8: bl       #0x2efc42c
+>> 0x7bfecec: adrp     x2, #0xb55000
+>> 0x7bfecf0: add      x2, x2, #0xad1
+>> 0x7bfecf4: mov      x0, x26
+>> 0x7bfecf8: mov      x1, x23
+>> 0x7bfecfc: bl       #0x7d2ad08
+>> 0x7bfed00: mov      w24, w0
+>> 0x7bfed04: mov      x0, x22
+>> 0x7bfed08: bl       #0x8b38640
+>> 0x7bfed0c: and      w8, w24, #1
+   0x7bfed10: ldr      w22, [sp, #0xc]
+   0x7bfed14: sturb    w8, [x29, #-0x70]
+   0x7bfed18: ldurb    w8, [x29, #-0x30]
+   0x7bfed1c: cbnz     w8, #0x7bfe9d0
+   0x7bfed20: mov      w24, wzr
+   0x7bfed24: ldr      x25, [sp, #0x18]
+   0x7bfed28: ldurb    w8, [x29, #-0x50]
+   0x7bfed2c: cbnz     w8, #0x7bfe9f0
+   0x7bfed30: b        #0x7bfea04
+   0x7bfed34: stp      d13, d12, [sp, #-0x90]!
+   0x7bfed38: stp      d11, d10, [sp, #0x10]
+   0x7bfed3c: stp      d9, d8, [sp, #0x20]
+   0x7bfed40: stp      x29, x30, [sp, #0x30]
+   0x7bfed44: stp      x28, x27, [sp, #0x40]
+   0x7bfed48: stp      x26, x25, [sp, #0x50]
+   0x7bfed4c: stp      x24, x23, [sp, #0x60]
+   0x7bfed50: stp      x22, x21, [sp, #0x70]
+   0x7bfed54: stp      x20, x19, [sp, #0x80]
+   0x7bfed58: add      x29, sp, #0x30
+IMMEDIATE_HINTS:
+   0x7bfedb4: cmp      w2, #3
+
+====================================================================================================
+TARGET P2P_ADHOC_LAN_LOW_LEVEL
+string_vas=0xb55ad1
+xref_count=2
+XREF[0] pc=0x7bfe49c function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe44c: adrp     x2, #0xb1d000
+   0x7bfe450: add      x2, x2, #0x5fd
+   0x7bfe454: b        #0x7bfe4a4
+   0x7bfe458: mov      x0, x27
+   0x7bfe45c: bl       #0x2efc42c
+   0x7bfe460: adrp     x2, #0xbc9000
+   0x7bfe464: add      x2, x2, #0xb3f
+   0x7bfe468: b        #0x7bfe4a4
+   0x7bfe46c: mov      x0, x27
+   0x7bfe470: bl       #0x2efc42c
+   0x7bfe474: adrp     x2, #0x9c6000
+   0x7bfe478: add      x2, x2, #0xc0a
+>> 0x7bfe47c: b        #0x7bfe4a4
+>> 0x7bfe480: mov      x0, x27
+>> 0x7bfe484: bl       #0x2efc42c
+>> 0x7bfe488: adrp     x2, #0xabe000
+>> 0x7bfe48c: add      x2, x2, #0xac2
+>> 0x7bfe490: b        #0x7bfe4a4
+>> 0x7bfe494: mov      x0, x27
+>> 0x7bfe498: bl       #0x2efc42c
+>> 0x7bfe49c: adrp     x2, #0xb55000
+>> 0x7bfe4a0: add      x2, x2, #0xad1
+>> 0x7bfe4a4: mov      x0, x26
+>> 0x7bfe4a8: mov      x1, x22
+>> 0x7bfe4ac: bl       #0x7d2ad08
+>> 0x7bfe4b0: mov      w23, w0
+>> 0x7bfe4b4: mov      x0, x19
+>> 0x7bfe4b8: bl       #0x8b38640
+>> 0x7bfe4bc: and      w8, w23, #1
+   0x7bfe4c0: sturb    w8, [x29, #-0x70]
+   0x7bfe4c4: ldurb    w8, [x29, #-0x30]
+   0x7bfe4c8: cbnz     w8, #0x7bfe19c
+   0x7bfe4cc: mov      w23, wzr
+   0x7bfe4d0: ldurb    w8, [x29, #-0x50]
+   0x7bfe4d4: ldr      x27, [sp, #8]
+   0x7bfe4d8: cbnz     w8, #0x7bfe1b8
+   0x7bfe4dc: b        #0x7bfe1c8
+   0x7bfe4e0: stp      x29, x30, [sp, #-0x60]!
+   0x7bfe4e4: stp      x28, x27, [sp, #0x10]
+   0x7bfe4e8: stp      x26, x25, [sp, #0x20]
+   0x7bfe4ec: stp      x24, x23, [sp, #0x30]
+   0x7bfe4f0: stp      x22, x21, [sp, #0x40]
+   0x7bfe4f4: stp      x20, x19, [sp, #0x50]
+   0x7bfe4f8: mov      x29, sp
+   0x7bfe4fc: sub      sp, sp, #0x610
+   0x7bfe500: mrs      x19, tpidr_el0
+   0x7bfe504: add      x9, sp, #0x2e0
+   0x7bfe508: movi     v0.2d, #0000000000000000
+IMMEDIATE_HINTS:
+   0x7bfe5c0: cmp      w11, #9
+   0x7bfe600: cmp      w25, #3
+   0x7bfe608: cmp      w24, #2
+XREF[1] pc=0x7bfecec function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfec9c: adrp     x2, #0xb1d000
+   0x7bfeca0: add      x2, x2, #0x5fd
+   0x7bfeca4: b        #0x7bfecf4
+   0x7bfeca8: mov      x0, x28
+   0x7bfecac: bl       #0x2efc42c
+   0x7bfecb0: adrp     x2, #0xbc9000
+   0x7bfecb4: add      x2, x2, #0xb3f
+   0x7bfecb8: b        #0x7bfecf4
+   0x7bfecbc: mov      x0, x28
+   0x7bfecc0: bl       #0x2efc42c
+   0x7bfecc4: adrp     x2, #0x9c6000
+   0x7bfecc8: add      x2, x2, #0xc0a
+>> 0x7bfeccc: b        #0x7bfecf4
+>> 0x7bfecd0: mov      x0, x28
+>> 0x7bfecd4: bl       #0x2efc42c
+>> 0x7bfecd8: adrp     x2, #0xabe000
+>> 0x7bfecdc: add      x2, x2, #0xac2
+>> 0x7bfece0: b        #0x7bfecf4
+>> 0x7bfece4: mov      x0, x28
+>> 0x7bfece8: bl       #0x2efc42c
+>> 0x7bfecec: adrp     x2, #0xb55000
+>> 0x7bfecf0: add      x2, x2, #0xad1
+>> 0x7bfecf4: mov      x0, x26
+>> 0x7bfecf8: mov      x1, x23
+>> 0x7bfecfc: bl       #0x7d2ad08
+>> 0x7bfed00: mov      w24, w0
+>> 0x7bfed04: mov      x0, x22
+>> 0x7bfed08: bl       #0x8b38640
+>> 0x7bfed0c: and      w8, w24, #1
+   0x7bfed10: ldr      w22, [sp, #0xc]
+   0x7bfed14: sturb    w8, [x29, #-0x70]
+   0x7bfed18: ldurb    w8, [x29, #-0x30]
+   0x7bfed1c: cbnz     w8, #0x7bfe9d0
+   0x7bfed20: mov      w24, wzr
+   0x7bfed24: ldr      x25, [sp, #0x18]
+   0x7bfed28: ldurb    w8, [x29, #-0x50]
+   0x7bfed2c: cbnz     w8, #0x7bfe9f0
+   0x7bfed30: b        #0x7bfea04
+   0x7bfed34: stp      d13, d12, [sp, #-0x90]!
+   0x7bfed38: stp      d11, d10, [sp, #0x10]
+   0x7bfed3c: stp      d9, d8, [sp, #0x20]
+   0x7bfed40: stp      x29, x30, [sp, #0x30]
+   0x7bfed44: stp      x28, x27, [sp, #0x40]
+   0x7bfed48: stp      x26, x25, [sp, #0x50]
+   0x7bfed4c: stp      x24, x23, [sp, #0x60]
+   0x7bfed50: stp      x22, x21, [sp, #0x70]
+   0x7bfed54: stp      x20, x19, [sp, #0x80]
+   0x7bfed58: add      x29, sp, #0x30
+IMMEDIATE_HINTS:
+   0x7bfedb4: cmp      w2, #3
+
+====================================================================================================
+TARGET P2P_ADHOC_LAN_HIGH_LEVEL
+string_vas=0xabeaa9
+xref_count=2
+XREF[0] pc=0x7bfe358 function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe308: b        #0x7bfe4a4
+   0x7bfe30c: mov      x0, x27
+   0x7bfe310: bl       #0x2efc42c
+   0x7bfe314: adrp     x2, #0xb43000
+   0x7bfe318: add      x2, x2, #0xa84
+   0x7bfe31c: mov      x0, x26
+   0x7bfe320: mov      x1, x21
+   0x7bfe324: bl       #0x7d2ad08
+   0x7bfe328: mov      w25, w0
+   0x7bfe32c: mov      x0, x19
+   0x7bfe330: bl       #0x8b38640
+   0x7bfe334: and      w8, w25, #1
+>> 0x7bfe338: cmp      w23, #2
+>> 0x7bfe33c: sturb    w8, [x29, #-0x50]
+>> 0x7bfe340: b.eq     #0x7bfe480
+>> 0x7bfe344: cmp      w23, #1
+>> 0x7bfe348: b.eq     #0x7bfe494
+>> 0x7bfe34c: cbnz     w23, #0x7bfe364
+>> 0x7bfe350: mov      x0, x27
+>> 0x7bfe354: bl       #0x2efc42c
+>> 0x7bfe358: adrp     x2, #0xabe000
+>> 0x7bfe35c: add      x2, x2, #0xaa9
+>> 0x7bfe360: b        #0x7bfe4a4
+>> 0x7bfe364: mov      x0, x22
+>> 0x7bfe368: bl       #0x2f91730
+>> 0x7bfe36c: mov      x0, x21
+>> 0x7bfe370: bl       #0x2f91730
+>> 0x7bfe374: mov      x0, x20
+>> 0x7bfe378: bl       #0x2f91730
+   0x7bfe37c: ldr      x27, [sp, #8]
+   0x7bfe380: cmp      w23, #2
+   0x7bfe384: b.hi     #0x7bfe3c8
+   0x7bfe388: add      x1, sp, #0x10
+   0x7bfe38c: mov      x0, x27
+   0x7bfe390: bl       #0x7b461b4
+   0x7bfe394: mov      w0, #1
+   0x7bfe398: ldr      x8, [x28, #0x28]
+   0x7bfe39c: ldur     x9, [x29, #-0x10]
+   0x7bfe3a0: cmp      x8, x9
+   0x7bfe3a4: b.ne     #0x7bfe3dc
+   0x7bfe3a8: add      sp, sp, #0x600
+   0x7bfe3ac: ldp      x20, x19, [sp, #0x50]
+   0x7bfe3b0: ldp      x22, x21, [sp, #0x40]
+   0x7bfe3b4: ldp      x24, x23, [sp, #0x30]
+   0x7bfe3b8: ldp      x26, x25, [sp, #0x20]
+   0x7bfe3bc: ldp      x28, x27, [sp, #0x10]
+   0x7bfe3c0: ldp      x29, x30, [sp], #0x60
+   0x7bfe3c4: ret      
+IMMEDIATE_HINTS:
+   0x7bfe288: cmp      w23, #2
+   0x7bfe294: cmp      w23, #1
+   0x7bfe2e0: cmp      w23, #2
+   0x7bfe2ec: cmp      w23, #1
+>> 0x7bfe338: cmp      w23, #2
+>> 0x7bfe344: cmp      w23, #1
+   0x7bfe380: cmp      w23, #2
+   0x7bfe394: mov      w0, #1
+XREF[1] pc=0x7bfebac function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfeb5c: b        #0x7bfecf4
+   0x7bfeb60: mov      x0, x28
+   0x7bfeb64: bl       #0x2efc42c
+   0x7bfeb68: adrp     x2, #0xb43000
+   0x7bfeb6c: add      x2, x2, #0xa84
+   0x7bfeb70: mov      x0, x26
+   0x7bfeb74: ldr      x1, [sp, #0x18]
+   0x7bfeb78: bl       #0x7d2ad08
+   0x7bfeb7c: mov      w25, w0
+   0x7bfeb80: mov      x0, x22
+   0x7bfeb84: bl       #0x8b38640
+   0x7bfeb88: and      w8, w25, #1
+>> 0x7bfeb8c: cmp      w24, #2
+>> 0x7bfeb90: sturb    w8, [x29, #-0x50]
+>> 0x7bfeb94: b.eq     #0x7bfecd0
+>> 0x7bfeb98: cmp      w24, #1
+>> 0x7bfeb9c: b.eq     #0x7bfece4
+>> 0x7bfeba0: cbnz     w24, #0x7bfebb8
+>> 0x7bfeba4: mov      x0, x28
+>> 0x7bfeba8: bl       #0x2efc42c
+>> 0x7bfebac: adrp     x2, #0xabe000
+>> 0x7bfebb0: add      x2, x2, #0xaa9
+>> 0x7bfebb4: b        #0x7bfecf4
+>> 0x7bfebb8: mov      x0, x23
+>> 0x7bfebbc: bl       #0x2f91730
+>> 0x7bfebc0: ldr      x0, [sp, #0x18]
+>> 0x7bfebc4: bl       #0x2f91730
+>> 0x7bfebc8: mov      x0, x21
+>> 0x7bfebcc: bl       #0x2f91730
+   0x7bfebd0: ldr      x21, [sp, #0x10]
+   0x7bfebd4: cbz      w20, #0x7bfec18
+   0x7bfebd8: add      x1, sp, #0x20
+   0x7bfebdc: mov      x0, x21
+   0x7bfebe0: bl       #0x7b461b4
+   0x7bfebe4: mov      w0, #1
+   0x7bfebe8: ldr      x8, [x19, #0x28]
+   0x7bfebec: ldur     x9, [x29, #-0x10]
+   0x7bfebf0: cmp      x8, x9
+   0x7bfebf4: b.ne     #0x7bfec2c
+   0x7bfebf8: add      sp, sp, #0x610
+   0x7bfebfc: ldp      x20, x19, [sp, #0x50]
+   0x7bfec00: ldp      x22, x21, [sp, #0x40]
+   0x7bfec04: ldp      x24, x23, [sp, #0x30]
+   0x7bfec08: ldp      x26, x25, [sp, #0x20]
+   0x7bfec0c: ldp      x28, x27, [sp, #0x10]
+   0x7bfec10: ldp      x29, x30, [sp], #0x60
+   0x7bfec14: ret      
+   0x7bfec18: mov      w0, wzr
+IMMEDIATE_HINTS:
+   0x7bfeadc: cmp      w24, #2
+   0x7bfeae8: cmp      w24, #1
+   0x7bfeb34: cmp      w24, #2
+   0x7bfeb40: cmp      w24, #1
+>> 0x7bfeb8c: cmp      w24, #2
+>> 0x7bfeb98: cmp      w24, #1
+   0x7bfebe4: mov      w0, #1
+
+====================================================================================================
+TARGET P2P_ADHOC_WIFIDIRECTLAN
+string_vas=0xb43a62,0xb55aa3,0xb7bfb2,0xbef372
+xref_count=8
+XREF[0] pc=0x7bfe0d8 function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe088: bl       #0x7d2ad08
+   0x7bfe08c: add      x19, x19, #0x10
+   0x7bfe090: mov      x24, x28
+   0x7bfe094: mov      w28, w0
+   0x7bfe098: mov      x0, x19
+   0x7bfe09c: bl       #0x8b38640
+   0x7bfe0a0: and      w8, w28, #1
+   0x7bfe0a4: mov      x28, x24
+   0x7bfe0a8: cmp      w25, #4
+   0x7bfe0ac: sturb    w8, [x29, #-0x30]
+   0x7bfe0b0: b.hi     #0x7bfe364
+   0x7bfe0b4: mov      w8, w25
+>> 0x7bfe0b8: adrp     x9, #0xc8e000
+>> 0x7bfe0bc: add      x9, x9, #0xc4a
+>> 0x7bfe0c0: adr      x10, #0x7bfe0d0
+>> 0x7bfe0c4: ldrb     w11, [x9, x8]
+>> 0x7bfe0c8: add      x10, x10, x11, lsl #2
+>> 0x7bfe0cc: br       x10
+>> 0x7bfe0d0: mov      x0, x27
+>> 0x7bfe0d4: bl       #0x2efc42c
+>> 0x7bfe0d8: adrp     x2, #0xbef000
+>> 0x7bfe0dc: add      x2, x2, #0x372
+>> 0x7bfe0e0: mov      x0, x26
+>> 0x7bfe0e4: mov      x1, x21
+>> 0x7bfe0e8: bl       #0x7d2ad08
+>> 0x7bfe0ec: mov      w25, w0
+>> 0x7bfe0f0: mov      x0, x19
+>> 0x7bfe0f4: bl       #0x8b38640
+>> 0x7bfe0f8: and      w8, w25, #1
+   0x7bfe0fc: cmp      w23, #2
+   0x7bfe100: sturb    w8, [x29, #-0x50]
+   0x7bfe104: b.eq     #0x7bfe3e0
+   0x7bfe108: cmp      w23, #1
+   0x7bfe10c: b.eq     #0x7bfe3f4
+   0x7bfe110: cbnz     w23, #0x7bfe364
+   0x7bfe114: mov      x0, x27
+   0x7bfe118: bl       #0x2efc42c
+   0x7bfe11c: adrp     x2, #0xb7b000
+   0x7bfe120: add      x2, x2, #0xfb2
+   0x7bfe124: b        #0x7bfe4a4
+   0x7bfe128: mov      x0, x26
+   0x7bfe12c: bl       #0x2efc42c
+   0x7bfe130: adrp     x2, #0xbef000
+   0x7bfe134: add      x2, x2, #0x1c7
+   0x7bfe138: b        #0x7bfe174
+   0x7bfe13c: mov      x0, x26
+   0x7bfe140: bl       #0x2efc42c
+   0x7bfe144: adrp     x2, #0xbc9000
+IMMEDIATE_HINTS:
+   0x7bfdfd8: cmp      w23, #2
+   0x7bfdfe4: cmp      w23, #1
+   0x7bfe03c: cmp      w23, #2
+   0x7bfe048: cmp      w23, #1
+   0x7bfe0a8: cmp      w25, #4
+   0x7bfe0fc: cmp      w23, #2
+   0x7bfe108: cmp      w23, #1
+   0x7bfe1f8: tbz      w23, #0, #0x7bfe388
+   0x7bfe230: cmp      w23, #2
+   0x7bfe23c: cmp      w23, #1
+XREF[1] pc=0x7bfe11c function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe0cc: br       x10
+   0x7bfe0d0: mov      x0, x27
+   0x7bfe0d4: bl       #0x2efc42c
+   0x7bfe0d8: adrp     x2, #0xbef000
+   0x7bfe0dc: add      x2, x2, #0x372
+   0x7bfe0e0: mov      x0, x26
+   0x7bfe0e4: mov      x1, x21
+   0x7bfe0e8: bl       #0x7d2ad08
+   0x7bfe0ec: mov      w25, w0
+   0x7bfe0f0: mov      x0, x19
+   0x7bfe0f4: bl       #0x8b38640
+   0x7bfe0f8: and      w8, w25, #1
+>> 0x7bfe0fc: cmp      w23, #2
+>> 0x7bfe100: sturb    w8, [x29, #-0x50]
+>> 0x7bfe104: b.eq     #0x7bfe3e0
+>> 0x7bfe108: cmp      w23, #1
+>> 0x7bfe10c: b.eq     #0x7bfe3f4
+>> 0x7bfe110: cbnz     w23, #0x7bfe364
+>> 0x7bfe114: mov      x0, x27
+>> 0x7bfe118: bl       #0x2efc42c
+>> 0x7bfe11c: adrp     x2, #0xb7b000
+>> 0x7bfe120: add      x2, x2, #0xfb2
+>> 0x7bfe124: b        #0x7bfe4a4
+>> 0x7bfe128: mov      x0, x26
+>> 0x7bfe12c: bl       #0x2efc42c
+>> 0x7bfe130: adrp     x2, #0xbef000
+>> 0x7bfe134: add      x2, x2, #0x1c7
+>> 0x7bfe138: b        #0x7bfe174
+>> 0x7bfe13c: mov      x0, x26
+   0x7bfe140: bl       #0x2efc42c
+   0x7bfe144: adrp     x2, #0xbc9000
+   0x7bfe148: add      x2, x2, #0xa2e
+   0x7bfe14c: b        #0x7bfe174
+   0x7bfe150: mov      x0, x26
+   0x7bfe154: bl       #0x2efc42c
+   0x7bfe158: adrp     x2, #0xad1000
+   0x7bfe15c: add      x2, x2, #0x238
+   0x7bfe160: b        #0x7bfe174
+   0x7bfe164: mov      x0, x26
+   0x7bfe168: bl       #0x2efc42c
+   0x7bfe16c: adrp     x2, #0xa72000
+   0x7bfe170: add      x2, x2, #0x10b
+   0x7bfe174: mov      x0, x25
+   0x7bfe178: mov      x1, x22
+   0x7bfe17c: bl       #0x7d2ad08
+   0x7bfe180: mov      w23, w0
+   0x7bfe184: mov      x0, x24
+   0x7bfe188: bl       #0x8b38640
+IMMEDIATE_HINTS:
+   0x7bfe03c: cmp      w23, #2
+   0x7bfe048: cmp      w23, #1
+   0x7bfe0a8: cmp      w25, #4
+>> 0x7bfe0fc: cmp      w23, #2
+>> 0x7bfe108: cmp      w23, #1
+   0x7bfe1f8: tbz      w23, #0, #0x7bfe388
+   0x7bfe230: cmp      w23, #2
+   0x7bfe23c: cmp      w23, #1
+   0x7bfe288: cmp      w23, #2
+   0x7bfe294: cmp      w23, #1
+XREF[2] pc=0x7bfe3e8 function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe398: ldr      x8, [x28, #0x28]
+   0x7bfe39c: ldur     x9, [x29, #-0x10]
+   0x7bfe3a0: cmp      x8, x9
+   0x7bfe3a4: b.ne     #0x7bfe3dc
+   0x7bfe3a8: add      sp, sp, #0x600
+   0x7bfe3ac: ldp      x20, x19, [sp, #0x50]
+   0x7bfe3b0: ldp      x22, x21, [sp, #0x40]
+   0x7bfe3b4: ldp      x24, x23, [sp, #0x30]
+   0x7bfe3b8: ldp      x26, x25, [sp, #0x20]
+   0x7bfe3bc: ldp      x28, x27, [sp, #0x10]
+   0x7bfe3c0: ldp      x29, x30, [sp], #0x60
+   0x7bfe3c4: ret      
+>> 0x7bfe3c8: mov      w0, wzr
+>> 0x7bfe3cc: ldr      x8, [x28, #0x28]
+>> 0x7bfe3d0: ldur     x9, [x29, #-0x10]
+>> 0x7bfe3d4: cmp      x8, x9
+>> 0x7bfe3d8: b.eq     #0x7bfe3a8
+>> 0x7bfe3dc: bl       #0x8b35290
+>> 0x7bfe3e0: mov      x0, x27
+>> 0x7bfe3e4: bl       #0x2efc42c
+>> 0x7bfe3e8: adrp     x2, #0xb55000
+>> 0x7bfe3ec: add      x2, x2, #0xaa3
+>> 0x7bfe3f0: b        #0x7bfe4a4
+>> 0x7bfe3f4: mov      x0, x27
+>> 0x7bfe3f8: bl       #0x2efc42c
+>> 0x7bfe3fc: adrp     x2, #0xb43000
+>> 0x7bfe400: add      x2, x2, #0xa62
+>> 0x7bfe404: b        #0x7bfe4a4
+>> 0x7bfe408: mov      x0, x27
+   0x7bfe40c: bl       #0x2efc42c
+   0x7bfe410: adrp     x2, #0xa72000
+   0x7bfe414: add      x2, x2, #0x124
+   0x7bfe418: b        #0x7bfe4a4
+   0x7bfe41c: mov      x0, x27
+   0x7bfe420: bl       #0x2efc42c
+   0x7bfe424: adrp     x2, #0xc02000
+   0x7bfe428: add      x2, x2, #0x3f1
+   0x7bfe42c: b        #0x7bfe4a4
+   0x7bfe430: mov      x0, x27
+   0x7bfe434: bl       #0x2efc42c
+   0x7bfe438: adrp     x2, #0xbef000
+   0x7bfe43c: add      x2, x2, #0x38a
+   0x7bfe440: b        #0x7bfe4a4
+   0x7bfe444: mov      x0, x27
+   0x7bfe448: bl       #0x2efc42c
+   0x7bfe44c: adrp     x2, #0xb1d000
+   0x7bfe450: add      x2, x2, #0x5fd
+   0x7bfe454: b        #0x7bfe4a4
+IMMEDIATE_HINTS:
+   0x7bfe2ec: cmp      w23, #1
+   0x7bfe338: cmp      w23, #2
+   0x7bfe344: cmp      w23, #1
+   0x7bfe380: cmp      w23, #2
+   0x7bfe394: mov      w0, #1
+XREF[3] pc=0x7bfe3fc function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe3ac: ldp      x20, x19, [sp, #0x50]
+   0x7bfe3b0: ldp      x22, x21, [sp, #0x40]
+   0x7bfe3b4: ldp      x24, x23, [sp, #0x30]
+   0x7bfe3b8: ldp      x26, x25, [sp, #0x20]
+   0x7bfe3bc: ldp      x28, x27, [sp, #0x10]
+   0x7bfe3c0: ldp      x29, x30, [sp], #0x60
+   0x7bfe3c4: ret      
+   0x7bfe3c8: mov      w0, wzr
+   0x7bfe3cc: ldr      x8, [x28, #0x28]
+   0x7bfe3d0: ldur     x9, [x29, #-0x10]
+   0x7bfe3d4: cmp      x8, x9
+   0x7bfe3d8: b.eq     #0x7bfe3a8
+>> 0x7bfe3dc: bl       #0x8b35290
+>> 0x7bfe3e0: mov      x0, x27
+>> 0x7bfe3e4: bl       #0x2efc42c
+>> 0x7bfe3e8: adrp     x2, #0xb55000
+>> 0x7bfe3ec: add      x2, x2, #0xaa3
+>> 0x7bfe3f0: b        #0x7bfe4a4
+>> 0x7bfe3f4: mov      x0, x27
+>> 0x7bfe3f8: bl       #0x2efc42c
+>> 0x7bfe3fc: adrp     x2, #0xb43000
+>> 0x7bfe400: add      x2, x2, #0xa62
+>> 0x7bfe404: b        #0x7bfe4a4
+>> 0x7bfe408: mov      x0, x27
+>> 0x7bfe40c: bl       #0x2efc42c
+>> 0x7bfe410: adrp     x2, #0xa72000
+>> 0x7bfe414: add      x2, x2, #0x124
+>> 0x7bfe418: b        #0x7bfe4a4
+>> 0x7bfe41c: mov      x0, x27
+   0x7bfe420: bl       #0x2efc42c
+   0x7bfe424: adrp     x2, #0xc02000
+   0x7bfe428: add      x2, x2, #0x3f1
+   0x7bfe42c: b        #0x7bfe4a4
+   0x7bfe430: mov      x0, x27
+   0x7bfe434: bl       #0x2efc42c
+   0x7bfe438: adrp     x2, #0xbef000
+   0x7bfe43c: add      x2, x2, #0x38a
+   0x7bfe440: b        #0x7bfe4a4
+   0x7bfe444: mov      x0, x27
+   0x7bfe448: bl       #0x2efc42c
+   0x7bfe44c: adrp     x2, #0xb1d000
+   0x7bfe450: add      x2, x2, #0x5fd
+   0x7bfe454: b        #0x7bfe4a4
+   0x7bfe458: mov      x0, x27
+   0x7bfe45c: bl       #0x2efc42c
+   0x7bfe460: adrp     x2, #0xbc9000
+   0x7bfe464: add      x2, x2, #0xb3f
+   0x7bfe468: b        #0x7bfe4a4
+IMMEDIATE_HINTS:
+   0x7bfe338: cmp      w23, #2
+   0x7bfe344: cmp      w23, #1
+   0x7bfe380: cmp      w23, #2
+   0x7bfe394: mov      w0, #1
+XREF[4] pc=0x7bfe908 function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe8b8: mov      x0, x26
+   0x7bfe8bc: mov      x1, x21
+   0x7bfe8c0: bl       #0x7d2ad08
+   0x7bfe8c4: add      x22, x22, #0x10
+   0x7bfe8c8: mov      w25, w0
+   0x7bfe8cc: mov      x0, x22
+   0x7bfe8d0: bl       #0x8b38640
+   0x7bfe8d4: and      w8, w25, #1
+   0x7bfe8d8: cmp      w27, #4
+   0x7bfe8dc: sturb    w8, [x29, #-0x30]
+   0x7bfe8e0: b.hi     #0x7bfebb8
+   0x7bfe8e4: mov      w8, w27
+>> 0x7bfe8e8: adrp     x9, #0xc8e000
+>> 0x7bfe8ec: add      x9, x9, #0xc4f
+>> 0x7bfe8f0: adr      x10, #0x7bfe900
+>> 0x7bfe8f4: ldrb     w11, [x9, x8]
+>> 0x7bfe8f8: add      x10, x10, x11, lsl #2
+>> 0x7bfe8fc: br       x10
+>> 0x7bfe900: mov      x0, x28
+>> 0x7bfe904: bl       #0x2efc42c
+>> 0x7bfe908: adrp     x2, #0xbef000
+>> 0x7bfe90c: add      x2, x2, #0x372
+>> 0x7bfe910: mov      x0, x26
+>> 0x7bfe914: ldr      x1, [sp, #0x18]
+>> 0x7bfe918: bl       #0x7d2ad08
+>> 0x7bfe91c: mov      w25, w0
+>> 0x7bfe920: mov      x0, x22
+>> 0x7bfe924: bl       #0x8b38640
+>> 0x7bfe928: and      w8, w25, #1
+   0x7bfe92c: cmp      w24, #2
+   0x7bfe930: sturb    w8, [x29, #-0x50]
+   0x7bfe934: b.eq     #0x7bfec30
+   0x7bfe938: cmp      w24, #1
+   0x7bfe93c: b.eq     #0x7bfec44
+   0x7bfe940: cbnz     w24, #0x7bfebb8
+   0x7bfe944: mov      x0, x28
+   0x7bfe948: bl       #0x2efc42c
+   0x7bfe94c: adrp     x2, #0xb7b000
+   0x7bfe950: add      x2, x2, #0xfb2
+   0x7bfe954: b        #0x7bfecf4
+   0x7bfe958: mov      x0, x27
+   0x7bfe95c: bl       #0x2efc42c
+   0x7bfe960: adrp     x2, #0xbef000
+   0x7bfe964: add      x2, x2, #0x1c7
+   0x7bfe968: b        #0x7bfe9a4
+   0x7bfe96c: mov      x0, x27
+   0x7bfe970: bl       #0x2efc42c
+   0x7bfe974: adrp     x2, #0xbc9000
+IMMEDIATE_HINTS:
+   0x7bfe810: cmp      w24, #2
+   0x7bfe81c: cmp      w24, #1
+   0x7bfe874: cmp      w24, #2
+   0x7bfe880: cmp      w24, #1
+   0x7bfe8d8: cmp      w27, #4
+   0x7bfe92c: cmp      w24, #2
+   0x7bfe938: cmp      w24, #1
+   0x7bfea38: tst      w24, #1
+   0x7bfea4c: tbz      w8, #0, #0x7bfec18
+   0x7bfea84: cmp      w24, #2
+XREF[5] pc=0x7bfe94c function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe8fc: br       x10
+   0x7bfe900: mov      x0, x28
+   0x7bfe904: bl       #0x2efc42c
+   0x7bfe908: adrp     x2, #0xbef000
+   0x7bfe90c: add      x2, x2, #0x372
+   0x7bfe910: mov      x0, x26
+   0x7bfe914: ldr      x1, [sp, #0x18]
+   0x7bfe918: bl       #0x7d2ad08
+   0x7bfe91c: mov      w25, w0
+   0x7bfe920: mov      x0, x22
+   0x7bfe924: bl       #0x8b38640
+   0x7bfe928: and      w8, w25, #1
+>> 0x7bfe92c: cmp      w24, #2
+>> 0x7bfe930: sturb    w8, [x29, #-0x50]
+>> 0x7bfe934: b.eq     #0x7bfec30
+>> 0x7bfe938: cmp      w24, #1
+>> 0x7bfe93c: b.eq     #0x7bfec44
+>> 0x7bfe940: cbnz     w24, #0x7bfebb8
+>> 0x7bfe944: mov      x0, x28
+>> 0x7bfe948: bl       #0x2efc42c
+>> 0x7bfe94c: adrp     x2, #0xb7b000
+>> 0x7bfe950: add      x2, x2, #0xfb2
+>> 0x7bfe954: b        #0x7bfecf4
+>> 0x7bfe958: mov      x0, x27
+>> 0x7bfe95c: bl       #0x2efc42c
+>> 0x7bfe960: adrp     x2, #0xbef000
+>> 0x7bfe964: add      x2, x2, #0x1c7
+>> 0x7bfe968: b        #0x7bfe9a4
+>> 0x7bfe96c: mov      x0, x27
+   0x7bfe970: bl       #0x2efc42c
+   0x7bfe974: adrp     x2, #0xbc9000
+   0x7bfe978: add      x2, x2, #0xa2e
+   0x7bfe97c: b        #0x7bfe9a4
+   0x7bfe980: mov      x0, x27
+   0x7bfe984: bl       #0x2efc42c
+   0x7bfe988: adrp     x2, #0xad1000
+   0x7bfe98c: add      x2, x2, #0x238
+   0x7bfe990: b        #0x7bfe9a4
+   0x7bfe994: mov      x0, x27
+   0x7bfe998: bl       #0x2efc42c
+   0x7bfe99c: adrp     x2, #0xa72000
+   0x7bfe9a0: add      x2, x2, #0x10b
+   0x7bfe9a4: mov      x0, x26
+   0x7bfe9a8: mov      x1, x23
+   0x7bfe9ac: bl       #0x7d2ad08
+   0x7bfe9b0: mov      w24, w0
+   0x7bfe9b4: mov      x0, x25
+   0x7bfe9b8: bl       #0x8b38640
+IMMEDIATE_HINTS:
+   0x7bfe874: cmp      w24, #2
+   0x7bfe880: cmp      w24, #1
+   0x7bfe8d8: cmp      w27, #4
+>> 0x7bfe92c: cmp      w24, #2
+>> 0x7bfe938: cmp      w24, #1
+   0x7bfea38: tst      w24, #1
+   0x7bfea4c: tbz      w8, #0, #0x7bfec18
+   0x7bfea84: cmp      w24, #2
+   0x7bfea90: cmp      w24, #1
+XREF[6] pc=0x7bfec38 function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfebe8: ldr      x8, [x19, #0x28]
+   0x7bfebec: ldur     x9, [x29, #-0x10]
+   0x7bfebf0: cmp      x8, x9
+   0x7bfebf4: b.ne     #0x7bfec2c
+   0x7bfebf8: add      sp, sp, #0x610
+   0x7bfebfc: ldp      x20, x19, [sp, #0x50]
+   0x7bfec00: ldp      x22, x21, [sp, #0x40]
+   0x7bfec04: ldp      x24, x23, [sp, #0x30]
+   0x7bfec08: ldp      x26, x25, [sp, #0x20]
+   0x7bfec0c: ldp      x28, x27, [sp, #0x10]
+   0x7bfec10: ldp      x29, x30, [sp], #0x60
+   0x7bfec14: ret      
+>> 0x7bfec18: mov      w0, wzr
+>> 0x7bfec1c: ldr      x8, [x19, #0x28]
+>> 0x7bfec20: ldur     x9, [x29, #-0x10]
+>> 0x7bfec24: cmp      x8, x9
+>> 0x7bfec28: b.eq     #0x7bfebf8
+>> 0x7bfec2c: bl       #0x8b35290
+>> 0x7bfec30: mov      x0, x28
+>> 0x7bfec34: bl       #0x2efc42c
+>> 0x7bfec38: adrp     x2, #0xb55000
+>> 0x7bfec3c: add      x2, x2, #0xaa3
+>> 0x7bfec40: b        #0x7bfecf4
+>> 0x7bfec44: mov      x0, x28
+>> 0x7bfec48: bl       #0x2efc42c
+>> 0x7bfec4c: adrp     x2, #0xb43000
+>> 0x7bfec50: add      x2, x2, #0xa62
+>> 0x7bfec54: b        #0x7bfecf4
+>> 0x7bfec58: mov      x0, x28
+   0x7bfec5c: bl       #0x2efc42c
+   0x7bfec60: adrp     x2, #0xa72000
+   0x7bfec64: add      x2, x2, #0x124
+   0x7bfec68: b        #0x7bfecf4
+   0x7bfec6c: mov      x0, x28
+   0x7bfec70: bl       #0x2efc42c
+   0x7bfec74: adrp     x2, #0xc02000
+   0x7bfec78: add      x2, x2, #0x3f1
+   0x7bfec7c: b        #0x7bfecf4
+   0x7bfec80: mov      x0, x28
+   0x7bfec84: bl       #0x2efc42c
+   0x7bfec88: adrp     x2, #0xbef000
+   0x7bfec8c: add      x2, x2, #0x38a
+   0x7bfec90: b        #0x7bfecf4
+   0x7bfec94: mov      x0, x28
+   0x7bfec98: bl       #0x2efc42c
+   0x7bfec9c: adrp     x2, #0xb1d000
+   0x7bfeca0: add      x2, x2, #0x5fd
+   0x7bfeca4: b        #0x7bfecf4
+IMMEDIATE_HINTS:
+   0x7bfeb40: cmp      w24, #1
+   0x7bfeb8c: cmp      w24, #2
+   0x7bfeb98: cmp      w24, #1
+   0x7bfebe4: mov      w0, #1
+   0x7bfedb4: cmp      w2, #3
+XREF[7] pc=0x7bfec4c function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfebfc: ldp      x20, x19, [sp, #0x50]
+   0x7bfec00: ldp      x22, x21, [sp, #0x40]
+   0x7bfec04: ldp      x24, x23, [sp, #0x30]
+   0x7bfec08: ldp      x26, x25, [sp, #0x20]
+   0x7bfec0c: ldp      x28, x27, [sp, #0x10]
+   0x7bfec10: ldp      x29, x30, [sp], #0x60
+   0x7bfec14: ret      
+   0x7bfec18: mov      w0, wzr
+   0x7bfec1c: ldr      x8, [x19, #0x28]
+   0x7bfec20: ldur     x9, [x29, #-0x10]
+   0x7bfec24: cmp      x8, x9
+   0x7bfec28: b.eq     #0x7bfebf8
+>> 0x7bfec2c: bl       #0x8b35290
+>> 0x7bfec30: mov      x0, x28
+>> 0x7bfec34: bl       #0x2efc42c
+>> 0x7bfec38: adrp     x2, #0xb55000
+>> 0x7bfec3c: add      x2, x2, #0xaa3
+>> 0x7bfec40: b        #0x7bfecf4
+>> 0x7bfec44: mov      x0, x28
+>> 0x7bfec48: bl       #0x2efc42c
+>> 0x7bfec4c: adrp     x2, #0xb43000
+>> 0x7bfec50: add      x2, x2, #0xa62
+>> 0x7bfec54: b        #0x7bfecf4
+>> 0x7bfec58: mov      x0, x28
+>> 0x7bfec5c: bl       #0x2efc42c
+>> 0x7bfec60: adrp     x2, #0xa72000
+>> 0x7bfec64: add      x2, x2, #0x124
+>> 0x7bfec68: b        #0x7bfecf4
+>> 0x7bfec6c: mov      x0, x28
+   0x7bfec70: bl       #0x2efc42c
+   0x7bfec74: adrp     x2, #0xc02000
+   0x7bfec78: add      x2, x2, #0x3f1
+   0x7bfec7c: b        #0x7bfecf4
+   0x7bfec80: mov      x0, x28
+   0x7bfec84: bl       #0x2efc42c
+   0x7bfec88: adrp     x2, #0xbef000
+   0x7bfec8c: add      x2, x2, #0x38a
+   0x7bfec90: b        #0x7bfecf4
+   0x7bfec94: mov      x0, x28
+   0x7bfec98: bl       #0x2efc42c
+   0x7bfec9c: adrp     x2, #0xb1d000
+   0x7bfeca0: add      x2, x2, #0x5fd
+   0x7bfeca4: b        #0x7bfecf4
+   0x7bfeca8: mov      x0, x28
+   0x7bfecac: bl       #0x2efc42c
+   0x7bfecb0: adrp     x2, #0xbc9000
+   0x7bfecb4: add      x2, x2, #0xb3f
+   0x7bfecb8: b        #0x7bfecf4
+IMMEDIATE_HINTS:
+   0x7bfeb8c: cmp      w24, #2
+   0x7bfeb98: cmp      w24, #1
+   0x7bfebe4: mov      w0, #1
+   0x7bfedb4: cmp      w2, #3
+
+====================================================================================================
+TARGET P2P_ADHOC_WIFIDIRECTLAN_LOW_LEVEL
+string_vas=0xb43a62
+xref_count=2
+XREF[0] pc=0x7bfe3fc function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe3ac: ldp      x20, x19, [sp, #0x50]
+   0x7bfe3b0: ldp      x22, x21, [sp, #0x40]
+   0x7bfe3b4: ldp      x24, x23, [sp, #0x30]
+   0x7bfe3b8: ldp      x26, x25, [sp, #0x20]
+   0x7bfe3bc: ldp      x28, x27, [sp, #0x10]
+   0x7bfe3c0: ldp      x29, x30, [sp], #0x60
+   0x7bfe3c4: ret      
+   0x7bfe3c8: mov      w0, wzr
+   0x7bfe3cc: ldr      x8, [x28, #0x28]
+   0x7bfe3d0: ldur     x9, [x29, #-0x10]
+   0x7bfe3d4: cmp      x8, x9
+   0x7bfe3d8: b.eq     #0x7bfe3a8
+>> 0x7bfe3dc: bl       #0x8b35290
+>> 0x7bfe3e0: mov      x0, x27
+>> 0x7bfe3e4: bl       #0x2efc42c
+>> 0x7bfe3e8: adrp     x2, #0xb55000
+>> 0x7bfe3ec: add      x2, x2, #0xaa3
+>> 0x7bfe3f0: b        #0x7bfe4a4
+>> 0x7bfe3f4: mov      x0, x27
+>> 0x7bfe3f8: bl       #0x2efc42c
+>> 0x7bfe3fc: adrp     x2, #0xb43000
+>> 0x7bfe400: add      x2, x2, #0xa62
+>> 0x7bfe404: b        #0x7bfe4a4
+>> 0x7bfe408: mov      x0, x27
+>> 0x7bfe40c: bl       #0x2efc42c
+>> 0x7bfe410: adrp     x2, #0xa72000
+>> 0x7bfe414: add      x2, x2, #0x124
+>> 0x7bfe418: b        #0x7bfe4a4
+>> 0x7bfe41c: mov      x0, x27
+   0x7bfe420: bl       #0x2efc42c
+   0x7bfe424: adrp     x2, #0xc02000
+   0x7bfe428: add      x2, x2, #0x3f1
+   0x7bfe42c: b        #0x7bfe4a4
+   0x7bfe430: mov      x0, x27
+   0x7bfe434: bl       #0x2efc42c
+   0x7bfe438: adrp     x2, #0xbef000
+   0x7bfe43c: add      x2, x2, #0x38a
+   0x7bfe440: b        #0x7bfe4a4
+   0x7bfe444: mov      x0, x27
+   0x7bfe448: bl       #0x2efc42c
+   0x7bfe44c: adrp     x2, #0xb1d000
+   0x7bfe450: add      x2, x2, #0x5fd
+   0x7bfe454: b        #0x7bfe4a4
+   0x7bfe458: mov      x0, x27
+   0x7bfe45c: bl       #0x2efc42c
+   0x7bfe460: adrp     x2, #0xbc9000
+   0x7bfe464: add      x2, x2, #0xb3f
+   0x7bfe468: b        #0x7bfe4a4
+IMMEDIATE_HINTS:
+   0x7bfe338: cmp      w23, #2
+   0x7bfe344: cmp      w23, #1
+   0x7bfe380: cmp      w23, #2
+   0x7bfe394: mov      w0, #1
+XREF[1] pc=0x7bfec4c function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfebfc: ldp      x20, x19, [sp, #0x50]
+   0x7bfec00: ldp      x22, x21, [sp, #0x40]
+   0x7bfec04: ldp      x24, x23, [sp, #0x30]
+   0x7bfec08: ldp      x26, x25, [sp, #0x20]
+   0x7bfec0c: ldp      x28, x27, [sp, #0x10]
+   0x7bfec10: ldp      x29, x30, [sp], #0x60
+   0x7bfec14: ret      
+   0x7bfec18: mov      w0, wzr
+   0x7bfec1c: ldr      x8, [x19, #0x28]
+   0x7bfec20: ldur     x9, [x29, #-0x10]
+   0x7bfec24: cmp      x8, x9
+   0x7bfec28: b.eq     #0x7bfebf8
+>> 0x7bfec2c: bl       #0x8b35290
+>> 0x7bfec30: mov      x0, x28
+>> 0x7bfec34: bl       #0x2efc42c
+>> 0x7bfec38: adrp     x2, #0xb55000
+>> 0x7bfec3c: add      x2, x2, #0xaa3
+>> 0x7bfec40: b        #0x7bfecf4
+>> 0x7bfec44: mov      x0, x28
+>> 0x7bfec48: bl       #0x2efc42c
+>> 0x7bfec4c: adrp     x2, #0xb43000
+>> 0x7bfec50: add      x2, x2, #0xa62
+>> 0x7bfec54: b        #0x7bfecf4
+>> 0x7bfec58: mov      x0, x28
+>> 0x7bfec5c: bl       #0x2efc42c
+>> 0x7bfec60: adrp     x2, #0xa72000
+>> 0x7bfec64: add      x2, x2, #0x124
+>> 0x7bfec68: b        #0x7bfecf4
+>> 0x7bfec6c: mov      x0, x28
+   0x7bfec70: bl       #0x2efc42c
+   0x7bfec74: adrp     x2, #0xc02000
+   0x7bfec78: add      x2, x2, #0x3f1
+   0x7bfec7c: b        #0x7bfecf4
+   0x7bfec80: mov      x0, x28
+   0x7bfec84: bl       #0x2efc42c
+   0x7bfec88: adrp     x2, #0xbef000
+   0x7bfec8c: add      x2, x2, #0x38a
+   0x7bfec90: b        #0x7bfecf4
+   0x7bfec94: mov      x0, x28
+   0x7bfec98: bl       #0x2efc42c
+   0x7bfec9c: adrp     x2, #0xb1d000
+   0x7bfeca0: add      x2, x2, #0x5fd
+   0x7bfeca4: b        #0x7bfecf4
+   0x7bfeca8: mov      x0, x28
+   0x7bfecac: bl       #0x2efc42c
+   0x7bfecb0: adrp     x2, #0xbc9000
+   0x7bfecb4: add      x2, x2, #0xb3f
+   0x7bfecb8: b        #0x7bfecf4
+IMMEDIATE_HINTS:
+   0x7bfeb8c: cmp      w24, #2
+   0x7bfeb98: cmp      w24, #1
+   0x7bfebe4: mov      w0, #1
+   0x7bfedb4: cmp      w2, #3
+
+====================================================================================================
+TARGET P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+string_vas=0xb7bfb2
+xref_count=2
+XREF[0] pc=0x7bfe11c function~=0x7bfdbf4-0x7bfe3c8
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfdff8 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe05c va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe078 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe0d8 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe11c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe130 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe144 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe158 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe16c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe20c va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfe250 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfe264 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfe2a8 va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfe2bc va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfe300 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfe314 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfe358 va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe0cc: br       x10
+   0x7bfe0d0: mov      x0, x27
+   0x7bfe0d4: bl       #0x2efc42c
+   0x7bfe0d8: adrp     x2, #0xbef000
+   0x7bfe0dc: add      x2, x2, #0x372
+   0x7bfe0e0: mov      x0, x26
+   0x7bfe0e4: mov      x1, x21
+   0x7bfe0e8: bl       #0x7d2ad08
+   0x7bfe0ec: mov      w25, w0
+   0x7bfe0f0: mov      x0, x19
+   0x7bfe0f4: bl       #0x8b38640
+   0x7bfe0f8: and      w8, w25, #1
+>> 0x7bfe0fc: cmp      w23, #2
+>> 0x7bfe100: sturb    w8, [x29, #-0x50]
+>> 0x7bfe104: b.eq     #0x7bfe3e0
+>> 0x7bfe108: cmp      w23, #1
+>> 0x7bfe10c: b.eq     #0x7bfe3f4
+>> 0x7bfe110: cbnz     w23, #0x7bfe364
+>> 0x7bfe114: mov      x0, x27
+>> 0x7bfe118: bl       #0x2efc42c
+>> 0x7bfe11c: adrp     x2, #0xb7b000
+>> 0x7bfe120: add      x2, x2, #0xfb2
+>> 0x7bfe124: b        #0x7bfe4a4
+>> 0x7bfe128: mov      x0, x26
+>> 0x7bfe12c: bl       #0x2efc42c
+>> 0x7bfe130: adrp     x2, #0xbef000
+>> 0x7bfe134: add      x2, x2, #0x1c7
+>> 0x7bfe138: b        #0x7bfe174
+>> 0x7bfe13c: mov      x0, x26
+   0x7bfe140: bl       #0x2efc42c
+   0x7bfe144: adrp     x2, #0xbc9000
+   0x7bfe148: add      x2, x2, #0xa2e
+   0x7bfe14c: b        #0x7bfe174
+   0x7bfe150: mov      x0, x26
+   0x7bfe154: bl       #0x2efc42c
+   0x7bfe158: adrp     x2, #0xad1000
+   0x7bfe15c: add      x2, x2, #0x238
+   0x7bfe160: b        #0x7bfe174
+   0x7bfe164: mov      x0, x26
+   0x7bfe168: bl       #0x2efc42c
+   0x7bfe16c: adrp     x2, #0xa72000
+   0x7bfe170: add      x2, x2, #0x10b
+   0x7bfe174: mov      x0, x25
+   0x7bfe178: mov      x1, x22
+   0x7bfe17c: bl       #0x7d2ad08
+   0x7bfe180: mov      w23, w0
+   0x7bfe184: mov      x0, x24
+   0x7bfe188: bl       #0x8b38640
+IMMEDIATE_HINTS:
+   0x7bfe03c: cmp      w23, #2
+   0x7bfe048: cmp      w23, #1
+   0x7bfe0a8: cmp      w25, #4
+>> 0x7bfe0fc: cmp      w23, #2
+>> 0x7bfe108: cmp      w23, #1
+   0x7bfe1f8: tbz      w23, #0, #0x7bfe388
+   0x7bfe230: cmp      w23, #2
+   0x7bfe23c: cmp      w23, #1
+   0x7bfe288: cmp      w23, #2
+   0x7bfe294: cmp      w23, #1
+XREF[1] pc=0x7bfe94c function~=0x7bfe4e0-0x7bfec18
+SAME_FUNCTION_STRINGS:
+  pc=0x7bfe830 va=0xbb64a4 CS_HIGH_LEVEL
+  pc=0x7bfe894 va=0xb68e29 P2P_HIGH_LEVEL
+  pc=0x7bfe8b0 va=0xa84e75 P2P_ADHOC
+  pc=0x7bfe908 va=0xbef372 P2P_ADHOC_WIFIDIRECTLAN
+  pc=0x7bfe94c va=0xb7bfb2 P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL
+  pc=0x7bfe960 va=0xbef1c7 CS_LOW_LEVEL
+  pc=0x7bfe974 va=0xbc9a2e P2P_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfe988 va=0xad1238 P2P_LOW_LEVEL
+  pc=0x7bfe99c va=0xa7210b CS_GIVE_UP_QUICKLY_LEVEL
+  pc=0x7bfea60 va=0xb1d615 P2P_ADHOC_UNKNOWN
+  pc=0x7bfeaa4 va=0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+  pc=0x7bfeab8 va=0xa7225c P2P_ADHOC_BTC
+  pc=0x7bfeafc va=0xb30671 P2P_ADHOC_BTC_HIGH_LEVEL
+  pc=0x7bfeb10 va=0xbef3ae P2P_ADHOC_BLE
+  pc=0x7bfeb54 va=0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+  pc=0x7bfeb68 va=0xb43a84 P2P_ADHOC_LAN
+  pc=0x7bfebac va=0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+MARKED_XREF_NEIGHBORHOOD:
+   0x7bfe8fc: br       x10
+   0x7bfe900: mov      x0, x28
+   0x7bfe904: bl       #0x2efc42c
+   0x7bfe908: adrp     x2, #0xbef000
+   0x7bfe90c: add      x2, x2, #0x372
+   0x7bfe910: mov      x0, x26
+   0x7bfe914: ldr      x1, [sp, #0x18]
+   0x7bfe918: bl       #0x7d2ad08
+   0x7bfe91c: mov      w25, w0
+   0x7bfe920: mov      x0, x22
+   0x7bfe924: bl       #0x8b38640
+   0x7bfe928: and      w8, w25, #1
+>> 0x7bfe92c: cmp      w24, #2
+>> 0x7bfe930: sturb    w8, [x29, #-0x50]
+>> 0x7bfe934: b.eq     #0x7bfec30
+>> 0x7bfe938: cmp      w24, #1
+>> 0x7bfe93c: b.eq     #0x7bfec44
+>> 0x7bfe940: cbnz     w24, #0x7bfebb8
+>> 0x7bfe944: mov      x0, x28
+>> 0x7bfe948: bl       #0x2efc42c
+>> 0x7bfe94c: adrp     x2, #0xb7b000
+>> 0x7bfe950: add      x2, x2, #0xfb2
+>> 0x7bfe954: b        #0x7bfecf4
+>> 0x7bfe958: mov      x0, x27
+>> 0x7bfe95c: bl       #0x2efc42c
+>> 0x7bfe960: adrp     x2, #0xbef000
+>> 0x7bfe964: add      x2, x2, #0x1c7
+>> 0x7bfe968: b        #0x7bfe9a4
+>> 0x7bfe96c: mov      x0, x27
+   0x7bfe970: bl       #0x2efc42c
+   0x7bfe974: adrp     x2, #0xbc9000
+   0x7bfe978: add      x2, x2, #0xa2e
+   0x7bfe97c: b        #0x7bfe9a4
+   0x7bfe980: mov      x0, x27
+   0x7bfe984: bl       #0x2efc42c
+   0x7bfe988: adrp     x2, #0xad1000
+   0x7bfe98c: add      x2, x2, #0x238
+   0x7bfe990: b        #0x7bfe9a4
+   0x7bfe994: mov      x0, x27
+   0x7bfe998: bl       #0x2efc42c
+   0x7bfe99c: adrp     x2, #0xa72000
+   0x7bfe9a0: add      x2, x2, #0x10b
+   0x7bfe9a4: mov      x0, x26
+   0x7bfe9a8: mov      x1, x23
+   0x7bfe9ac: bl       #0x7d2ad08
+   0x7bfe9b0: mov      w24, w0
+   0x7bfe9b4: mov      x0, x25
+   0x7bfe9b8: bl       #0x8b38640
+IMMEDIATE_HINTS:
+   0x7bfe874: cmp      w24, #2
+   0x7bfe880: cmp      w24, #1
+   0x7bfe8d8: cmp      w27, #4
+>> 0x7bfe92c: cmp      w24, #2
+>> 0x7bfe938: cmp      w24, #1
+   0x7bfea38: tst      w24, #1
+   0x7bfea4c: tbz      w8, #0, #0x7bfec18
+   0x7bfea84: cmp      w24, #2
+   0x7bfea90: cmp      w24, #1
+
+====================================================================================================
+TARGET CMD_SET_LOCAL_GAMERELAY_LIST
+string_vas=0xa71af0
+xref_count=2
+XREF[0] pc=0x76e8b74 function~=0x76e8b08-0x76e8bf0
+SAME_FUNCTION_STRINGS:
+  pc=0x76e8b74 va=0xa71af0 CMD_SET_LOCAL_GAMERELAY_LIST
+  pc=0x76e8bb0 va=0xa0030a CmdSetLocalGamerelayList.php
+MARKED_XREF_NEIGHBORHOOD:
+   0x76e8b24: adrp     x8, #0x97a2000
+   0x76e8b28: add      x8, x8, #0x600
+   0x76e8b2c: str      x8, [x19]
+   0x76e8b30: bl       #0x2f8e028
+   0x76e8b34: add      x0, x19, #0xc8
+   0x76e8b38: bl       #0x2f93838
+   0x76e8b3c: add      x0, x19, #0xf0
+   0x76e8b40: mov      w1, wzr
+   0x76e8b44: bl       #0x2f912cc
+   0x76e8b48: mov      w0, #0x2000
+   0x76e8b4c: strb     wzr, [x19, #0x108]
+   0x76e8b50: mov      w20, #0x2000
+>> 0x76e8b54: bl       #0x8b35650
+>> 0x76e8b58: movi     v0.2d, #0000000000000000
+>> 0x76e8b5c: add      x8, x19, #0x138
+>> 0x76e8b60: adrp     x21, #0x97d9000
+>> 0x76e8b64: add      x21, x21, #0x5e0
+>> 0x76e8b68: stp      x0, x20, [x19, #0x120]
+>> 0x76e8b6c: add      x22, x21, #0x48
+>> 0x76e8b70: add      x23, x21, #0x78
+>> 0x76e8b74: adrp     x1, #0xa71000
+>> 0x76e8b78: add      x1, x1, #0xaf0
+>> 0x76e8b7c: mov      x0, x8
+>> 0x76e8b80: mov      w2, #0x1c
+>> 0x76e8b84: stp      q0, q0, [x8]
+>> 0x76e8b88: stp      q0, q0, [x8, #0x20]
+>> 0x76e8b8c: add      x20, x19, #0x170
+>> 0x76e8b90: stp      q0, q0, [x8, #0x40]
+>> 0x76e8b94: stp      q0, q0, [x8, #0x60]
+   0x76e8b98: stp      q0, q0, [x8, #0x80]
+   0x76e8b9c: str      q0, [x8, #0xa0]
+   0x76e8ba0: str      x21, [x19]
+   0x76e8ba4: stp      x22, xzr, [x19, #0x110]
+   0x76e8ba8: str      x23, [x19, #0x130]
+   0x76e8bac: bl       #0x2efb614
+   0x76e8bb0: adrp     x1, #0xa00000
+   0x76e8bb4: add      x1, x1, #0x30a
+   0x76e8bb8: mov      x0, x20
+   0x76e8bbc: mov      w2, #0x1c
+   0x76e8bc0: bl       #0x2efb614
+   0x76e8bc4: str      x21, [x19]
+   0x76e8bc8: str      x22, [x19, #0x110]
+   0x76e8bcc: str      x23, [x19, #0x130]
+   0x76e8bd0: stp      xzr, xzr, [x19, #0x1f0]
+   0x76e8bd4: str      xzr, [x19, #0x1e8]
+   0x76e8bd8: str      wzr, [x19, #0x200]
+   0x76e8bdc: ldp      x20, x19, [sp, #0x30]
+   0x76e8be0: ldp      x22, x21, [sp, #0x20]
+IMMEDIATE_HINTS:
+   0x76e8a7c: tst      w8, #1
+   0x76e8a94: cmp      x21, #0x16
+   0x76e8b48: mov      w0, #0x2000
+   0x76e8b50: mov      w20, #0x2000
+>> 0x76e8b80: mov      w2, #0x1c
+   0x76e8bbc: mov      w2, #0x1c
+   0x76e8cac: tst      w8, #1
+   0x76e8ce4: tst      w8, #1
+XREF[1] pc=0x76e9988 function~=0x76e98d4-0x76e99ec
+SAME_FUNCTION_STRINGS:
+  pc=0x76e9988 va=0xa71af0 CMD_SET_LOCAL_GAMERELAY_LIST
+  pc=0x76e99b0 va=0xa0030a CmdSetLocalGamerelayList.php
+MARKED_XREF_NEIGHBORHOOD:
+   0x76e9938: mov      w1, wzr
+   0x76e993c: mov      w2, #0x258
+   0x76e9940: str      xzr, [x19, #0x118]
+   0x76e9944: add      x21, x19, #0x1f0
+   0x76e9948: stp      q0, q0, [x20]
+   0x76e994c: stp      q0, q0, [x20, #0x20]
+   0x76e9950: stp      q0, q0, [x20, #0x40]
+   0x76e9954: stp      q0, q0, [x20, #0x60]
+   0x76e9958: stp      q0, q0, [x20, #0x80]
+   0x76e995c: str      q0, [x20, #0xa0]
+   0x76e9960: bl       #0x8b35360
+   0x76e9964: mov      x0, x21
+>> 0x76e9968: mov      w1, wzr
+>> 0x76e996c: mov      w2, #0x514
+>> 0x76e9970: bl       #0x8b35360
+>> 0x76e9974: adrp     x22, #0x97d9000
+>> 0x76e9978: add      x22, x22, #0x678
+>> 0x76e997c: add      x23, x22, #0x48
+>> 0x76e9980: add      x24, x22, #0x78
+>> 0x76e9984: add      x25, x22, #0x98
+>> 0x76e9988: adrp     x1, #0xa71000
+>> 0x76e998c: add      x1, x1, #0xaf0
+>> 0x76e9990: mov      x0, x20
+>> 0x76e9994: mov      w2, #0x1c
+>> 0x76e9998: str      x22, [x19]
+>> 0x76e999c: add      x21, x19, #0x170
+>> 0x76e99a0: str      x23, [x19, #0x110]
+>> 0x76e99a4: str      x24, [x19, #0x130]
+>> 0x76e99a8: str      x25, [x19, #0x1e8]
+   0x76e99ac: bl       #0x2efb614
+   0x76e99b0: adrp     x1, #0xa00000
+   0x76e99b4: add      x1, x1, #0x30a
+   0x76e99b8: mov      x0, x21
+   0x76e99bc: mov      w2, #0x1c
+   0x76e99c0: bl       #0x2efb614
+   0x76e99c4: str      x22, [x19]
+   0x76e99c8: str      x23, [x19, #0x110]
+   0x76e99cc: str      x24, [x19, #0x130]
+   0x76e99d0: str      x25, [x19, #0x1e8]
+   0x76e99d4: ldp      x20, x19, [sp, #0x40]
+   0x76e99d8: ldp      x22, x21, [sp, #0x30]
+   0x76e99dc: ldp      x24, x23, [sp, #0x20]
+   0x76e99e0: ldr      x25, [sp, #0x10]
+   0x76e99e4: ldp      x29, x30, [sp], #0x50
+   0x76e99e8: ret      
+   0x76e99ec: stp      x29, x30, [sp, #-0x20]!
+   0x76e99f0: stp      x20, x19, [sp, #0x10]
+   0x76e99f4: mov      x29, sp
+IMMEDIATE_HINTS:
+   0x76e98c8: mov      w0, #1
+   0x76e9918: mov      w0, #0x2000
+   0x76e9920: mov      w20, #0x2000
+   0x76e993c: mov      w2, #0x258
+>> 0x76e996c: mov      w2, #0x514
+>> 0x76e9994: mov      w2, #0x1c
+   0x76e99bc: mov      w2, #0x1c
+   0x76e9a38: tbnz     w8, #0, #0x76e9a48
+   0x76e9a78: cmp      w1, #0x5c
+   0x76e9a84: mov      w0, #1
+   0x76e9ac8: mov      w0, #0x38
+   0x76e9ad4: mov      w1, #0x2000
+   0x76e9afc: cmp      w8, #1
+
+====================================================================================================
+TARGET TaskEvCompeLocalGamerelay
+string_vas=0xa97bc2
+xref_count=1
+XREF[0] pc=0x7a13bd0 function~=0x7a13ba0-0x7a13c18
+SAME_FUNCTION_STRINGS:
+  pc=0x7a13bd0 va=0xa97bc2 TaskEvCompeLocalGamerelay
+MARKED_XREF_NEIGHBORHOOD:
+   0x7a13b80: bl       #0x8b35240
+   0x7a13b84: mov      w8, #-1
+   0x7a13b88: str      w8, [x21]
+   0x7a13b8c: ldp      x20, x19, [sp, #0x20]
+   0x7a13b90: ldp      x22, x21, [sp, #0x10]
+   0x7a13b94: ldp      x29, x30, [sp], #0x30
+   0x7a13b98: ret      
+   0x7a13b9c: bl       #0x8b382d0
+   0x7a13ba0: stp      x29, x30, [sp, #-0x20]!
+   0x7a13ba4: stp      x20, x19, [sp, #0x10]
+   0x7a13ba8: mov      x29, sp
+   0x7a13bac: adrp     x20, #0xa49a000
+>> 0x7a13bb0: ldr      x19, [x20, #0x870]
+>> 0x7a13bb4: cbz      x19, #0x7a13bc8
+>> 0x7a13bb8: mov      x0, x19
+>> 0x7a13bbc: ldp      x20, x19, [sp, #0x10]
+>> 0x7a13bc0: ldp      x29, x30, [sp], #0x20
+>> 0x7a13bc4: ret      
+>> 0x7a13bc8: mov      w0, #0xa8
+>> 0x7a13bcc: bl       #0x8b35260
+>> 0x7a13bd0: adrp     x1, #0xa97000
+>> 0x7a13bd4: add      x1, x1, #0xbc2
+>> 0x7a13bd8: mov      w2, wzr
+>> 0x7a13bdc: mov      x19, x0
+>> 0x7a13be0: bl       #0x814416c
+>> 0x7a13be4: movi     v0.2d, #0000000000000000
+>> 0x7a13be8: mov      w8, #1
+>> 0x7a13bec: adrp     x9, #0x97fd000
+>> 0x7a13bf0: add      x9, x9, #0x378
+   0x7a13bf4: str      x19, [x20, #0x870]
+   0x7a13bf8: strh     w8, [x19, #0xa0]
+   0x7a13bfc: str      x9, [x19]
+   0x7a13c00: stp      q0, q0, [x19, #0x70]
+   0x7a13c04: str      q0, [x19, #0x90]
+   0x7a13c08: mov      x0, x19
+   0x7a13c0c: ldp      x20, x19, [sp, #0x10]
+   0x7a13c10: ldp      x29, x30, [sp], #0x20
+   0x7a13c14: ret      
+   0x7a13c18: adrp     x8, #0xa49a000
+   0x7a13c1c: ldr      x0, [x8, #0x870]
+   0x7a13c20: ret      
+   0x7a13c24: stp      x29, x30, [sp, #-0x20]!
+   0x7a13c28: str      x19, [sp, #0x10]
+   0x7a13c2c: mov      x29, sp
+   0x7a13c30: mov      x19, x0
+   0x7a13c34: ldr      x0, [x0, #0x80]
+   0x7a13c38: adrp     x8, #0x97fd000
+   0x7a13c3c: add      x8, x8, #0x378
+IMMEDIATE_HINTS:
+   0x7a13b4c: mov      w10, #0x752a
+   0x7a13b54: mov      w8, #0xa
+   0x7a13b58: mov      w9, #0x72
+   0x7a13b5c: movk     w10, #0x6573, lsl #16
+   0x7a13b84: mov      w8, #-1
+>> 0x7a13bc8: mov      w0, #0xa8
+>> 0x7a13be8: mov      w8, #1
+   0x7a13c5c: tbz      w8, #0, #0x7a13c68
+   0x7a13c78: mov      w0, #1
+   0x7a13cb8: tbz      w8, #0, #0x7a13cc4
+   0x7a13cf4: mov      w8, #1
+   0x7a13d04: mov      w2, #0x24
+   0x7a13d30: tbz      w0, #0, #0x7a13db8
+   0x7a13d4c: mov      w8, #-1
+
+====================================================================================================
+TARGET direct_online_turn_mode
+string_vas=0xb43a92
+xref_count=1
+XREF[0] pc=0x7c0e444 function~=0x7c0dca0-0x7c0e430
+SAME_FUNCTION_STRINGS:
+  pc=0x7c0dd00 va=0xa2b729 basic::Mutex
+  pc=0x7c0dd24 va=0xa3e784 basic::RecursiveMutex
+MARKED_XREF_NEIGHBORHOOD:
+   0x7c0e3f4: blr      x8
+   0x7c0e3f8: mov      x0, x19
+   0x7c0e3fc: bl       #0x8b388f0
+   0x7c0e400: ldr      x8, [x26, #0x28]
+   0x7c0e404: ldur     x9, [x29, #-0x10]
+   0x7c0e408: cmp      x8, x9
+   0x7c0e40c: b.ne     #0x7c0e538
+   0x7c0e410: add      sp, sp, #0x4f0
+   0x7c0e414: ldp      x20, x19, [sp, #0x50]
+   0x7c0e418: ldp      x22, x21, [sp, #0x40]
+   0x7c0e41c: ldp      x24, x23, [sp, #0x30]
+   0x7c0e420: ldp      x26, x25, [sp, #0x20]
+>> 0x7c0e424: ldp      x28, x27, [sp, #0x10]
+>> 0x7c0e428: ldp      x29, x30, [sp], #0x60
+>> 0x7c0e42c: ret      
+>> 0x7c0e430: bl       #0x813fe80
+>> 0x7c0e434: bl       #0x814241c
+>> 0x7c0e438: and      w8, w0, #0xff
+>> 0x7c0e43c: cmp      w8, #0x1b
+>> 0x7c0e440: b.ne     #0x7c0e484
+>> 0x7c0e444: adrp     x0, #0xb43000
+>> 0x7c0e448: add      x0, x0, #0xa92
+>> 0x7c0e44c: mov      w1, #0x17
+>> 0x7c0e450: bl       #0x2f0eaf0
+>> 0x7c0e454: cmp      w0, #2
+>> 0x7c0e458: b.eq     #0x7c0e4d4
+>> 0x7c0e45c: cmp      w0, #1
+>> 0x7c0e460: b.eq     #0x7c0e500
+>> 0x7c0e464: cbnz     w0, #0x7c0e304
+   0x7c0e468: mov      w0, #0x2ce0
+   0x7c0e46c: bl       #0x8b35260
+   0x7c0e470: add      x1, sp, #0x10
+   0x7c0e474: mov      x2, sp
+   0x7c0e478: mov      x22, x0
+   0x7c0e47c: bl       #0x7c57148
+   0x7c0e480: b        #0x7c0e2ec
+   0x7c0e484: bl       #0x7d2bf4c
+   0x7c0e488: cbz      x0, #0x7c0e304
+   0x7c0e48c: ldr      x0, [x0, #0x50]
+   0x7c0e490: bl       #0x7d43a74
+   0x7c0e494: ldp      x8, x9, [x0]
+   0x7c0e498: cmp      x8, x9
+   0x7c0e49c: b.eq     #0x7c0e51c
+   0x7c0e4a0: adrp     x0, #0xa85000
+   0x7c0e4a4: add      x0, x0, #0x69
+   0x7c0e4a8: mov      w1, #9
+   0x7c0e4ac: bl       #0x2f0eaf0
+   0x7c0e4b0: cmp      w0, #3
+IMMEDIATE_HINTS:
+   0x7c0e358: mov      x0, #-1
+   0x7c0e384: mov      x0, #-1
+   0x7c0e3b0: mov      x0, #-1
+   0x7c0e3dc: mov      x0, #-1
+>> 0x7c0e43c: cmp      w8, #0x1b
+>> 0x7c0e44c: mov      w1, #0x17
+>> 0x7c0e454: cmp      w0, #2
+>> 0x7c0e45c: cmp      w0, #1
+   0x7c0e468: mov      w0, #0x2ce0
+   0x7c0e4a8: mov      w1, #9
+   0x7c0e4b0: cmp      w0, #3
+   0x7c0e4d4: mov      w0, #0xbc0
+   0x7c0e500: mov      w0, #0xef0
+   0x7c0e51c: mov      w0, #0xbe0
+   0x7c0e5ac: tst      w8, #1
+
+====================================================================================================
+TARGET LinkUpMode
+string_vas=0xb43a34
+xref_count=1
+XREF[0] pc=0x7c08db8 function~=0x7c088e4-0x7c09854
+SAME_FUNCTION_STRINGS:
+  pc=0x7c08a94 va=0xa5e930 Domain
+  pc=0x7c08af4 va=0xbdc775 SendOutHeaderOverheadLength
+  pc=0x7c08b28 va=0xa1346f RecvInHeaderOverheadLength
+  pc=0x7c08b58 va=0x9ed571 FinWaitTimeoutMs
+  pc=0x7c08b88 va=0xbef360 TimeWaitTimeoutMs
+  pc=0x7c08bbc va=0xb8f37b PingIntervalUs
+  pc=0x7c08bec va=0xb3065a MaxNumberOfPingRequest
+  pc=0x7c08c1c va=0xb43a1f PingRequestTimeoutUs
+  pc=0x7c08c4c va=0xbb6765 MaxPongQueueSize
+  pc=0x7c08c7c va=0xa25f17 Reordering
+  pc=0x7c08cac va=0xae3c7d RecentlyIntervalUs
+  pc=0x7c08d00 va=0xc02505 RttSummaryStatisticsWindowSize
+  pc=0x7c08d34 va=0xb297fc LinkMode
+  pc=0x7c08d60 va=0xaab79b LinkTableSize
+  pc=0x7c08d8c va=0xb8f38a LinkTimeoutUs
+  pc=0x7c08db8 va=0xb43a34 LinkUpMode
+  pc=0x7c08de4 va=0xa38772 KeyExchangeTimeoutUs
+  pc=0x7c08e10 va=0xb43a3f KeyExcahngeRetransmissionTimeoutUs
+  pc=0x7c08e3c va=0xbb6776 KeyExchangeEncryptionAlgorithm
+  pc=0x7c08e74 va=0xa97ebc KeyExchangeEncryptionKey
+  pc=0x7c09610 va=0xae3c90 SessionKeyEncryptionAlgorithm
+  pc=0x7c09640 va=0xa97ed5 SessionKeyEncryptionKeyLength
+MARKED_XREF_NEIGHBORHOOD:
+   0x7c08d68: add      x0, sp, #0x1d0
+   0x7c08d6c: add      x1, sp, #0x220
+   0x7c08d70: str      xzr, [sp, #0x220]
+   0x7c08d74: bl       #0x7d2aa38
+   0x7c08d78: tbz      w0, #0, #0x7c08d8c
+   0x7c08d7c: mov      w24, #1
+   0x7c08d80: ldr      x8, [sp, #0x220]
+   0x7c08d84: strb     w24, [sp, #0x108]
+   0x7c08d88: str      x8, [sp, #0x110]
+   0x7c08d8c: adrp     x2, #0xb8f000
+   0x7c08d90: add      x2, x2, #0x38a
+   0x7c08d94: add      x0, sp, #0x1d0
+>> 0x7c08d98: add      x1, sp, #0x220
+>> 0x7c08d9c: str      xzr, [sp, #0x220]
+>> 0x7c08da0: bl       #0x7d2aa38
+>> 0x7c08da4: tbz      w0, #0, #0x7c08db8
+>> 0x7c08da8: mov      w24, #1
+>> 0x7c08dac: ldr      x8, [sp, #0x220]
+>> 0x7c08db0: strb     w24, [sp, #0x118]
+>> 0x7c08db4: str      x8, [sp, #0x120]
+>> 0x7c08db8: adrp     x2, #0xb43000
+>> 0x7c08dbc: add      x2, x2, #0xa34
+>> 0x7c08dc0: add      x0, sp, #0x1d0
+>> 0x7c08dc4: add      x1, sp, #0x220
+>> 0x7c08dc8: str      wzr, [sp, #0x220]
+>> 0x7c08dcc: bl       #0x7d2a948
+>> 0x7c08dd0: tbz      w0, #0, #0x7c08de4
+>> 0x7c08dd4: mov      w24, #1
+>> 0x7c08dd8: ldr      w8, [sp, #0x220]
+   0x7c08ddc: strb     w24, [sp, #0x128]
+   0x7c08de0: str      w8, [sp, #0x12c]
+   0x7c08de4: adrp     x2, #0xa38000
+   0x7c08de8: add      x2, x2, #0x772
+   0x7c08dec: add      x0, sp, #0x1d0
+   0x7c08df0: add      x1, sp, #0x220
+   0x7c08df4: str      xzr, [sp, #0x220]
+   0x7c08df8: bl       #0x7d2aa38
+   0x7c08dfc: tbz      w0, #0, #0x7c08e10
+   0x7c08e00: mov      w24, #1
+   0x7c08e04: ldr      x8, [sp, #0x220]
+   0x7c08e08: strb     w24, [sp, #0x130]
+   0x7c08e0c: str      x8, [sp, #0x138]
+   0x7c08e10: adrp     x2, #0xb43000
+   0x7c08e14: add      x2, x2, #0xa3f
+   0x7c08e18: add      x0, sp, #0x1d0
+   0x7c08e1c: add      x1, sp, #0x220
+   0x7c08e20: str      xzr, [sp, #0x220]
+   0x7c08e24: bl       #0x7d2aa38
+IMMEDIATE_HINTS:
+   0x7c08cc4: tbz      w0, #0, #0x7c08cdc
+   0x7c08cc8: mov      w24, #1
+   0x7c08d20: tbz      w0, #0, #0x7c08d34
+   0x7c08d24: mov      w24, #1
+   0x7c08d4c: tbz      w0, #0, #0x7c08d60
+   0x7c08d50: mov      w24, #1
+   0x7c08d78: tbz      w0, #0, #0x7c08d8c
+   0x7c08d7c: mov      w24, #1
+>> 0x7c08da4: tbz      w0, #0, #0x7c08db8
+>> 0x7c08da8: mov      w24, #1
+>> 0x7c08dd0: tbz      w0, #0, #0x7c08de4
+>> 0x7c08dd4: mov      w24, #1
+   0x7c08dfc: tbz      w0, #0, #0x7c08e10
+   0x7c08e00: mov      w24, #1
+   0x7c08e28: tbz      w0, #0, #0x7c08e3c
+   0x7c08e2c: mov      w24, #1
+   0x7c08e54: tbz      w0, #0, #0x7c08e68
+   0x7c08e58: mov      w24, #1
+   0x7c08e8c: tbz      w0, #0, #0x7c09608
+   0x7c08f2c: tbz      w0, #0, #0x7c08f54
