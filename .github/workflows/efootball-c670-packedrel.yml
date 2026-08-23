@@ -81,22 +81,24 @@ jobs:
                       if b&0x40:result-=(1<<shift)
                       return result,pos
 
-          import struct
-          def unpack_android_rela(d):
-              # Android packed RELA (APS) or plain-after-magic (APA). Returns [(r_offset,type,r_addend)]
+          import struct,sys
+          def unpack_android_rela(d,want):
+              # Android packed RELA (APS) or plain-after-magic (APA).
+              # want(addend) -> bool ; keeps only matching entries
               res=[]
               if d[:4]==b'APA\x00':
                   for o in range(4,len(d)-23,24):
                       ro,ri,ra=struct.unpack_from('<QQq',d,o)
-                      res.append((ro,ri&0xffffffff,ra))
-                  return res
+                      if want(ra):res.append((ro,ri&0xffffffff,ra))
+                  return res,'APA'
               if not d[:3]==b'APS':
-                  return None
+                  return None,d[:4].decode('latin1')
               pos=4
               count,pos=sleb128(d,pos)
+              print(f'  packed count={count}',file=sys.stderr,flush=True)
               offset=0;info=0;addend=0
               G_OFFSET_DELTA=1;G_INFO=2;G_ADDEND=4
-              n=0
+              n=0;checked=0
               while n<count:
                   gsize,pos=sleb128(d,pos)
                   gflags,pos=sleb128(d,pos)
@@ -116,17 +118,24 @@ jobs:
                           info,pos=sleb128(d,pos)
                       if not (gflags & G_ADDEND):
                           addend+=sleb128(d,pos)[0]
-                      res.append((offset,info&0xffffffff,addend))
+                      checked+=1
+                      if want(addend):res.append((offset,info&0xffffffff,addend))
+                      if checked % 500000==0:
+                          print(f'  {checked}/{count} relocs',file=sys.stderr,flush=True)
                   n+=gsize
-              return res
+              print(f'  done {checked} relocs',file=sys.stderr,flush=True)
+              return res,'APS'
 
           entries=[]
           for d in android_rela+plain_rela:
-              r=unpack_android_rela(d)
+              print('unpacking reloc section...',file=sys.stderr,flush=True)
+              r,magic=unpack_android_rela(d,lambda ra: ra==TARGET or 0x7c0c000<=ra<0x7c0e000)
               if r is None:
-                  out.append(f'UNPACK_FAILED magic={d[:4]!r}')
+                  out.append(f'UNPACK_FAILED magic={magic!r}')
                   continue
+              out.append(f'reloc_section magic={magic} matching={len(r)}')
               entries.extend(r)
+          out.append(f'total_matching_relocations={len(entries)}')
           out.append(f'total_relocations_decoded={len(entries)}')
 
           slots=[(ro,rt) for ro,rt,ra in entries if ra==TARGET]
