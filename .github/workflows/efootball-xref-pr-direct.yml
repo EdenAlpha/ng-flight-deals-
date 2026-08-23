@@ -1,0 +1,92 @@
+name: eFootball direct xref inspection
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip python3 python3-pip file >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball arm64 binary
+        run: |
+          mkdir -p /tmp/ef/bundle /tmp/ef/native
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE="$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          test -f /tmp/ef/native/lib/arm64-v8a/libUE4.so
+          file /tmp/ef/native/lib/arm64-v8a/libUE4.so
+      - name: Exact string map and ARM64 xrefs
+        run: |
+          cat > /tmp/ef/x.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM,arm64
+          import struct,re
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); d=p.read_bytes()
+          terms=[
+            'P2P_ADHOC_WIFIDIRECTLAN','P2P_ADHOC_LAN','direct_online_turn_mode',
+            'LOCAL_GAMERELAY','CMD_SET_LOCAL_GAMERELAY_LIST','TaskEvCompeLocalGamerelay',
+            'CMD_CHANGE_GAMEPHASE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT','CMD_ADD_SCORE',
+            'MatchScoreChanged','m_homeScore','m_awayScore','GetGameScore','SetHomeScore','SetAwayScore',
+            'EPKR_GamePhase::GameplayFinished','EPKR_GamePhase::ResultPresentation',
+            'EMatchFlowTask::SendServerMatchEnd','MatchResultTimeUpDemo','Match/End/MatchEnd',
+            'ROOM_GAME_PHASE_END','NUM_GUESTS_END_MATCH','ADDED_TIME','m_isExtraTime',
+            'HOST_DIRECT','HOST_RELAY','PUNCHING_FINISHED','START_UDP_HOLE_PUNCHING',
+            'OnlineSystemMultiplaySessionStrategyP2pFullMeshWithTurn.cpp'
+          ]
+          with p.open('rb') as f:
+            e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr'])
+            loads=[(int(s['p_offset']),int(s['p_filesz']),int(s['p_vaddr'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          def ova(o):
+            for po,sz,va in loads:
+              if po<=o<po+sz:return va+o-po
+          inst=[]
+          for t in terms:
+            s=0
+            while True:
+              o=d.find(t.encode(),s)
+              if o<0:break
+              inst.append((t,o,ova(o)));s=o+1
+          labels={va:(t,o) for t,o,va in inst if va is not None}; pages={a&~0xfff for a in labels}
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM);md.detail=True
+          regs={}; refs=[]; n=0
+          for i in md.disasm(tb,tva):
+            n+=1
+            for r,(pg,k) in list(regs.items()):
+              if n-k>8:regs.pop(r,None)
+            ops=i.operands
+            if i.mnemonic=='adrp' and len(ops)>=2 and ops[0].type==arm64.ARM64_OP_REG and ops[1].type==arm64.ARM64_OP_IMM:
+              pg=int(ops[1].imm)
+              if pg in pages:regs[ops[0].reg]=(pg,n)
+            elif i.mnemonic=='add' and len(ops)>=3 and ops[1].type==arm64.ARM64_OP_REG and ops[2].type==arm64.ARM64_OP_IMM:
+              if ops[1].reg in regs:
+                a=regs[ops[1].reg][0]+int(ops[2].imm)
+                if a in labels:refs.append((i.address,a,'ADRP+ADD'))
+            elif i.mnemonic=='adr' and len(ops)>=2 and ops[1].type==arm64.ARM64_OP_IMM:
+              a=int(ops[1].imm)
+              if a in labels:refs.append((i.address,a,'ADR'))
+          print('=== TARGETS ===')
+          for t,o,va in inst:print(f'{t}\toff=0x{o:x}\tva=0x{va:x}')
+          print('\n=== DIRECT CODE XREFS ===')
+          by={}
+          for pc,a,k in refs:by.setdefault(a,[]).append((pc,k))
+          for a,(t,o) in labels.items():
+            rr=by.get(a,[]);print(f'{t}\tva=0x{a:x}\txrefs={len(rr)}\t'+','.join(f'0x{x:x}:{k}' for x,k in rr[:30]))
+          print('\n=== STRING NEIGHBORHOODS ===')
+          for t,o,va in inst:
+            print(f'\n--- {t} @ 0x{o:x} ---')
+            lo=max(0,o-700);hi=min(len(d),o+700)
+            for m in re.finditer(rb'[ -~]{4,}',d[lo:hi]):
+              print(f'0x{lo+m.start():x} '+m.group().decode('ascii','ignore'))
+          PY
+          python3 /tmp/ef/x.py
