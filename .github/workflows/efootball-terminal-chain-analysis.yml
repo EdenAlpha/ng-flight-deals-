@@ -1,0 +1,215 @@
+name: eFootball terminal transport and result-chain analysis
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip binutils file >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball native split
+        run: |
+          set -euxo pipefail
+          rm -rf /tmp/eft termchain-output
+          mkdir -p /tmp/eft/bundle /tmp/eft/native termchain-output
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/eft/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/eft/efootball.xapk -d /tmp/eft/bundle
+          APK="$(find /tmp/eft/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          test -n "$APK"
+          unzip -q "$APK" -d /tmp/eft/native
+          test -f /tmp/eft/native/lib/arm64-v8a/libUE4.so
+          test -f /tmp/eft/native/lib/arm64-v8a/libgadsme.so
+          sha256sum /tmp/eft/native/lib/arm64-v8a/libUE4.so /tmp/eft/native/lib/arm64-v8a/libgadsme.so > termchain-output/hashes.txt
+      - name: Analyze transport ownership and result command call graph
+        run: |
+          cat > /tmp/eft/analyze.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from elftools.dwarf.callframe import FDE
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM, arm64
+          import re, bisect, collections, struct
+
+          OUT=Path('termchain-output')
+          sizes={26,63,68,70,105,107}
+
+          def analyze_so(path, label):
+              raw=Path(path).read_bytes()
+              with open(path,'rb') as f:
+                  e=ELFFile(f)
+                  text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr'])
+                  ro=e.get_section_by_name('.rodata'); rv=int(ro['sh_addr']) if ro else 0; rb=ro.data() if ro else b''
+                  dyn=e.get_section_by_name('.dynsym')
+                  dynsyms=[]
+                  if dyn:
+                      for s in dyn.iter_symbols():
+                          if s.name: dynsyms.append((int(s['st_value']),s.name))
+                  # PLT import map
+                  plt=e.get_section_by_name('.plt'); rela=e.get_section_by_name('.rela.plt'); plt_names={}
+                  if plt is not None and rela is not None:
+                      symtab=e.get_section(rela['sh_link']); base=int(plt['sh_addr'])+32
+                      for i,r in enumerate(rela.iter_relocations()):
+                          plt_names[base+i*16]=symtab.get_symbol(r['r_info_sym']).name
+                  ranges=[]
+                  try:
+                      dwarf=e.get_dwarf_info()
+                      for x in dwarf.EH_CFI_entries():
+                          if isinstance(x,FDE):
+                              a=int(x['initial_location']); z=a+int(x['address_range'])
+                              if tva<=a<z<=tva+len(tb): ranges.append((a,z))
+                  except Exception: pass
+              ranges=sorted(set(ranges)); starts=[a for a,z in ranges]
+              def fr(pc):
+                  k=bisect.bisect_right(starts,pc)-1
+                  if k>=0 and ranges[k][0]<=pc<ranges[k][1]:return ranges[k]
+                  return (max(tva,pc-0x300),min(tva+len(tb),pc+0x500))
+              md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=True
+              strings={rv+m.start():m.group().decode('ascii','ignore') for m in re.finditer(rb'[ -~]{4,}',rb)}
+              keywords=re.compile(r'(dtls|ssl|tls|stun|turn|udp|socket|sendto|recvfrom|sendmsg|recvmsg|packet|ack|sequence|reliable|unreliable|fragment|cipher|encrypt|decrypt|peer|relay|p2p)',re.I)
+              keyword_strings=[(va,s) for va,s in strings.items() if keywords.search(s)]
+              # complete import inventory filtered to networking/crypto
+              imports=[name for va,name in dynsyms if keywords.search(name)]
+              (OUT/f'{label}_network_imports.txt').write_text('\n'.join(sorted(set(imports))))
+              (OUT/f'{label}_network_strings.txt').write_text('\n'.join(f'0x{va:x} {s}' for va,s in keyword_strings[:12000]))
+
+              # direct BL calls to PLT plus immediate constants in same function
+              funcs=collections.defaultdict(lambda:{'calls':[],'sizes':[]})
+              ins=list(md.disasm(tb,tva))
+              for I in ins:
+                  a,z=fr(I.address)
+                  key=(a,z)
+                  if I.mnemonic=='bl' and I.operands and I.operands[0].type==arm64.ARM64_OP_IMM:
+                      dst=int(I.operands[0].imm); nm=plt_names.get(dst,'')
+                      if nm and keywords.search(nm): funcs[key]['calls'].append((I.address,nm))
+                  if I.mnemonic in ('mov','cmp','subs','adds'):
+                      for op in I.operands:
+                          if op.type==arm64.ARM64_OP_IMM and int(op.imm) in sizes:
+                              funcs[key]['sizes'].append((I.address,int(op.imm),I.mnemonic,I.op_str))
+              rep=[]
+              for (a,z),d in funcs.items():
+                  if not d['calls'] and not d['sizes']: continue
+                  if not d['calls'] and len(d['sizes'])<2: continue
+                  rep.append(f'\nFUNCTION 0x{a:x}-0x{z:x}')
+                  for x,n in d['calls']:rep.append(f'  CALL 0x{x:x} {n}')
+                  for x,v,m,o in d['sizes']:rep.append(f'  SIZE 0x{x:x} {v} {m} {o}')
+                  lo=max(tva,a); hi=min(tva+len(tb),z)
+                  if hi-lo>0x2400: hi=min(hi,a+0x2400)
+                  # attach printable string refs via literal ADRP/ADD approximation
+                  regpg={}; refs=[]
+                  for I in md.disasm(tb[lo-tva:hi-tva],lo):
+                      ops=I.operands
+                      if I.mnemonic=='adrp' and len(ops)>=2 and ops[0].type==arm64.ARM64_OP_REG and ops[1].type==arm64.ARM64_OP_IMM:
+                          regpg[ops[0].reg]=(int(ops[1].imm),I.address)
+                      elif I.mnemonic=='add' and len(ops)>=3 and ops[1].type==arm64.ARM64_OP_REG and ops[2].type==arm64.ARM64_OP_IMM:
+                          b=regpg.get(ops[1].reg)
+                          if b and I.address-b[1]<=0x40:
+                              s=strings.get(b[0]+int(ops[2].imm))
+                              if s and keywords.search(s):refs.append((I.address,s))
+                  for x,s in refs[:60]:rep.append(f'  STR 0x{x:x} {s[:220]}')
+              (OUT/f'{label}_size_call_functions.txt').write_text('\n'.join(rep))
+              return dict(tb=tb,tva=tva,md=md,fr=fr,strings=strings,plt_names=plt_names,ins=ins,ranges=ranges)
+
+          g=analyze_so('/tmp/eft/native/lib/arm64-v8a/libgadsme.so','gadsme')
+          u=analyze_so('/tmp/eft/native/lib/arm64-v8a/libUE4.so','ue4')
+
+          # UE4 target-string xrefs and a direct call graph around result/end state.
+          tb=u['tb']; tva=u['tva']; md=u['md']; fr=u['fr']; strings=u['strings']; ins=u['ins']
+          targets=['CMD_SET_GAME_RESULT','CmdSetGameResult.php','CMD_GET_GAME_RESULT','CMD_CHANGE_GAMEPHASE','EMatchFlowTask::SendServerMatchEnd','GameplayFinished','ResultPresentation','ROOM_GAME_PHASE_END','HOME_SCORE','AWAY_SCORE','END_REASON','m_homeScore','m_awayScore','GetGameScore']
+          target_vas=collections.defaultdict(list)
+          for va,s in strings.items():
+              for t in targets:
+                  if t.lower() in s.lower(): target_vas[t].append(va)
+          pages={va&~0xfff for vv in target_vas.values() for va in vv}
+          # ADRP+ADD refs for exact/containing string VAs
+          refs=collections.defaultdict(list)
+          regpg={}
+          for I in ins:
+              ops=I.operands
+              if I.mnemonic=='adrp' and len(ops)>=2 and ops[0].type==arm64.ARM64_OP_REG and ops[1].type==arm64.ARM64_OP_IMM:
+                  regpg[ops[0].reg]=(int(ops[1].imm),I.address)
+              elif I.mnemonic=='add' and len(ops)>=3 and ops[1].type==arm64.ARM64_OP_REG and ops[2].type==arm64.ARM64_OP_IMM:
+                  b=regpg.get(ops[1].reg)
+                  if not b or I.address-b[1]>0x40: continue
+                  addr=b[0]+int(ops[2].imm)
+                  for t,vv in target_vas.items():
+                      if addr in vv: refs[t].append(I.address)
+          # map function start -> labels
+          flabels=collections.defaultdict(set)
+          for t,pcs in refs.items():
+              for pc in pcs: flabels[fr(pc)].add(t)
+          # build direct internal BL caller map
+          callers=collections.defaultdict(list)
+          for I in ins:
+              if I.mnemonic=='bl' and I.operands and I.operands[0].type==arm64.ARM64_OP_IMM:
+                  dst=int(I.operands[0].imm)
+                  if tva<=dst<tva+len(tb): callers[dst].append(I.address)
+          rep=[]
+          for f,labels in sorted(flabels.items()):
+              a,z=f; rep.append(f'\nTARGET_FUNCTION 0x{a:x}-0x{z:x} labels={sorted(labels)}')
+              # exact callers to function start; include caller labels and nearby target strings
+              lvl=[a]; seen={a}
+              for depth in range(3):
+                  nxt=[]; rep.append(f'  DEPTH {depth+1}')
+                  for dst in lvl:
+                      for cpc in callers.get(dst,[])[:100]:
+                          cf=fr(cpc); ca,cz=cf
+                          rep.append(f'    caller_pc=0x{cpc:x} caller_func=0x{ca:x}-0x{cz:x} labels={sorted(flabels.get(cf,set()))}')
+                          if ca not in seen: seen.add(ca); nxt.append(ca)
+                  lvl=nxt
+              # calls made by target function
+              rep.append('  CALLEES:')
+              for I in md.disasm(tb[a-tva:min(z-tva,a-tva+0x6000)],a):
+                  if I.mnemonic=='bl' and I.operands and I.operands[0].type==arm64.ARM64_OP_IMM:
+                      rep.append(f'    0x{I.address:x} -> 0x{int(I.operands[0].imm):x}')
+          (OUT/'ue4_result_end_callgraph.txt').write_text('\n'.join(rep))
+
+          # Find functions that mention BOTH result command material and end-state material.
+          families={'result':set(),'end':set(),'score':set()}
+          for f,labs in flabels.items():
+              for l in labs:
+                  q=l.lower()
+                  if 'set_game_result' in q or 'setgameresult' in q:families['result'].add(f)
+                  if 'sendservermatchend' in q or 'gameplayfinished' in q or 'resultpresentation' in q or 'room_game_phase_end' in q:families['end'].add(f)
+                  if 'score' in q:families['score'].add(f)
+          summ=['RESULT_FUNCS '+repr(sorted(families['result'])),'END_FUNCS '+repr(sorted(families['end'])),'SCORE_FUNCS '+repr(sorted(families['score']))]
+          # test caller intersections up to 4 hops
+          def ancestors(fs,depth=4):
+              cur={a for a,z in fs}; allx=set(cur)
+              for _ in range(depth):
+                  nxt=set()
+                  for d in cur:
+                      for pc in callers.get(d,[]):nxt.add(fr(pc)[0])
+                  nxt-=allx; allx|=nxt; cur=nxt
+              return allx
+          ra=ancestors(families['result']); ea=ancestors(families['end'])
+          inter=sorted(ra&ea)
+          summ.append('COMMON_ANCESTORS_UP_TO_4='+','.join(hex(x) for x in inter[:200]))
+          (OUT/'summary.txt').write_text('\n'.join(summ))
+          PY
+          python3 /tmp/eft/analyze.py
+          echo '=== SUMMARY ==='
+          cat termchain-output/summary.txt
+          echo '=== GADSME IMPORTS ==='
+          cat termchain-output/gadsme_network_imports.txt | head -200
+          echo '=== GADSME SIZE/CALL ==='
+          sed -n '1,500p' termchain-output/gadsme_size_call_functions.txt
+      - name: Commit textual findings
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add termchain-output
+          git commit -m 'Add eFootball terminal-chain findings' || exit 0
+          git push origin HEAD:efootball-apk-analysis-2026-08-23
