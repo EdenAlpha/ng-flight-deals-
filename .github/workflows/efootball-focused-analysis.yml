@@ -1,0 +1,109 @@
+name: eFootball focused UE4 analysis
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  focused:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+
+      - name: Download and extract current eFootball native split
+        run: |
+          set -euxo pipefail
+          rm -rf focus-work focused-output
+          mkdir -p focus-work/bundle focus-work/apks focus-work/native focused-output
+          curl -L --fail --retry 5 --retry-delay 3 -A 'Mozilla/5.0' -o focus-work/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q focus-work/efootball.xapk -d focus-work/bundle
+          find focus-work/bundle -type f -name '*.apk' -exec cp '{}' focus-work/apks/ \;
+          ARM="$(find focus-work/apks -type f -name '*arm64*apk' -o -name 'config.arm64_v8a.apk' | head -n1)"
+          test -n "$ARM"
+          unzip -q "$ARM" -d focus-work/native
+          UE4="$(find focus-work/native -type f -name 'libUE4.so' | head -n1)"
+          test -n "$UE4"
+          cp "$UE4" focus-work/libUE4.so
+          sha256sum focus-work/libUE4.so > focused-output/libUE4_sha256.txt
+          file focus-work/libUE4.so > focused-output/libUE4_file.txt
+          readelf -h focus-work/libUE4.so > focused-output/libUE4_elf_header.txt
+          readelf -S focus-work/libUE4.so > focused-output/libUE4_sections.txt
+          readelf -d focus-work/libUE4.so > focused-output/libUE4_dynamic.txt
+
+      - name: Extract exact strings with file offsets
+        run: |
+          set -euxo pipefail
+          strings -a -t x -n 4 focus-work/libUE4.so > focus-work/ue4_strings_offsets.txt
+          grep -Ei '(^|[^[:alnum:]_])(stun|turn|dtls|ice|p2p|peer[- _]?to[- _]?peer|relay|candidate|xor[- _]?mapped|mapped[- _]?address|message[- _]?integrity|fingerprint|binding request|binding response)([^[:alnum:]_]|$)' focus-work/ue4_strings_offsets.txt > focused-output/network_protocol_strings.txt || true
+          grep -Ei '(turn\.konami|googleusercontent|stun\.|stun:|turn:|dtls|xor-mapped|mapped-address|message-integrity|change-request|response-port|ice candidate|candidate pair|relay server|relay address)' focus-work/ue4_strings_offsets.txt > focused-output/network_high_precision.txt || true
+          grep -Ei '(half[ _-]?time|full[ _-]?time|final[ _-]?score|match[ _-]?result|result[ _-]?match|winner|loser|victory|defeat|draw|scoreboard|match[ _-]?clock|game[ _-]?clock|stoppage|added[ _-]?time|extra[ _-]?time|penalty shoot|match end|end match|match finished|game finished|final whistle)' focus-work/ue4_strings_offsets.txt > focused-output/match_state_strings.txt || true
+          grep -Ei '(OnlineSubsystem|NetDriver|IpNetDriver|UNetConnection|SocketSubsystem|FSocket|FUdp|UdpSocket|Datagram|sendto|recvfrom|BSDIPv|NetworkFailure|ConnectionTimeout|PacketHandler|ReliabilityHandler|StatelessConnect)' focus-work/ue4_strings_offsets.txt > focused-output/unreal_network_strings.txt || true
+
+      - name: Symbol-level focused inventory
+        run: |
+          set -euxo pipefail
+          readelf -Ws focus-work/libUE4.so | c++filt > focus-work/ue4_symbols_demangled.txt || true
+          grep -Ei '(stun|turn|dtls|ice|p2p|relay|candidate|OnlineSubsystem|NetDriver|IpNetDriver|NetConnection|SocketSubsystem|Udp|Datagram|MatchResult|HalfTime|FullTime|Score|Winner|Victory|Defeat)' focus-work/ue4_symbols_demangled.txt > focused-output/focused_symbols.txt || true
+
+      - name: Binary-context extraction around exact clues
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('focus-work/libUE4.so'); data=p.read_bytes()
+          terms=[
+            b'STUN',b'Stun',b'stun',b'TURN',b'Turn',b'turn',b'DTLS',b'dtls',
+            b'XOR-MAPPED-ADDRESS',b'MAPPED-ADDRESS',b'MESSAGE-INTEGRITY',b'FINGERPRINT',
+            b'P2P',b'PeerToPeer',b'Relay',b'relay',b'Candidate',b'candidate',
+            b'HalfTime',b'Halftime',b'HALFTIME',b'FullTime',b'FULLTIME',b'Full Time',
+            b'MatchResult',b'Match Result',b'FinalScore',b'Final Score',b'Scoreboard',
+            b'Winner',b'Victory',b'Defeat',b'Stoppage',b'AddedTime',b'ExtraTime'
+          ]
+          out=[]; seen=set()
+          for t in terms:
+              start=0
+              while True:
+                  i=data.find(t,start)
+                  if i<0: break
+                  start=i+1
+                  key=(t,i)
+                  if key in seen: continue
+                  seen.add(key)
+                  lo=max(0,i-240); hi=min(len(data),i+len(t)+360)
+                  raw=data[lo:hi]
+                  text=''.join(chr(b) if 32<=b<127 else ' ' for b in raw)
+                  text=re.sub(r' +',' ',text)
+                  out.append(f'OFFSET=0x{i:x} TERM={t.decode(errors="replace")}\nCONTEXT={text}\n')
+                  if len(out)>12000: break
+              if len(out)>12000: break
+          Path('focused-output/binary_context.txt').write_text('\n'.join(out),errors='ignore')
+          PY
+
+      - name: Summarize focused findings
+        run: |
+          {
+            echo '# eFootball 11.0.1 focused UE4 static analysis'; date -u
+            echo; cat focused-output/libUE4_file.txt; cat focused-output/libUE4_sha256.txt
+            echo; echo '## Exact/high-precision networking strings'; cat focused-output/network_high_precision.txt
+            echo; echo '## Broader protocol strings'; sed -n '1,1200p' focused-output/network_protocol_strings.txt
+            echo; echo '## Match state / score / clock strings'; sed -n '1,2000p' focused-output/match_state_strings.txt
+            echo; echo '## Focused symbols'; sed -n '1,2000p' focused-output/focused_symbols.txt
+            echo; echo '## Unreal networking strings'; sed -n '1,2000p' focused-output/unreal_network_strings.txt
+            echo; echo '## Binary contexts'; sed -n '1,5000p' focused-output/binary_context.txt
+          } > focused-output/focused_report.md
+
+      - name: Commit focused textual findings
+        run: |
+          set -euxo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add focused-output
+          git commit -m 'Add focused eFootball UE4 analysis' || exit 0
+          git push origin HEAD:efootball-apk-analysis-2026-08-23
