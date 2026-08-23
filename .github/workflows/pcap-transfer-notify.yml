@@ -22,5 +22,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: 772,
-              body: 'Automated PCAP transfer mailbox ping from GitHub Actions.'
+              body: '@EdenAlpha automated PCAP transfer mailbox ping from GitHub Actions. This mention is only to establish the GitHub reply-by-email attachment path.'
             })
