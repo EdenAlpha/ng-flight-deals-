@@ -1,0 +1,234 @@
+name: eFootball APK surgical analysis
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install static-analysis tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y unzip zip binutils file ripgrep python3 python3-pip openjdk-17-jre-headless jq libarchive-tools
+          curl -L --retry 3 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.5/jadx-1.5.5.zip
+          mkdir -p /opt/jadx
+          unzip -q /tmp/jadx.zip -d /opt/jadx
+          echo /opt/jadx/bin >> "$GITHUB_PATH"
+          python3 -m pip install --break-system-packages lief==0.17.0 androguard==4.1.3
+
+      - name: Download current eFootball package
+        run: |
+          set -euxo pipefail
+          mkdir -p work/download
+          curl -L --fail --retry 5 --retry-delay 3 \
+            -A 'Mozilla/5.0' \
+            -o work/download/efootball.xapk \
+            'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          ls -lh work/download/efootball.xapk
+          file work/download/efootball.xapk
+
+      - name: Extract package bundle
+        run: |
+          set -euxo pipefail
+          mkdir -p work/bundle work/apks work/unpacked work/jadx report hits/native
+          unzip -q work/download/efootball.xapk -d work/bundle
+          find work/bundle -type f -name '*.apk' -exec cp '{}' work/apks/ \;
+          echo '=== XAPK top-level ==='
+          find work/bundle -maxdepth 2 -type f -printf '%p %s bytes\n' | sort -k2 -nr | head -100
+          echo '=== APK splits ==='
+          find work/apks -type f -name '*.apk' -printf '%f %s bytes\n' | sort
+          test -n "$(find work/apks -type f -name '*.apk' -print -quit)"
+
+      - name: Verify package identity and signatures
+        run: |
+          set -euxo pipefail
+          {
+            echo '# eFootball 11.0.1 surgical static analysis'
+            echo
+            date -u
+            echo
+            echo '## Bundle inventory'
+            find work/apks -type f -name '*.apk' -printf '%f %s bytes\n' | sort
+            echo
+            echo '## SHA-256'
+            sha256sum work/apks/*.apk
+            echo
+            echo '## Certificates'
+            for a in work/apks/*.apk; do
+              echo "### $a"
+              keytool -printcert -jarfile "$a" 2>&1 | sed -n '1,45p' || true
+            done
+          } > report/report.md
+
+          python3 - <<'PY'
+          from pathlib import Path
+          from androguard.core.apk import APK
+          rows=[]
+          for p in sorted(Path('work/apks').glob('*.apk')):
+              try:
+                  a=APK(str(p))
+                  rows.append(f'{p.name}: package={a.get_package()} versionName={a.get_androidversion_name()} versionCode={a.get_androidversion_code()}')
+                  rows.append('  permissions=' + ', '.join(sorted(a.get_permissions())))
+                  rows.append('  activities=' + ', '.join(sorted(a.get_activities())))
+                  rows.append('  services=' + ', '.join(sorted(a.get_services())))
+              except Exception as e:
+                  rows.append(f'{p.name}: parse_error={e}')
+          Path('hits/android_inventory.txt').write_text('\n'.join(rows), errors='ignore')
+          PY
+          cat hits/android_inventory.txt >> report/report.md
+
+      - name: Decompile bytecode/resources with JADX
+        run: |
+          set -euxo pipefail
+          mapfile -t APKS < <(find work/apks -type f -name '*.apk' | sort)
+          jadx --no-debug-info --show-bad-code --deobf -j 4 -d work/jadx "${APKS[@]}" 2>&1 | tee hits/jadx.log || true
+          echo "JADX output files: $(find work/jadx -type f | wc -l)"
+
+      - name: Unpack every APK and inventory binaries
+        run: |
+          set -euxo pipefail
+          n=0
+          for a in work/apks/*.apk; do
+            n=$((n+1))
+            d="work/unpacked/apk$n"
+            mkdir -p "$d"
+            unzip -q -o "$a" -d "$d" || true
+          done
+          find work/unpacked -type f -printf '%p %s\n' | sort -k2 -nr | head -300 > hits/largest_files.txt
+          find work/unpacked -type f -name '*.so' -printf '%p %s\n' | sort -k2 -nr > hits/native_libraries.txt
+
+      - name: Native ELF and symbol analysis
+        run: |
+          set -euxo pipefail
+          find work/unpacked -type f -name '*.so' -print0 | while IFS= read -r -d '' so; do
+            key="$(echo "$so" | sed 's#[/ ]#_#g')"
+            {
+              echo "FILE: $so"
+              file "$so"
+              echo '--- SHA256 ---'
+              sha256sum "$so"
+              echo '--- ELF HEADER ---'
+              readelf -h "$so" 2>/dev/null || true
+              echo '--- DYNAMIC LIBS ---'
+              readelf -d "$so" 2>/dev/null | grep -E 'NEEDED|SONAME|RPATH|RUNPATH' || true
+              echo '--- NETWORK / CRYPTO / MATCH SYMBOLS ---'
+              readelf -Ws "$so" 2>/dev/null | grep -Ei 'stun|turn|ice|dtls|ssl|tls|udp|socket|sendto|recvfrom|connect|bind|protobuf|flatbuffer|score|match|result|winner|half.?time|full.?time|clock' | head -1000 || true
+            } > "hits/native/${key}.elf.txt"
+            strings -a -n 5 "$so" > "hits/native/${key}.strings.txt" || true
+          done
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import lief
+          rows=[]
+          for p in Path('work/unpacked').rglob('*.so'):
+              try:
+                  b=lief.parse(str(p))
+                  rows.append(f'{p} size={p.stat().st_size} machine={b.header.machine_type} entry={hex(b.entrypoint)}')
+                  rows.append('  libs=' + ', '.join(b.libraries))
+                  ex=[s.name for s in b.exported_symbols if s.name]
+                  rows.append('  exports=' + ', '.join(ex[:250]))
+              except Exception as e:
+                  rows.append(f'{p}: LIEF error {e}')
+          Path('hits/lief_native_summary.txt').write_text('\n'.join(rows), errors='ignore')
+          PY
+
+      - name: Deep search for networking, ICE, relay, score and match-state clues
+        run: |
+          set -euxo pipefail
+          TERMS='stun|turn\.konami|turn|ice|relay|dtls|boringssl|openssl|xor.?mapped|mapped.?address|message.?integrity|fingerprint|change.?request|response.?port|bc\.googleusercontent|googleusercontent|udp|datagram|socket|peer.?to.?peer|p2p|friend.?match|match.?result|result.?match|final.?score|score|winner|loser|victory|defeat|draw|half.?time|full.?time|extra.?time|added.?time|stoppage|abbrev|abbreviation|short.?name|team.?code|match.?clock|game.?clock|pause|resume|screencap|surfaceflinger'
+          rg -n -i --hidden --glob '!*.png' --glob '!*.jpg' --glob '!*.webp' --glob '!*.ttf' --glob '!*.otf' --glob '!*.so' "$TERMS" work/jadx > hits/jadx_keyword_hits.txt || true
+          cat hits/native/*.strings.txt 2>/dev/null | grep -Ein "$TERMS" | head -40000 > hits/native_keyword_hits.txt || true
+          find work/unpacked -type f \( -name '*.xml' -o -name '*.json' -o -name '*.txt' -o -name '*.properties' -o -name '*.csv' \) -print0 | xargs -0 grep -Ein "$TERMS" 2>/dev/null | head -40000 > hits/resource_keyword_hits.txt || true
+
+      - name: Endpoint and protocol vocabulary extraction
+        run: |
+          set -euxo pipefail
+          cat hits/native/*.strings.txt 2>/dev/null > /tmp/native_strings.txt || true
+          {
+            rg -o -i '(https?://[^ "<>]+|[a-z0-9._-]+\.(konami\.com|googleusercontent\.com|googleapis\.com|gstatic\.com))' work/jadx /tmp/native_strings.txt 2>/dev/null || true
+            grep -Eio '([a-z0-9-]+\.)+(konami\.com|googleusercontent\.com|googleapis\.com|gstatic\.com)' /tmp/native_strings.txt || true
+          } | sort -u > hits/endpoints.txt
+
+      - name: Probe raw binaries for connectivity-check message constants
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          pats={
+            '080A_be':bytes.fromhex('080a'),'090A_be':bytes.fromhex('090a'),
+            '080B_be':bytes.fromhex('080b'),'090B_be':bytes.fromhex('090b'),
+            '080C_be':bytes.fromhex('080c'),'090C_be':bytes.fromhex('090c'),
+            '080A_le':bytes.fromhex('0a08'),'090A_le':bytes.fromhex('0a09'),
+            '080B_le':bytes.fromhex('0b08'),'090B_le':bytes.fromhex('0b09'),
+            '080C_le':bytes.fromhex('0c08'),'090C_le':bytes.fromhex('0c09'),
+          }
+          lines=[]
+          for p in Path('work/unpacked').rglob('*'):
+              if not p.is_file() or p.stat().st_size > 650_000_000: continue
+              if p.suffix not in {'.so','.dex','.bin','.dat','.pak'}: continue
+              try: data=p.read_bytes()
+              except: continue
+              counts={k:data.count(v) for k,v in pats.items()}
+              if any(counts.values()):
+                  lines.append(f'{p} size={len(data)} ' + ' '.join(f'{k}={v}' for k,v in counts.items()))
+          Path('hits/connectivity_constant_counts.txt').write_text('\n'.join(lines))
+          PY
+
+      - name: Build compact report
+        run: |
+          set -euxo pipefail
+          {
+            echo
+            echo '## Largest files'
+            sed -n '1,150p' hits/largest_files.txt
+            echo
+            echo '## Native libraries'
+            cat hits/native_libraries.txt
+            echo
+            echo '## Native LIEF summary'
+            cat hits/lief_native_summary.txt
+            echo
+            echo '## Endpoint inventory'
+            sed -n '1,2000p' hits/endpoints.txt
+            echo
+            echo '## Keyword hit counts'
+            wc -l hits/jadx_keyword_hits.txt hits/native_keyword_hits.txt hits/resource_keyword_hits.txt
+            echo
+            echo '## High-value JADX hits'
+            sed -n '1,1200p' hits/jadx_keyword_hits.txt
+            echo
+            echo '## High-value native string hits'
+            sed -n '1,2500p' hits/native_keyword_hits.txt
+            echo
+            echo '## Resource hits'
+            sed -n '1,1200p' hits/resource_keyword_hits.txt
+            echo
+            echo '## 080A/080B/080C-family raw binary occurrence counts'
+            cat hits/connectivity_constant_counts.txt
+            echo
+            echo '## JADX diagnostic tail'
+            tail -200 hits/jadx.log
+          } >> report/report.md
+          echo '===== BEGIN EFOOTBALL ANALYSIS REPORT ====='
+          cat report/report.md
+          echo '===== END EFOOTBALL ANALYSIS REPORT ====='
+
+      - name: Upload analysis outputs only
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-11.0.1-static-analysis
+          path: |
+            report/
+            hits/
+          retention-days: 7
