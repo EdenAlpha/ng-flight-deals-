@@ -37,34 +37,6 @@
 
 # ══════════════════════════════════════════════════════════
 # PRIME SERVER — app_process entry points
-#
-# SHIZUKU DOES THIS (proguard-rules.pro):
-#
-#   # Entrance of Shizuku service
-#   -keep class rikka.shizuku.server.ShizukuService {
-#       public static void main(java.lang.String[]);
-#   }
-#
-#   # Entrance of user service starter
-#   -keep class moe.shizuku.starter.ServiceStarter {
-#       public static void main(java.lang.String[]);
-#   }
-#
-# WHY THIS IS MANDATORY:
-#   libpeerlinkstarter.so launches PrimeServer with:
-#     app_process ... com.peerlink.app.godmode.PrimeServerMain
-#   app_process finds the class by its FULL ORIGINAL NAME from the dex.
-#   Your -repackageclasses '' and -flattenpackagehierarchy '' move ALL
-#   classes to the default package with single-letter names in release builds.
-#   PrimeServerMain becomes "a" or "b" — app_process looks for
-#   "com.peerlink.app.godmode.PrimeServerMain", finds nothing, crashes.
-#
-#   Additionally, main(String[]) is never called from within your Kotlin app —
-#   only by app_process at runtime. Without an explicit keep rule,
-#   -assumenosideeffects and dead code elimination strip it entirely.
-#
-#   PrimeServer.main() is the fallback entry point (PrimeServer::class.java.name
-#   is referenced in older code). Keep it too.
 # ══════════════════════════════════════════════════════════
 
 # Entry point called by app_process to start PrimeServer — MUST keep class name
@@ -92,6 +64,13 @@
 
 # ── NSD CALLBACK (Android calls this interface by reflection) ──
 -keep class com.peerlink.app.discovery.NsdDiscovery$NsdCallback { *; }
+
+# ── NATIVE BACKEND / JNI CALLBACKS ──
+# C++ calls NativeCallbacks by literal GetMethodID names. Release R8 must not
+# rename or remove these methods, and the outer class name is part of exported
+# JNI symbol names (Java_com_peerlink_app_tunnel_NativePeerLinkBackend_*).
+-keep class com.peerlink.app.tunnel.NativePeerLinkBackend { *; }
+-keep class com.peerlink.app.tunnel.NativePeerLinkBackend$NativeCallbacks { *; }
 
 
 # ══════════════════════════════════════════════════════════
