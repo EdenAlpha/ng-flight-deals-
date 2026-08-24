@@ -1,0 +1,144 @@
+name: eFootball crypto fn identification
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch: {}
+
+concurrency:
+  group: efootball-cryptofn-id-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  identify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball arm64 binary (runner-side)
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+      - name: Identify crypto functions and caller contexts
+        run: |
+          cat > /tmp/ef/cryptofn_id.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re,bisect
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f)
+              text=e.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          hexmem=re.compile(r'\[[wx][0-9]+, #0x([0-9a-f]+)\]')
+          starts=[]
+          for addr,size,mnem,ops in md.disasm_lite(tb,tva):
+              if mnem=='stp' and 'x29, x30' in ops and '[sp' in ops:
+                  starts.append(addr)
+          starts=sorted(set(starts))
+          def fstart(a):
+              j=bisect.bisect_right(starts,a)-1
+              return starts[j] if j>=0 else tva
+          def fend(fs):
+              j=bisect.bisect_right(starts,fs)
+              return starts[j] if j<len(starts) else tend
+          def vaoff(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va,maxlen=140):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+maxlen].split(b'\0',1)[0]
+              if len(b)<4:return None
+              if sum(32<=x<127 for x in b)/len(b)<.92:return None
+              return b.decode('ascii','replace')
+
+          def dump_fn(fs,fe,out,prefix=''):
+              ann={}
+              bl=list(md.disasm(tb[fs-tva:min(fe,tend)-tva],fs))
+              for i,z in enumerate(bl):
+                  if z.mnemonic!='adrp':continue
+                  m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                  if not m:continue
+                  reg=m.group(1);page=int(m.group(2),16)
+                  for q in bl[i+1:i+10]:
+                      mm=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                      if mm:
+                          va=page+int(mm.group(1),16);s=cstr(va)
+                          if s:ann[q.address]=f' ; "{s}"'
+                          break
+              out.append(f'{prefix}--- FN 0x{fs:x}-0x{min(fe,tend):x} ({len(bl)} ins) ---')
+              for z in bl:
+                  keep = z.mnemonic in ('cmp','cbz','cbnz','tbz','tbnz','blr','br','ret','adrp') or z.mnemonic.startswith('bl ') or z.address in ann
+                  h=hexmem.search(z.op_str)
+                  if h and int(h.group(1),16) in (0x80,0x88,0xa0,0xa8):keep=True
+                  if keep:
+                      extra=ann.get(z.address,'')
+                      out.append(f'{prefix}0x{z.address:x}: {z.mnemonic:8} {z.op_str}{extra}')
+
+          out=[]
+          TARGETS=[0x813fe80,0x814241c,0x814416c,0x81441f0,0x8145274,0x8142ee0,0x81432d0,
+                   0x814a04c,0x8149480,0x8149578,0x8149434,0x81279ec,0x7fd66d0,0x7f50c64]
+          for t in TARGETS:
+              fs=fstart(t)
+              fe=min(fend(fs),fs+0x400)
+              dump_fn(fs,fe,out,f'\n===== CRYPTO TARGET ')
+              out[-len(out):]  # noop
+
+          # rewrite: simpler - redo cleanly
+          out=[]
+          for t in TARGETS:
+              fs=fstart(t); fe=min(fend(fs),fs+0x500)
+              out.append(f'\n########## TARGET 0x{t:x} (fn start 0x{fs:x}) ##########')
+              dump_fn(fs,fe,out)
+
+          # caller context: +/- 30 instructions around selected call sites of interest
+          SITES={0x7d443e8:[0x814a04c,0x8149480],0x7dbc430:[0x8149480],
+                 0x7d27054:[0x8142ee0,0x81432d0,0x81441f0],0x7d27568:[0x8145274]}
+          for caller,ts in SITES.items():
+              fs=fstart(caller); fe=min(fend(fs),caller+0x800)
+              bl=list(md.disasm(tb[fs-tva:fe-tva],fs))
+              idx={z.address:i for i,z in enumerate(bl)}
+              out.append(f'\n@@@@@@@@@@ CALLER CONTEXT 0x{caller:x} @@@@@@@@@@')
+              shown=set()
+              for z in bl:
+                  if z.mnemonic=='bl' and z.op_str.startswith('#'):
+                      t=int(z.op_str[1:],16)
+                      if t in ts and z.address not in shown:
+                          lo=max(0,idx[z.address]-25);hi=min(len(bl),idx[z.address]+15)
+                          for q in bl[lo:hi]:
+                              out.append(f'0x{q.address:x}: {q.mnemonic:8} {q.op_str}')
+                          out.append('   ...')
+                          shown.add(z.address)
+
+          txt='\n'.join(out)
+          Path('/tmp/out/cryptofn_id.txt').write_text(txt)
+          print(f'report bytes={len(txt)}',flush=True)
+          PY
+          python3 /tmp/ef/cryptofn_id.py
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-cryptofn-id
+          path: /tmp/out/
+          retention-days: 7
