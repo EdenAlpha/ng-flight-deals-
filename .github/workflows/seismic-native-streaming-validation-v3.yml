@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'research/master_portfolio_v2_all_engine_bakeoff_streaming.py'
+      - 'research/compression_phenotype_streaming_native_judge_v3.py'
       - '.github/workflows/seismic-native-streaming-validation-v3.yml'
 
 permissions:
