@@ -1,0 +1,107 @@
+name: Seismic native streaming validation v3
+
+on:
+  pull_request:
+    paths:
+      - 'research/master_portfolio_v2_all_engine_bakeoff_streaming.py'
+      - '.github/workflows/seismic-native-streaming-validation-v3.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  FROZEN_PLAN_RUN: '31835067295'
+  PRIOR_BLIND_RUN: '32606727470'
+  ALL_ENGINE_NATIVE_STREAM_CHUNK_BYTES: '268435456'
+
+jobs:
+  native-stream:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        dataset:
+          - land_teapot_dome_3d
+          - marine_parihaka_3d
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install --quiet numpy zstandard pybind11 boto3 h5py 's3fs<2027' segyio pysz obspy brotli requests
+      - name: Compile bit-exact backend
+        run: |
+          EXT=$(python3-config --extension-suffix)
+          c++ -O3 -march=x86-64 -shared -std=c++17 -fPIC $(python -m pybind11 --includes) research/general_seismic_fast_zsm.cpp -o research/general_seismic_fast_zsm${EXT}
+      - uses: actions/download-artifact@v4
+        with:
+          name: final-frozen-plan
+          path: frozen_plan
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: ${{ env.FROZEN_PLAN_RUN }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: final-global-epsilon
+          path: epsilon
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: ${{ env.FROZEN_PLAN_RUN }}
+          github-token: ${{ github.token }}
+      - name: Run all recovered native families as bounded trace streams
+        env: {PYTHONPATH: research}
+        run: |
+          python research/master_portfolio_v2_all_engine_bakeoff_streaming.py native-only \
+            --manifest frozen_plan/general_seismic_v1_effective_manifest.json \
+            --preflight frozen_plan/general_seismic_v1_preflight.json \
+            --epsilon-map epsilon/general_seismic_global_epsilon.json \
+            --dataset '${{ matrix.dataset }}' \
+            --out 'native_stream_${{ matrix.dataset }}.json'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-stream-${{ matrix.dataset }}
+          path: native_stream_${{ matrix.dataset }}.json
+          if-no-files-found: warn
+          retention-days: 60
+
+  judge:
+    needs: native-stream
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-stream-*
+          path: streaming
+      - uses: actions/download-artifact@v4
+        with:
+          name: blind-all-engine-bakeoff-v2
+          path: prior_bake
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: ${{ env.PRIOR_BLIND_RUN }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: blind-family-predictions-v2
+          path: predictions
+          repository: EdenAlpha/ng-flight-deals-
+          run-id: ${{ env.PRIOR_BLIND_RUN }}
+          github-token: ${{ github.token }}
+      - name: Compare streaming native bytes against already-matched SZ3 bytes
+        env: {PYTHONPATH: research}
+        run: |
+          python research/compression_phenotype_streaming_native_judge_v3.py \
+            --predictions predictions/blind_family_predictions_v2.json \
+            --bakeoff prior_bake/blind_all_engine_bakeoff_v2.json \
+            --streaming streaming \
+            --out streaming_native_validation_v3.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming-native-validation-v3
+          path: streaming_native_validation_v3.json
+          retention-days: 90
