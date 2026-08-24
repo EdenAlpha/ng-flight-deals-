@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,18 +35,32 @@ jobs:
             python3 peerlink-source/tools/patch_direct_terminal_callback.py
           fi
 
-      - name: Build PeerLink debug APK
+      - name: Build debug and minified release APKs
         run: |
           set -euo pipefail
           cd peerlink-source
           chmod +x gradlew
-          ./gradlew :app:assembleDebug --no-daemon --stacktrace
+          ./gradlew :app:assembleDebug :app:assembleRelease --no-daemon --stacktrace
 
-      - name: Upload PeerLink score-reader APK
+      - name: Verify JNI callback names survived R8
+        run: |
+          set -euo pipefail
+          MAPPING=peerlink-source/app/build/outputs/mapping/release/mapping.txt
+          test -f "$MAPPING"
+          # These names are looked up from C++ with GetMethodID and therefore
+          # must remain literal in the minified release build.
+          ! grep -E 'preparePeerSocket\(|fabricateStunResponse\(|onNativeLog\(|onMatchTerminalDetected\(' "$MAPPING" | grep -E ' -> [^ ]+$' | grep -vE ' -> (preparePeerSocket|fabricateStunResponse|onNativeLog|onMatchTerminalDetected)$' || {
+            echo 'A JNI callback method was renamed by R8.' >&2
+            exit 1
+          }
+
+      - name: Upload PeerLink score-reader APKs
         uses: actions/upload-artifact@v4
         with:
-          name: peerlink-score-reader-debug
-          path: peerlink-source/app/build/outputs/apk/debug/app-debug.apk
+          name: peerlink-score-reader-apks
+          path: |
+            peerlink-source/app/build/outputs/apk/debug/app-debug.apk
+            peerlink-source/app/build/outputs/apk/release/app-release-unsigned.apk
           if-no-files-found: error
           retention-days: 7
 
