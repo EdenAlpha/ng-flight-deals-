@@ -107,6 +107,12 @@
 # Keep NSD system classes
 -keep class android.net.nsd.** { *; }
 
+# Conscrypt carries compatibility adapters for Android platform classes that are
+# absent from the compile SDK but supplied (or intentionally absent) at runtime.
+# R8 must not treat those guarded platform references as fatal missing classes.
+-dontwarn com.android.org.conscrypt.SSLParametersImpl
+-dontwarn org.apache.harmony.xnet.provider.jsse.SSLParametersImpl
+
 
 # ══════════════════════════════════════════════════════════
 # JETPACK COMPOSE
