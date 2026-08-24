@@ -1,0 +1,193 @@
+name: eFootball direct P2P score wire surgery v2
+
+on:
+  push:
+    branches: [ efootball-score-wire-surgery-2026-08-24 ]
+    paths: [ '.github/workflows/efootball-score-wire-surgery-v2.yml' ]
+
+permissions:
+  contents: read
+
+jobs:
+  surgery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install analysis tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball arm64 binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Trace custom encryption, scramble and direct-P2P consumers
+        run: |
+          cat > /tmp/ef/wire.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import struct,bisect,re,collections
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_offset']),int(s['p_filesz']),int(s['p_vaddr'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          def ova(o):
+              for po,sz,va in loads:
+                  if po<=o<po+sz:return va+o-po
+          def sx(x,b):return x-(1<<b) if x&(1<<(b-1)) else x
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          mv=memoryview(tb); words=len(tb)//4
+
+          needles=[
+            'pes-custom-encrypt','ScrambleCode','EncryptionAlgorithm','EncryptionKeyLength',
+            'KeyExchangeEncryptionAlgorithm','KeyExchangeEncryptionKey','SessionKeyEncryptionAlgorithm','SessionKeyEncryptionKeyLength',
+            'P2P_LOW_LEVEL','P2P_HIGH_LEVEL','P2P_ADHOC','RP_DATA_CAST','RP_RELIABILITY','RP_RELIABILITY_ECHO','RP_SYNC_POINT','RP_JSON_DATA',
+            'ChannelDatagramLength','MaxPayloadLength','MatchCommandDequeueHzRateRecentBasicStatisticsMaxSize',
+            'HOME_SCORE','AWAY_SCORE','GAME_PHASE','CMD_ADD_SCORE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT'
+          ]
+          labels={}
+          for n in needles:
+              pos=0
+              while True:
+                  o=raw.find(n.encode(),pos)
+                  if o<0:break
+                  va=ova(o)
+                  if va is not None:labels.setdefault(va,[]).append(n)
+                  pos=o+1
+          pages={v&~0xfff for v in labels}
+
+          # Function starts + direct BL graph in one raw ARM64 pass.
+          starts=[tva]; calls=collections.defaultdict(list); rev=collections.defaultdict(list)
+          for i in range(words):
+              w=struct.unpack_from('<I',mv,i*4)[0]; pc=tva+i*4
+              if (w & 0xffc07fff)==0xa9807bfd: starts.append(pc)
+              if (w&0xfc000000)==0x94000000:
+                  dst=pc+(sx(w&0x03ffffff,26)<<2)
+                  calls[pc].append(dst)
+          starts=sorted(set(starts))
+          def fstart(pc):
+              j=bisect.bisect_right(starts,pc)-1; return starts[j] if j>=0 else tva
+          def fend(fs):
+              j=bisect.bisect_right(starts,fs); return starts[j] if j<len(starts) else tend
+          func_calls=collections.defaultdict(list)
+          for pc,ds in calls.items():
+              fs=fstart(pc)
+              for d in ds:
+                  func_calls[fs].append((pc,d)); rev[d].append((fs,pc))
+
+          # ADRP+ADD/LDR exact references to target strings.
+          refs=collections.defaultdict(list)
+          for i in range(words):
+              w=struct.unpack_from('<I',mv,i*4)[0]
+              if (w&0x9f000000)!=0x90000000:continue
+              rd=w&31; imm=sx((((w>>5)&0x7ffff)<<2)|((w>>29)&3),21)<<12
+              pc=tva+i*4; page=(pc&~0xfff)+imm
+              if page not in pages:continue
+              for j in range(1,12):
+                  if i+j>=words:break
+                  w2=struct.unpack_from('<I',mv,(i+j)*4)[0]; pc2=tva+(i+j)*4
+                  # ADD immediate using same base reg
+                  if (w2&0x1f000000)==0x11000000 and not ((w2>>30)&1) and ((w2>>5)&31)==rd:
+                      cand=page+(((w2>>10)&0xfff)<<(12 if ((w2>>22)&1) else 0))
+                      if cand in labels: refs[cand].append((pc,pc2,'ADD'));break
+                  # LDR unsigned-immediate can load pointer from literal table on same page; keep candidate address
+                  if (w2&0x3b000000)==0x39000000 and ((w2>>5)&31)==rd:
+                      scale=(w2>>30)&3; cand=page+(((w2>>10)&0xfff)<<scale)
+                      if cand in labels: refs[cand].append((pc,pc2,'LDR'));break
+
+          funcs=collections.defaultdict(lambda:collections.defaultdict(list))
+          for va,names in labels.items():
+              for a,b,k in refs.get(va,[]):
+                  fs=fstart(a)
+                  for n in names:funcs[fs][n].append((a,b,k))
+
+          def dis(fs,cap=0x5000):
+              hi=min(fend(fs),fs+cap); return list(md.disasm(tb[fs-tva:hi-tva],fs))
+          def called_by(fs): return rev.get(fs,[])
+          def printable_near(va,r=0x180):
+              out=[]
+              # VA->file offset
+              off=None
+              for po,sz,pv in loads:
+                  if pv<=va<pv+sz:off=po+va-pv;break
+              if off is None:return out
+              ch=raw[max(0,off-r):min(len(raw),off+r)]
+              return [x.decode('ascii','replace') for x in re.findall(rb'[ -~]{5,}',ch)[:40]]
+
+          out=[]
+          out.append(f'libUE4 .text 0x{tva:x}-0x{tend:x} starts={len(starts)} labels={len(labels)}')
+          out.append('\n=== TARGET STRINGS + EXACT XREFS ===')
+          for va,names in sorted(labels.items()):
+              out.append(f'0x{va:x} {names} refs='+','.join(f'0x{a:x}->0x{b:x}/{k}' for a,b,k in refs.get(va,[])))
+              if any(x in names for x in ('pes-custom-encrypt','ScrambleCode')):
+                  out.append('  NEAR: '+' | '.join(printable_near(va)))
+
+          out.append('\n=== FUNCTIONS REFERENCING CUSTOM CRYPTO/P2P TERMS ===')
+          interesting=set()
+          for fs,nmap in sorted(funcs.items()):
+              if not any(n in nmap for n in needles):continue
+              interesting.add(fs)
+              out.append(f'\nFUNC 0x{fs:x}-0x{fend(fs):x} terms={sorted(nmap)}')
+              out.append('CALLERS '+', '.join(f'0x{c:x}@0x{s:x}' for c,s in called_by(fs)[:80]))
+              out.append('CALLEES '+', '.join(f'0x{d:x}@0x{s:x}' for s,d in func_calls.get(fs,[])[:100]))
+              marks=[a for xs in nmap.values() for a,b,k in xs]
+              for z in dis(fs):
+                  if any(abs(z.address-m)<=0x240 for m in marks):
+                      out.append(f'  0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          # Known direct transport/reliability/score functions from prior surgery.
+          known={
+            0x7c088e4:'crypto_config_parser',0x7bfc91c:'profile_loader',0x7c0dca0:'transport_parent',0x7c1234c:'transport_caller',
+            0x7ceafc4:'p2p_reliability',0x7cec4ac:'rt_ack',0x7cf85d4:'reliability_parser',
+            0x75adb2c:'cmd_add_score',0x7d4724c:'score_serializer_A_old',0x7d55600:'score_serializer_A_region',0x7d5d200:'score_serializer_B_region'
+          }
+          out.append('\n=== KNOWN TRANSPORT / SCORE CALL NEIGHBORHOODS ===')
+          for a,n in known.items():
+              fs=fstart(a)
+              out.append(f'\nKNOWN {n} address=0x{a:x} func~0x{fs:x}-0x{fend(fs):x}')
+              out.append('CALLERS '+', '.join(f'0x{c:x}@0x{s:x}' for c,s in called_by(a)[:80]))
+              # Calls made in containing function, emphasize calls to interesting funcs and local neighbors
+              for s,d in func_calls.get(fs,[]):
+                  if d in interesting or abs(s-a)<0x500:
+                      out.append(f'  CALL 0x{s:x} -> 0x{d:x}'+(' [INTERESTING]' if d in interesting else ''))
+
+          # Graph distance between custom-crypto string functions and reliability parser / score serializers.
+          revfunc=collections.defaultdict(set); fwdfunc=collections.defaultdict(set)
+          for fs,arr in func_calls.items():
+              for _,d in arr:
+                  df=fstart(d) if tva<=d<tend else d
+                  fwdfunc[fs].add(df); revfunc[df].add(fs)
+          seeds=set(interesting)
+          targets={fstart(x) for x in [0x7ceafc4,0x7cec4ac,0x7cf85d4,0x75adb2c,0x7d55600,0x7d5d200]}
+          out.append('\n=== SHORTEST FUNCTION-GRAPH CONNECTIONS (<=6 hops) ===')
+          for seed in sorted(seeds):
+              q=collections.deque([(seed,[seed])]);seen={seed};found=[]
+              while q and len(found)<12:
+                  u,path=q.popleft()
+                  if len(path)>7:continue
+                  if u in targets and u!=seed:found.append(path);continue
+                  for v in fwdfunc.get(u,()):
+                      if v not in seen:seen.add(v);q.append((v,path+[v]))
+              for path in found:out.append(' -> '.join(f'0x{x:x}' for x in path))
+
+          Path('/tmp/out/direct_p2p_score_wire.txt').write_text('\n'.join(out),errors='ignore')
+          PY
+          python3 /tmp/ef/wire.py
+          echo '===== CUSTOM CRYPTO XREF SUMMARY ====='
+          grep -E "pes-custom-encrypt|ScrambleCode|^FUNC |^KNOWN |SHORTEST|INTERESTING" /tmp/out/direct_p2p_score_wire.txt | head -n 1200 || true
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-direct-p2p-score-wire-v2
+          path: /tmp/out/
+          retention-days: 7
