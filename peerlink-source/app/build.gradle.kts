@@ -94,6 +94,9 @@ dependencies {
     // ── Coroutines ──
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
+    // One-shot on-device OCR for the final eFootball scoreboard.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+
     // ───────────────────────────────────────────────────────────────────
     // JETPACK COMPOSE — BOM-managed.  Compose 1.11 + Material 3 Expressive.
     // The BOM pins every compose-* artifact to one tested set, so they stay versionless below.

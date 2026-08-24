@@ -378,6 +378,11 @@ class PeerLinkVpnService : VpnService() {
                     override fun onStats(stats: NativeBackendStats) {
                         AppState.tunneled.set(stats.totalTunneledPackets)
                     }
+
+                    override fun onMatchTerminalDetected() {
+                        AppState.appendLog("[MATCH-END  ] Triggering one-shot final-score capture")
+                        com.peerlink.app.score.MatchScoreReader.captureAtTerminal(this@PeerLinkVpnService)
+                    }
                 },
             )
 

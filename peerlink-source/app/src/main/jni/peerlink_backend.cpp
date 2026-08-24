@@ -56,6 +56,15 @@ constexpr uint64_t kGameplayFlowCandidateWindowMs = 450ULL;
 constexpr int kGameplayFlowMinHitsToLock = 3;
 constexpr uint64_t kGameplayFlowSwitchIdleMs = 1200ULL;
 constexpr uint64_t kGameplayPortAliasTtlMs = 15000ULL;
+// eFootball terminal signature recovered from a real PeerLink/PCAPDroid match:
+// once gameplay application payload stops, the custom P2P flow drains as
+// transport-only packets (mostly 26 bytes).  We observe UDP APPLICATION
+// payload length here, not the outer IP/tunnel length.
+constexpr size_t kMatchTerminalMaxUdpPayload = 36U;
+constexpr uint64_t kMatchTerminalArmAfterMs = 30000ULL;
+constexpr uint64_t kMatchTerminalSustainMs = 500ULL;
+constexpr uint32_t kMatchTerminalMinPackets = 8U;
+constexpr uint64_t kMatchTerminalCooldownMs = 30000ULL;
 constexpr uint32_t kTunnelDiagMagic = 0x504C4447u;
 constexpr uint8_t kTunnelDiagVersion = 2;
 constexpr uint16_t kTunnelDiagHeaderSize = 56;
@@ -265,6 +274,15 @@ struct BackendState {
     uint64_t gameplay_start_hint_ms = 0;
     std::atomic<uint64_t> game_traffic_start_ms{0};
     std::deque<uint64_t> recent_gameplay_udp_times_ms;
+
+    // Match-end detector is fed only from the already-classified outbound
+    // gameplay UDP hot path. Candidate fields are owned by the TUN reader
+    // thread; only the one-shot signal crosses threads atomically.
+    std::atomic<bool> match_terminal_detected{false};
+    uint64_t match_terminal_candidate_start_ms = 0;
+    uint32_t match_terminal_candidate_packets = 0;
+    uint64_t match_terminal_last_detected_ms = 0;
+    bool match_terminal_rearm_ready = true;
 
     std::atomic<bool> running{false};
     std::thread tun_thread;
@@ -1437,6 +1455,51 @@ void observe_gameplay_flow(BackendState *state, int local_port, int remote_port,
 }
 
 
+
+void observe_match_terminal_outbound(BackendState *state,
+                           uint16_t local_port,
+                           uint16_t remote_port,
+                           size_t udp_payload_length,
+                           uint64_t now_ms) {
+    if (state == nullptr || state->match_terminal_detected.load(std::memory_order_relaxed)) return;
+    if (!stable_gameplay_known(state)) return;
+    if (local_port != static_cast<uint16_t>(load_stable_game_port(state)) ||
+        remote_port != static_cast<uint16_t>(load_stable_remote_port(state))) return;
+
+    const uint64_t gameplay_start = state->game_traffic_start_ms.load(std::memory_order_acquire);
+    if (gameplay_start == 0 || now_ms < gameplay_start ||
+        (now_ms - gameplay_start) < kMatchTerminalArmAfterMs) return;
+
+    if (udp_payload_length > kMatchTerminalMaxUdpPayload) {
+        state->match_terminal_candidate_start_ms = 0;
+        state->match_terminal_candidate_packets = 0;
+        state->match_terminal_rearm_ready = true;
+        return;
+    }
+
+    if (!state->match_terminal_rearm_ready) return;
+    if (state->match_terminal_last_detected_ms != 0 &&
+        now_ms >= state->match_terminal_last_detected_ms &&
+        (now_ms - state->match_terminal_last_detected_ms) < kMatchTerminalCooldownMs) return;
+
+    if (state->match_terminal_candidate_start_ms == 0) {
+        state->match_terminal_candidate_start_ms = now_ms;
+        state->match_terminal_candidate_packets = 1;
+        return;
+    }
+
+    ++state->match_terminal_candidate_packets;
+    const uint64_t sustained_ms = now_ms - state->match_terminal_candidate_start_ms;
+    if (sustained_ms >= kMatchTerminalSustainMs &&
+        state->match_terminal_candidate_packets >= kMatchTerminalMinPackets) {
+        state->match_terminal_last_detected_ms = now_ms;
+        state->match_terminal_candidate_start_ms = 0;
+        state->match_terminal_candidate_packets = 0;
+        state->match_terminal_rearm_ready = false;
+        state->match_terminal_detected.store(true, std::memory_order_release);
+    }
+}
+
 int resolve_inbound_gameplay_port(BackendState *state, int peer_sent_port, int /*tunnel_flags*/, uint64_t now_ms) {
     const int stable_port = state->stable_game_port.load(std::memory_order_acquire);
     if (state->has_stable_game_port.load(std::memory_order_acquire) && stable_port > 0) {
@@ -2384,6 +2447,7 @@ void handle_tun_ipv4(JNIEnv *env, BackendState *state, const uint8_t *packet, si
                 const int old_stable_port = load_stable_game_port(state);
                 const int old_remote_port = load_stable_remote_port(state);
                 observe_gameplay_flow(state, parsed.source_port, parsed.dest_port, now_ms);
+                observe_match_terminal_outbound(state, parsed.source_port, parsed.dest_port, parsed.udp_payload_length, now_ms);
                 const int new_stable_port = load_stable_game_port(state);
                 const int new_remote_port = load_stable_remote_port(state);
                 if (!had_stable_port || old_stable_port != new_stable_port || old_remote_port != new_remote_port) {
@@ -3347,6 +3411,16 @@ Java_com_peerlink_app_tunnel_NativePeerLinkBackend_nativeStop(
         state->callbacks = nullptr;
     }
     delete state;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_peerlink_app_tunnel_NativePeerLinkBackend_nativePollMatchTerminal(
+        JNIEnv * /*env*/,
+        jobject /*thiz*/,
+        jlong handle) {
+    BackendState *state = from_handle(handle);
+    if (state == nullptr) return JNI_FALSE;
+    return state->match_terminal_detected.exchange(false, std::memory_order_acq_rel) ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT jstring JNICALL
