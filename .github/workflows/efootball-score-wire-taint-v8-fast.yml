@@ -1,0 +1,152 @@
+name: eFootball concrete score wire taint v8 fast
+
+on:
+  pull_request:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  score-wire-taint-fast:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-score-wire-bridge-v3-2026-08-24
+          fetch-depth: 0
+      - name: Download native binary
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256_fast.txt
+      - name: Targeted call and value trace
+        run: |
+          cat > /tmp/ef/fast.py <<'PY'
+          from pathlib import Path
+          from collections import defaultdict,deque
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import re,bisect
+
+          P=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          with P.open('rb') as f:
+              E=ELFFile(f); T=E.get_section_by_name('.text'); B=T.data(); TVA=int(T['sh_addr']); TEND=TVA+len(B)
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM)
+          starts=[]; calls=[]; windows=[]
+          # Only retain disassembly in ranges relevant to score/result/P2P bridge; stream the rest.
+          ranges=[(0x7d43f00,0x7d5f900),(0x7bf6000,0x7c11000),(0x7ce5000,0x7d12000)]
+          for z in md.disasm(B,TVA):
+              if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str: starts.append(z.address)
+              if z.mnemonic=='bl':
+                  m=re.match(r'#0x([0-9a-f]+)',z.op_str)
+                  if m:calls.append((z.address,int(m.group(1),16)))
+              if any(a<=z.address<b for a,b in ranges): windows.append(z)
+          starts=sorted(set(starts))
+          def fs(a):
+              i=bisect.bisect_right(starts,a)-1; return starts[i] if i>=0 else a
+          def fe(a):
+              i=bisect.bisect_right(starts,a); return starts[i] if i<len(starts) else TEND
+          graph=defaultdict(set);rev=defaultdict(set); rawcallers=defaultdict(list)
+          for site,dst in calls:
+              rawcallers[dst].append(site); a=fs(site);b=fs(dst)
+              if a!=b:graph[a].add(b);rev[b].add(a)
+          by={z.address:z for z in windows}
+          out=[]
+          out.append('=== VERIFIED KNOWN SCORE INSTRUCTIONS ===')
+          for a in [0x7d556a8,0x7d556e0,0x7d556fc,0x7d556f4,0x7d55710]:
+              z=by.get(a); out.append(f'0x{a:x}: '+(f'{z.mnemonic} {z.op_str}' if z else 'MISSING'))
+          out.append('\n=== DIRECT RAW CALLERS ===')
+          for target in [0x7d46058,0x7d54c40,0x7d54c44,0x7d5bc34,0x7d5bc38,0x7d5e71c,0x7bf9ecc,0x7bfb88c]:
+              out.append(f'target 0x{target:x} normalized=0x{fs(target):x} callers='+','.join(f'0x{x:x}(fn=0x{fs(x):x})' for x in rawcallers.get(target,[])))
+
+          # Exact local score region and x26 provenance.
+          out.append('\n=== SCORE REGION 0x7d55580..0x7d557c0 ===')
+          for z in windows:
+              if 0x7d55580<=z.address<0x7d557c0: out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+          out.append('\n=== x26 provenance in owner ===')
+          for z in windows:
+              if 0x7d54c40<=z.address<0x7d556e0 and re.search(r'\bx26\b',z.op_str):out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          # Helper that receives x0=builder, x1=field-name, w2=score.
+          hf=fs(0x7d5e71c); out.append(f'\n=== SCORE INSERT HELPER fn=0x{hf:x} end=0x{fe(hf):x} ===')
+          count=0
+          for z in windows:
+              if hf<=z.address<fe(hf):
+                  out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}');count+=1
+                  if count>500:break
+
+          # Composite result builder which calls serializer A -> score serializer -> serializer B.
+          comp=fs(0x7d46058); out.append(f'\n=== COMPOSITE RESULT BUILDER fn=0x{comp:x} end=0x{fe(comp):x} ===')
+          for z in windows:
+              if comp<=z.address<min(fe(comp),comp+0x900):out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          # Direct-call graph tests using known P2P/crypto endpoints from prior verified analysis.
+          p2p={fs(x) for x in [0x7bf6f38,0x7bf7ac0,0x7bf7dbc,0x7bf8128,0x7bf8440,0x7bf9b18,0x7bf9ecc,0x7bfb88c,0x7bfc47c,0x7bfc91c,0x7bfdbf4,0x7bfe4e0,0x7bfed40,0x7bff920,0x7c0c670,0x7c0dca0,0x7ceafc4,0x7cf86f4]}
+          def bfs(src,targets,G,maxd=30):
+              q=deque([(src,[src])]);seen={src}
+              while q:
+                  n,p=q.popleft()
+                  if n in targets and n!=src:return p
+                  if len(p)-1>=maxd:continue
+                  for x in G.get(n,()):
+                      if x not in seen:seen.add(x);q.append((x,p+[x]))
+              return None
+          def fmt(p):return 'NONE' if not p else ' -> '.join(hex(x) for x in p)
+          owner=fs(0x7d54c40)
+          out.append('\n=== CALL GRAPH ===')
+          out.append('composite_to_p2p='+fmt(bfs(comp,p2p,graph)))
+          out.append('composite_reverse_to_p2p='+fmt(bfs(comp,p2p,rev)))
+          out.append('owner_to_p2p='+fmt(bfs(owner,p2p,graph)))
+          out.append('owner_reverse_to_p2p='+fmt(bfs(owner,p2p,rev)))
+
+          # Enumerate callers recursively up to 5 levels so we can see how result builder is reached.
+          out.append('\n=== COMPOSITE REVERSE ANCESTRY ===')
+          frontier={comp};seen={comp}
+          for depth in range(1,7):
+              nxt=set()
+              for n in frontier:nxt|=rev.get(n,set())
+              nxt-=seen;seen|=nxt
+              out.append(f'depth{depth}='+','.join(hex(x) for x in sorted(nxt)))
+              frontier=nxt
+              if not frontier:break
+
+          out.append('\n=== SCORE OWNER REVERSE ANCESTRY ===')
+          frontier={owner};seen={owner}
+          for depth in range(1,7):
+              nxt=set()
+              for n in frontier:nxt|=rev.get(n,set())
+              nxt-=seen;seen|=nxt
+              out.append(f'depth{depth}='+','.join(hex(x) for x in sorted(nxt)))
+              frontier=nxt
+              if not frontier:break
+
+          out.append('\n=== VERDICT ===')
+          ok=all(by.get(a) for a in [0x7d556e0,0x7d556fc])
+          out.append('KNOWN_SCORE_SITE_STABLE='+('YES' if ok else 'NO'))
+          out.append('This run distinguishes the labelled result serializer from unrelated structures that happen to use offsets 0x4B/0x4C.')
+          Path('/tmp/out/efootball-score-wire-taint-v8-fast.txt').write_text('\n'.join(out))
+          print('\n'.join(out))
+          PY
+          python3 /tmp/ef/fast.py
+      - name: Commit fast report
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-score-wire-taint-v8-fast.txt analysis-output/
+          cp /tmp/out/libue4_sha256_fast.txt analysis-output/efootball-score-wire-taint-v8-fast.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/efootball-score-wire-taint-v8-fast.txt analysis-output/efootball-score-wire-taint-v8-fast.sha256.txt
+          git commit -m 'Trace exact labelled score serializer ancestry fast'
+          git push origin HEAD:efootball-score-wire-bridge-v3-2026-08-24
