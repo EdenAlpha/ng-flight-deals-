@@ -1,0 +1,195 @@
+name: eFootball score wire bridge v3
+
+on:
+  push:
+    branches: [ efootball-score-wire-bridge-v3-2026-08-24 ]
+    paths-ignore:
+      - 'analysis-output/**'
+
+permissions:
+  contents: write
+
+jobs:
+  bridge-surgery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install analysis tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+
+      - name: Download current eFootball native binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' \
+            -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+
+      - name: Build exact call-graph bridge report
+        run: |
+          cat > /tmp/ef/bridge.py <<'PY'
+          from pathlib import Path
+          from collections import defaultdict, deque
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import bisect, re
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f)
+              text=e.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM)
+          starts=[]; raw_calls=[]
+          for a,s,m,o in md.disasm_lite(tb,tva):
+              if m=='stp' and 'x29, x30' in o and '[sp' in o:
+                  starts.append(a)
+              if m=='bl':
+                  mm=re.match(r'#0x([0-9a-f]+)',o)
+                  if mm: raw_calls.append((a,int(mm.group(1),16)))
+          starts=sorted(set(starts))
+
+          def fstart(a):
+              if not (tva <= a < tend): return a
+              i=bisect.bisect_right(starts,a)-1
+              return starts[i] if i>=0 else a
+
+          graph=defaultdict(set); rev=defaultdict(set); callsites=defaultdict(list)
+          for site,dst in raw_calls:
+              src=fstart(site); d=fstart(dst)
+              if src==d: continue
+              graph[src].add(d); rev[d].add(src); callsites[(src,d)].append(site)
+
+          named={
+              0x7d4724c:'result_serializer_A',
+              0x7d5b638:'result_serializer_B',
+              0x75adb2c:'CMD_ADD_SCORE_handler',
+              0x7621ad8:'CMD_GET_GAME_RESULT_xref_region',
+              0x76d42c8:'CMD_SET_GAME_RESULT_xref_region',
+              0x7d2c954:'command_registry',
+              0x7c088e4:'crypto_config_parser',
+              0x7c0c670:'session_crypto_transformer',
+              0x7c0dca0:'transport_parent',
+              0x7ceafc4:'p2p_reliability',
+              0x7cec4ac:'rt_ack',
+              0x7cf85d4:'reliability_parser',
+          }
+          norm={fstart(k):v for k,v in named.items()}
+          score={fstart(x) for x in [0x7d4724c,0x7d5b638,0x75adb2c,0x7621ad8,0x76d42c8,0x7d2c954]}
+          transport={fstart(x) for x in [0x7c088e4,0x7c0c670,0x7c0dca0,0x7ceafc4,0x7cec4ac,0x7cf85d4]}
+
+          def nm(x): return f"{norm.get(x,'func')}@0x{x:x}"
+
+          def shortest(srcs, dsts, g, maxdepth=12):
+              q=deque((s,[s]) for s in srcs); seen=set(srcs)
+              while q:
+                  n,path=q.popleft()
+                  if len(path)-1>=maxdepth: continue
+                  for z in g.get(n,()):
+                      if z in path: continue
+                      np=path+[z]
+                      if z in dsts: return np
+                      if z not in seen:
+                          seen.add(z);q.append((z,np))
+              return None
+
+          def closure(seeds,g,depth):
+              seen=set(seeds); frontier=set(seeds)
+              levels=[]
+              for d in range(depth+1):
+                  levels.append(set(frontier))
+                  nf=set()
+                  for n in frontier: nf.update(g.get(n,()))
+                  nf-=seen; seen|=nf; frontier=nf
+              return seen,levels
+
+          out=[]
+          out.append('=== NORMALIZED TARGETS ===')
+          for a,n in sorted(norm.items()): out.append(f'{n}: 0x{a:x}')
+
+          out.append('\n=== SHORTEST DIRECT-CALL PATHS ===')
+          for label,src,dst,g in [
+              ('score -> transport',score,transport,graph),
+              ('transport -> score',transport,score,graph),
+              ('score <- transport via reverse graph',score,transport,rev),
+          ]:
+              pth=shortest(src,dst,g,12)
+              out.append(label+': '+(' -> '.join(nm(x) for x in pth) if pth else 'NONE within 12 direct-call hops'))
+              if pth:
+                  for a,b in zip(pth,pth[1:]):
+                      sites=callsites.get((a,b),[])
+                      if not sites and g is rev: sites=callsites.get((b,a),[])
+                      out.append(f'  {nm(a)} -> {nm(b)} sites='+','.join(f'0x{x:x}' for x in sites[:12]))
+
+          score_anc,_=closure(score,rev,8); trans_anc,_=closure(transport,rev,8)
+          score_desc,_=closure(score,graph,8); trans_desc,_=closure(transport,graph,8)
+          out.append('\n=== INTERSECTION TESTS (<=8 hops) ===')
+          tests=[
+              ('shared ancestors',score_anc & trans_anc),
+              ('shared descendants',score_desc & trans_desc),
+              ('score descendants intersect transport ancestors',score_desc & trans_anc),
+              ('transport descendants intersect score ancestors',trans_desc & score_anc),
+          ]
+          for label,vals in tests:
+              ranked=sorted(vals,key=lambda x:(0 if x in norm else 1,x))
+              out.append(f'{label}: {len(vals)}')
+              for x in ranked[:120]: out.append('  '+nm(x))
+
+          out.append('\n=== DIRECT EDGES TOUCHING TARGET FAMILIES ===')
+          for n in sorted(score|transport):
+              out.append(f'NODE {nm(n)}')
+              out.append('  callers: '+(', '.join(nm(x) for x in sorted(rev.get(n,()))[:80]) or 'NONE'))
+              out.append('  callees: '+(', '.join(nm(x) for x in sorted(graph.get(n,()))[:80]) or 'NONE'))
+
+          # Search result/transport string neighborhoods as a sanity check.
+          needles=[b'HOME_SCORE',b'AWAY_SCORE',b'GAME_PHASE',b'CMD_ADD_SCORE',b'CMD_GET_GAME_RESULT',b'CMD_SET_GAME_RESULT',
+                   b'SessionKeyEncryptionAlgorithm',b'pes-custom-encrypt',b'RP_RELIABILITY',b'P2P_LOW_LEVEL']
+          out.append('\n=== STRING OFFSETS ===')
+          for nd in needles:
+              pos=0; hits=[]
+              while True:
+                  j=raw.find(nd,pos)
+                  if j<0: break
+                  hits.append(j);pos=j+1
+              out.append(f'{nd.decode()}: '+(', '.join(f'0x{x:x}' for x in hits[:20]) or 'NONE'))
+
+          # Machine verdict: direct call-graph evidence only, not a proof of no data dependency.
+          p1=shortest(score,transport,graph,12)
+          p2=shortest(transport,score,graph,12)
+          out.append('\n=== VERDICT ===')
+          if p1 or p2:
+              out.append('DIRECT_CALL_BRIDGE_FOUND=YES')
+              out.append('A score/result function and the known P2P/crypto family are connected by the static direct-call graph. Inspect the path above before claiming wire score bytes.')
+          else:
+              out.append('DIRECT_CALL_BRIDGE_FOUND=NO')
+              out.append('No direct-call path was found within 12 hops between the recovered score/result family and known P2P/crypto/reliability family. This supports keeping event-triggered visual score capture as the practical path while deeper indirect/vtable/dataflow analysis continues.')
+
+          Path('/tmp/out/efootball-score-wire-bridge-v3.txt').write_text('\n'.join(out))
+          print('\n'.join(out[:450]))
+          PY
+          python3 /tmp/ef/bridge.py
+
+      - name: Commit report
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-score-wire-bridge-v3.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-score-wire-bridge-v3.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/
+          git commit -m 'Add score-to-P2P call graph bridge report' || exit 0
+          git push
