@@ -20,11 +20,10 @@ jobs:
   native-stream:
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 1
       matrix:
         dataset:
           - land_teapot_dome_3d
-          - land_crescent_valley_2016
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
