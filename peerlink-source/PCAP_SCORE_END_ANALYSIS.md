@@ -43,6 +43,16 @@ Its custom transport packet sequence is visible in the first bytes (`00 00` foll
 
 The same >=8 packets / >=500 ms detector fires at about +152.666 s. There is an earlier <=36-byte handshake-era run near +10-12 s, which is why the production detector also waits until established gameplay has been active for at least 30 s.
 
+## Outbound-only validation against PeerLink's actual hook
+
+PeerLink evaluates this detector on the local phone's outbound TUN gameplay path, not on a merged two-direction PCAP stream. Replaying only that outbound direction gives the same decisive behavior:
+
+- `03_Jul_11_46_30`: no trigger.
+- `03_Jul_11_46_34`: trigger at +347.2957 s after 14 consecutive matching outbound DTLS records spanning 504 ms.
+- `28_Jun_15_53_33`: trigger at +152.6661 s after 16 consecutive matching outbound custom-P2P packets spanning 527 ms.
+
+After the 30 s arm point, capture 2 has exactly one sustained outbound terminal-family run (about 0.968 s total), capture 3 has exactly one (about 1.384 s total), and capture 1 has none. This validates the threshold on the same traffic direction used by the native runtime detector rather than relying on bidirectional packet density.
+
 ## Score-data conclusion
 
 A raw byte search across all three captures finds no plaintext `HOME_SCORE`, `AWAY_SCORE`, `GAME_PHASE`, `GAME_RESULT`, `END_REASON`, `score`, or `goal` strings.
