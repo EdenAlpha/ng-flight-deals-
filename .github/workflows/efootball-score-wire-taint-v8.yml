@@ -1,0 +1,193 @@
+name: eFootball concrete score wire taint v8
+
+on:
+  pull_request:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  score-wire-taint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-score-wire-bridge-v3-2026-08-24
+          fetch-depth: 0
+
+      - name: Install current eFootball native binary
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+
+      - name: Trace real HOME_SCORE and AWAY_SCORE values downstream
+        run: |
+          cat > /tmp/ef/taint.py <<'PY'
+          from pathlib import Path
+          from collections import defaultdict, deque
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import re,bisect
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); ins=list(md.disasm(tb,tva)); idx={z.address:i for i,z in enumerate(ins)}
+          starts=[]
+          for z in ins:
+              if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str: starts.append(z.address)
+          starts=sorted(set(starts))
+          def fs(a):
+              i=bisect.bisect_right(starts,a)-1; return starts[i] if i>=0 else a
+          def fe(a):
+              i=bisect.bisect_right(starts,a); return starts[i] if i<len(starts) else tend
+          def vaoff(va):
+              for sv,so,sz in loads:
+                  if sv<=va<sv+sz:return so+va-sv
+          def cstr(va):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+160].split(b'\0',1)[0]
+              try:s=b.decode('utf8')
+              except:return None
+              return s if s and all(31<ord(c)<127 for c in s) else None
+          def callee(z):
+              if z.mnemonic!='bl':return None
+              m=re.match(r'#0x([0-9a-f]+)',z.op_str); return int(m.group(1),16) if m else None
+
+          # Resolve adrp+add strings and identify the *actual* labelled score reads.
+          labels={}
+          for i,z in enumerate(ins):
+              if z.mnemonic!='adrp':continue
+              m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+              if not m:continue
+              reg,pg=m.group(1),int(m.group(2),16)
+              for q in ins[i+1:i+6]:
+                  m2=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                  if m2:
+                      s=cstr(pg+int(m2.group(1),16))
+                      if s:labels[q.address]=s
+                      break
+
+          score_sites=[]
+          for i,z in enumerate(ins):
+              if z.mnemonic!='ldrb' or '#0x4b]' not in z.op_str and '#0x4c]' not in z.op_str:continue
+              # Require a nearby materialized literal HOME_SCORE/AWAY_SCORE, avoiding unrelated structs with same offsets.
+              near=[]
+              for q in ins[i:i+12]: near += [s for a,s in labels.items() if q.address-8 <= a <= q.address+8]
+              want='HOME_SCORE' if '#0x4b]' in z.op_str else 'AWAY_SCORE'
+              if want in near: score_sites.append((want,z.address,fs(z.address),z.op_str))
+
+          out=['=== CONCRETE LABELLED SCORE LOADS ===']
+          for x in score_sites:out.append(str(x))
+          if len(score_sites)<2:
+              out.append('FATAL: could not recover both labelled score loads'); Path('/tmp/out/efootball-score-wire-taint-v8.txt').write_text('\n'.join(out)); raise SystemExit(2)
+
+          owner=score_sites[0][2]
+          out.append(f'\nowner=0x{owner:x} range=0x{owner:x}-0x{fe(owner):x}')
+
+          # Focused disassembly from 160 insns before HOME_SCORE through 700 after AWAY_SCORE.
+          hs=min(a for n,a,_,_ in score_sites if n=='HOME_SCORE'); aw=min(a for n,a,_,_ in score_sites if n=='AWAY_SCORE')
+          lo=max(0,idx[hs]-180); hi=min(len(ins),idx[aw]+700)
+          out.append('\n=== SCORE SERIALIZATION REGION ===')
+          for z in ins[lo:hi]:
+              tag=''
+              if z.address in labels: tag=' ; STRING='+labels[z.address]
+              d=callee(z)
+              if d is not None: tag += f' ; CALL fn=0x{fs(d):x} raw=0x{d:x}'
+              out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{tag}')
+
+          # Identify helper called immediately after each score load and dump helper bodies/callers.
+          helpers=[]
+          for name,a,_,_ in score_sites:
+              for q in ins[idx[a]+1:idx[a]+12]:
+                  d=callee(q)
+                  if d is not None:
+                      helpers.append((name,q.address,fs(d),d));break
+          out.append('\n=== SCORE VALUE HELPERS ===')
+          for h in helpers:out.append(str(h))
+          callsites=defaultdict(list)
+          for z in ins:
+              d=callee(z)
+              if d is not None:callsites[fs(d)].append(z.address)
+          for name,site,hf,rawdst in helpers:
+              out.append(f'\nHELPER {name} fn=0x{hf:x} raw=0x{rawdst:x} callers={len(callsites[hf])}')
+              s=idx.get(hf)
+              if s is not None:
+                  for z in ins[s:min(len(ins),s+260)]:
+                      if z.address>=fe(hf):break
+                      out.append(f'  0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          # Build direct call graph and inspect downstream calls from the real score owner only.
+          graph=defaultdict(set); rev=defaultdict(set)
+          for z in ins:
+              d=callee(z)
+              if d is None:continue
+              a=fs(z.address); b=fs(d)
+              if a!=b: graph[a].add(b); rev[b].add(a)
+
+          # Functions with P2P/crypto strings.
+          fnstr=defaultdict(set)
+          for a,s in labels.items():fnstr[fs(a)].add(s)
+          keys=('P2P_','RP_','pes-custom-encrypt','SessionKeyEncryptionAlgorithm','KeyExchangeEncryptionAlgorithm')
+          p2p={f for f,ss in fnstr.items() if any(any(k in s for k in keys) for s in ss)}
+          def bfs(start,targets,g,maxd=24):
+              q=deque([(start,[start])]);seen={start}
+              while q:
+                  n,path=q.popleft()
+                  if n in targets and n!=start:return path
+                  if len(path)-1>=maxd:continue
+                  for x in g.get(n,()):
+                      if x not in seen:seen.add(x);q.append((x,path+[x]))
+              return None
+          out.append('\n=== REAL SCORE OWNER TO P2P ===')
+          pth=bfs(owner,p2p,graph,24); out.append('direct_call_path=' + ('NONE' if not pth else ' -> '.join(hex(x) for x in pth)))
+          rpth=bfs(owner,p2p,rev,24); out.append('reverse_call_path=' + ('NONE' if not rpth else ' -> '.join(hex(x) for x in rpth)))
+
+          # Crucial: inspect x26 provenance before the labelled score loads.
+          out.append('\n=== RESULT-STRUCT REGISTER x26 PROVENANCE ===')
+          i0=idx[hs]
+          for z in ins[max(0,i0-450):i0]:
+              if re.search(r'(^|, )x26\b|\bx26,',z.op_str): out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          # Inspect all later materializations of the same stack builder used as x0 around score inserts.
+          out.append('\n=== STACK RESULT BUILDER / DOWNSTREAM CALLS ===')
+          for z in ins[idx[hs]-120:min(len(ins),idx[aw]+1300)]:
+              if '#1, lsl #12' in z.op_str or '#0x270' in z.op_str or z.mnemonic in ('bl','blr'):
+                  tag=''
+                  d=callee(z)
+                  if d is not None:tag=f' fn=0x{fs(d):x}'
+                  out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{tag}')
+
+          out.append('\n=== VERDICT ===')
+          out.append('LABELLED_HOME_AWAY_SCORE_LOADS=CONFIRMED')
+          out.append('This report traces only the score accesses proven by their HOME_SCORE/AWAY_SCORE labels; unrelated +0x4B/+0x4C structures are excluded.')
+          Path('/tmp/out/efootball-score-wire-taint-v8.txt').write_text('\n'.join(out))
+          print('\n'.join(out[:1800]))
+          PY
+          python3 /tmp/ef/taint.py
+
+      - name: Commit v8 report
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-score-wire-taint-v8.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-score-wire-taint-v8.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/efootball-score-wire-taint-v8.txt analysis-output/efootball-score-wire-taint-v8.sha256.txt
+          git commit -m 'Trace labelled score bytes toward eFootball wire path'
+          git push origin HEAD:efootball-score-wire-bridge-v3-2026-08-24
