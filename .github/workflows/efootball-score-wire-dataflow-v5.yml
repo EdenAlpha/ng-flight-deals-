@@ -1,6 +1,7 @@
 name: eFootball score wire dataflow v5
 
 on:
+  workflow_dispatch: {}
   push:
     branches: [ efootball-score-wire-bridge-v3-2026-08-24 ]
     paths:
