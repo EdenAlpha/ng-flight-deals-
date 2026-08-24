@@ -1,0 +1,70 @@
+name: eFootball deep score-to-P2P analysis
+
+on:
+  pull_request:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  deep-analysis:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-score-wire-bridge-v3-2026-08-24
+          fetch-depth: 0
+
+      - name: Install tools and current eFootball native binary
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+
+      - name: Execute ownership and indirect-dispatch surgeries
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def extract(workflow, marker, out_path):
+              y = Path(workflow).read_text()
+              if marker not in y:
+                  raise SystemExit(f'marker missing in {workflow}')
+              raw = y.split(marker, 1)[1].split("\n          PY\n", 1)[0]
+              code = '\n'.join(line[10:] if line.startswith('          ') else line for line in raw.splitlines())
+              Path(out_path).write_text(code)
+
+          extract('.github/workflows/efootball-score-ownership-v5.yml', "cat > /tmp/ef/ownership.py <<'PY'\n", '/tmp/ef/ownership.py')
+          extract('.github/workflows/efootball-score-indirect-v6.yml', "cat > /tmp/ef/indirect.py <<'PY'\n", '/tmp/ef/indirect.py')
+          PY
+          python3 /tmp/ef/ownership.py
+          python3 /tmp/ef/indirect.py
+
+      - name: Commit reports to analysis branch
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-score-ownership-v5.txt analysis-output/
+          cp /tmp/out/efootball-score-indirect-v6.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-score-deep-pr.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/efootball-score-ownership-v5.txt analysis-output/efootball-score-indirect-v6.txt analysis-output/efootball-score-deep-pr.sha256.txt
+          if git diff --cached --quiet; then
+            echo 'Reports unchanged.'
+            exit 0
+          fi
+          git commit -m 'Add deep score ownership and indirect P2P trace'
+          git push origin HEAD:efootball-score-wire-bridge-v3-2026-08-24
