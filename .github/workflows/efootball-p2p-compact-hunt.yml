@@ -1,0 +1,147 @@
+name: eFootball P2P compact-object hunt
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch: {}
+
+concurrency:
+  group: efootball-p2p-compact-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  hunt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball arm64 binary (runner-side)
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Hunt compact-object consumers inside P2P region
+        run: |
+          cat > /tmp/ef/p2p_hunt.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re,bisect,collections,sys
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f)
+              text=e.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          hexmem=re.compile(r'\[[wx][0-9]+, #0x([0-9a-f]+)\]')
+          def vaoff(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va,maxlen=120):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+maxlen].split(b'\0',1)[0]
+              if len(b)<4:return None
+              if sum(32<=x<127 for x in b)/len(b)<.92:return None
+              return b.decode('ascii','replace')
+
+          starts=[]
+          for addr,size,mnem,ops in md.disasm_lite(tb,tva):
+              if mnem=='stp' and 'x29, x30' in ops and '[sp' in ops:
+                  starts.append(addr)
+          starts=sorted(set(starts))
+          def fstart(a):
+              j=bisect.bisect_right(starts,a)-1
+              return starts[j] if j>=0 else tva
+          def fend(fs):
+              j=bisect.bisect_right(starts,fs)
+              return starts[j] if j<len(starts) else tend
+
+          LO,HI=0x7b00000,0x7e00000
+          COMPACT={0x80:'keyex_alg',0x88:'keyex_key',0xa0:'session_alg',0xa8:'session_keylen'}
+          stats=collections.defaultdict(lambda:collections.defaultdict(list))
+          print('scanning P2P region...',flush=True)
+          for addr,size,mnem,ops in md.disasm_lite(tb[LO-tva:min(HI,tend)-tva],LO):
+              fs=fstart(addr)
+              h=hexmem.search(ops)
+              if not h:continue
+              off=int(h.group(1),16)
+              if mnem in ('ldr','ldur','ldrb') and off in COMPACT:
+                  stats[fs]['reads'].append((addr,off))
+              elif mnem.startswith('str') and off in COMPACT:
+                  stats[fs]['writes'].append((addr,off))
+
+          ranked=[]
+          for fs,st in stats.items():
+              rd=[x for x in st.get('reads',[]) if x[1] in (0xa0,0xa8)]
+              wr=[x for x in st.get('reads',[])+st.get('writes',[]) if x[1] in (0x80,0x88)]
+              score=len(rd)*20+len(wr)*8
+              if rd and wr:score+=40
+              if score>=28:ranked.append((score,fs,st))
+          ranked.sort(reverse=True,key=lambda x:x[0])
+          out=[f'P2P_CANDIDATES={len(ranked)}']
+          for score,fs,st in ranked[:40]:
+              out.append(f'CAND fn=0x{fs:x} score={score} reads={[f"0x{a:x}:+{hex(o)}" for a,o in st.get("reads",[])][:14]} writes={[f"0x{a:x}:+{hex(o)}" for a,o in st.get("writes",[])][:14]}')
+
+          # surgical dumps of top 15
+          for score,fs,st in ranked[:15]:
+              fe=min(fend(fs),fs+0x1800)
+              out.append(f'\n--- SURGERY 0x{fs:x}-0x{fe:x} score={score} ---')
+              ann={}
+              bl=list(md.disasm(tb[fs-tva:fe-tva],fs))
+              for i,z in enumerate(bl):
+                  if z.mnemonic!='adrp':continue
+                  m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                  if not m:continue
+                  reg=m.group(1);page=int(m.group(2),16)
+                  for q in bl[i+1:i+8]:
+                      mm=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                      if mm:
+                          va=page+int(mm.group(1),16);s=cstr(va)
+                          if s:ann[q.address]=f' ; STR@0x{va:x}={s!r}'
+                          break
+              taint={}
+              for z in bl:
+                  tag=''
+                  lm=re.match(r'(?:ldr|ldurb|ldurb|ldrb|ldursw|ldrsw|ldur)\s+([wx]\d+),',z.mnemonic+' '+z.op_str)
+                  h=hexmem.search(z.op_str)
+                  off=int(h.group(1),16) if h else None
+                  if lm and off in (0xa0,0xa8,0x80,0x88):
+                      taint[lm.group(1)]=(z.address,f'+{hex(off)}');tag+=f' <LOAD {COMPACT[off]}>'
+                  for reg,(src,soff) in list(taint.items()):
+                      if reg in z.op_str and z.address!=src:tag+=f' <{reg}<-{soff}@0x{src:x}>'
+                  if z.mnemonic in ('cmp','cbz','cbnz','tbz','tbnz','blr','br') or z.mnemonic.startswith('bl ') or tag or z.address in ann:
+                      out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{ann.get(z.address,"")}{tag}')
+
+          txt='\n'.join(out)
+          Path('/tmp/out/p2p_compact_hunt.txt').write_text(txt)
+          print(f'report bytes={len(txt)}',flush=True)
+          PY
+          python3 /tmp/ef/p2p_hunt.py
+      - name: Show summary
+        run: |
+          grep -E "CAND fn=|SURGERY|P2P_CANDIDATES" /tmp/out/p2p_compact_hunt.txt | head -60 || true
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-p2p-compact-hunt
+          path: /tmp/out/
+          retention-days: 7
