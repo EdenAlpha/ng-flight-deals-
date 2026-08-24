@@ -24,7 +24,7 @@ jobs:
       matrix:
         dataset:
           - land_teapot_dome_3d
-          - marine_parihaka_3d
+          - land_crescent_valley_2016
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
