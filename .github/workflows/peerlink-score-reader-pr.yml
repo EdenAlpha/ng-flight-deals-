@@ -18,8 +18,13 @@ jobs:
           ref: peerlink-score-reader-2026-08-24
           fetch-depth: 0
 
-      - name: Apply the score-reader patch embedded in the staging workflow
+      - name: Apply staged score-reader patch
         run: |
+          set -euo pipefail
+          if [ ! -f .github/workflows/peerlink-score-reader-build.yml ]; then
+            echo "Staging workflow already consumed; validating committed source only."
+            exit 0
+          fi
           python3 - <<'PY'
           from pathlib import Path
           import textwrap
@@ -36,10 +41,14 @@ jobs:
           chmod +x gradlew
           ./gradlew :app:assembleDebug --no-daemon --stacktrace
 
-      - name: Commit verified implementation
+      - name: Commit verified implementation when staged
         run: |
           set -euo pipefail
           rm -f .github/workflows/peerlink-score-reader-build.yml .github/workflows/peerlink-score-reader-pr.yml
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No staging changes to commit."
+            exit 0
+          fi
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A
