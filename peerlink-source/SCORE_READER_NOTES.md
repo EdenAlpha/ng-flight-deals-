@@ -32,8 +32,8 @@ Current detector requirements:
 
 ## Runtime path
 
-`Native TUN gameplay classification -> terminal detector -> one-shot Kotlin callback -> event-only screenshot burst -> upper-frame ML Kit OCR -> persisted latest score`
+`Native TUN gameplay classification -> terminal detector -> direct JNI callback on the same event -> event-only screenshot burst -> upper-frame ML Kit OCR -> persisted latest score`
 
-The screenshot burst occurs only after the terminal event, at roughly `t=0 ms`, `t=350 ms`, and `t=900 ms`, and stops immediately after a confident score is found. This protects against the transport entering its terminal state slightly before the final score UI settles while avoiding continuous screenshot polling during gameplay.
+The match-end signal no longer waits for the 1-second statistics poll; native code dispatches it immediately when the terminal rule becomes true. The screenshot burst occurs only after that terminal event, at roughly `t=0 ms`, `t=350 ms`, and `t=900 ms`, and stops immediately after a confident score is found. This protects against the transport entering its terminal state slightly before the final score UI settles while avoiding continuous screenshot polling during gameplay.
 
 Prime Mode currently supplies the screenshot via `screencap`. A MediaProjection fallback remains to be added for devices where Prime Mode is not active.

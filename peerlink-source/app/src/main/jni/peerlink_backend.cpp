@@ -236,6 +236,7 @@ struct BackendState {
     jmethodID prepare_peer_socket_mid = nullptr;
     jmethodID fabricate_stun_mid = nullptr;
     jmethodID native_log_mid = nullptr;
+    jmethodID match_terminal_mid = nullptr;
 
     int tun_fd = -1;
     int peer_fd = -1;
@@ -1456,36 +1457,36 @@ void observe_gameplay_flow(BackendState *state, int local_port, int remote_port,
 
 
 
-void observe_match_terminal_outbound(BackendState *state,
-                           uint16_t local_port,
-                           uint16_t remote_port,
-                           size_t udp_payload_length,
-                           uint64_t now_ms) {
-    if (state == nullptr || state->match_terminal_detected.load(std::memory_order_relaxed)) return;
-    if (!stable_gameplay_known(state)) return;
+bool observe_match_terminal_outbound(BackendState *state,
+                                     uint16_t local_port,
+                                     uint16_t remote_port,
+                                     size_t udp_payload_length,
+                                     uint64_t now_ms) {
+    if (state == nullptr || state->match_terminal_detected.load(std::memory_order_relaxed)) return false;
+    if (!stable_gameplay_known(state)) return false;
     if (local_port != static_cast<uint16_t>(load_stable_game_port(state)) ||
-        remote_port != static_cast<uint16_t>(load_stable_remote_port(state))) return;
+        remote_port != static_cast<uint16_t>(load_stable_remote_port(state))) return false;
 
     const uint64_t gameplay_start = state->game_traffic_start_ms.load(std::memory_order_acquire);
     if (gameplay_start == 0 || now_ms < gameplay_start ||
-        (now_ms - gameplay_start) < kMatchTerminalArmAfterMs) return;
+        (now_ms - gameplay_start) < kMatchTerminalArmAfterMs) return false;
 
     if (udp_payload_length > kMatchTerminalMaxUdpPayload) {
         state->match_terminal_candidate_start_ms = 0;
         state->match_terminal_candidate_packets = 0;
         state->match_terminal_rearm_ready = true;
-        return;
+        return false;
     }
 
-    if (!state->match_terminal_rearm_ready) return;
+    if (!state->match_terminal_rearm_ready) return false;
     if (state->match_terminal_last_detected_ms != 0 &&
         now_ms >= state->match_terminal_last_detected_ms &&
-        (now_ms - state->match_terminal_last_detected_ms) < kMatchTerminalCooldownMs) return;
+        (now_ms - state->match_terminal_last_detected_ms) < kMatchTerminalCooldownMs) return false;
 
     if (state->match_terminal_candidate_start_ms == 0) {
         state->match_terminal_candidate_start_ms = now_ms;
         state->match_terminal_candidate_packets = 1;
-        return;
+        return false;
     }
 
     ++state->match_terminal_candidate_packets;
@@ -1497,7 +1498,28 @@ void observe_match_terminal_outbound(BackendState *state,
         state->match_terminal_candidate_packets = 0;
         state->match_terminal_rearm_ready = false;
         state->match_terminal_detected.store(true, std::memory_order_release);
+        return true;
     }
+    return false;
+}
+
+void dispatch_match_terminal_event(JNIEnv *env, BackendState *state) {
+    if (state == nullptr) return;
+    if (env != nullptr && state->callbacks != nullptr && state->match_terminal_mid != nullptr) {
+        env->CallVoidMethod(state->callbacks, state->match_terminal_mid);
+        if (env->ExceptionCheck()) {
+            env->ExceptionClear();
+            emit_native_log(env, state, kNativeLogWarn, false,
+                            "[MATCH-END  ] Native match-end callback threw; event latch released");
+        } else {
+            emit_native_log(env, state, kNativeLogInfo, false,
+                            "[MATCH-END  ] Terminal signature dispatched directly from native TUN path");
+        }
+    }
+    // Rearm is still guarded by match_terminal_rearm_ready and the cooldown.
+    // Clearing this transient latch here avoids any polling dependency and allows
+    // a later match in the same VPN session after normal (>36-byte) gameplay resumes.
+    state->match_terminal_detected.store(false, std::memory_order_release);
 }
 
 int resolve_inbound_gameplay_port(BackendState *state, int peer_sent_port, int /*tunnel_flags*/, uint64_t now_ms) {
@@ -2447,7 +2469,9 @@ void handle_tun_ipv4(JNIEnv *env, BackendState *state, const uint8_t *packet, si
                 const int old_stable_port = load_stable_game_port(state);
                 const int old_remote_port = load_stable_remote_port(state);
                 observe_gameplay_flow(state, parsed.source_port, parsed.dest_port, now_ms);
-                observe_match_terminal_outbound(state, parsed.source_port, parsed.dest_port, parsed.udp_payload_length, now_ms);
+                if (observe_match_terminal_outbound(state, parsed.source_port, parsed.dest_port, parsed.udp_payload_length, now_ms)) {
+                    dispatch_match_terminal_event(env, state);
+                }
                 const int new_stable_port = load_stable_game_port(state);
                 const int new_remote_port = load_stable_remote_port(state);
                 if (!had_stable_port || old_stable_port != new_stable_port || old_remote_port != new_remote_port) {
@@ -2556,7 +2580,11 @@ void handle_tun_ipv6(JNIEnv *env, BackendState *state, const uint8_t *packet, si
             const bool had_stable_port = stable_gameplay_known(state);
             const int old_stable_port = load_stable_game_port(state);
             const int old_remote_port = load_stable_remote_port(state);
-            observe_gameplay_flow(state, parsed.source_port, parsed.dest_port, monotonic_ms());
+            const uint64_t now_ms = monotonic_ms();
+            observe_gameplay_flow(state, parsed.source_port, parsed.dest_port, now_ms);
+            if (observe_match_terminal_outbound(state, parsed.source_port, parsed.dest_port, parsed.udp_payload_length, now_ms)) {
+                dispatch_match_terminal_event(env, state);
+            }
             const int new_stable_port = load_stable_game_port(state);
             const int new_remote_port = load_stable_remote_port(state);
             if (!had_stable_port || old_stable_port != new_stable_port || old_remote_port != new_remote_port) {
@@ -3109,8 +3137,10 @@ Java_com_peerlink_app_tunnel_NativePeerLinkBackend_nativeStart(
     state->prepare_peer_socket_mid = env->GetMethodID(callback_class, "preparePeerSocket", "(I)Z");
     state->fabricate_stun_mid = env->GetMethodID(callback_class, "fabricateStunResponse", "([BI)[B");
     state->native_log_mid = env->GetMethodID(callback_class, "onNativeLog", "(ILjava/lang/String;Z)V");
+    state->match_terminal_mid = env->GetMethodID(callback_class, "onMatchTerminalDetected", "()V");
     env->DeleteLocalRef(callback_class);
-    if (state->prepare_peer_socket_mid == nullptr || state->fabricate_stun_mid == nullptr || state->native_log_mid == nullptr) {
+    if (state->prepare_peer_socket_mid == nullptr || state->fabricate_stun_mid == nullptr ||
+        state->native_log_mid == nullptr || state->match_terminal_mid == nullptr) {
         LOGE("Required callback methods were not found");
         env->DeleteGlobalRef(state->callbacks);
         state->callbacks = nullptr;

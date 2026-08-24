@@ -36,6 +36,12 @@ class NativePeerLinkBackend(
         fun onNativeLog(level: Int, message: String, fileOnly: Boolean) {
             callbacks.onNativeLog(level, message, fileOnly)
         }
+
+        @Suppress("unused")
+        fun onMatchTerminalDetected() {
+            AppState.appendLog("[MATCH-END  ] Native eFootball terminal signature confirmed")
+            callbacks.onMatchTerminalDetected()
+        }
     }
 
     private var nativeHandle: Long = 0L
@@ -152,10 +158,6 @@ class NativePeerLinkBackend(
                         val stats = pollStats()
                         AppState.tunneled.set(stats.totalTunneledPackets)
                         callbacks.onStats(stats)
-                        if (pollMatchTerminalDetected()) {
-                            AppState.appendLog("[MATCH-END  ] Native eFootball terminal signature confirmed")
-                            callbacks.onMatchTerminalDetected()
-                        }
                     }
                 },
                 1L,
