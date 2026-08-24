@@ -1,0 +1,42 @@
+name: eFootball score owner provenance
+
+on:
+  pull_request:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  provenance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-score-wire-bridge-v3-2026-08-24
+      - name: Download current eFootball arm64 binary
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl binutils-aarch64-linux-gnu >/dev/null
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          unzip -q "$NATIVE" -d /tmp/ef/native
+      - name: Disassemble exact score-state provenance ranges
+        run: |
+          LIB=/tmp/ef/native/lib/arm64-v8a/libUE4.so
+          OUT=/tmp/out/efootball-score-owner-provenance.txt
+          {
+            echo '=== SCORE OWNER EARLY BODY ==='
+            aarch64-linux-gnu-objdump -d --start-address=0x7d54c40 --stop-address=0x7d55080 "$LIB"
+            echo '=== COMPOSITE CALLER ==='
+            aarch64-linux-gnu-objdump -d --start-address=0x7d46058 --stop-address=0x7d46250 "$LIB"
+            echo '=== P2P-NEAR OFFSET CANDIDATE ==='
+            aarch64-linux-gnu-objdump -d --start-address=0x7bbc880 --stop-address=0x7bbcd20 "$LIB"
+          } > "$OUT"
+          grep -nE 'x26|x11|7d54c40|7d4724c|7bf9ecc|#0x4b|#0x4c' "$OUT" || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-score-owner-provenance
+          path: /tmp/out/efootball-score-owner-provenance.txt
+          retention-days: 7
