@@ -1,0 +1,224 @@
+name: eFootball P2P score candidate v9
+
+on:
+  pull_request:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  candidate-v9:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-score-wire-bridge-v3-2026-08-24
+          fetch-depth: 0
+
+      - name: Install tools and current eFootball native binary
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/efootball-p2p-score-candidate-v9.sha256.txt
+
+      - name: Prove or reject paired score offsets at direct P2P caller
+        run: |
+          cat > /tmp/ef/v9.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import re,bisect
+
+          P=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=P.read_bytes()
+          with P.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); ins=list(md.disasm(tb,tva)); addrs=[z.address for z in ins]
+          def vaoff(va):
+              for sv,so,sz in loads:
+                  if sv<=va<sv+sz:return so+va-sv
+          def cstr(va):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+180].split(b'\0',1)[0]
+              try:s=b.decode('utf8')
+              except:return None
+              return s if len(s)>=3 and sum(32<=ord(c)<127 for c in s)/len(s)>.9 else None
+          starts=[]
+          for z in ins:
+              if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str:starts.append(z.address)
+          starts=sorted(set(starts))
+          def bounds(a):
+              i=bisect.bisect_right(starts,a)-1; s=starts[i] if i>=0 else a
+              j=bisect.bisect_right(starts,a); en=starts[j] if j<len(starts) else tend
+              return s,en
+          def seq(a,b):
+              i=bisect.bisect_left(addrs,a); j=bisect.bisect_left(addrs,b); return ins[i:j]
+          def strings_for(ss):
+              out=[]
+              for i,z in enumerate(ss):
+                  if z.mnemonic!='adrp':continue
+                  m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                  if not m:continue
+                  r,pg=m.group(1),int(m.group(2),16)
+                  for q in ss[i+1:i+7]:
+                      m2=re.match(rf'{r}, {r}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                      if m2:
+                          s=cstr(pg+int(m2.group(1),16))
+                          if s and s not in out:out.append(s)
+                          break
+              return out
+          def regname(x):
+              x=x.strip()
+              if re.fullmatch(r'w\d+',x): return 'x'+x[1:]
+              return x
+          def destreg(z):
+              p=z.op_str.split(',',1)[0].strip()
+              return regname(p) if re.fullmatch(r'[wx]\d+',p) else None
+          def src_regs(s): return {regname(x) for x in re.findall(r'\b[wx]\d+\b',s)}
+          def memkey(s):
+              m=re.search(r'\[(x\d+|sp)(?:,\s*#(-?0x[0-9a-f]+|-?\d+))?\]',s)
+              if not m:return None
+              return (m.group(1),m.group(2) or '0')
+
+          out=[]
+          cand=0x7bbc4bc; p2pcall=0x7bbc92c; endpoint=0x7bf9ecc
+          cs,ce=bounds(cand); css=seq(cs,ce)
+          out += [f'CURRENT_LIBUE4_SHA256={Path("/tmp/out/efootball-p2p-score-candidate-v9.sha256.txt").read_text().split()[0]}',
+                  f'CANDIDATE=0x{cand:x} recovered_function=0x{cs:x}-0x{ce:x}',f'P2P_CALLSITE=0x{p2pcall:x} endpoint=0x{endpoint:x}',
+                  '\n=== CANDIDATE STRINGS ===']
+          for s in strings_for(css):out.append(repr(s))
+
+          out.append('\n=== ALL x21 MEMORY OPERATIONS ===')
+          x21ops=[]
+          for z in css:
+              if '[x21' in z.op_str:
+                  x21ops.append(z); out.append(f'0x{z.address:x}: {z.mnemonic:8} {z.op_str}')
+          sig=[]
+          for z in x21ops:
+              m=re.search(r'\[x21,\s*#0x([0-9a-f]+)\]',z.op_str)
+              if m and int(m.group(1),16) in {0x48,0x4b,0x4c,0x58,0x5c,0x5d,0x60,0x64}:sig.append((int(m.group(1),16),z))
+          out.append('\n=== RESULT-LAYOUT SIGNATURE HITS ON x21 ===')
+          for off,z in sig:out.append(f'+0x{off:x} 0x{z.address:x}: {z.mnemonic} {z.op_str}')
+          offs={x for x,_ in sig}; out.append('signature_offsets='+','.join(hex(x) for x in sorted(offs)))
+
+          scorehits=[]
+          for z in css:
+              m=re.search(r'\[x21,\s*#0x(4b|4c)\]',z.op_str)
+              if m:scorehits.append(z)
+          out.append('\n=== SCORE-OFFSET WINDOWS ===')
+          for h in scorehits:
+              out.append(f'-- around 0x{h.address:x} --')
+              for z in seq(max(cs,h.address-0x100),min(ce,h.address+0x180)):out.append(f'0x{z.address:x}: {z.mnemonic:8} {z.op_str}')
+
+          out.append('\n=== x21 PROVENANCE / DEFINITIONS ===')
+          for z in css:
+              if re.match(r'x21\b',z.op_str) or re.match(r'w21\b',z.op_str):out.append(f'0x{z.address:x}: {z.mnemonic:8} {z.op_str}')
+
+          # Conservative linear taint from exact x21 +4b/+4c loads. Keep tainted stack/object slots.
+          taint=set(); memtaint=set(); events=[]; call_taint=[]
+          aliases={'x21':'candidate_base'}
+          for z in css:
+              op=z.op_str; mn=z.mnemonic
+              hit=re.search(r'\[(x21),\s*#0x(4b|4c)\]',op)
+              d=destreg(z)
+              if hit and mn.startswith('ldr') and d:
+                  taint.add(d); events.append(f'0x{z.address:x} SOURCE {d} <- SCORE_+0x{hit.group(2)}')
+                  continue
+              # loads from a known tainted memory slot
+              if mn.startswith('ldr') and d:
+                  k=memkey(op)
+                  if k in memtaint:
+                      taint.add(d); events.append(f'0x{z.address:x} RELOAD {d} <- tainted_mem{k}')
+                  elif d in taint: taint.discard(d)
+              # stores of tainted source to addressable memory
+              if mn.startswith('str'):
+                  src=regname(op.split(',',1)[0].strip()); k=memkey(op)
+                  if src in taint and k:
+                      memtaint.add(k); events.append(f'0x{z.address:x} STORE tainted {src} -> mem{k}')
+              # common register propagation
+              if d and mn in {'mov','orr','and','eor','add','sub','lsl','lsr','ubfm','sbfm','uxtb','uxth','csel','csinc'}:
+                  srcs=src_regs(op.split(',',1)[1] if ',' in op else '')
+                  if srcs & taint:
+                      taint.add(d); events.append(f'0x{z.address:x} PROP {d} <= {sorted(srcs & taint)} via {mn}')
+                  elif d in taint: taint.discard(d)
+              if mn in {'bl','blr'}:
+                  args=sorted([r for r in taint if r in {f'x{i}' for i in range(8)}])
+                  if args:call_taint.append((z.address,op,args,sorted(memtaint)))
+                  if z.address==p2pcall:
+                      events.append(f'0x{z.address:x} P2P_CALL tainted_args={args} tainted_mem={sorted(memtaint)}')
+                  # ordinary AArch64 call clobbers x0-x17; preserve callee-saved taints
+                  taint={r for r in taint if re.fullmatch(r'x(1[89]|2[0-8])',r)}
+          out.append('\n=== SCORE TAINT EVENTS ==='); out.extend(events or ['NONE'])
+          out.append('\n=== CALLS WITH SCORE-TAINTED ARGUMENT REGISTERS ===')
+          for a,op,args,mt in call_taint:out.append(f'0x{a:x}: {op} args={args} memtaint={mt}')
+
+          out.append('\n=== EXACT P2P CALL BACKWARD WINDOW ===')
+          back=seq(max(cs,p2pcall-0x500),min(ce,p2pcall+0x80))
+          for z in back:out.append(f'0x{z.address:x}: {z.mnemonic:8} {z.op_str}')
+          out.append('\n=== LAST DEFINITIONS OF x0..x7 BEFORE P2P CALL ===')
+          before=[z for z in css if z.address<p2pcall]
+          for n in range(8):
+              want={f'x{n}',f'w{n}'}; found=[]
+              for z in reversed(before[-500:]):
+                  first=z.op_str.split(',',1)[0].strip()
+                  if first in want:
+                      found.append(z)
+                      if len(found)>=4:break
+              out.append(f'ARG x{n}:')
+              for z in reversed(found):out.append(f'  0x{z.address:x}: {z.mnemonic} {z.op_str}')
+
+          # Exact helper body: entry is not a canonical frame-pointer prologue.
+          out.append('\n=== EXACT SERIALIZER HELPER 0x7d5e71c ===')
+          for z in seq(0x7d5e71c,0x7d5eb80):out.append(f'0x{z.address:x}: {z.mnemonic:8} {z.op_str}')
+
+          # Secondary paired candidate.
+          c2=0x7a536b8; s2,e2=bounds(c2); ss2=seq(s2,e2)
+          out += ['\n=== SECONDARY CANDIDATE 0x7a536b8 ===',f'function=0x{s2:x}-0x{e2:x}']
+          for z in ss2:
+              if re.search(r'\[(x\d+),\s*#0x(48|4b|4c)\]',z.op_str):out.append(f'0x{z.address:x}: {z.mnemonic:8} {z.op_str}')
+          out.append('strings='+repr(strings_for(ss2)[:80]))
+
+          # Conservative verdict. Same-layout requires phase+both scores; wire proof requires tainted score arg at exact P2P call.
+          exact_args=[]
+          for a,op,args,mt in call_taint:
+              if a==p2pcall: exact_args=args
+          same_layout=all(x in offs for x in (0x48,0x4b,0x4c))
+          out.append('\n=== VERDICT ===')
+          if same_layout and exact_args:
+              out.append('SCORE_VALUE_TO_P2P_DATAFLOW=PROVEN')
+              out.append(f'Exact result-layout signature +48/+4B/+4C exists on x21 and score-derived register(s) {exact_args} reach the direct call to 0x7bf9ecc.')
+          elif not same_layout:
+              out.append('P2P_CANDIDATE_REJECTED_UNRELATED_LAYOUT')
+              out.append('The direct P2P caller does not reproduce the required GAME_PHASE(+48)+HOME_SCORE(+4B)+AWAY_SCORE(+4C) layout on x21; paired offsets alone are insufficient proof.')
+          else:
+              out.append('P2P_CANDIDATE_VALUEFLOW_NOT_PROVEN')
+              out.append('The candidate reproduces the result-layout signature, but this conservative static taint did not carry score-derived argument registers into the exact P2P call. Inspect the emitted memory stores and argument slice for buffer/object transfer.')
+          Path('/tmp/out/efootball-p2p-score-candidate-v9.txt').write_text('\n'.join(out))
+          print('\n'.join(out))
+          PY
+          python3 /tmp/ef/v9.py
+
+      - name: Commit focused report
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-p2p-score-candidate-v9.txt analysis-output/
+          cp /tmp/out/efootball-p2p-score-candidate-v9.sha256.txt analysis-output/
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/efootball-p2p-score-candidate-v9.txt analysis-output/efootball-p2p-score-candidate-v9.sha256.txt
+          if git diff --cached --quiet; then echo 'Report unchanged.'; exit 0; fi
+          git commit -m 'Dissect direct P2P paired-score candidate v9'
+          git push origin HEAD:efootball-score-wire-bridge-v3-2026-08-24
