@@ -27,11 +27,11 @@ jobs:
           fi
           python3 - <<'PY'
           from pathlib import Path
-          import textwrap
           y = Path('.github/workflows/peerlink-score-reader-build.yml').read_text()
           marker = "python3 - <<'PY'\n"
-          code = y.split(marker, 1)[1].split("\n          PY\n", 1)[0]
-          exec(textwrap.dedent(code), {'__name__': '__main__'})
+          raw = y.split(marker, 1)[1].split("\n          PY\n", 1)[0]
+          code = '\n'.join(line[10:] if line.startswith('          ') else line for line in raw.splitlines())
+          exec(compile(code, '<score-reader-stage>', 'exec'), {'__name__': '__main__'})
           PY
 
       - name: Build PeerLink debug APK
