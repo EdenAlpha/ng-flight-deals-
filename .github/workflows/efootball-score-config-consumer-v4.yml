@@ -1,0 +1,172 @@
+name: eFootball crypto config consumer v4
+
+on:
+  push:
+    branches: [ efootball-score-wire-bridge-v3-2026-08-24 ]
+    paths:
+      - '.github/workflows/efootball-score-config-consumer-v4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  config-consumer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current native binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Surgical config-consumer trace
+        run: |
+          cat > /tmp/ef/consumer.py <<'PY'
+          from pathlib import Path
+          from collections import defaultdict, deque
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import bisect,re
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM)
+
+          def vaoff(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va,n=180):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+n].split(b'\0',1)[0]
+              if len(b)<4 or sum(32<=x<127 for x in b)/max(1,len(b))<.92:return None
+              return b.decode('ascii','replace')
+
+          starts=[]; calls=[]
+          for a,s,m,o in md.disasm_lite(tb,tva):
+              if m=='stp' and 'x29, x30' in o and '[sp' in o:starts.append(a)
+              if m=='bl':
+                  mm=re.match(r'#0x([0-9a-f]+)',o)
+                  if mm:calls.append((a,int(mm.group(1),16)))
+          starts=sorted(set(starts))
+          def fs(a):
+              i=bisect.bisect_right(starts,a)-1
+              return starts[i] if i>=0 else a
+          def fe(a):
+              i=bisect.bisect_right(starts,a)
+              return starts[i] if i<len(starts) else tend
+          graph=defaultdict(set); rev=defaultdict(set); sites=defaultdict(list)
+          for site,dst in calls:
+              s=fs(site); d=fs(dst) if tva<=dst<tend else dst
+              if s!=d:
+                  graph[s].add(d);rev[d].add(s);sites[(s,d)].append(site)
+
+          consumer=fs(0x7bf9ecc)
+          parent=fs(0x7c0dca0)
+          p2p_targets={fs(x) for x in [0x7ceafc4,0x7cf85d4,0x7cec4ac,0x7ce4c48,0x7cec814,0x7cee054]}
+
+          out=[]
+          out.append(f'consumer raw=0x7bf9ecc normalized=0x{consumer:x} end=0x{fe(consumer):x}')
+          out.append(f'parent=0x{parent:x}')
+
+          def dump(name,lo,hi):
+              out.append(f'\n=== {name} 0x{lo:x}-0x{hi:x} ===')
+              body=list(md.disasm(tb[lo-tva:hi-tva],lo))
+              for i,z in enumerate(body):
+                  extra=''
+                  if z.mnemonic=='adrp':
+                      mm=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if mm:
+                          reg=mm.group(1);page=int(mm.group(2),16)
+                          for q in body[i+1:i+8]:
+                              m2=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                              if m2:
+                                  s=cstr(page+int(m2.group(1),16))
+                                  if s: extra=f' ; STR={s!r}'
+                                  break
+                  out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{extra}')
+
+          dump('PARENT CALLSITE FULL',0x7c0dfc0,0x7c0e330)
+          dump('CONSUMER FULL',consumer,min(fe(consumer),consumer+0x5000))
+
+          out.append('\n=== CONSUMER CALLERS/CALLEES ===')
+          out.append('callers='+','.join(f'0x{x:x}' for x in sorted(rev.get(consumer,()))))
+          for d in sorted(graph.get(consumer,())):
+              out.append(f'callee 0x{d:x} sites='+','.join(f'0x{x:x}' for x in sites[(consumer,d)]))
+
+          def shortest(src,dsts,maxd=12):
+              q=deque([(src,[src])]);seen={src}
+              while q:
+                  n,path=q.popleft()
+                  if len(path)-1>=maxd:continue
+                  for z in graph.get(n,()):
+                      if z in path:continue
+                      np=path+[z]
+                      if z in dsts:return np
+                      if z not in seen:seen.add(z);q.append((z,np))
+              return None
+          path=shortest(consumer,p2p_targets,12)
+          out.append('\n=== CONSUMER -> KNOWN P2P PATH ===')
+          out.append(' -> '.join(f'0x{x:x}' for x in path) if path else 'NONE within 12 direct-call hops')
+
+          # For every node reachable within 5 hops, rank functions that contain
+          # indirect calls or strings mentioning encrypt/key/session/p2p.
+          seen={consumer};front={consumer};reachable=[]
+          for depth in range(6):
+              nf=set()
+              for n in front:
+                  reachable.append((depth,n))
+                  nf.update(graph.get(n,()))
+              nf-=seen;seen|=nf;front=nf
+          out.append('\n=== REACHABLE CRYPTO/P2P CANDIDATES <=5 HOPS ===')
+          for depth,n in reachable:
+              if not (tva<=n<tend):continue
+              end=min(fe(n),n+0x2800)
+              body=list(md.disasm(tb[n-tva:end-tva],n))
+              strings=[];indirect=0
+              for i,z in enumerate(body):
+                  if z.mnemonic in ('blr','br'):indirect+=1
+                  if z.mnemonic=='adrp':
+                      mm=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if not mm:continue
+                      reg=mm.group(1);page=int(mm.group(2),16)
+                      for q in body[i+1:i+6]:
+                          m2=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                          if m2:
+                              s=cstr(page+int(m2.group(1),16))
+                              if s and re.search(r'encrypt|decrypt|cipher|session|key|p2p|reliab|datagram|packet',s,re.I): strings.append(s)
+                              break
+              if strings or indirect:
+                  out.append(f'depth={depth} fn=0x{n:x} indirect={indirect} strings={strings[:16]}')
+
+          Path('/tmp/out/efootball-crypto-config-consumer-v4.txt').write_text('\n'.join(out))
+          print('\n'.join(out[:700]))
+          PY
+          python3 /tmp/ef/consumer.py
+      - name: Commit report
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-crypto-config-consumer-v4.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-crypto-config-consumer-v4.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/
+          git commit -m 'Add runtime crypto config consumer trace' || exit 0
+          git push
