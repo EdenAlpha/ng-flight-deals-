@@ -1,0 +1,119 @@
+name: PeerLink score detector v2
+
+on:
+  push:
+    branches: [ peerlink-score-reader-2026-08-24 ]
+    paths:
+      - '.github/workflows/peerlink-score-detector-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch multi-transport terminal detector
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          cppp=Path('peerlink-source/app/src/main/jni/peerlink_backend.cpp')
+          notesp=Path('peerlink-source/SCORE_READER_NOTES.md')
+          s=cppp.read_text()
+          old="""// eFootball terminal signature recovered from a real PeerLink/PCAPDroid match:
+// once gameplay application payload stops, the custom P2P flow drains as
+// transport-only packets (mostly 26 bytes).  We observe UDP APPLICATION
+// payload length here, not the outer IP/tunnel length.
+constexpr size_t kMatchTerminalMaxUdpPayload = 36U;
+"""
+          new="""// eFootball has two packet families in the captured matches. Direct custom-P2P
+// drains to 26-byte reliability packets (occasionally 27/32/36), while the DTLS
+// path drains to ~68-76-byte application records. These are UDP payload lengths.
+// The family marker plus a sustained low-size run is substantially safer than a
+// raw size threshold alone.
+constexpr size_t kMatchTerminalCustomMaxUdpPayload = 36U;
+constexpr size_t kMatchTerminalDtlsMaxUdpPayload = 80U;
+"""
+          if s.count(old)!=1: raise SystemExit(f'constant block matches={s.count(old)}')
+          s=s.replace(old,new,1)
+          oldsig="""void observe_match_terminal_outbound(BackendState *state,
+                           uint16_t local_port,
+                           uint16_t remote_port,
+                           size_t udp_payload_length,
+                           uint64_t now_ms) {
+"""
+          newsig="""void observe_match_terminal_outbound(BackendState *state,
+                           uint16_t local_port,
+                           uint16_t remote_port,
+                           const uint8_t *udp_payload,
+                           size_t udp_payload_length,
+                           uint64_t now_ms) {
+"""
+          if s.count(oldsig)!=1: raise SystemExit(f'signature matches={s.count(oldsig)}')
+          s=s.replace(oldsig,newsig,1)
+          oldgate="""    if (udp_payload_length > kMatchTerminalMaxUdpPayload) {
+        state->match_terminal_candidate_start_ms = 0;
+        state->match_terminal_candidate_packets = 0;
+        state->match_terminal_rearm_ready = true;
+        return;
+    }
+"""
+          newgate="""    const bool custom_p2p_terminal =
+            udp_payload != nullptr && udp_payload_length >= 2U &&
+            udp_payload_length <= kMatchTerminalCustomMaxUdpPayload &&
+            udp_payload[0] == 0x00U && udp_payload[1] == 0x00U;
+    const bool dtls_terminal =
+            udp_payload != nullptr && udp_payload_length >= 13U &&
+            udp_payload_length <= kMatchTerminalDtlsMaxUdpPayload &&
+            udp_payload[0] == 0x17U && udp_payload[1] == 0xFEU && udp_payload[2] == 0xFDU;
+
+    if (!custom_p2p_terminal && !dtls_terminal) {
+        state->match_terminal_candidate_start_ms = 0;
+        state->match_terminal_candidate_packets = 0;
+        state->match_terminal_rearm_ready = true;
+        return;
+    }
+"""
+          if s.count(oldgate)!=1: raise SystemExit(f'gate matches={s.count(oldgate)}')
+          s=s.replace(oldgate,newgate,1)
+          oldcall="observe_match_terminal_outbound(state, parsed.source_port, parsed.dest_port, parsed.udp_payload_length, now_ms);"
+          newcall="observe_match_terminal_outbound(state, parsed.source_port, parsed.dest_port, packet + parsed.udp_payload_offset, parsed.udp_payload_length, now_ms);"
+          if s.count(oldcall)!=1: raise SystemExit(f'call matches={s.count(oldcall)}')
+          s=s.replace(oldcall,newcall,1)
+          cppp.write_text(s)
+
+          notes=notesp.read_text()
+          notes += """
+
+## Capture validation update
+
+The terminal detector is now transport-aware rather than assuming only the 26-byte custom-P2P floor.
+
+- `PCAPdroid_28_Jun_15_53_33.pcap`: custom-P2P (`00 00...`) terminal run starts at ~152.095 s; the 500 ms / 8-packet detector fires at ~152.666 s.
+- `PCAPdroid_03_Jul_11_46_34.pcap`: DTLS 1.2 application-data (`17 FE FD...`) terminal run is ~68-76 bytes; detector fires at ~347.296 s.
+- `PCAPdroid_03_Jul_11_46_30.pcap`: no sustained terminal drain is present before capture termination, and the same detector produces no trigger.
+
+This keeps the detector event-driven and avoids continuous screenshots. Score capture still starts only after a confirmed terminal transport transition.
+"""
+          notesp.write_text(notes)
+          PY
+      - name: Build PeerLink debug APK
+        run: |
+          set -euo pipefail
+          cd peerlink-source
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace
+      - name: Commit verified detector
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/peerlink-score-detector-v2.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m 'Support custom-P2P and DTLS match-end score triggers'
+          git push origin HEAD:peerlink-score-reader-2026-08-24
