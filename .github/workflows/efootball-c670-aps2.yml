@@ -72,9 +72,8 @@ jobs:
           def decode(extra_hdr,limit=None):
               pos=4
               count,pos=sleb(pos)
-              pos_backup=pos
               for _ in range(extra_hdr):_,pos=sleb(pos)
-              res=[];offset=0;info=0;addend=0;n=0;bad=0;pos=pos_backup
+              res=[];offset=0;info=0;addend=0;n=0;bad=0
               while n<count:
                   gsize,pos=sleb(pos)
                   gflags,pos=sleb(pos)
