@@ -1,0 +1,240 @@
+name: eFootball score sink trace v8
+
+on:
+  pull_request:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  trace-score-sink:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-score-wire-bridge-v3-2026-08-24
+          fetch-depth: 0
+
+      - name: Install tools and current eFootball native binary
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+
+      - name: Trace score bytes into serializer and downstream sinks
+        run: |
+          cat > /tmp/ef/sinktrace.py <<'PY'
+          from pathlib import Path
+          from collections import defaultdict, deque
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import bisect, re
+
+          BIN=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw=BIN.read_bytes()
+          with BIN.open('rb') as f:
+              elf=ELFFile(f)
+              text=elf.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in elf.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM)
+          ins=list(md.disasm(tb,tva))
+          starts=[]; calls=[]
+          for z in ins:
+              if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str:
+                  starts.append(z.address)
+              if z.mnemonic=='bl':
+                  m=re.match(r'#0x([0-9a-f]+)',z.op_str)
+                  if m: calls.append((z.address,int(m.group(1),16)))
+          starts=sorted(set(starts))
+          def fs(a):
+              if not(tva<=a<tend): return a
+              i=bisect.bisect_right(starts,a)-1
+              return starts[i] if i>=0 else a
+          def fe(a):
+              i=bisect.bisect_right(starts,a)
+              return starts[i] if i<len(starts) else tend
+          graph=defaultdict(set); rev=defaultdict(set)
+          for site,dst in calls:
+              s=fs(site); d=fs(dst)
+              if s!=d:
+                  graph[s].add(d); rev[d].add(s)
+          def vaoff(va):
+              for sv,so,sz in loads:
+                  if sv<=va<sv+sz:return so+va-sv
+          def cstr(va):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+180].split(b'\0',1)[0]
+              try:s=b.decode('utf8')
+              except:return None
+              if len(s)<2:return None
+              if sum(32<=ord(c)<127 for c in s)/len(s)<.9:return None
+              return s
+
+          fnstr=defaultdict(set)
+          for i,z in enumerate(ins):
+              if z.mnemonic!='adrp': continue
+              m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+              if not m: continue
+              reg=m.group(1); pg=int(m.group(2),16)
+              for q in ins[i+1:i+7]:
+                  m2=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                  if m2:
+                      s=cstr(pg+int(m2.group(1),16))
+                      if s and len(s)<140: fnstr[fs(z.address)].add(s)
+                      break
+
+          def path(src,dsts,maxd=20):
+              q=deque([(src,[src])]); seen={src}
+              while q:
+                  n,p=q.popleft()
+                  if len(p)-1>=maxd: continue
+                  for x in graph.get(n,()):
+                      if x in p: continue
+                      np=p+[x]
+                      if x in dsts:return np
+                      if x not in seen:
+                          seen.add(x); q.append((x,np))
+              return None
+          def fmt(p): return 'NONE' if not p else ' -> '.join(f'0x{x:x}' for x in p)
+
+          p2p_words={'P2P_LOW_LEVEL','P2P_HIGH_LEVEL','RP_RELIABILITY','RP_DATA_CAST','RP_JSON_DATA','pes-custom-encrypt','SessionKeyEncryptionAlgorithm','KeyExchangeEncryptionAlgorithm'}
+          server_words={'CMD_ADD_SCORE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT','CmdAddScore.php','CmdGetGameResult.php','CmdSetGameResult.php'}
+          p2p={f for f,s in fnstr.items() if s&p2p_words}
+          server={f for f,s in fnstr.items() if s&server_words}
+
+          owner=fs(0x7d556e0)
+          helper=fs(0x7d5e71c)
+          away_site=0x7d55710
+          out=[]
+          out += ['=== TARGETS ===',f'owner=0x{owner:x}-0x{fe(owner):x}',f'helper=0x{helper:x}-0x{fe(helper):x}',f'p2p_seed_count={len(p2p)} server_seed_count={len(server)}']
+
+          out.append('\n=== SCORE LOAD WINDOW ===')
+          for z in ins:
+              if 0x7d55670 <= z.address <= 0x7d55790:
+                  out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          out.append('\n=== SERIALIZER HELPER FULL DISASSEMBLY ===')
+          out.append(f'helper_strings={sorted(fnstr.get(helper,set()))}')
+          out.append('helper_callers='+','.join(f'0x{x:x}' for x in sorted(rev.get(helper,()))))
+          out.append('helper_callees='+','.join(f'0x{x:x}' for x in sorted(graph.get(helper,()))))
+          for z in md.disasm(tb[helper-tva:fe(helper)-tva],helper):
+              out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+          out.append('helper_to_p2p='+fmt(path(helper,p2p)))
+          out.append('helper_to_server='+fmt(path(helper,server)))
+
+          # Linear symbolic tracker, intentionally conservative, to reveal which calls consume
+          # the stack object used as x0 for HOME_SCORE/AWAY_SCORE serialization.
+          regs={f'x{i}':None for i in range(31)}
+          regs['sp']=('sp',0)
+          def setreg(r,v):
+              if r in regs: regs[r]=v
+          def getreg(r): return regs.get(r)
+          def imm(s):
+              m=re.match(r'#(?:0x([0-9a-f]+)|(\d+))$',s)
+              if not m:return None
+              return int(m.group(1),16) if m.group(1) else int(m.group(2))
+          def expr(v):
+              if v is None:return '?'
+              if isinstance(v,tuple) and v[0]=='sp':return f'sp+0x{v[1]:x}'
+              return str(v)
+
+          owner_ins=[z for z in ins if owner<=z.address<fe(owner)]
+          calls_after=[]
+          for z in owner_ins:
+              ops=[x.strip() for x in z.op_str.split(',')]
+              if z.mnemonic=='mov' and len(ops)==2 and ops[0].startswith('x'):
+                  setreg(ops[0], getreg(ops[1]))
+              elif z.mnemonic=='add' and len(ops)>=3 and ops[0].startswith('x'):
+                  base=getreg(ops[1]); im=imm(ops[2])
+                  if isinstance(base,tuple) and base[0]=='sp' and im is not None:
+                      setreg(ops[0],('sp',base[1]+im))
+                  else:setreg(ops[0],None)
+              elif z.mnemonic in ('ldr','ldur','adrp','adr','sub','mul','eor','orr','and') and ops and ops[0].startswith('x'):
+                  # Preserve SP only; other written X registers become unknown.
+                  setreg(ops[0],None)
+              if z.mnemonic=='bl':
+                  m=re.match(r'#0x([0-9a-f]+)',z.op_str)
+                  dst=int(m.group(1),16) if m else 0
+                  snapshot={r:expr(regs[r]) for r in ('x0','x1','x2','x3')}
+                  if z.address>=0x7d55670:
+                      calls_after.append((z.address,dst,snapshot))
+                  for r in [f'x{i}' for i in range(18)]: regs[r]=None
+              if z.mnemonic=='ret':
+                  for r in regs:
+                      if r!='sp':regs[r]=None
+
+          out.append('\n=== OWNER CALLS FROM SCORE SERIALIZATION ONWARD ===')
+          for site,dst,args in calls_after:
+              if site>away_site+0x2200: break
+              marker=''
+              if 'sp+0x1270' in args.values(): marker=' TARGET_BUFFER_ARG'
+              out.append(f'0x{site:x} -> 0x{dst:x} args={args}{marker} strings={sorted(fnstr.get(fs(dst),set()))[:12]} p2p={fmt(path(fs(dst),p2p,14))} server={fmt(path(fs(dst),server,14))}')
+
+          out.append('\n=== EXPLICIT SP+0x1270 MATERIALIZATIONS IN OWNER ===')
+          for i,z in enumerate(owner_ins):
+              if z.mnemonic=='add' and 'sp, #1, lsl #12' in z.op_str:
+                  nxt=owner_ins[i+1:i+5]
+                  if any(q.mnemonic=='add' and '#0x270' in q.op_str for q in nxt):
+                      out.append(f'at 0x{z.address:x}')
+                      for q in owner_ins[max(0,i-2):i+8]:out.append(f'  0x{q.address:x}: {q.mnemonic:9} {q.op_str}')
+
+          # All helper callsites plus nearby key strings lets us classify the helper as a
+          # field builder/serializer rather than guessing from one callsite.
+          out.append('\n=== SERIALIZER HELPER CALLSITE SAMPLE ===')
+          helper_sites=[site for site,dst in calls if fs(dst)==helper]
+          out.append(f'helper_callsite_count={len(helper_sites)}')
+          for site in helper_sites[:120]:
+              f=fs(site); idx=next((i for i,z in enumerate(ins) if z.address==site),None)
+              out.append(f'CALL 0x{site:x} in 0x{f:x} strings={sorted(fnstr.get(f,set()))[:20]}')
+              if idx is not None:
+                  for q in ins[max(0,idx-7):idx+2]:out.append(f'  0x{q.address:x}: {q.mnemonic:9} {q.op_str}')
+
+          out.append('\n=== OWNER CONNECTIVITY ===')
+          out.append('owner_to_p2p='+fmt(path(owner,p2p)))
+          out.append('owner_to_server='+fmt(path(owner,server)))
+          out.append('owner_callers='+','.join(f'0x{x:x}' for x in sorted(rev.get(owner,()))))
+          out.append('owner_callees='+','.join(f'0x{x:x}' for x in sorted(graph.get(owner,()))))
+
+          # Conservative verdict.
+          helper_p2p=path(helper,p2p)
+          target_calls=[x for x in calls_after if 'sp+0x1270' in x[2].values() and x[0]>away_site]
+          out.append('\n=== VERDICT ===')
+          if helper_p2p:
+              out.append('SERIALIZER_DIRECT_P2P_PATH=FOUND')
+              out.append('The helper receiving score values has a direct static call path into the known P2P/crypto family. This is a concrete candidate wire bridge and should be dissected instruction-by-instruction next.')
+          elif target_calls:
+              out.append('POST_SCORE_BUFFER_CONSUMER=FOUND')
+              out.append('The structured buffer containing HOME_SCORE/AWAY_SCORE is consumed after the fields are written. Follow the marked consumer(s); this is narrower than generic P2P ancestry.')
+          else:
+              out.append('DIRECT_SCORE_TO_P2P_NOT_YET_PROVEN')
+              out.append('The HOME_SCORE/AWAY_SCORE loads and their serializer are real, but no direct static serializer-to-P2P call path was proven by this pass. The report identifies exact downstream calls and buffer materializations for the next dataflow pass.')
+
+          Path('/tmp/out/efootball-score-sink-v8.txt').write_text('\n'.join(out))
+          print('\n'.join(out[:1800]))
+          PY
+          python3 /tmp/ef/sinktrace.py
+
+      - name: Commit report to analysis branch
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-score-sink-v8.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-score-sink-v8.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/efootball-score-sink-v8.txt analysis-output/efootball-score-sink-v8.sha256.txt
+          git commit -m 'Trace eFootball score serializer downstream sinks' || exit 0
+          git push origin HEAD:efootball-score-wire-bridge-v3-2026-08-24
