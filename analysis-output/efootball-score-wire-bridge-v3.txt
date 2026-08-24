@@ -1,0 +1,198 @@
+=== NORMALIZED TARGETS ===
+CMD_ADD_SCORE_handler: 0x75adb2c
+CMD_GET_GAME_RESULT_xref_region: 0x7621a70
+CMD_SET_GAME_RESULT_xref_region: 0x76d4270
+crypto_config_parser: 0x7c088e4
+session_crypto_transformer: 0x7c0c670
+transport_parent: 0x7c0dca0
+p2p_reliability: 0x7ceafc4
+rt_ack: 0x7cec4ac
+reliability_parser: 0x7cf85d4
+command_registry: 0x7d2c954
+result_serializer_A: 0x7d4724c
+result_serializer_B: 0x7d5b638
+
+=== SHORTEST DIRECT-CALL PATHS ===
+score -> transport: NONE within 12 direct-call hops
+transport -> score: NONE within 12 direct-call hops
+score <- transport via reverse graph: NONE within 12 direct-call hops
+
+=== INTERSECTION TESTS (<=8 hops) ===
+shared ancestors: 0
+shared descendants: 225
+  func@0x2832e20
+  func@0x2832ea8
+  func@0x2835d6c
+  func@0x283845c
+  func@0x2a1156c
+  func@0x2efa44c
+  func@0x2efa52c
+  func@0x2efa830
+  func@0x2efaa00
+  func@0x2efb3a0
+  func@0x2efb490
+  func@0x2efb508
+  func@0x2efb5a4
+  func@0x2efb614
+  func@0x2efb894
+  func@0x2efb9dc
+  func@0x2efbc90
+  func@0x2efc39c
+  func@0x2efc42c
+  func@0x2efc4dc
+  func@0x2f15088
+  func@0x2f16590
+  func@0x2f1772c
+  func@0x2f1ec3c
+  func@0x2f2532c
+  func@0x2f2e0c8
+  func@0x2f8f730
+  func@0x2f8fd80
+  func@0x2f912cc
+  func@0x2f914dc
+  func@0x2f91730
+  func@0x2f917e0
+  func@0x2f919b4
+  func@0x2f919d8
+  func@0x2f91f98
+  func@0x2f92458
+  func@0x2f927dc
+  func@0x2f92e08
+  func@0x2f966c8
+  func@0x2f9684c
+  func@0x2f96f2c
+  func@0x2f97b6c
+  func@0x415df60
+  func@0x41b5d3c
+  func@0x41b8ef8
+  func@0x41bda48
+  func@0x41bdb78
+  func@0x41bdd24
+  func@0x41be114
+  func@0x41dbc94
+  func@0x41dcf44
+  func@0x41dd9d4
+  func@0x41ddb04
+  func@0x41df2f0
+  func@0x41e0d2c
+  func@0x41e3e5c
+  func@0x41ee57c
+  func@0x41f3c58
+  func@0x41f4aa0
+  func@0x41f4e08
+  func@0x41f5164
+  func@0x41f616c
+  func@0x41f7a40
+  func@0x41f7b8c
+  func@0x41fae00
+  func@0x41faef8
+  func@0x41fe48c
+  func@0x41ffffc
+  func@0x421e3fc
+  func@0x421e920
+  func@0x421ea0c
+  func@0x421eb78
+  func@0x42c8a78
+  func@0x42c9ebc
+  func@0x42d25a4
+  func@0x42d2678
+  func@0x43116e0
+  func@0x4311a48
+  func@0x4315574
+  func@0x6f94eec
+  func@0x6f9d734
+  func@0x6f9d778
+  func@0x6f9d7d8
+  func@0x6f9d838
+  func@0x6f9d898
+  func@0x6f9d8f8
+  func@0x6f9d958
+  func@0x6f9d9b8
+  func@0x6f9da18
+  func@0x6f9da7c
+  func@0x6f9daec
+  func@0x6f9db94
+  func@0x6f9dbfc
+  func@0x6f9dc8c
+  func@0x6f9dcfc
+  func@0x6f9dda4
+  func@0x6f9de0c
+  func@0x6f9dea0
+  func@0x6f9df10
+  func@0x6f9dfc0
+  func@0x6f9e020
+  func@0x6f9e0b0
+  func@0x6f9e120
+  func@0x6f9e1c8
+  func@0x6f9e240
+  func@0x6f9e2d0
+  func@0x6f9e340
+  func@0x6f9e3e8
+  func@0x6f9e460
+  func@0x6f9e4f0
+  func@0x6f9e560
+  func@0x6f9e608
+  func@0x6f9e670
+  func@0x6f9e700
+  func@0x6f9e770
+  func@0x6f9e820
+  func@0x6f9e880
+  func@0x6f9e910
+  func@0x6f9e980
+  func@0x6f9ea24
+score descendants intersect transport ancestors: 0
+transport descendants intersect score ancestors: 0
+
+=== DIRECT EDGES TOUCHING TARGET FAMILIES ===
+NODE CMD_ADD_SCORE_handler@0x75adb2c
+  callers: func@0x75ad80c
+  callees: func@0x2f8df84, func@0x2f912cc, func@0x2f93448, func@0x8b35650
+NODE CMD_GET_GAME_RESULT_xref_region@0x7621a70
+  callers: func@0x7621a3c
+  callees: func@0x7b1f680, func@0x7b20de8, func@0x7b21a70, func@0x7d2bf1c, func@0x7d374ec, func@0x813fdd8, func@0x813fe8c
+NODE CMD_SET_GAME_RESULT_xref_region@0x76d4270
+  callers: func@0x76d3fbc
+  callees: func@0x2f8df84, func@0x2f912cc, func@0x2f93448, func@0x8b35650
+NODE crypto_config_parser@0x7c088e4
+  callers: func@0x7bfc91c
+  callees: func@0x2efa44c, func@0x2efa52c, func@0x2efb614, func@0x2f2e0c8, func@0x2f8f730, func@0x2f912cc, func@0x2f91730, func@0x2f919d8, func@0x2f91f98, func@0x2f91fe4, func@0x2f92e08, func@0x691d0d4, func@0x7d2a948, func@0x7d2a9c0, func@0x7d2aa38, func@0x7d2ad08, func@0x8b35290, func@0x8b382d0, func@0x8b38590, func@0x8b385a0, func@0x8b385c0, func@0x8b385d0, func@0x8b385e0, func@0x8b38620
+NODE session_crypto_transformer@0x7c0c670
+  callers: NONE
+  callees: func@0x2efa52c, func@0x691d0d4, func@0x7b93324, func@0x8b35290
+NODE transport_parent@0x7c0dca0
+  callers: func@0x7c1234c, func@0x7c2ef28
+  callees: func@0x2efa52c, func@0x2efc39c, func@0x2efc4dc, func@0x2f0e6f4, func@0x7a5544c, func@0x7bf9ecc, func@0x7bfc91c, func@0x7c0fa68, func@0x7c10200, func@0x7c2eca8, func@0x7c54020, func@0x7c55498, func@0x7c559ec, func@0x7c56740, func@0x7c57148, func@0x7c578b8, func@0x7c5abc4, func@0x7c7394c, func@0x7d2bf1c, func@0x7d43a74, func@0x813fdd8, func@0x81423dc, func@0x89f3d40, func@0x8b35260, func@0x8b35290, func@0x8b388f0, func@0x8b3abf0
+NODE p2p_reliability@0x7ceafc4
+  callers: func@0x7ce4c90, func@0x7ce8a84, func@0x7ce8e30, func@0x7ce969c, func@0x7ce9d58, func@0x7cea458, func@0x7ceddc0, func@0x7cee054, func@0x7cee754, func@0x7ceeb30, func@0x7ceef48, func@0x7cef2fc, func@0x7cef70c, func@0x7cefaec, func@0x7cefe0c, func@0x7cf0f00, func@0x7cf13a4, func@0x7cf1690, func@0x7cf19dc, func@0x7cf24fc, func@0x7cf6994, func@0x7cf86f4, func@0x7cf9be4, func@0x7cf9d40, func@0x7d196e0
+  callees: func@0x7cebf88, func@0x7cec068, func@0x7cec14c, rt_ack@0x7cec4ac, func@0x7cf82e4, func@0x7cfa314, func@0x7cfa568, func@0x7cfa9e0, func@0x8b35260, func@0x8b35290, func@0x8b35300, func@0x8b35360, func@0x8b3aec0
+NODE rt_ack@0x7cec4ac
+  callers: p2p_reliability@0x7ceafc4, func@0x7cec2e8, func@0x7cf86f4, func@0x7cf9be4
+  callees: func@0x7cfa314, func@0x8b35300
+NODE reliability_parser@0x7cf85d4
+  callers: func@0x7cf82e4
+  callees: func@0x8b35260, func@0x8b35300, func@0x8b35680
+NODE command_registry@0x7d2c954
+  callers: NONE
+  callees: func@0x2efa52c
+NODE result_serializer_A@0x7d4724c
+  callers: func@0x7d46058, func@0x7d5a1f0, func@0x7d5b450, func@0x7dc6310
+  callees: func@0x2efa44c, func@0x2efa52c, func@0x2efb614, func@0x2f15088, func@0x2f2e0c8, func@0x31b542c, func@0x6f94eec, func@0x7b232d8, func@0x7b237e0, func@0x7be67c4, func@0x7c91800, func@0x7d4ff14, func@0x7d50030, func@0x7d501c8, func@0x7d502d8, func@0x7d5102c, func@0x7d51138, func@0x7d51e8c, func@0x7d52be0, func@0x7d53928, func@0x7d54158, func@0x7d5e6e0, func@0x7d5e720, func@0x7d5e838, func@0x7d5e94c, func@0x7d62818, func@0x7d62950, func@0x7dc3f04, func@0x7dd1a3c, func@0x89f3d40, func@0x8b35290, func@0x8b352f0, func@0x8b35330, func@0x8b35360, func@0x8b382d0, func@0x8b38590, func@0x8b385a0, func@0x8b385c0, func@0x8b385d0, func@0x8b385e0, func@0x8b388f0, func@0x8b3abf0, func@0x8b3ac10
+NODE result_serializer_B@0x7d5b638
+  callers: func@0x7d46058, func@0x7dc7164
+  callees: func@0x2efa44c, func@0x2efa52c, func@0x2efb614, func@0x2f15088, func@0x2f2e0c8, func@0x31b542c, func@0x7d626c8, func@0x8b35290, func@0x8b352f0, func@0x8b35330, func@0x8b382d0, func@0x8b38590, func@0x8b385a0, func@0x8b385c0, func@0x8b385d0, func@0x8b385e0
+
+=== STRING OFFSETS ===
+HOME_SCORE: 0xa38b01
+AWAY_SCORE: 0xa13757
+GAME_PHASE: 0x9f77dd, 0x9f7804, 0xa0a62c, 0xa0a655, 0xa0a682, 0xa1c91c, 0xa2f5a5, 0xa42643, 0xa5523c, 0xa8e84e, 0xab536a, 0xac7dde, 0xb0ad08, 0xb27736, 0xb3a51d, 0xb3a543, 0xb5fc6b, 0xb9959d, 0xbacced, 0xbe6459
+CMD_ADD_SCORE: 0xbef70c, 0xc15175
+CMD_GET_GAME_RESULT: 0xaf6d0e
+CMD_SET_GAME_RESULT: 0xba196a
+SessionKeyEncryptionAlgorithm: 0xae3c90
+pes-custom-encrypt: 0xad120e
+RP_RELIABILITY: 0xa97f91, 0xbdc830
+P2P_LOW_LEVEL: 0xad1238
+
+=== VERDICT ===
+DIRECT_CALL_BRIDGE_FOUND=NO
+No direct-call path was found within 12 hops between the recovered score/result family and known P2P/crypto/reliability family. This supports keeping event-triggered visual score capture as the practical path while deeper indirect/vtable/dataflow analysis continues.
