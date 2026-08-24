@@ -1,0 +1,158 @@
+name: eFootball session crypto consumer trace
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: efootball-session-crypto-consumer-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  trace-consumers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball arm64 binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Find session-crypto config consumers
+        run: |
+          cat > /tmp/ef/trace_consumers.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re,bisect
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+
+          def vaoff(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va,maxlen=160):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+maxlen].split(b'\0',1)[0]
+              if len(b)<4:return None
+              if sum(32<=x<127 for x in b)/len(b)<.92:return None
+              return b.decode('ascii','replace')
+
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          wanted={0xf0,0xf4,0xf8,0x100,0x118,0x11c,0x120,0x128}
+          hexmem=re.compile(r'\[[wx][0-9]+, #0x([0-9a-f]+)\]')
+          decmem=re.compile(r'\[[wx][0-9]+, #(\d+)\]')
+
+          # Memory-light whole-text pass: keep only frame starts and relevant-offset hits.
+          starts=[]; hits=[]; nins=0
+          for addr,size,mnem,ops in md.disasm_lite(tb,tva):
+              nins+=1
+              if mnem=='stp' and 'x29, x30' in ops and '[sp' in ops:
+                  starts.append(addr)
+              off=None
+              m=hexmem.search(ops)
+              if m: off=int(m.group(1),16)
+              else:
+                  d=decmem.search(ops)
+                  if d: off=int(d.group(1))
+              if off in wanted:
+                  hits.append((addr,off,mnem,ops))
+          starts=sorted(set(starts))
+
+          def fstart(a):
+              j=bisect.bisect_right(starts,a)-1
+              return starts[j] if j>=0 else tva
+          def fend(fs):
+              j=bisect.bisect_right(starts,fs)
+              return starts[j] if j<len(starts) else tend
+
+          cand={}
+          for h in hits:cand.setdefault(fstart(h[0]),[]).append(h)
+          ranked=[]
+          for fs,hs in cand.items():
+              offs={h[1] for h in hs}
+              score=(120 if {0x11c,0x128}<=offs else 0)+(45 if {0x118,0x11c,0x120,0x128}<=offs else 0)+(35 if {0xf8,0x100}<=offs else 0)+len(offs)*6+len(hs)
+              ranked.append((score,fs,offs,hs))
+          ranked.sort(reverse=True)
+
+          out=[f'.text=0x{tva:x}-0x{tend:x} instructions={nins} frame_starts={len(starts)} relevant_hits={len(hits)} candidates={len(ranked)}',
+               'KNOWN CONFIG OFFSETS: F0 keyex-alg-flag; F4 keyex-alg; F8 keyex-key-flag; 100 keyex-key-object; 118 session-alg-flag; 11C session-alg; 120 keylen-flag; 128 keylen']
+
+          high=[]
+          for score,fs,offs,hs in ranked[:120]:
+              out.append(f'\n=== CANDIDATE 0x{fs:x} score={score} offsets={",".join(hex(x) for x in sorted(offs))} hits={len(hs)} ===')
+              for a,o,mn,op in hs[:50]:out.append(f'HIT 0x{a:x}: {mn:8} {op} [off={hex(o)}]')
+              if {0x11c,0x128}<=offs or len(offs)>=5 or score>=95:high.append((score,fs,offs,hs))
+
+          out.append(f'\nBOTH_SESSION_ALG_AND_KEYLEN={sum(1 for r in ranked if {0x11c,0x128}<=r[2])}')
+          for score,fs,offs,hs in ranked:
+              if {0x11c,0x128}<=offs:out.append(f'BOTH 0x{fs:x} score={score} offsets={",".join(hex(x) for x in sorted(offs))}')
+
+          # Surgical disassembly only for high-confidence functions.
+          for score,fs,offs,hs in high[:35]:
+              fe=min(fend(fs),fs+0x2000)
+              body=list(md.disasm(tb[fs-tva:fe-tva],fs))
+              out.append(f'\n--- SURGERY 0x{fs:x}-0x{fe:x} score={score} ---')
+              # Find printable ADRP+ADD strings.
+              ann={}
+              for i,z in enumerate(body):
+                  if z.mnemonic!='adrp':continue
+                  m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                  if not m:continue
+                  reg=m.group(1);page=int(m.group(2),16)
+                  for q in body[i+1:i+8]:
+                      mm=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                      if mm:
+                          va=page+int(mm.group(1),16);s=cstr(va)
+                          if s:ann[q.address]=f' ; STR@0x{va:x}={s!r}'
+                          break
+              # Track registers loaded from session-alg / key-length and print nearby use.
+              tainted={}
+              for i,z in enumerate(body):
+                  tag=''
+                  mm=hexmem.search(z.op_str); dd=decmem.search(z.op_str)
+                  off=int(mm.group(1),16) if mm else (int(dd.group(1)) if dd else None)
+                  if off in wanted:tag+=f' <OFFSET {hex(off)}>'
+                  lm=re.match(r'(?:ldr|ldrb|ldrh|ldrsw)\s+([wx]\d+),',z.mnemonic+' '+z.op_str)
+                  if lm and off in (0x11c,0x128):
+                      tainted[lm.group(1)]=(z.address,off)
+                  # Propagate simple mov w/x register aliases for a few instructions by reporting, not full SSA.
+                  uses=[]
+                  for reg,(src,soff) in list(tainted.items()):
+                      if reg in z.op_str and z.address!=src:uses.append(f'{reg}<-{hex(soff)}@{hex(src)}')
+                  if uses:tag+=' <USES '+','.join(uses)+'>'
+                  if z.mnemonic in ('cmp','cmn','subs','cbz','cbnz','tbz','tbnz','bl','blr','br') or tag or z.address in ann:
+                      out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{ann.get(z.address,"")}{tag}')
+
+          Path('/tmp/out/session_crypto_consumers.txt').write_text('\n'.join(out))
+          PY
+          python3 /tmp/ef/trace_consumers.py
+          echo '===== SESSION CRYPTO CONSUMER TRACE ====='
+          cat /tmp/out/session_crypto_consumers.txt
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-session-crypto-consumers
+          path: /tmp/out/
+          retention-days: 7

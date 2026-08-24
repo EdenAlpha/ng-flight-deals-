@@ -1,0 +1,125 @@
+name: eFootball LIEF relocs + P2P crypto call edges
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch: {}
+
+concurrency:
+  group: efootball-lief-cryptoedges-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6 lief==0.14.1
+      - name: Download current eFootball arm64 binary (runner-side)
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: LIEF relocations + P2P-to-crypto call graph
+        run: |
+          cat > /tmp/ef/lief_edges.py <<'PY'
+          from pathlib import Path
+          import capstone
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re,bisect,collections,sys
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw=p.read_bytes()
+
+          # ---- part 1: LIEF relocations
+          TARGET=0x7c0c670
+          out=[]
+          try:
+              import lief
+              lf=lief.parse(str(p))
+              rels=list(lf.relocations)
+              out.append(f'LIEF_relocations={len(rels)}')
+              hits=[r for r in rels if r.addend==TARGET]
+              out.append(f'LIEF_TARGET_SLOTS={len(hits)} -> {[hex(r.address) for r in hits[:10]]}')
+              # neighbors around first slot = vtable contents
+              def rd64(va):
+                  o=None
+                  for seg in lf.segments:
+                      if seg.virtual_address<=va<seg.virtual_address+seg.physical_size:
+                          o=seg.file_offset+va-seg.virtual_address;break
+                  return int.from_bytes(raw[o:o+8],'little') if o is not None else None
+              for r in hits[:6]:
+                  sl=r.address
+                  out.append(f'\n=== VTABLE WINDOW {hex(sl)} ===')
+                  for va in range(sl-0x80,sl+0x88,8):
+                      v=rd64(va)
+                      mark=' <<<< c670' if v==TARGET else ''
+                      out.append(f'{hex(va)}: {hex(v) if v else "?"}{mark}')
+          except Exception as ex:
+              out.append(f'LIEF_FAILED: {ex!r}')
+
+          # ---- part 2: BL edges from P2P region into crypto region
+          with p.open('rb') as f:
+              from elftools.elf.elffile import ELFFile
+              elf=ELFFile(f)
+              text=elf.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          starts=[]
+          for addr,size,mnem,ops in md.disasm_lite(tb,tva):
+              if mnem=='stp' and 'x29, x30' in ops and '[sp' in ops:
+                  starts.append(addr)
+          starts=sorted(set(starts))
+          def fstart(a):
+              j=bisect.bisect_right(starts,a)-1
+              return starts[j] if j>=0 else tva
+
+          P2P_LO,P2P_HI=0x7b00000,0x7e00000
+          CR_LO,CR_HI=0x7f00000,0x8400000
+          edges=collections.defaultdict(list)
+          print('building call edges...',flush=True)
+          for addr,size,mnem,ops in md.disasm_lite(tb[P2P_LO-tva:P2P_HI-tva],P2P_LO):
+              if mnem=='bl' and ops.startswith('#'):
+                  t=int(ops[1:],16)
+                  if CR_LO<=t<CR_HI:
+                      edges[t].append(addr)
+          out.append(f'\nP2P_TO_CRYPTO_EDGES={sum(len(v) for v in edges.values())} distinct_targets={len(edges)}')
+
+          def cstr(va,maxlen=120):
+              o=None
+              for sv,so,fs in [(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz']))]:
+                  pass
+              return None
+
+          # rank crypto targets by caller diversity
+          ranked=sorted(edges.items(),key=lambda kv:-len(set(fstart(a) for a in kv[1])))
+          for tgt,sites in ranked[:50]:
+              callers=sorted(set(fstart(a) for a in sites))
+              out.append(f'CRYPTO_FN 0x{tgt:x} callsites={len(sites)} callers={[hex(c) for c in callers[:12]]}')
+
+          txt='\n'.join(out)
+          Path('/tmp/out/lief_edges.txt').write_text(txt)
+          print(txt[:5000])
+          PY
+          python3 /tmp/ef/lief_edges.py 2>&1 | tail -70
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-lief-edges
+          path: /tmp/out/
+          retention-days: 7

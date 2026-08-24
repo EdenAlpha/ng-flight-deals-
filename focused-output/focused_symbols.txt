@@ -1,0 +1,728 @@
+    45: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND AInputEvent_getDeviceId
+   350: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND glFramebufferTextureLayer
+   628: 0000000008965dac   992 FUNC    GLOBAL DEFAULT   14 silk_encode_indices
+   637: 00000000086d50dc   364 FUNC    GLOBAL DEFAULT   14 icu_64::SimpleLocaleKeyFactory::create(icu_64::ICUServiceKey const&, icu_64::ICUService const*, UErrorCode&) const
+   645: 0000000008aacc2c   348 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AttachDspTimeStretch
+   724: 0000000008a44718    12 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_EnableBusSendOffsetWhenLevelNotExist
+   833: 0000000008aca890   456 FUNC    GLOBAL DEFAULT   14 criAfxParagraphicEqualizer_Process
+   873: 00000000089c57f8  1212 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetupAtomVoiceInternal(CriAtomVoiceConfigTag*, int, short)
+   911: 00000000089c5644    44 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::CalculateNumSamplesPerPacket(float, float)
+   938: 00000000088ccda4   696 FUNC    WEAK   DEFAULT   14 OT::hb_get_subtables_context_t::return_t OT::SubstLookupSubTable::dispatch<OT::hb_get_subtables_context_t>(OT::hb_get_subtables_context_t*, unsigned int) const
+   950: 0000000008aec4a0    24 FUNC    GLOBAL DEFAULT   14 criFsDevice_SetThreadPriority
+   997: 0000000008560a28    12 FUNC    GLOBAL DEFAULT   14 physx::Gu::RTreeTriangleMesh::getVerticesForModification()
+  1079: 00000000088bc510   208 FUNC    WEAK   DEFAULT   14 OT::HintingDevice::get_x_delta(hb_font_t*) const
+  1134: 000000000868b18c    36 FUNC    GLOBAL DEFAULT   14 icu_64::ICUBreakIteratorService::~ICUBreakIteratorService()
+  1151: 0000000008aacb64   200 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForDspTimeStretch
+  1296: 00000000086d2088   384 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::get(icu_64::Locale const&, int, icu_64::Locale*, UErrorCode&) const
+  1332: 00000000098943d8   392 OBJECT  GLOBAL DEFAULT   16 vtable for icu_64::ChoiceFormat
+  1334: 0000000008a5d574   328 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetDspParameter
+  1337: 00000000086cf5e0     8 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::getID() const
+  1374: 00000000088c1138   128 FUNC    WEAK   DEFAULT   14 OT::hb_would_apply_context_t::return_t OT::SingleSubst::dispatch<OT::hb_would_apply_context_t>(OT::hb_would_apply_context_t*) const
+  1388: 00000000089c6b18    12 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice_Float32::SetCallbackGetFloat32PcmData(unsigned int (*)(void*, unsigned int, float**, unsigned int), void*)
+  1392: 00000000086cf858    12 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::getDynamicClassID() const
+  1410: 00000000086d07c8   548 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getVisibleIDs(icu_64::UVector&, icu_64::UnicodeString const*, UErrorCode&) const
+  1448: 00000000087082c0   148 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::ChoiceFormat(icu_64::UnicodeString const&, UErrorCode&)
+  1468: 0000000008a5c680   100 FUNC    GLOBAL DEFAULT   14 criAsrVoice_Execute
+  1537: 00000000088cc9bc   396 FUNC    WEAK   DEFAULT   14 OT::hb_add_coverage_context_t<hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 4u>, hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 0u>, hb_set_digest_lowest_bits_t<unsigned long, 9u> > > >::return_t OT::SubstLookupSubTable::dispatch<OT::hb_add_coverage_context_t<hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 4u>, hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 0u>, hb_set_digest_lowest_bits_t<unsigned long, 9u> > > > >(OT::hb_add_coverage_context_t<hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 4u>, hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 0u>, hb_set_digest_lowest_bits_t<unsigned long, 9u> > > >*, unsigned int) const
+  1625: 00000000088df4b4   340 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t AAT::KerxSubTable::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+  1635: 0000000008a5d6bc   212 FUNC    GLOBAL DEFAULT   14 criAsrVoice_ResetDspParameters
+  1669: 0000000008a6753c    44 FUNC    GLOBAL DEFAULT   14 criAtomVoice_IsAudioOutputActive
+  1729: 00000000086cf73c   132 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::parsePrefix(icu_64::UnicodeString&)
+  1730: 00000000086d18d4   124 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::createKey(icu_64::UnicodeString const*, UErrorCode&) const
+  1759: 0000000008a4fa3c    12 FUNC    GLOBAL DEFAULT   14 criAtomPlayer_SetMonitoringVoiceStopCallback
+  1773: 00000000088db19c   592 FUNC    WEAK   DEFAULT   14 AAT::hb_aat_apply_context_t::return_t AAT::ChainSubtable<AAT::ExtendedTypes>::dispatch<AAT::hb_aat_apply_context_t>(AAT::hb_aat_apply_context_t*) const
+  1793: 0000000008708400   184 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::ChoiceFormat(double const*, signed char const*, icu_64::UnicodeString const*, int)
+  1903: 0000000008a68240    60 FUNC    GLOBAL DEFAULT   14 criAtomVoice_IsNcVoicePlaying
+  1921: 00000000086d0b60    64 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getDisplayName(icu_64::UnicodeString const&, icu_64::UnicodeString&) const
+  1947: 0000000008613964    64 FUNC    GLOBAL DEFAULT   14 physx::PxVehicleGraph::updateTimeSlice(float const*)
+  1977: 0000000008a5d830    76 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetSpatializer
+  2059: 0000000008a67b04    20 FUNC    GLOBAL DEFAULT   14 criAtomVoice_Pause
+  2087: 00000000087082c0   148 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::ChoiceFormat(icu_64::UnicodeString const&, UErrorCode&)
+  2095: 0000000008a44020    24 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_GetAtomPlayer
+  2264: 00000000086d27f8    96 FUNC    WEAK   DEFAULT   14 icu_64::ServiceEnumeration::reset(UErrorCode&)
+  2348: 0000000008a58788     8 FUNC    GLOBAL DEFAULT   14 criAsrRack_SetOutputNcVoiceType
+  2356: 00000000088c6f48   232 FUNC    WEAK   DEFAULT   14 OT::OffsetTo<OT::Device, OT::IntType<unsigned short, 2u>, true>::sanitize(hb_sanitize_context_t*, void const*) const
+  2403: 0000000008709290   324 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::matchStringUntilLimitPart(icu_64::MessagePattern const&, int, int, icu_64::UnicodeString const&, int)
+  2423: 0000000008290478    20 FUNC    GLOBAL DEFAULT   14 mixer_numvoices
+  2457: 0000000008a43fd4    40 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_IsActive
+  2533: 0000000008a69914   892 FUNC    GLOBAL DEFAULT   14 criNcVoice_ProcessInsertionDspAndInterleaveFloat32toInt16
+  2548: 0000000000d085f9    35 OBJECT  GLOBAL DEFAULT   10 typeinfo name for icu_64::ICUBreakIteratorService
+  2593: 0000000008a5c2b8   184 FUNC    GLOBAL DEFAULT   14 criAsrVoice_CalculateWorkSize
+  2598: 0000000008af5df8    76 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_IsCreatedDevice
+  2620: 000000000870868c    64 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::~ChoiceFormat()
+  2748: 00000000088ca88c   588 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t OT::Context::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+  2795: 00000000086d1aa4     8 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getTimestamp() const
+  2821: 00000000089c6414    72 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetVolume(float)
+  2932: 0000000009891200    24 OBJECT  GLOBAL DEFAULT   16 typeinfo for icu_64::ICUService
+  2984: 00000000086d2308    20 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::registerInstance(icu_64::UObject*, icu_64::Locale const&, int, UErrorCode&)
+  3002: 0000000008acaa70    28 FUNC    GLOBAL DEFAULT   14 criAfxParagraphicEqualizer_GetParameter
+  3032: 0000000009895ae0    24 OBJECT  GLOBAL DEFAULT   16 typeinfo for icu_64::CalendarService
+  3232: 00000000082e003c   104 FUNC    GLOBAL DEFAULT   14 physx::NpCloth::getSelfCollisionIndices(unsigned int*) const
+  3267: 0000000008aebf18    92 FUNC    GLOBAL DEFAULT   14 criFsDevice_CalculateWorkSize
+  3314: 0000000008a1d164    12 FUNC    GLOBAL DEFAULT   14 criStreamerManager_GetDefaultDeviceId
+  3390: 0000000008a67a7c    20 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetSamplingRate
+  3433: 0000000008aac9d8   212 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForDspPitchShifter
+  3439: 0000000008a6c5c8    24 FUNC    GLOBAL DEFAULT   14 criNcHcaMixer_RemoveVoice
+  3514: 00000000086e1ac0   352 FUNC    GLOBAL DEFAULT   14 icu_64::UnifiedCache::_runEvictionSlice() const
+  3548: 0000000008381e28     8 FUNC    WEAK   DEFAULT   14 physx::cloth::ClothImpl<physx::cloth::SwCloth>::getNumSelfCollisionIndices() const
+  3608: 0000000008a5d4ac     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetContext
+  3625: 0000000008998798    48 FUNC    GLOBAL DEFAULT   14 CriMvEasyPlayer::detachCenterVoice()
+  3653: 0000000008ab9e24   152 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForInstrumentVoicePool
+  3714: 0000000008338b38   268 FUNC    GLOBAL DEFAULT   14 physx::Pt::SpatialHash::reorderParticleIndicesToPackets(unsigned int*, unsigned int, physx::Cm::BitMapBase<physx::shdfnd::NonTrackingAllocator> const&, unsigned short*)
+  3718: 00000000083e141c    20 FUNC    GLOBAL DEFAULT   14 physx::Sc::SimulationController::udpateScBodyAndShapeSim(physx::PxsTransformCache&, physx::Bp::BoundsArray&, physx::PxBaseTask*)
+  3775: 00000000088c1008   304 FUNC    WEAK   DEFAULT   14 OT::hb_would_apply_context_t::return_t OT::SubstLookupSubTable::dispatch<OT::hb_would_apply_context_t>(OT::hb_would_apply_context_t*, unsigned int) const
+  3779: 0000000008ab2688     4 FUNC    GLOBAL DEFAULT   14 criAtomExAsr_PauseOutputVoice
+  3845: 00000000089c53a4   120 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::Initialize()
+  4059: 0000000008705510  1084 FUNC    GLOBAL DEFAULT   14 icu_64::MessagePattern::parseChoiceStyle(int, int, UParseError*, UErrorCode&)
+  4086: 00000000089c6878   172 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::ResetBusSendLevel()
+  4095: 00000000086cf864     4 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceFactory::~ICUServiceFactory()
+  4138: 0000000008a44654   172 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_ForceResetBusSend
+  4270: 00000000086d266c   168 FUNC    WEAK   DEFAULT   14 icu_64::ServiceEnumeration::clone() const
+  4279: 0000000008a96af0    32 FUNC    GLOBAL DEFAULT   14 criatomexplayer_SetDeviceSendLevel
+  4300: 0000000008a8d5c0   120 FUNC    GLOBAL DEFAULT   14 criAtomEx_GetNumUsedVirtualVoices
+  4313: 00000000086d2030    68 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::~ICULocaleService()
+  4316: 0000000008aebeac    92 FUNC    GLOBAL DEFAULT   14 criFsDecodeDevice_GetDecoder
+  4320: 000000000853fe18  1448 FUNC    GLOBAL DEFAULT   14 physx::Gu::HeightField::parseTrianglesForCollisionVertices(unsigned short)
+  4377: 00000000086d0008    20 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getKey(icu_64::ICUServiceKey&, UErrorCode&) const
+  4380: 00000000087234f8   680 FUNC    GLOBAL DEFAULT   14 icu_64::DateTimePatternGenerator::getFieldAndWidthIndices(char const*, UDateTimePGDisplayWidth*) const
+  4412: 0000000008af64a8    24 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_SetInitialThreadPriority
+  4468: 0000000008aec484    12 FUNC    GLOBAL DEFAULT   14 criFsDevice_RequestToResume
+  4507: 00000000088bcf0c   336 FUNC    WEAK   DEFAULT   14 OT::hb_collect_glyphs_context_t::return_t OT::SubstLookup::dispatch_recurse_func<OT::hb_collect_glyphs_context_t>(OT::hb_collect_glyphs_context_t*, unsigned int)
+  4636: 0000000008a67bfc    64 FUNC    GLOBAL DEFAULT   14 criAtomVoice_IsDropped
+  4640: 00000000088e18c0   492 FUNC    WEAK   DEFAULT   14 AAT::hb_aat_apply_context_t::return_t AAT::KerxSubTable::dispatch<AAT::hb_aat_apply_context_t>(AAT::hb_aat_apply_context_t*) const
+  4681: 0000000008a53f48    16 FUNC    GLOBAL DEFAULT   14 criAtom_SetDeviceUpdateCallback
+  4684: 0000000008a6a358    12 FUNC    GLOBAL DEFAULT   14 criNcVoiceAsr_GetInterface
+  4755: 0000000008a75e10  9248 FUNC    GLOBAL DEFAULT   14 criAtomParameter2_CalcVoiceParameter
+  4772: 00000000088b9430   232 FUNC    WEAK   DEFAULT   14 AAT::hb_aat_apply_context_t::return_t OT::KernSubTable<OT::KernOTSubTableHeader>::dispatch<AAT::hb_aat_apply_context_t>(AAT::hb_aat_apply_context_t*) const
+  4795: 00000000087082b4    12 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::getDynamicClassID() const
+  4839: 0000000008a8b3a4   264 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AllocateHcaMxVoicePool
+  4855: 0000000008752224   692 FUNC    GLOBAL DEFAULT   14 icu_64::ChineseCalendar::winterSolstice(int) const
+  4871: 0000000008a47514    20 FUNC    GLOBAL DEFAULT   14 criAtomPlayerPool_SetVoiceEventCallback
+  4872: 000000000824684c   168 FUNC    GLOBAL DEFAULT   14 std::__ndk1::random_device::random_device(std::__ndk1::basic_string<char, std::__ndk1::char_traits<char>, std::__ndk1::allocator<char> > const&)
+  4925: 0000000008a5d8cc   100 FUNC    GLOBAL DEFAULT   14 criAsrVoice_ReturnPacket
+  5115: 0000000008a5d4b4     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_GetContext
+  5133: 0000000008a99b30   120 FUNC    GLOBAL DEFAULT   14 criAtomEx_EnumerateVoiceInfos
+  5254: 0000000008a5c508   224 FUNC    GLOBAL DEFAULT   14 criAsrVoice_Destroy
+  5312: 0000000008aac574   144 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForDsp
+  5317: 00000000089c8940    84 FUNC    GLOBAL DEFAULT   14 criManaStreamer_IsCandidate
+  5333: 0000000008ac9fdc   152 FUNC    GLOBAL DEFAULT   14 criAfxParagraphicEqualizer_CalculateWorkSize
+  5360: 0000000008708ddc    24 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::format(int, icu_64::UnicodeString&, icu_64::FieldPosition&) const
+  5468: 000000000868b188     4 FUNC    GLOBAL DEFAULT   14 icu_64::ICUBreakIteratorService::~ICUBreakIteratorService()
+  5482: 0000000008a50eb4     8 FUNC    GLOBAL DEFAULT   14 criAtomPlayer_SetDeviceSend
+  5496: 00000000086d25fc    48 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::createKey(icu_64::UnicodeString const*, UErrorCode&) const
+  5568: 00000000089c6968    40 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::GetAtomExPlaybackId()
+  5576: 00000000088caad8   388 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t OT::ChainContext::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+  5586: 0000000008af6350   332 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_SetParameterToDeviceList
+  5695: 00000000087084b8    92 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::ChoiceFormat(icu_64::ChoiceFormat const&)
+  5738: 00000000084cb328   496 FUNC    GLOBAL DEFAULT   14 physx::MaterialIndicesStruct::getBinaryMetaData(physx::PxOutputStream&)
+  5770: 0000000008a6795c   204 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetDefaultParameters
+  6007: 000000000839c18c    56 FUNC    GLOBAL DEFAULT   14 physx::Sc::Scene::swapInteractionArrayIndices(unsigned int, unsigned int, physx::Sc::InteractionType::Enum)
+  6008: 00000000086cf52c    68 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::ICUServiceKey(icu_64::UnicodeString const&)
+  6014: 0000000008a43efc   204 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_FreeVoice
+  6024: 0000000008a6a140   364 FUNC    GLOBAL DEFAULT   14 criNcVoice_FlushInsertionDsp
+  6175: 0000000008a68204    60 FUNC    GLOBAL DEFAULT   14 criAtomVoice_GetSpatializer
+  6286: 0000000008a1d70c   232 FUNC    GLOBAL DEFAULT   14 criStreamerManager_DeleteStreamerByDeviceId
+  6305: 0000000008aec490     8 FUNC    GLOBAL DEFAULT   14 criFsDevice_IsSuspended
+  6392: 00000000086d2224   204 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::registerInstance(icu_64::UObject*, icu_64::UnicodeString const&, signed char, UErrorCode&)
+  6425: 0000000008a43fc8    12 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_SetRawPcmMode
+  6461: 0000000008aebf74   484 FUNC    GLOBAL DEFAULT   14 criFsDevice_CreateFromWork
+  6481: 0000000008a553ec   132 FUNC    GLOBAL DEFAULT   14 criAtomAsr_PauseOutputVoice
+  6514: 0000000008781be4   268 FUNC    GLOBAL DEFAULT   14 icu_64::CollationDataBuilder::setPrimaryRangeAndReturnNext(int, int, unsigned int, int, UErrorCode&)
+  6522: 0000000008a5d87c     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_GetSpatializer
+  6557: 0000000008aec6d0    88 FUNC    GLOBAL DEFAULT   14 criFsDispatcher_ReturnActionItem
+  6660: 0000000008708db8    12 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::getFormats(int&) const
+  6676: 00000000089c6578   100 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetPan(int, float)
+  6721: 000000000a572700     8 OBJECT  GLOBAL DEFAULT   23 criatomvoice_hn_list
+  6749: 00000000098911a0    24 OBJECT  GLOBAL DEFAULT   16 typeinfo for icu_64::ICUServiceFactory
+  6790: 00000000089c5670   244 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::CriManaSoundAtomVoice()
+  6923: 0000000008a5d494     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_GetNumRoutings
+  6959: 0000000008708654    56 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::~ChoiceFormat()
+  7049: 0000000008534a24     8 FUNC    WEAK   DEFAULT   14 physx::Gu::ConvexMesh::getNbVertices() const
+  7071: 000000000855ffa8     8 FUNC    WEAK   DEFAULT   14 physx::Gu::TriangleMesh::getNbVertices() const
+  7183: 0000000008a6a2f8     8 FUNC    GLOBAL DEFAULT   14 criNcvDummy_GetDeviceType
+  7240: 000000000a57b1f8     8 OBJECT  GLOBAL DEFAULT   23 g_criatomex_monitoring_voice_stop_cb_obj
+  7255: 00000000088bc458   184 FUNC    WEAK   DEFAULT   14 OT::Device::get_y_delta(hb_font_t*, OT::VariationStore const&) const
+  7302: 0000000008aff160    16 FUNC    GLOBAL DEFAULT   14 MovieDecoder_EnableVoicePoolCreate
+  7327: 0000000008a55e68   124 FUNC    GLOBAL DEFAULT   14 criAtomAsr_GetDeviceType
+  7436: 0000000009891ce0   208 OBJECT  GLOBAL DEFAULT   16 vtable for icu_64::ICUNumberFormatService
+  7506: 0000000008a42b48    32 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_GetFinalVoiceParameter
+  7511: 0000000008386098    88 FUNC    GLOBAL DEFAULT   14 physx::cloth::ClothImpl<physx::cloth::SwCloth>::setSelfCollisionIndices(physx::cloth::Range<unsigned int const>)
+  7654: 0000000008a5cf7c    28 FUNC    GLOBAL DEFAULT   14 criAsrVoice_IsStop
+  7659: 0000000008a44498   104 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_GetMaxVoices
+  7699: 00000000089c69c0     8 FUNC    WEAK   DEFAULT   14 CriManaSoundAtomVoice::~CriManaSoundAtomVoice()
+  7771: 00000000089c633c   216 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::Pause(int)
+  7817: 0000000008aec324    68 FUNC    GLOBAL DEFAULT   14 criFsDevice_AddTask
+  7822: 00000000088ca278   228 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t OT::SubstLookupSubTable::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*, unsigned int) const
+  7941: 0000000008a279b8   132 FUNC    GLOBAL DEFAULT   14 criAtomConfig_GetVoiceLimitGroupIndex
+  7980: 0000000008af5d84    96 FUNC    GLOBAL DEFAULT   14 criFs_DetachIoDevice
+  8019: 0000000008aac604   168 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForDspAfx
+  8205: 0000000009895a10   208 OBJECT  GLOBAL DEFAULT   16 vtable for icu_64::CalendarService
+  8269: 00000000086d0028  1844 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getKey(icu_64::ICUServiceKey&, icu_64::UnicodeString*, icu_64::ICUServiceFactory const*, UErrorCode&) const
+  8286: 0000000008a5d4bc   120 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetDspActiveSwitch
+  8315: 00000000089c5cb4   468 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::CleanupAtomVoiceInternal()
+  8399: 0000000008a99a24    76 FUNC    GLOBAL DEFAULT   14 criAtomEx_SetVoiceEventCallback
+  8424: 00000000086d4048     8 FUNC    GLOBAL DEFAULT   14 icu_64::LocaleKeyFactory::handleCreate(icu_64::Locale const&, int, icu_64::ICUService const*, UErrorCode&) const
+  8440: 0000000008a6a2dc     8 FUNC    GLOBAL DEFAULT   14 criNcvDummy_GetOutputNcVoice
+  8455: 00000000086cf864     4 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceFactory::~ICUServiceFactory()
+  8488: 0000000008a67adc    12 FUNC    GLOBAL DEFAULT   14 criAtomVoice_Start
+  8506: 0000000008a42a0c    68 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_SetMaxPitch
+  8515: 00000000086def8c   192 FUNC    WEAK   DEFAULT   14 icu_64::ICUNumberFormatService::handleDefault(icu_64::ICUServiceKey const&, icu_64::UnicodeString*, UErrorCode&) const
+  8533: 0000000008a75708  1296 FUNC    GLOBAL DEFAULT   14 criAtomParameter2_Calculate3dVoiceParameter
+  8584: 0000000008a67c44    20 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetVolume
+  8670: 00000000086d2030    68 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::~ICULocaleService()
+  8695: 00000000083c0120     8 FUNC    GLOBAL DEFAULT   14 physx::PxsDefaultMemoryManager::createDeviceMemoryAllocator(unsigned int)
+  8811: 000000000834e0b8   332 FUNC    WEAK   DEFAULT   14 physx::shdfnd::Array<void*, physx::shdfnd::InlineAllocator<512u, physx::shdfnd::ReflectionAllocator<physx::Sq::AABBTreeIndices> > >::growAndPushBack(void* const&)
+  8884: 00000000088cbf70   124 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t OT::ExtensionFormat1<OT::ExtensionSubst>::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+  8985: 0000000008705478   152 FUNC    GLOBAL DEFAULT   14 icu_64::MessagePattern::parseChoiceStyle(icu_64::UnicodeString const&, UParseError*, UErrorCode&)
+  9024: 00000000089c64c0    60 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::ResetSendLevel()
+  9052: 00000000086def7c    16 FUNC    WEAK   DEFAULT   14 icu_64::ICUNumberFormatService::cloneInstance(icu_64::UObject*) const
+  9080: 0000000000d11e4e    22 OBJECT  GLOBAL DEFAULT   10 typeinfo name for icu_64::ICUService
+  9119: 000000000834de90   220 FUNC    WEAK   DEFAULT   14 physx::shdfnd::internal::Stack<physx::shdfnd::ReflectionAllocator<physx::Sq::AABBTreeIndices> >::grow()
+  9234: 00000000082900e0   100 FUNC    GLOBAL DEFAULT   14 mixer_getvoicepos
+  9253: 00000000088bc5e0   208 FUNC    WEAK   DEFAULT   14 OT::HintingDevice::get_y_delta(hb_font_t*) const
+  9342: 00000000089c62e8    84 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::Stop()
+  9360: 0000000008a68e9c   236 FUNC    GLOBAL DEFAULT   14 criNcVoice_CalculateWorkSize
+  9491: 0000000008af8474    12 FUNC    GLOBAL DEFAULT   14 criFsIo_GetDeviceId
+  9504: 0000000008a5c370   408 FUNC    GLOBAL DEFAULT   14 criAsrVoice_Create
+  9693: 00000000088ba5a0   440 FUNC    WEAK   DEFAULT   14 AAT::hb_aat_apply_context_t::return_t OT::KernSubTable<OT::KernAATSubTableHeader>::dispatch<AAT::hb_aat_apply_context_t>(AAT::hb_aat_apply_context_t*) const
+  9696: 00000000088bd05c   428 FUNC    WEAK   DEFAULT   14 OT::hb_collect_glyphs_context_t::return_t OT::SubstLookupSubTable::dispatch<OT::hb_collect_glyphs_context_t>(OT::hb_collect_glyphs_context_t*, unsigned int) const
+  9824: 000000000868b188     4 FUNC    GLOBAL DEFAULT   14 icu_64::ICUBreakIteratorService::~ICUBreakIteratorService()
+  9932: 00000000088d208c   396 FUNC    WEAK   DEFAULT   14 OT::hb_add_coverage_context_t<hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 4u>, hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 0u>, hb_set_digest_lowest_bits_t<unsigned long, 9u> > > >::return_t OT::PosLookupSubTable::dispatch<OT::hb_add_coverage_context_t<hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 4u>, hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 0u>, hb_set_digest_lowest_bits_t<unsigned long, 9u> > > > >(OT::hb_add_coverage_context_t<hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 4u>, hb_set_digest_combiner_t<hb_set_digest_lowest_bits_t<unsigned long, 0u>, hb_set_digest_lowest_bits_t<unsigned long, 9u> > > >*, unsigned int) const
+ 10004: 00000000084dd10c   456 FUNC    GLOBAL DEFAULT   14 physx::Gu::ReadIndices(unsigned short, unsigned int, unsigned short*, physx::PxInputStream&, bool)
+ 10106: 0000000008a9a094     4 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_SetServerFrequencyForWorkSizeCalculation
+ 10136: 0000000008a68140    72 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetDeviceSend
+ 10337: 00000000086d2414    60 FUNC    GLOBAL DEFAULT   14 icu_64::ServiceEnumeration::~ServiceEnumeration()
+ 10343: 0000000008a53f0c     8 FUNC    GLOBAL DEFAULT   14 criAtom_SetFreeTimeBufferingFlagForDefaultDevice
+ 10354: 0000000008a587a0     8 FUNC    GLOBAL DEFAULT   14 criAsrRack_GetVoice
+ 10361: 0000000008a34248    48 FUNC    GLOBAL DEFAULT   14 criAtomExAcb_GetDeviceSendLevelParametersInfoByCueName
+ 10401: 00000000089c5fd8    88 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetupUserPanning(unsigned int)
+ 10415: 0000000008a5d424    36 FUNC    GLOBAL DEFAULT   14 criAsrVoice_PutPacket
+ 10454: 00000000087351c4    56 FUNC    GLOBAL DEFAULT   14 icu_64::Calendar::registerFactory(icu_64::ICUServiceFactory*, UErrorCode&)
+ 10457: 0000000008a5d49c     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_GetOutputChannels
+ 10488: 0000000008a44038  1080 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_Execute
+ 10501: 00000000086d07b4     8 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::handleDefault(icu_64::ICUServiceKey const&, icu_64::UnicodeString*, UErrorCode&) const
+ 10510: 00000000089c64fc   124 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetSendLevel(int, CriAtomSpeakerIdTag, float)
+ 10595: 00000000086d07bc    12 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getVisibleIDs(icu_64::UVector&, UErrorCode&) const
+ 10597: 0000000008a1da80    44 FUNC    GLOBAL DEFAULT   14 criStreamerManager_SetDefaultDeviceSpecForTools
+ 10621: 00000000099712a0    24 OBJECT  GLOBAL DEFAULT   23 m2tsd_relaysj
+ 10645: 000000000873e77c   304 FUNC    WEAK   DEFAULT   14 icu_64::CalendarService::CalendarService()
+ 10651: 00000000088d2218   716 FUNC    WEAK   DEFAULT   14 OT::hb_get_subtables_context_t::return_t OT::PosLookupSubTable::dispatch<OT::hb_get_subtables_context_t>(OT::hb_get_subtables_context_t*, unsigned int) const
+ 10710: 0000000008a5cf60    28 FUNC    GLOBAL DEFAULT   14 criAsrVoice_Pause
+ 10764: 0000000008ab9a7c   276 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AllocateAiffVoicePool
+ 10823: 00000000086d2450    12 FUNC    GLOBAL DEFAULT   14 icu_64::ServiceEnumeration::getStaticClassID()
+ 10843: 00000000086d189c    32 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::isDefault() const
+ 10890: 0000000008a8af84   104 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForHcaVoicePool
+ 10930: 00000000088cd180   408 FUNC    WEAK   DEFAULT   14 OT::hb_get_subtables_context_t::return_t OT::Context::dispatch<OT::hb_get_subtables_context_t>(OT::hb_get_subtables_context_t*) const
+ 10939: 000000000a5701b8     8 OBJECT  GLOBAL DEFAULT   23 CriManaSoundAtomVoice::s_cs_list
+ 11018: 0000000008acab80    20 FUNC    GLOBAL DEFAULT   14 criAfxParagraphicEqualizer_GetNumProcessChannels
+ 11113: 0000000008b14b48    12 FUNC    GLOBAL DEFAULT   14 criAdo_AudioOutSetOutputDeviceConfig
+ 11200: 00000000086d14e4   420 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::registerFactory(icu_64::ICUServiceFactory*, UErrorCode&)
+ 11284: 0000000008708654    56 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::~ChoiceFormat()
+ 11365: 00000000083cc248   464 FUNC    GLOBAL DEFAULT   14 physx::Dy::DynamicsContext::setDescFromIndices(physx::PxSolverConstraintDesc&, physx::PxsIndexedInteraction const&, unsigned int)
+ 11368: 000000000870909c   172 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::format(icu_64::Formattable const*, int, icu_64::UnicodeString&, icu_64::FieldPosition&, UErrorCode&) const
+ 11378: 0000000008a44700    12 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_EnableCalculationAisacControlFrom3dPosition
+ 11459: 0000000008a67f34     8 FUNC    GLOBAL DEFAULT   14 criAtomVoice_GetNcVoiceHandle
+ 11519: 00000000087351a0    36 FUNC    GLOBAL DEFAULT   14 icu_64::CalendarService::~CalendarService()
+ 11543: 000000000828aeec    52 FUNC    GLOBAL DEFAULT   14 virt_getvoicepos
+ 11595: 00000000086deca8    20 FUNC    WEAK   DEFAULT   14 icu_64::ICUNumberFormatFactory::handleCreate(icu_64::Locale const&, int, icu_64::ICUService const*, UErrorCode&) const
+ 11602: 0000000008a67c58     8 FUNC    GLOBAL DEFAULT   14 criAtomVoice_GetVolume
+ 11679: 0000000008a67f3c    56 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetInsertionDsp
+ 11690: 00000000086d231c   196 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::registerInstance(icu_64::UObject*, icu_64::Locale const&, int, int, UErrorCode&)
+ 11739: 0000000008a6970c   520 FUNC    GLOBAL DEFAULT   14 criNcVoice_DownmixData
+ 11766: 00000000089ee6a0    84 FUNC    GLOBAL DEFAULT   14 vpx_codec_register_put_slice_cb
+ 11836: 0000000008a68f88   208 FUNC    GLOBAL DEFAULT   14 criNcVoice_Create
+ 11837: 0000000008af6034   180 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_RequestToResumeAll
+ 11872: 00000000089c69ac    20 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::UnSetCategory()
+ 11878: 00000000088bfe88  1752 FUNC    WEAK   DEFAULT   14 OT::hb_collect_glyphs_context_t::return_t OT::PosLookupSubTable::dispatch<OT::hb_collect_glyphs_context_t>(OT::hb_collect_glyphs_context_t*, unsigned int) const
+ 11903: 0000000008a3dc7c    72 FUNC    GLOBAL DEFAULT   14 criAtomTblVoiceLimitGroupWork_Initialize
+ 11965: 000000000868b734   188 FUNC    WEAK   DEFAULT   14 icu_64::ICUBreakIteratorService::handleDefault(icu_64::ICUServiceKey const&, icu_64::UnicodeString*, UErrorCode&) const
+ 12062: 00000000086cfbfc    12 FUNC    GLOBAL DEFAULT   14 icu_64::ServiceListener::getStaticClassID()
+ 12077: 0000000008a44564   128 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_StopAwbPlayback
+ 12111: 00000000085405a0   300 FUNC    GLOBAL DEFAULT   14 physx::getEdgeTriangleIndices(physx::Gu::HeightField const&, physx::EdgeData const&, unsigned int*)
+ 12133: 0000000008af60e8   384 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_IsSuspendedAll
+ 12138: 0000000008a5d48c     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_ResetRouting
+ 12239: 00000000089c5e88   336 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetupAutoPanning(unsigned int)
+ 12257: 0000000000d14c2f    27 OBJECT  GLOBAL DEFAULT   10 typeinfo name for icu_64::CalendarService
+ 12283: 000000000868b708    28 FUNC    WEAK   DEFAULT   14 icu_64::ICUBreakIteratorService::isDefault() const
+ 12296: 00000000089c6b24     4 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice_Float32::SetCallbackGetSint16PcmData(unsigned int (*)(void*, unsigned int, short**, unsigned int), void*)
+ 12367: 0000000000d11e18    29 OBJECT  GLOBAL DEFAULT   10 typeinfo name for icu_64::ICUServiceFactory
+ 12368: 0000000008a99c28    72 FUNC    GLOBAL DEFAULT   14 criAtomEx_SetMonitoringVoiceStopCallback
+ 12404: 00000000089c6b0c     4 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice_Float32::DestroyOutput()
+ 12405: 0000000008af6268   228 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_IsSuspendedAny
+ 12475: 0000000008af649c    12 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_SetInitialThreadStackSize
+ 12478: 0000000008a68014    48 FUNC    GLOBAL DEFAULT   14 criAtomVoice_ResetDspParameters
+ 12495: 0000000008a67d20   100 FUNC    GLOBAL DEFAULT   14 criAtomVoice_ResetPan
+ 12506: 0000000008aac924   180 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_DetachDsp
+ 12559: 0000000009891388   104 OBJECT  GLOBAL DEFAULT   16 vtable for icu_64::ServiceEnumeration
+ 12645: 00000000089c6990     8 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetAmbisonicsConfig(CriManaSound::AmbisonicsConfig)
+ 12683: 000000000a570230     4 OBJECT  GLOBAL DEFAULT   23 CriManaSoundAtomEx::available_voice_pool_id_for_mana_sound
+ 12732: 0000000008ab6178     4 FUNC    GLOBAL DEFAULT   14 criAtomExAsrRack_GetDeviceType
+ 12758: 0000000008a58768     8 FUNC    GLOBAL DEFAULT   14 criAsrRack_AddAsrVoice
+ 12805: 00000000087575e4    16 FUNC    WEAK   DEFAULT   14 icu_64::ICUCollatorService::cloneInstance(icu_64::UObject*) const
+ 12806: 0000000008a445e4    68 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_IsPathPointerRefered
+ 12817: 0000000008aac6ac   172 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AttachDspAfx
+ 12830: 0000000008a6338c     8 FUNC    GLOBAL DEFAULT   14 criNcMic_GetNumDevices
+ 12844: 00000000086cf6b4   128 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::isFallbackOf(icu_64::UnicodeString const&) const
+ 12881: 00000000089c6b28   496 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice_Float32::SubmitOnePacket()
+ 13087: 0000000008a949d8    40 FUNC    GLOBAL DEFAULT   14 criAtomExPlayer_SetVoiceControlMethod
+ 13099: 0000000008b188a0    16 FUNC    GLOBAL DEFAULT   14 criVsd_SetAudioOutputDeviceConfig
+ 13127: 0000000008a67d84   100 FUNC    GLOBAL DEFAULT   14 criAtomVoice_ResetSendLevel
+ 13179: 0000000008a68af4   208 FUNC    GLOBAL DEFAULT   14 criNcVoice_Initialize
+ 13223: 00000000086d245c    12 FUNC    GLOBAL DEFAULT   14 icu_64::ServiceEnumeration::getDynamicClassID() const
+ 13233: 0000000008a42884   272 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_Initialize
+ 13283: 00000000089bf568   732 FUNC    GLOBAL DEFAULT   14 MPVSL_DecSliceOne
+ 13365: 0000000008a597a0     8 FUNC    GLOBAL DEFAULT   14 criAsr_RemoveVoice
+ 13384: 0000000008af5ecc   180 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_ExecuteServer
+ 13391: 0000000008a6deb0   136 FUNC    GLOBAL DEFAULT   14 criAtomInstrumentVoice_Initialize
+ 13521: 00000000089c6a80   140 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice_Float32::CreateOutput(_criheap_struct*, unsigned int, unsigned int)
+ 13526: 0000000008708f88   276 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::findSubMessage(icu_64::MessagePattern const&, int, double)
+ 13550: 0000000008a6a2e8     4 FUNC    GLOBAL DEFAULT   14 criNcvDummy_SetDeviceSend
+ 13593: 0000000008a1d5f0   284 FUNC    GLOBAL DEFAULT   14 criStreamerManager_AddStreamerByDeviceId
+ 13601: 0000000008708354   172 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::ChoiceFormat(double const*, icu_64::UnicodeString const*, int)
+ 13691: 0000000008a8ac2c   280 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AllocateRawPcmVoicePool
+ 13728: 0000000008a3dcc4    88 FUNC    GLOBAL DEFAULT   14 criAtomTblVoiceLimitGroupWork_GetItem
+ 13741: 0000000008aebf14     4 FUNC    GLOBAL DEFAULT   14 criFsDecodeDevice_AddTask
+ 13833: 000000000a57b1f0     8 OBJECT  GLOBAL DEFAULT   23 g_criatomex_monitoring_voice_stop_cb_func
+ 13945: 0000000008a68a28    16 FUNC    GLOBAL DEFAULT   14 criNcVoice_RegisterInterface
+ 13989: 0000000008a5d898     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetInputCallback
+ 14018: 00000000087088e0    48 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::applyPattern(icu_64::UnicodeString const&, UParseError&, UErrorCode&)
+ 14143: 00000000088ca604   324 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t OT::AlternateSubst::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+ 14234: 0000000008acaa58    24 FUNC    GLOBAL DEFAULT   14 criAfxParagraphicEqualizer_SetParameter
+ 14284: 00000000084dd014   248 FUNC    GLOBAL DEFAULT   14 physx::Gu::StoreIndices(unsigned short, unsigned int, unsigned short const*, physx::PxOutputStream&, bool)
+ 14288: 00000000089951e4    92 FUNC    GLOBAL DEFAULT   14 CriMvEasyPlayer::isAvailableCenterVoice(CriMvStreamingParameters const*)
+ 14300: 0000000008246918   148 FUNC    GLOBAL DEFAULT   14 std::__ndk1::random_device::operator()()
+ 14393: 00000000088ca748   324 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t OT::LigatureSubst::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+ 14413: 0000000008984e04  1480 FUNC    GLOBAL DEFAULT   14 swappy::SwappyCommon::isDeviceUnsupported()
+ 14467: 0000000008adb568    72 FUNC    GLOBAL DEFAULT   14 criFs_SetReadDeviceEnabled
+ 14516: 00000000086d11dc    12 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getDisplayNames(icu_64::UVector&, icu_64::Locale const&, UErrorCode&) const
+ 14579: 0000000008a67a90    76 FUNC    GLOBAL DEFAULT   14 criAtomVoice_Setup
+ 14592: 00000000086d23e0    52 FUNC    GLOBAL DEFAULT   14 icu_64::ServiceEnumeration::~ServiceEnumeration()
+ 14598: 0000000008a427f0   148 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_CalculateWorkSize
+ 14665: 0000000008a67bbc    64 FUNC    GLOBAL DEFAULT   14 criAtomVoice_GetNumBufferedSamples
+ 14763: 0000000009891148    24 OBJECT  GLOBAL DEFAULT   16 typeinfo for icu_64::ICUServiceKey
+ 14823: 00000000086cf7c0   140 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::parseSuffix(icu_64::UnicodeString&)
+ 14855: 0000000008aebdf0   160 FUNC    GLOBAL DEFAULT   14 criFsDecodeDevice_Finalize
+ 14857: 0000000008b14b08     8 FUNC    GLOBAL DEFAULT   14 criAdo_EnableVoicePoolCreate
+ 14858: 000000000828a938   160 FUNC    GLOBAL DEFAULT   14 virt_resetvoice
+ 14862: 0000000008a4fa20    28 FUNC    GLOBAL DEFAULT   14 criAtomPlayer_SetMonitoringStopVoicePlaybackId
+ 14971: 0000000008a8a3ec   104 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForAdxVoicePool
+ 15053: 00000000089c6034   108 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::GetStatus()
+ 15122: 000000000873e670   200 FUNC    WEAK   DEFAULT   14 icu_64::CalendarService::handleDefault(icu_64::ICUServiceKey const&, icu_64::UnicodeString*, UErrorCode&) const
+ 15232: 00000000086df0b0   324 FUNC    WEAK   DEFAULT   14 icu_64::ICUNumberFormatService::ICUNumberFormatService()
+ 15336: 00000000086cfdbc   100 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::ICUService(icu_64::UnicodeString const&)
+ 15561: 00000000086d18bc    24 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::countFactories() const
+ 15575: 0000000009891db0    24 OBJECT  GLOBAL DEFAULT   16 typeinfo for icu_64::ICUNumberFormatService
+ 15597: 0000000008a6c910     8 FUNC    GLOBAL DEFAULT   14 criNcHcaMixer_GetOutputNcVoice
+ 15687: 0000000008a55cf4   104 FUNC    GLOBAL DEFAULT   14 criAtomAsr_GetOutputNcVoice
+ 15707: 0000000008a42a50   248 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_SetGroupInfo
+ 15777: 000000000873519c     4 FUNC    GLOBAL DEFAULT   14 icu_64::CalendarService::~CalendarService()
+ 15782: 00000000086d19ec    64 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::clearServiceCache()
+ 15869: 0000000009894560    24 OBJECT  GLOBAL DEFAULT   16 typeinfo for icu_64::ChoiceFormat
+ 15874: 00000000082dffd8    96 FUNC    GLOBAL DEFAULT   14 physx::NpCloth::setSelfCollisionIndices(unsigned int const*, unsigned int)
+ 15898: 00000000089c6998    20 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetCategoryByName(char const*)
+ 16013: 0000000008543f1c   352 FUNC    WEAK   DEFAULT   14 physx::Gu::HeightField::getTriangleAdjacencyIndices(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int&, unsigned int&, unsigned int&) const
+ 16050: 000000000829001c   196 FUNC    GLOBAL DEFAULT   14 mixer_voicepos
+ 16097: 0000000009890fe8    96 OBJECT  GLOBAL DEFAULT   16 vtable for icu_64::ICUServiceKey
+ 16116: 0000000008a69c90   676 FUNC    GLOBAL DEFAULT   14 criNcVoice_FlushInsertionDspAndInterleaveFloat32toInt16
+ 16137: 00000000086dd8e4    36 FUNC    GLOBAL DEFAULT   14 icu_64::ICUNumberFormatService::~ICUNumberFormatService()
+ 16147: 00000000086cff90   120 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::get(icu_64::UnicodeString const&, icu_64::UnicodeString*, UErrorCode&) const
+ 16175: 00000000086d1a2c    52 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::acceptsListener(icu_64::EventListener const&) const
+ 16196: 00000000089c541c   428 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::ExecuteServer(void*)
+ 16278: 000000000996a014     4 OBJECT  GLOBAL DEFAULT   22 g_criatomex_monitoring_voice_stop_playback_id
+ 16280: 0000000008755a6c   188 FUNC    GLOBAL DEFAULT   14 icu_64::ICUCollatorFactory::create(icu_64::ICUServiceKey const&, icu_64::ICUService const*, UErrorCode&) const
+ 16281: 00000000088dd400   656 FUNC    WEAK   DEFAULT   14 AAT::hb_aat_apply_context_t::return_t AAT::ChainSubtable<AAT::ObsoleteTypes>::dispatch<AAT::hb_aat_apply_context_t>(AAT::hb_aat_apply_context_t*) const
+ 16292: 0000000008708dc4    24 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::format(long, icu_64::UnicodeString&, icu_64::FieldPosition&) const
+ 16326: 0000000008a7b6a4    16 FUNC    GLOBAL DEFAULT   14 criAtomParameter2_HasDeviceSendLevel
+ 16358: 0000000008a5cda4     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_GetInputChannels
+ 16361: 0000000008a66e08   164 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForSpatializer
+ 16438: 00000000086cfd64    88 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::ICUService()
+ 16483: 00000000089c65dc    28 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::GetPan(int)
+ 16536: 0000000008af6718    76 FUNC    GLOBAL DEFAULT   14 criFs_CalculateWorkSizeForAttachIoDevice
+ 16574: 0000000008a1da6c    20 FUNC    GLOBAL DEFAULT   14 criStreamerManager_GetDefaultConfigByDeviceId
+ 16602: 0000000008709148    48 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::parse(icu_64::UnicodeString const&, icu_64::Formattable&, icu_64::ParsePosition&) const
+ 16696: 00000000083e59dc    16 FUNC    GLOBAL DEFAULT   14 physx::Sc::ClothCore::getNbSelfCollisionIndices() const
+ 16754: 0000000008707214   428 FUNC    GLOBAL DEFAULT   14 icu_64::MessagePattern::isChoice(int)
+ 16764: 00000000088c224c   428 FUNC    WEAK   DEFAULT   14 OT::hb_closure_context_t::return_t OT::SubstLookupSubTable::dispatch<OT::hb_closure_context_t>(OT::hb_closure_context_t*, unsigned int) const
+ 16784: 0000000008a59798     8 FUNC    GLOBAL DEFAULT   14 criAsr_AddVoice
+ 16821: 0000000008a67ae8    28 FUNC    GLOBAL DEFAULT   14 criAtomVoice_Stop
+ 16828: 0000000008a5d008    20 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetSamplingRate
+ 16917: 0000000008708400   184 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::ChoiceFormat(double const*, signed char const*, icu_64::UnicodeString const*, int)
+ 17074: 0000000008a5d01c     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_GetSamplingRate
+ 17113: 0000000008a5cdb8   352 FUNC    GLOBAL DEFAULT   14 criAsrVoice_Start
+ 17181: 00000000083dc374    48 FUNC    GLOBAL DEFAULT   14 physx::Sc::ShapeCore::getNbMaterialIndices() const
+ 17224: 00000000088cd318   368 FUNC    WEAK   DEFAULT   14 OT::hb_get_subtables_context_t::return_t OT::ChainContext::dispatch<OT::hb_get_subtables_context_t>(OT::hb_get_subtables_context_t*) const
+ 17377: 00000000086cff1c     4 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::~ICUService()
+ 17569: 0000000008a67638   804 FUNC    GLOBAL DEFAULT   14 criAtomVoice_Create
+ 17582: 0000000008a8afec   276 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AllocateHcaVoicePool
+ 17591: 00000000083dc17c   356 FUNC    GLOBAL DEFAULT   14 physx::Sc::ShapeCore::setMaterialIndices(unsigned short const*, unsigned short)
+ 17626: 00000000086d0e1c   960 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getDisplayNames(icu_64::UVector&, icu_64::Locale const&, icu_64::UnicodeString const*, UErrorCode&) const
+ 17813: 0000000008a99fd0    36 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_FreeAll
+ 17891: 00000000088cd05c   292 FUNC    WEAK   DEFAULT   14 OT::hb_get_subtables_context_t::return_t OT::SingleSubst::dispatch<OT::hb_get_subtables_context_t>(OT::hb_get_subtables_context_t*) const
+ 17907: 0000000008757904   352 FUNC    WEAK   DEFAULT   14 icu_64::ICUCollatorService::ICUCollatorService()
+ 17914: 0000000008a5d930   228 FUNC    GLOBAL DEFAULT   14 criAsrVoiceList_AddVoice
+ 17984: 00000000089c5764   144 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetupVoiceConfig(CriAtomVoiceConfigTag*, unsigned int, unsigned int, unsigned int)
+ 18036: 000000000874d8e0    12 FUNC    GLOBAL DEFAULT   14 icu_64::CalendarAstronomer::SUMMER_SOLSTICE()
+ 18097: 0000000008708910    16 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::toPattern(icu_64::UnicodeString&) const
+ 18270: 0000000008706f4c    48 FUNC    GLOBAL DEFAULT   14 icu_64::MessagePattern::inTopLevelChoiceMessage(int, UMessagePatternArgType)
+ 18271: 00000000087575f4   236 FUNC    WEAK   DEFAULT   14 icu_64::ICUCollatorService::handleDefault(icu_64::ICUServiceKey const&, icu_64::UnicodeString*, UErrorCode&) const
+ 18279: 0000000008a68188    56 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetVirtualSurroundFrontBypassFlag
+ 18288: 0000000008a67c94   140 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetPan
+ 18388: 0000000008a42b74  1568 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_AllocateVoice
+ 18437: 000000000874d8ec    12 FUNC    GLOBAL DEFAULT   14 icu_64::CalendarAstronomer::WINTER_SOLSTICE()
+ 18503: 00000000086d169c   292 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::unregister(void const*, UErrorCode&)
+ 18515: 00000000089c6474    76 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetPitch(int, int)
+ 18518: 0000000008388b5c    12 FUNC    GLOBAL DEFAULT   14 physx::cloth::SwFabric::getNumIndices() const
+ 18524: 0000000008388b68    12 FUNC    GLOBAL DEFAULT   14 non-virtual thunk to physx::cloth::SwFabric::getNumIndices() const
+ 18534: 00000000089c60a0   216 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::GetTime(unsigned long long&, unsigned long long&)
+ 18588: 00000000089c57f4     4 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetupAtomVoice(CriAtomVoiceConfigTag*, int, short)
+ 18647: 00000000086d1fc4   108 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::ICULocaleService(icu_64::UnicodeString const&)
+ 18666: 00000000086cfbf8     4 FUNC    GLOBAL DEFAULT   14 icu_64::ServiceListener::~ServiceListener()
+ 18792: 0000000008755bc0    36 FUNC    GLOBAL DEFAULT   14 icu_64::ICUCollatorService::~ICUCollatorService()
+ 18806: 0000000008af5de4    12 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_IsInitialized
+ 18838: 0000000008af634c     4 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_AddTask
+ 18876: 0000000008a68c1c   320 FUNC    GLOBAL DEFAULT   14 criNcVoice_Begin
+ 18911: 00000000083efb40     8 FUNC    GLOBAL DEFAULT   14 physx::Sc::ParticleSystemCore::returnStandaloneData(physx::Pt::ParticleData*)
+ 18946: 00000000086d23e0    52 FUNC    GLOBAL DEFAULT   14 icu_64::ServiceEnumeration::~ServiceEnumeration()
+ 18959: 0000000008708dac    12 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::getClosures(int&) const
+ 19002: 0000000008a69f34   524 FUNC    GLOBAL DEFAULT   14 criNcVoice_ProcessInsertionDsp
+ 19067: 00000000083cc418   332 FUNC    GLOBAL DEFAULT   14 physx::Dy::DynamicsContext::setDescFromIndices(physx::PxSolverConstraintDesc&, unsigned int, physx::IG::SimpleIslandManager const&, unsigned int*, unsigned int)
+ 19114: 0000000008a5da14   204 FUNC    GLOBAL DEFAULT   14 criAsrVoiceList_RemoveAllVoices
+ 19115: 0000000008a67f74    72 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetDspActiveSwitch
+ 19191: 0000000008a93fdc    12 FUNC    GLOBAL DEFAULT   14 criAtomExPlayer_EnableAdjustDeviceBuffer
+ 19192: 0000000008af5c94   240 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_Finalize
+ 19200: 00000000087084b8    92 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::ChoiceFormat(icu_64::ChoiceFormat const&)
+ 19213: 0000000008aca7dc    60 FUNC    GLOBAL DEFAULT   14 criAfxParagraphicEqualizer_Destroy
+ 19218: 0000000008aebc5c   404 FUNC    GLOBAL DEFAULT   14 criFsDecodeDevice_Initialize
+ 19255: 00000000089c6d18   280 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice_Float32::CopyPcmDataFromEasyPlayer(unsigned int, float**, unsigned int)
+ 19400: 00000000087082a8    12 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::getStaticClassID()
+ 19417: 0000000008a67e20   276 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetSendLevelArray
+ 19427: 0000000008aec474    16 FUNC    GLOBAL DEFAULT   14 criFsDevice_RequestToSuspend
+ 19438: 0000000008a67470   104 FUNC    GLOBAL DEFAULT   14 criAtomVoice_Finalize
+ 19513: 000000000834d834   440 FUNC    WEAK   DEFAULT   14 physx::shdfnd::PoolBase<physx::Sq::AABBTreeIndices, physx::shdfnd::ReflectionAllocator<physx::Sq::AABBTreeIndices> >::disposeElements()
+ 19548: 0000000008a9a060    52 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_GetPlayerHandle
+ 19627: 00000000086d1950   156 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::clearCaches()
+ 19666: 0000000000d11de4    27 OBJECT  GLOBAL DEFAULT   10 typeinfo name for icu_64::ServiceListener
+ 19679: 00000000082e0038     4 FUNC    GLOBAL DEFAULT   14 physx::NpCloth::sendPvdSelfCollisionIndices()
+ 19918: 0000000008af64c0   600 FUNC    GLOBAL DEFAULT   14 criFsIoDevice_SelectIoInterface
+ 19943: 0000000008aec158   144 FUNC    GLOBAL DEFAULT   14 criFsDevice_Destroy
+ 19970: 000000000873df84   724 FUNC    WEAK   DEFAULT   14 icu_64::BasicCalendarFactory::create(icu_64::ICUServiceKey const&, icu_64::ICUService const*, UErrorCode&) const
+ 19981: 0000000008a5cfa8     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetTimeOffset
+ 20005: 0000000008a67c60    32 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetChannelVolume
+ 20014: 00000000086cf52c    68 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::ICUServiceKey(icu_64::UnicodeString const&)
+ 20049: 00000000089c6178   264 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::CorrectTime(long long, int, unsigned long long&, unsigned long long&)
+ 20077: 0000000008a67b44   120 FUNC    GLOBAL DEFAULT   14 criAtomVoice_GetTime
+ 20118: 0000000008a5c6e4  1720 FUNC    GLOBAL DEFAULT   14 criAsrVoice_GenerateData
+ 20123: 00000000088c11b8   276 FUNC    WEAK   DEFAULT   14 OT::hb_would_apply_context_t::return_t OT::Context::dispatch<OT::hb_would_apply_context_t>(OT::hb_would_apply_context_t*) const
+ 20150: 00000000089c6030     4 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::CleanupAtomVoice()
+ 20166: 000000000873519c     4 FUNC    GLOBAL DEFAULT   14 icu_64::CalendarService::~CalendarService()
+ 20250: 00000000083e8344   168 FUNC    GLOBAL DEFAULT   14 physx::Sc::ClothFabricCore::getParticleIndices(unsigned int*, unsigned int) const
+ 20458: 00000000088c8310   404 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t OT::KernSubTable<OT::KernAATSubTableHeader>::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+ 20463: 0000000008a5d8a8    36 FUNC    GLOBAL DEFAULT   14 criAsrVoice_GetPacket
+ 20495: 0000000008a5022c    60 FUNC    GLOBAL DEFAULT   14 criAtomPlayer_GetVoiceStatus
+ 20543: 00000000086dd8e0     4 FUNC    GLOBAL DEFAULT   14 icu_64::ICUNumberFormatService::~ICUNumberFormatService()
+ 20584: 00000000088ca35c   356 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t OT::SingleSubst::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+ 20591: 00000000084dca00   472 FUNC    GLOBAL DEFAULT   14 physx::readIndices(unsigned int, unsigned int, unsigned int*, physx::PxInputStream&, bool)
+ 20695: 00000000086cf95c   316 FUNC    GLOBAL DEFAULT   14 icu_64::SimpleFactory::create(icu_64::ICUServiceKey const&, icu_64::ICUService const*, UErrorCode&) const
+ 20755: 0000000008708980    84 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::setChoices(double const*, signed char const*, icu_64::UnicodeString const*, int)
+ 20778: 00000000086cf614    12 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::currentID(icu_64::UnicodeString&) const
+ 20870: 0000000008a8b6f4   104 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForStandardVoicePool
+ 20917: 0000000008aebe90    12 FUNC    GLOBAL DEFAULT   14 criFsDecodeDevice_IsInitialized
+ 20932: 0000000008a55dd4   148 FUNC    GLOBAL DEFAULT   14 criAtomAsr_GetDeviceOutputChannels
+ 20942: 0000000008a693a8   428 FUNC    GLOBAL DEFAULT   14 criNcVoice_InterleavePcmFloat32toInt16
+ 20981: 00000000088d2608   292 FUNC    WEAK   DEFAULT   14 OT::hb_get_subtables_context_t::return_t OT::PairPos::dispatch<OT::hb_get_subtables_context_t>(OT::hb_get_subtables_context_t*) const
+ 21008: 0000000008a79bc4    64 FUNC    GLOBAL DEFAULT   14 criAtomParameter2_GetDeviceSendLevel
+ 21022: 0000000008a94af0    36 FUNC    GLOBAL DEFAULT   14 criAtomExPlayer_SetVoicePoolIdentifier
+ 21059: 000000000873e42c   464 FUNC    WEAK   DEFAULT   14 icu_64::DefaultCalendarFactory::create(icu_64::ICUServiceKey const&, icu_64::ICUService const*, UErrorCode&) const
+ 21079: 0000000008a5d534    64 FUNC    GLOBAL DEFAULT   14 criAsrVoice_UpdateDsp
+ 21165: 0000000008a429c0    76 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_EnumerateActiveVoices
+ 21179: 00000000086d2214    16 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::get(icu_64::Locale const&, icu_64::Locale*, UErrorCode&) const
+ 21230: 0000000008a2793c   124 FUNC    GLOBAL DEFAULT   14 criAtomConfig_FindVoiceLimitGroup
+ 21290: 0000000008a67fbc    88 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetDspParameter
+ 21342: 00000000084dc89c   356 FUNC    GLOBAL DEFAULT   14 physx::storeIndices(unsigned int, unsigned int, unsigned int const*, physx::PxOutputStream&, bool)
+ 21390: 00000000088d2010   124 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t OT::ExtensionFormat1<OT::ExtensionPos>::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+ 21425: 00000000089c6924    20 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetSoundRendererType(CriAtomSoundRendererTypeTag)
+ 21429: 0000000008a5d790   104 FUNC    GLOBAL DEFAULT   14 criAsrVoice_GetDspParameter
+ 21433: 0000000008afd55c   136 FUNC    GLOBAL DEFAULT   14 MovieDecoder_StartStreamingEsCore(MovieDecoderStruct*, char const**, int, unsigned int)
+ 21526: 0000000008a681c0    68 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetSpatializer
+ 21586: 0000000008a5cfb0    68 FUNC    GLOBAL DEFAULT   14 criAsrVoice_GetTime
+ 21604: 00000000086d41a0   196 FUNC    GLOBAL DEFAULT   14 icu_64::ICUResourceBundleFactory::handleCreate(icu_64::Locale const&, int, icu_64::ICUService const*, UErrorCode&) const
+ 21612: 0000000008b12b68     8 FUNC    GLOBAL DEFAULT   14 criVsd_GetLicense
+ 21658: 000000000873e5fc    28 FUNC    WEAK   DEFAULT   14 icu_64::CalendarService::isDefault() const
+ 21719: 00000000086cfe20   252 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::~ICUService()
+ 21732: 0000000008a8a454   276 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AllocateAdxVoicePool
+ 21737: 0000000008a5d448    68 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetRouting
+ 21765: 0000000008b12b70     4 FUNC    GLOBAL DEFAULT   14 criVsd_ClearLicense
+ 21848: 0000000008a5dae0   248 FUNC    GLOBAL DEFAULT   14 criAsrVoiceList_Execute
+ 21875: 00000000083860f0    92 FUNC    GLOBAL DEFAULT   14 non-virtual thunk to physx::cloth::ClothImpl<physx::cloth::SwCloth>::setSelfCollisionIndices(physx::cloth::Range<unsigned int const>)
+ 21905: 0000000008a6807c    88 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetRouting
+ 21954: 00000000089c69cc    12 FUNC    WEAK   DEFAULT   14 non-virtual thunk to CriManaSoundAtomVoice::~CriManaSoundAtomVoice()
+ 21986: 00000000086d17c0   204 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::reset()
+ 21989: 0000000008a99ba8   128 FUNC    GLOBAL DEFAULT   14 criAtomEx_MonitoringVoiceStop
+ 22167: 0000000008a5c5e8   152 FUNC    GLOBAL DEFAULT   14 criAsrVoiceList_RemoveVoice
+ 22203: 00000000087089d4   972 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::setChoices(double const*, signed char const*, icu_64::UnicodeString const*, int, UErrorCode&)
+ 22228: 000000000834d9ec   920 FUNC    WEAK   DEFAULT   14 void physx::shdfnd::sort<void*, physx::shdfnd::Less<void*>, physx::shdfnd::ReflectionAllocator<physx::Sq::AABBTreeIndices> >(void**, unsigned int, physx::shdfnd::Less<void*> const&, physx::shdfnd::ReflectionAllocator<physx::Sq::AABBTreeIndices> const&, unsigned int)
+ 22272: 00000000086cf5a4    60 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::~ICUServiceKey()
+ 22443: 00000000088d08ec   844 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t OT::PosLookupSubTable::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*, unsigned int) const
+ 22451: 0000000008a63394   124 FUNC    GLOBAL DEFAULT   14 criNcMic_GetDeviceInfo
+ 22501: 0000000000d11dff    25 OBJECT  GLOBAL DEFAULT   10 typeinfo name for icu_64::ICUServiceKey
+ 22504: 0000000008a33f00     4 FUNC    GLOBAL DEFAULT   14 criAtomExAcb_GetDeviceSendLevelParametersInfoByCueIndex
+ 22545: 0000000008a44628    32 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_SetVoiceEventCallback
+ 22572: 0000000008af9f1c    36 FUNC    GLOBAL DEFAULT   14 criVip_SetAtomVoicePoolID
+ 22619: 00000000086def60    28 FUNC    WEAK   DEFAULT   14 icu_64::ICUNumberFormatService::isDefault() const
+ 22764: 00000000086cf84c    12 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::getStaticClassID()
+ 22779: 000000000833a9f4   288 FUNC    GLOBAL DEFAULT   14 physx::Pt::SpatialHash::reorderParticleIndicesToCells(physx::Pt::Particle const*, unsigned int, physx::Pt::ParticleCell*, unsigned int*, unsigned int, unsigned short*)
+ 22787: 0000000008a564c4    84 FUNC    GLOBAL DEFAULT   14 criAtomAsr_AddAsrVoice
+ 22844: 00000000089c6e3c    12 FUNC    WEAK   DEFAULT   14 non-virtual thunk to CriManaSoundAtomVoice_Float32::~CriManaSoundAtomVoice_Float32()
+ 22859: 00000000088da1dc   548 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t AAT::ChainSubtable<AAT::ObsoleteTypes>::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+ 22908: 0000000008a7c108    12 FUNC    GLOBAL DEFAULT   14 criAtom3dPos_GetMinVoicePriority
+ 22937: 00000000083e7fd0    16 FUNC    GLOBAL DEFAULT   14 physx::Sc::ClothFabricCore::getNbParticleIndices() const
+ 22985: 00000000087085b8    84 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::operator==(icu_64::Format const&) const
+ 23028: 00000000086cfbf4     4 FUNC    GLOBAL DEFAULT   14 icu_64::ServiceListener::~ServiceListener()
+ 23057: 0000000000d12392    34 OBJECT  GLOBAL DEFAULT   10 typeinfo name for icu_64::ICUNumberFormatService
+ 23117: 0000000008a68284    16 FUNC    GLOBAL DEFAULT   14 criAtomVoice_GetOutputGranularity
+ 23128: 0000000008aec498     8 FUNC    GLOBAL DEFAULT   14 criFsDevice_GetServerHandle
+ 23131: 0000000000d12ff2    24 OBJECT  GLOBAL DEFAULT   10 typeinfo name for icu_64::ChoiceFormat
+ 23151: 00000000086cff20   112 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::get(icu_64::UnicodeString const&, UErrorCode&) const
+ 23165: 0000000008755bbc     4 FUNC    GLOBAL DEFAULT   14 icu_64::ICUCollatorService::~ICUCollatorService()
+ 23171: 00000000088ca4c0   324 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t OT::MultipleSubst::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+ 23201: 000000000988edd0   208 OBJECT  GLOBAL DEFAULT   16 vtable for icu_64::ICUBreakIteratorService
+ 23202: 0000000008a5d2e4   320 FUNC    GLOBAL DEFAULT   14 criAsrVoice_Update
+ 23223: 0000000008a8b75c   276 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AllocateStandardVoicePool
+ 23227: 0000000008a1d920    64 FUNC    GLOBAL DEFAULT   14 criStreamerManager_SetFreeTimeBufferingFlagByDeviceId
+ 23258: 0000000008a5d1c4   288 FUNC    GLOBAL DEFAULT   14 criAsrVoice_Setup
+ 23281: 0000000008a9ebcc   164 FUNC    GLOBAL DEFAULT   14 criAtomExCategory_SetDeviceSend
+ 23360: 00000000086d001c    12 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getKey(icu_64::ICUServiceKey&, icu_64::UnicodeString*, UErrorCode&) const
+ 23379: 00000000088d80b8   740 FUNC    WEAK   DEFAULT   14 OT::hb_ot_apply_context_t::return_t OT::PosLookupSubTable::dispatch<OT::hb_ot_apply_context_t>(OT::hb_ot_apply_context_t*, unsigned int) const
+ 23457: 00000000089c6680   504 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetBusSendLevel(char const*, float)
+ 23510: 0000000009891088   168 OBJECT  GLOBAL DEFAULT   16 vtable for icu_64::ICUService
+ 23525: 0000000008a6d8f4    12 FUNC    GLOBAL DEFAULT   14 criNcvPseudo_GetNumVoices
+ 23533: 00000000086d1a60    24 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::notifyListener(icu_64::EventListener&) const
+ 23618: 00000000086decbc   280 FUNC    WEAK   DEFAULT   14 icu_64::NFFactory::create(icu_64::ICUServiceKey const&, icu_64::ICUService const*, UErrorCode&) const
+ 23620: 0000000008a8abc0   108 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForRawPcmVoicePool
+ 23642: 0000000008a67a28    84 FUNC    GLOBAL DEFAULT   14 criAtomVoice_Destroy
+ 23669: 00000000083e48c0    20 FUNC    GLOBAL DEFAULT   14 physx::Sc::ClothCore::setSelfCollisionIndices(unsigned int const*, unsigned int)
+ 23708: 0000000000d11de2     2 OBJECT  GLOBAL DEFAULT   10 icu_64::ICUServiceKey::PREFIX_DELIMITER
+ 23722: 00000000086d2714   100 FUNC    WEAK   DEFAULT   14 icu_64::ServiceEnumeration::count(UErrorCode&) const
+ 23759: 0000000008a1d9b4    12 FUNC    GLOBAL DEFAULT   14 criStreamerManager_GetDeviceSpecForTools
+ 23803: 0000000008aec1e8   304 FUNC    GLOBAL DEFAULT   14 criFsDevice_Create
+ 23869: 000000000834dd84   268 FUNC    WEAK   DEFAULT   14 physx::shdfnd::Array<void*, physx::shdfnd::ReflectionAllocator<physx::Sq::AABBTreeIndices> >::growAndPushBack(void* const&)
+ 23926: 0000000008a5d024   416 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetMatrix
+ 23981: 0000000009891130    24 OBJECT  GLOBAL DEFAULT   16 typeinfo for icu_64::ServiceListener
+ 23996: 000000000833c368    52 FUNC    GLOBAL DEFAULT   14 physx::Sq::AABBTree::shiftIndices(unsigned int)
+ 24011: 0000000008a675b4   132 FUNC    GLOBAL DEFAULT   14 criAtomVoice_CalculateWorkSize
+ 24063: 00000000087088a8    56 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::applyPattern(icu_64::UnicodeString const&, UErrorCode&)
+ 24114: 0000000008af5e44    44 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_SetDeviceEnabled
+ 24212: 00000000089c6b10     8 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice_Float32::GetPcmFormat()
+ 24213: 0000000008a1d7f4   196 FUNC    GLOBAL DEFAULT   14 criStreamerManager_UpdateStreamerBpsByDeviceId
+ 24254: 0000000008a56bb4   440 FUNC    GLOBAL DEFAULT   14 criAmbisonics_CalculateCoefficent
+ 24288: 00000000086d2208    12 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::get(icu_64::Locale const&, int, UErrorCode&) const
+ 24333: 0000000000d11e94    28 OBJECT  GLOBAL DEFAULT   10 typeinfo name for icu_64::ICULocaleService
+ 24347: 00000000088d58d8   228 FUNC    WEAK   DEFAULT   14 hb_sanitize_context_t::return_t AAT::ChainSubtable<AAT::ExtendedTypes>::dispatch<hb_sanitize_context_t>(hb_sanitize_context_t*) const
+ 24419: 00000000087086cc   312 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::dtos(double, icu_64::UnicodeString&)
+ 24436: 00000000089c6280   104 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::Start()
+ 24549: 0000000008a68a50   164 FUNC    GLOBAL DEFAULT   14 criNcVoice_CalculateWorkSizeForLibrary
+ 24585: 00000000098913f0    24 OBJECT  GLOBAL DEFAULT   16 typeinfo for icu_64::ICULocaleService
+ 24601: 00000000086d09ec   372 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getVisibleIDMap(UErrorCode&) const
+ 24715: 0000000008a67130   300 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_DetachSpatializer
+ 24819: 00000000089c6938     8 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetAsrRackId(int)
+ 24838: 00000000088d79c0   812 FUNC    WEAK   DEFAULT   14 OT::hb_ot_apply_context_t::return_t OT::SubstLookupSubTable::dispatch<OT::hb_ot_apply_context_t>(OT::hb_ot_apply_context_t*, unsigned int) const
+ 24875: 0000000008a67de8    56 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetSendLevel
+ 24909: 00000000086d3cc4   252 FUNC    GLOBAL DEFAULT   14 icu_64::LocaleKeyFactory::create(icu_64::ICUServiceKey const&, icu_64::ICUService const*, UErrorCode&) const
+ 24935: 00000000086dd8e0     4 FUNC    GLOBAL DEFAULT   14 icu_64::ICUNumberFormatService::~ICUNumberFormatService()
+ 25009: 0000000008a67530    12 FUNC    GLOBAL DEFAULT   14 criAtomVoice_IsInitialized
+ 25043: 0000000008a4470c    12 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_IsEnableCalculationAisacControlFrom3dPosition
+ 25071: 00000000086d12fc   316 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::registerInstance(icu_64::UObject*, icu_64::UnicodeString const&, signed char, UErrorCode&)
+ 25193: 0000000008a5d7f8    56 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetInsertionDsp
+ 25198: 0000000008a67b20    36 FUNC    GLOBAL DEFAULT   14 criAtomVoice_GetStatus
+ 25262: 0000000008a95d8c   104 FUNC    GLOBAL DEFAULT   14 criAtomExPlayback_SetVoicePriority
+ 25284: 00000000089984ec    60 FUNC    GLOBAL DEFAULT   14 CriMvEasyPlayer::attachCenterVoice()
+ 25456: 0000000008af5f80   180 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_RequestToSuspendAll
+ 25462: 00000000082e2bf4     8 FUNC    GLOBAL DEFAULT   14 physx::NpClothFabric::getParticleIndices(unsigned int*, unsigned int) const
+ 25469: 0000000008a44484    20 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_SetFilterCallback
+ 25477: 0000000008a6b774    32 FUNC    GLOBAL DEFAULT   14 criNcvHcaMx_GetOutputNcVoice
+ 25529: 0000000008694528   308 FUNC    GLOBAL DEFAULT   14 utext_openConstUnicodeString_64
+ 25606: 0000000008a34218    48 FUNC    GLOBAL DEFAULT   14 criAtomExAcb_GetDeviceSendLevelParametersInfoByCueId
+ 25665: 00000000082e00a4     8 FUNC    GLOBAL DEFAULT   14 physx::NpCloth::getNbSelfCollisionIndices() const
+ 25678: 0000000008a43ffc    16 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_SetPriority
+ 25772: 0000000008a8b348    92 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForHcaMxVoicePool
+ 25783: 000000000834c658    60 FUNC    GLOBAL DEFAULT   14 physx::Sq::IncrementalAABBTree::fixupTreeIndices(physx::Sq::IncrementalAABBTreeNode*, unsigned int, unsigned int)
+ 25962: 00000000083e3fd4   112 FUNC    GLOBAL DEFAULT   14 physx::Sc::ClothCore::getSelfCollisionIndices(unsigned int*) const
+ 26142: 00000000086cfe20   252 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::~ICUService()
+ 26174: 000000000996a16c   256 OBJECT  GLOBAL DEFAULT   22 crifs_device_info
+ 26320: 0000000008534a2c    20 FUNC    WEAK   DEFAULT   14 physx::Gu::ConvexMesh::getVertices() const
+ 26385: 00000000089c69c8     4 FUNC    WEAK   DEFAULT   14 non-virtual thunk to CriManaSoundAtomVoice::~CriManaSoundAtomVoice()
+ 26408: 0000000008789470   116 FUNC    GLOBAL DEFAULT   14 icu_64::CollationFastLatinBuilder::getMiniCE(long) const
+ 26516: 00000000089c7c80    36 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomEx::SetDefaultConfigForManaSoundVoicePool(CriAtomExRawPcmVoicePoolConfigTag*)
+ 26547: 00000000087093d4   132 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::clone() const
+ 26571: 0000000008a68104    60 FUNC    GLOBAL DEFAULT   14 criAtomVoice_GetNumRoutings
+ 26616: 000000000868b6f8    16 FUNC    WEAK   DEFAULT   14 icu_64::ICUBreakIteratorFactory::handleCreate(icu_64::Locale const&, int, icu_64::ICUService const*, UErrorCode&) const
+ 26630: 00000000086d1a78    44 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getName(icu_64::UnicodeString&) const
+ 26733: 00000000086cf570    52 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::~ICUServiceKey()
+ 26734: 000000000870860c    72 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::operator=(icu_64::ChoiceFormat const&)
+ 26764: 00000000086d0dd8    68 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getDisplayNames(icu_64::UVector&, UErrorCode&) const
+ 26768: 0000000008ac9fb8    12 FUNC    GLOBAL DEFAULT   14 criAfxParagraphicEqualizer_GetEffectName
+ 26809: 0000000008ab9ebc   356 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AllocateInstrumentVoicePool
+ 26926: 0000000009897cc0    24 OBJECT  GLOBAL DEFAULT   16 typeinfo for icu_64::ICUCollatorService
+ 26936: 0000000008709178   280 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::parseArgument(icu_64::MessagePattern const&, int, icu_64::UnicodeString const&, icu_64::ParsePosition&)
+ 26947: 0000000008a1d158    12 FUNC    GLOBAL DEFAULT   14 criStreamerManager_SetDefaultDeviceId
+ 26983: 00000000089c69e0   160 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice_Float32::CalculateOutputWorkSize(unsigned int, unsigned int)
+ 27004: 0000000008a66eac   644 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AttachSpatializer
+ 27057: 00000000086d2468   168 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::getAvailableLocales() const
+ 27079: 000000000a570218    24 OBJECT  GLOBAL DEFAULT   23 CriManaSoundAtomVoice::s_sndout_list
+ 27082: 0000000008999a94    20 FUNC    GLOBAL DEFAULT   14 CriMvEasyPlayer::ReplaceCenterVoice(int, CriError&)
+ 27098: 000000000988eea0    24 OBJECT  GLOBAL DEFAULT   16 typeinfo for icu_64::ICUBreakIteratorService
+ 27209: 0000000008a4400c    20 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_BreakLoop
+ 27317: 00000000089c6e38     4 FUNC    WEAK   DEFAULT   14 non-virtual thunk to CriManaSoundAtomVoice_Float32::~CriManaSoundAtomVoice_Float32()
+ 27320: 00000000086d12e8    20 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::registerInstance(icu_64::UObject*, icu_64::UnicodeString const&, UErrorCode&)
+ 27372: 0000000008981394   960 FUNC    GLOBAL DEFAULT   14 silk_decode_indices
+ 27383: 0000000008708514   164 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::ChoiceFormat(icu_64::UnicodeString const&, UParseError&, UErrorCode&)
+ 27423: 00000000086d2778   128 FUNC    WEAK   DEFAULT   14 icu_64::ServiceEnumeration::snext(UErrorCode&)
+ 27431: 0000000008a5d4a4     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_IsDropped
+ 27434: 0000000008a3db98    72 FUNC    GLOBAL DEFAULT   14 criAtomTblVoiceLimitGroup_Initialize
+ 27489: 00000000086cf734     8 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::prefix(icu_64::UnicodeString&) const
+ 27492: 0000000008708da0    12 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::getLimits(int&) const
+ 27498: 00000000086cfbf4     4 FUNC    GLOBAL DEFAULT   14 icu_64::ServiceListener::~ServiceListener()
+ 27616: 00000000089c6940    40 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::GetAtomExPlayer()
+ 27623: 0000000008755bbc     4 FUNC    GLOBAL DEFAULT   14 icu_64::ICUCollatorService::~ICUCollatorService()
+ 27658: 0000000008a94904    56 FUNC    GLOBAL DEFAULT   14 criAtomExPlayer_SetVoicePriority
+ 27672: 00000000098912b8   208 OBJECT  GLOBAL DEFAULT   16 vtable for icu_64::ICULocaleService
+ 27707: 00000000083cc5bc   980 FUNC    GLOBAL DEFAULT   14 physx::Dy::createSolverTaskChain(physx::Dy::DynamicsContext&, physx::Dy::SolverIslandObjects const&, physx::PxsIslandIndices const&, unsigned int, physx::IG::SimpleIslandManager&, unsigned int*, physx::PxsMaterialManager*, physx::PxBaseTask*, physx::PxsContactManagerOutputIterator&, bool)
+ 27717: 000000000873e618    88 FUNC    WEAK   DEFAULT   14 icu_64::CalendarService::cloneInstance(icu_64::UObject*) const
+ 27890: 0000000008af5954   832 FUNC    GLOBAL DEFAULT   14 criFs_AttachIoDevice
+ 27898: 0000000008a42b68    12 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_ClearFinalVoiceParameter
+ 27913: 0000000008540404   412 FUNC    GLOBAL DEFAULT   14 physx::getVertexEdgeIndices(physx::Gu::HeightField const&, unsigned int, unsigned int, unsigned int, physx::EdgeData*)
+ 27986: 0000000008afd8ac    12 FUNC    GLOBAL DEFAULT   14 MovieDecoder_SetAudioOutputDeviceConfig
+ 27990: 000000000828b4a8    52 FUNC    GLOBAL DEFAULT   14 virt_voicepos
+ 28007: 0000000008af67f4   100 FUNC    GLOBAL DEFAULT   14 criFsIoDevice_SetSelectIoCallback
+ 28030: 0000000008af5768   388 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_Initialize
+ 28090: 0000000008a6de9c     8 FUNC    GLOBAL DEFAULT   14 criAtomInstrumentVoice_CalculateWorkSizeForLibrary
+ 28110: 0000000008a5cd9c     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_OutputToChStrip
+ 28222: 00000000082e2bcc     8 FUNC    GLOBAL DEFAULT   14 physx::NpClothFabric::getNbParticleIndices() const
+ 28248: 00000000086d262c    64 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::createKey(icu_64::UnicodeString const*, int, UErrorCode&) const
+ 28300: 0000000008a99eb8   280 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_Free
+ 28326: 0000000008aacaac   184 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AttachDspPitchShifter
+ 28369: 00000000086d28fc   268 FUNC    WEAK   DEFAULT   14 icu_64::ServiceEnumeration::ServiceEnumeration(icu_64::ServiceEnumeration const&, UErrorCode&)
+ 28507: 0000000008adb5b0    96 FUNC    GLOBAL DEFAULT   14 criFs_GetDeviceInfo
+ 28531: 0000000008b112dc    20 FUNC    GLOBAL DEFAULT   14 criVsd_EnableVoicePoolCreate
+ 28604: 00000000089c6e30     8 FUNC    WEAK   DEFAULT   14 CriManaSoundAtomVoice_Float32::~CriManaSoundAtomVoice_Float32()
+ 28607: 00000000086d0ba0   568 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::getDisplayName(icu_64::UnicodeString const&, icu_64::UnicodeString&, icu_64::Locale const&) const
+ 28624: 0000000009891408    24 OBJECT  GLOBAL DEFAULT   16 typeinfo for icu_64::ServiceEnumeration
+ 28820: 0000000008ab617c     4 FUNC    GLOBAL DEFAULT   14 criAtomExAsrRack_GetOutputDeviceChannels
+ 28840: 00000000088d7cec   324 FUNC    WEAK   DEFAULT   14 OT::hb_ot_apply_context_t::return_t OT::ChainContext::dispatch<OT::hb_ot_apply_context_t>(OT::hb_ot_apply_context_t*) const
+ 28928: 00000000088d0d30   212 FUNC    WEAK   DEFAULT   14 OT::ValueFormat::sanitize_value_devices(hb_sanitize_context_t*, void const*, OT::IntType<unsigned short, 2u> const*) const
+ 29007: 0000000008a271fc   224 FUNC    GLOBAL DEFAULT   14 criAtomConfig_GetVoiceLimitGroupInformation
+ 29042: 0000000008708514   164 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::ChoiceFormat(icu_64::UnicodeString const&, UParseError&, UErrorCode&)
+ 29159: 0000000008aebf08    12 FUNC    GLOBAL DEFAULT   14 criFsDecodeDevice_ExecuteServer
+ 29275: 00000000098911d0    48 OBJECT  GLOBAL DEFAULT   16 vtable for icu_64::ServiceListener
+ 29299: 0000000008a3dc58    36 FUNC    GLOBAL DEFAULT   14 criAtomTblVoiceLimitGroup_GetItemIndex
+ 29346: 0000000008ac9f94    12 FUNC    GLOBAL DEFAULT   14 criAfxParagraphicEqualizer_GetInterfaceWithVersion
+ 29489: 0000000008aec368    12 FUNC    GLOBAL DEFAULT   14 criFsDevice_RemoveTask
+ 29515: 0000000008a1daac    36 FUNC    GLOBAL DEFAULT   14 criStreamerManager_SetDeviceConfig
+ 29520: 0000000000d16670    30 OBJECT  GLOBAL DEFAULT   10 typeinfo name for icu_64::ICUCollatorService
+ 29540: 0000000008a5d8a0     8 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetCallback
+ 29683: 00000000098ba740   304 OBJECT  GLOBAL DEFAULT   16 vtable for CriManaSoundAtomVoice_Float32
+ 29703: 00000000084dcd3c   728 FUNC    GLOBAL DEFAULT   14 physx::Gu::ReadIndices(unsigned int, unsigned int, unsigned int*, physx::PxInputStream&, bool)
+ 29739: 0000000008a6c544   132 FUNC    GLOBAL DEFAULT   14 criNcHcaMixer_AddVoice
+ 29747: 000000000868b724    16 FUNC    WEAK   DEFAULT   14 icu_64::ICUBreakIteratorService::cloneInstance(icu_64::UObject*) const
+ 29763: 00000000086d22f0    24 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::registerInstance(icu_64::UObject*, icu_64::Locale const&, UErrorCode&)
+ 29771: 0000000008a99ff4   108 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_GetNumUsedVoices
+ 29777: 00000000086d3dc0   196 FUNC    GLOBAL DEFAULT   14 icu_64::LocaleKeyFactory::handlesKey(icu_64::ICUServiceKey const&, UErrorCode&) const
+ 29792: 00000000083383a0   464 FUNC    WEAK   DEFAULT   14 physx::Pt::HeightFieldAabbTest::getTriangleVertices(physx::PxVec3*, physx::Pt::HeightFieldAabbTest::Iterator const&) const
+ 29818: 0000000008560800    52 FUNC    GLOBAL DEFAULT   14 physx::Gu::TriangleMesh::getVerticesForModification()
+ 29829: 00000000082468f4    36 FUNC    GLOBAL DEFAULT   14 std::__ndk1::random_device::~random_device()
+ 29853: 0000000008aec374    32 FUNC    GLOBAL DEFAULT   14 criFsDevice_Execute
+ 29893: 0000000008aca10c   560 FUNC    GLOBAL DEFAULT   14 criAfxParagraphicEqualizer_Create
+ 29948: 0000000008a98ca8   232 FUNC    GLOBAL DEFAULT   14 criAtomExPlayback_MonitoringVoiceStop
+ 30074: 0000000008af5df0     8 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_CalculateWorkSizeForCreateHandle
+ 30123: 00000000028322c8  2888 FUNC    GLOBAL DEFAULT   14 Java_com_epicgames_ue4_NativeCalls_RouteServiceIntent
+ 30148: 00000000085a4a1c    48 FUNC    GLOBAL DEFAULT   14 physx::shdfnd::atomicExchange(int volatile*, int)
+ 30193: 0000000008a8a7b0   104 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForWaveVoicePool
+ 30227: 00000000084d3d48   128 FUNC    GLOBAL DEFAULT   14 physx::Gu::computeBoundsAroundVertices(physx::PxBounds3&, unsigned int, physx::PxVec3 const*)
+ 30276: 0000000008a8a818   276 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_AllocateWaveVoicePool
+ 30408: 00000000089c65f8   136 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::SetBusSendLevel(int, float)
+ 30464: 00000000086d2858   164 FUNC    WEAK   DEFAULT   14 icu_64::ServiceEnumeration::ServiceEnumeration(icu_64::ICULocaleService const*, UErrorCode&)
+ 30585: 000000000841e068    12 FUNC    GLOBAL DEFAULT   14 getNbPxClothFabric_ParticleIndices(physx::PxClothFabric const*)
+ 30611: 000000000837e5b4    20 FUNC    GLOBAL DEFAULT   14 non-virtual thunk to physx::cloth::SwFactory::extractSelfCollisionIndices(physx::cloth::Cloth const&, physx::cloth::Range<unsigned int>) const
+ 30628: 0000000008a68a38    24 FUNC    GLOBAL DEFAULT   14 criNcVoice_IsInterfaceRegistered
+ 30674: 00000000086d1438   172 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::createSimpleFactory(icu_64::UObject*, icu_64::UnicodeString const&, signed char, UErrorCode&)
+ 30711: 0000000008ab9a14   104 FUNC    GLOBAL DEFAULT   14 criAtomExVoicePool_CalculateWorkSizeForAiffVoicePool
+ 30723: 0000000008756b94   196 FUNC    GLOBAL DEFAULT   14 icu_64::CFactory::create(icu_64::ICUServiceKey const&, icu_64::ICUService const*, UErrorCode&) const
+ 30764: 0000000008af5e70    92 FUNC    GLOBAL DEFAULT   14 criFsReadDevice_GetDeviceHandle
+ 30847: 00000000083dc3a4    48 FUNC    GLOBAL DEFAULT   14 physx::Sc::ShapeCore::getMaterialIndices() const
+ 30945: 0000000008a67c80    20 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetPitch
+ 30952: 0000000008aca720   188 FUNC    GLOBAL DEFAULT   14 criAfxParagraphicEqualizer_ApplyParameters
+ 30978: 0000000009897bf0   208 OBJECT  GLOBAL DEFAULT   16 vtable for icu_64::ICUCollatorService
+ 31034: 0000000008a42994    44 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_Finalize
+ 31042: 00000000087575c8    28 FUNC    WEAK   DEFAULT   14 icu_64::ICUCollatorService::isDefault() const
+ 31105: 00000000082469ac    88 FUNC    GLOBAL DEFAULT   14 std::__ndk1::random_device::entropy() const
+ 31135: 00000000086cf570    52 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::~ICUServiceKey()
+ 31166: 0000000008a5d884    20 FUNC    GLOBAL DEFAULT   14 criAsrVoice_SetRendererType
+ 31194: 00000000088d24e4   292 FUNC    WEAK   DEFAULT   14 OT::hb_get_subtables_context_t::return_t OT::SinglePos::dispatch<OT::hb_get_subtables_context_t>(OT::hb_get_subtables_context_t*) const
+ 31226: 0000000008a67268   176 FUNC    GLOBAL DEFAULT   14 criAtomVoice_CalculateWorkSizeForLibrary
+ 31258: 0000000000d11eb0    30 OBJECT  GLOBAL DEFAULT   10 typeinfo name for icu_64::ServiceEnumeration
+ 31283: 0000000008aec4b8    36 FUNC    GLOBAL DEFAULT   14 criFsDevice_SetThreadPriorityCallback
+ 31301: 0000000008a587b8     8 FUNC    GLOBAL DEFAULT   14 criAsrRack_GetOutputNcVoiceType
+ 31303: 0000000008aca854    60 FUNC    GLOBAL DEFAULT   14 criAfxParagraphicEqualizer_Start
+ 31365: 0000000008a680d4    48 FUNC    GLOBAL DEFAULT   14 criAtomVoice_ResetRouting
+ 31416: 0000000008a69058   260 FUNC    GLOBAL DEFAULT   14 criNcVoice_InterleavePcm16
+ 31422: 0000000008adb610    92 FUNC    GLOBAL DEFAULT   14 criFs_SetDeviceInfo
+ 31491: 0000000008a6df38    36 FUNC    GLOBAL DEFAULT   14 criAtomInstrumentVoice_Finalize
+ 31514: 00000000087f2da4   412 FUNC    GLOBAL DEFAULT   14 icu_64::number::impl::NumberStringBuilder::splice(int, int, icu_64::UnicodeString const&, int, int, unsigned char, UErrorCode&)
+ 31548: 0000000008708df4   404 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::format(double, icu_64::UnicodeString&, icu_64::FieldPosition&) const
+ 31637: 0000000008a67318   344 FUNC    GLOBAL DEFAULT   14 criAtomVoice_Initialize
+ 31643: 0000000008a6915c   588 FUNC    GLOBAL DEFAULT   14 criNcVoice_InterleavePcm32
+ 31680: 0000000008a67b18     8 FUNC    GLOBAL DEFAULT   14 criAtomVoice_IsPaused
+ 31746: 00000000084dcbd8   356 FUNC    GLOBAL DEFAULT   14 physx::Gu::StoreIndices(unsigned int, unsigned int, unsigned int const*, physx::PxOutputStream&, bool)
+ 31800: 00000000086cf5e8    44 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::canonicalID(icu_64::UnicodeString&) const
+ 31816: 00000000086cf6ac     8 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::fallback()
+ 31818: 0000000008a5cdac    12 FUNC    GLOBAL DEFAULT   14 criAsrVoice_IsPlaying
+ 31834: 0000000008a99c70    44 FUNC    GLOBAL DEFAULT   14 criAtomEx_SetMonitoringVoiceStopPlaybackId
+ 31961: 0000000008a68044    56 FUNC    GLOBAL DEFAULT   14 criAtomVoice_UpdateDsp
+ 32016: 0000000008a69554   440 FUNC    GLOBAL DEFAULT   14 criNcVoice_InterleavePcmFloat32toInt32V24
+ 32078: 0000000008a56518   104 FUNC    GLOBAL DEFAULT   14 criAtomAsr_GetOutputNcVoiceType
+ 32097: 0000000008a7a828    60 FUNC    GLOBAL DEFAULT   14 criAtomParameter2_GetVoicePoolIdentifier
+ 32117: 00000000086cfc08    12 FUNC    GLOBAL DEFAULT   14 icu_64::ServiceListener::getDynamicClassID() const
+ 32137: 0000000008a5cff4    20 FUNC    GLOBAL DEFAULT   14 criAsrVoice_GetNumBufferedSamples
+ 32190: 00000000088c12cc   504 FUNC    WEAK   DEFAULT   14 OT::hb_would_apply_context_t::return_t OT::ChainContext::dispatch<OT::hb_would_apply_context_t>(OT::hb_would_apply_context_t*) const
+ 32292: 000000000875753c   140 FUNC    WEAK   DEFAULT   14 icu_64::ICUCollatorService::getKey(icu_64::ICUServiceKey&, icu_64::UnicodeString*, UErrorCode&) const
+ 32348: 0000000008a5cf98    16 FUNC    GLOBAL DEFAULT   14 criAsrVoice_Flush
+ 32456: 000000000a570cf8    24 OBJECT  GLOBAL DEFAULT   23 criatomsoundvoice_active_voice_list
+ 32466: 000000000837e5a0    20 FUNC    GLOBAL DEFAULT   14 physx::cloth::SwFactory::extractSelfCollisionIndices(physx::cloth::Cloth const&, physx::cloth::Range<unsigned int>) const
+ 32475: 000000000a570d10     8 OBJECT  GLOBAL DEFAULT   23 criatomsoundvoice_total_info
+ 32552: 00000000088bc3a0   184 FUNC    WEAK   DEFAULT   14 OT::Device::get_x_delta(hb_font_t*, OT::VariationStore const&) const
+ 32612: 00000000086d1f58   108 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::ICULocaleService()
+ 32760: 00000000089c645c    24 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::GetVolume()
+ 32768: 00000000089c7ca4    52 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomEx::UpdateConfigForManaSoundVoicePool(CriAtomExRawPcmVoicePoolConfigTag*, int, int)
+ 32785: 0000000008a67c3c     8 FUNC    GLOBAL DEFAULT   14 criAtomVoice_SetVolumeBias
+ 32786: 00000000086d2078    16 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::get(icu_64::Locale const&, UErrorCode&) const
+ 32828: 00000000098ba610   304 OBJECT  GLOBAL DEFAULT   16 vtable for CriManaSoundAtomVoice
+ 32911: 0000000008708354   172 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::ChoiceFormat(double const*, icu_64::UnicodeString const*, int)
+ 32933: 0000000008a44470    20 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_SetDataRequestCallback
+ 32970: 00000000089c69dc     4 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice_Float32::Destroy()
+ 33000: 00000000086bca98   196 FUNC    GLOBAL DEFAULT   14 icu_64::PossibleWord::candidates(UText*, icu_64::DictionaryMatcher*, int)
+ 33047: 0000000008aebe9c    16 FUNC    GLOBAL DEFAULT   14 criFsDecodeDevice_GetDeviceHandle
+ 33061: 000000000841e05c    12 FUNC    GLOBAL DEFAULT   14 getPxClothFabric_ParticleIndices(physx::PxClothFabric const*, unsigned int*, unsigned int)
+ 33071: 00000000088c7030   328 FUNC    WEAK   DEFAULT   14 OT::Device::sanitize(hb_sanitize_context_t*) const
+ 33107: 0000000008629288    60 FUNC    GLOBAL DEFAULT   14 udata_openChoice_64
+ 33226: 0000000008a67568    76 FUNC    GLOBAL DEFAULT   14 criAtomVoice_ExecuteServer
+ 33252: 0000000008a68bc4    88 FUNC    GLOBAL DEFAULT   14 criNcVoice_Finalize
+ 33324: 00000000086cf868     4 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceFactory::~ICUServiceFactory()
+ 33465: 0000000008a55ee4    28 FUNC    GLOBAL DEFAULT   14 criAtomPlayer_GetAsrVoiceHn
+ 33515: 00000000086d2074     4 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::~ICULocaleService()
+ 33529: 00000000086d2510   236 FUNC    GLOBAL DEFAULT   14 icu_64::ICULocaleService::validateFallbackLocale() const
+ 33613: 0000000008383294     8 FUNC    WEAK   DEFAULT   14 non-virtual thunk to physx::cloth::ClothImpl<physx::cloth::SwCloth>::getNumSelfCollisionIndices() const
+ 33662: 000000000824684c   168 FUNC    GLOBAL DEFAULT   14 std::__ndk1::random_device::random_device(std::__ndk1::basic_string<char, std::__ndk1::char_traits<char>, std::__ndk1::allocator<char> > const&)
+ 33666: 0000000009891160    64 OBJECT  GLOBAL DEFAULT   16 vtable for icu_64::ICUServiceFactory
+ 33668: 0000000008a44500   100 FUNC    GLOBAL DEFAULT   14 criAtomSoundVoice_GetNumFreeVoices
+ 33756: 0000000008a68d5c   320 FUNC    GLOBAL DEFAULT   14 criNcVoice_End
+ 33766: 000000000868b7f0   324 FUNC    WEAK   DEFAULT   14 icu_64::ICUBreakIteratorService::ICUBreakIteratorService()
+ 33802: 000000000a5701c0    88 OBJECT  GLOBAL DEFAULT   23 CriManaSoundAtomVoice::s_cs_list_work
+ 33858: 0000000008a62e18   116 FUNC    GLOBAL DEFAULT   14 criAtom_SetDeviceReadBitrate_ANDROID
+ 33937: 0000000008a5cf18    72 FUNC    GLOBAL DEFAULT   14 criAsrVoice_Stop
+ 34032: 0000000008708920    96 FUNC    GLOBAL DEFAULT   14 icu_64::ChoiceFormat::setChoices(double const*, icu_64::UnicodeString const*, int)
+ 34034: 000000000855ffb0     8 FUNC    WEAK   DEFAULT   14 physx::Gu::TriangleMesh::getVertices() const
+ 34040: 00000000089c55c8   124 FUNC    GLOBAL DEFAULT   14 CriManaSoundAtomVoice::Finalize()
+ 34060: 00000000086d188c    16 FUNC    GLOBAL DEFAULT   14 icu_64::ICUService::reInitializeFactories()
+ 34061: 0000000008a3dbe0   120 FUNC    GLOBAL DEFAULT   14 criAtomTblVoiceLimitGroup_GetItem
+ 34128: 00000000082468f4    36 FUNC    GLOBAL DEFAULT   14 std::__ndk1::random_device::~random_device()
+ 34146: 00000000086cf620   140 FUNC    GLOBAL DEFAULT   14 icu_64::ICUServiceKey::currentDescriptor(icu_64::UnicodeString&) const

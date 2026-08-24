@@ -1,0 +1,8 @@
+work/unpacked/apk1/lib/arm64-v8a/libUE4.so 160822968 bytes
+work/unpacked/apk1/lib/arm64-v8a/libgadsme.so 7232952 bytes
+work/unpacked/apk1/lib/arm64-v8a/libcrashlytics-common.so 865608 bytes
+work/unpacked/apk1/lib/arm64-v8a/libplaycore.so 574952 bytes
+work/unpacked/apk1/lib/arm64-v8a/libcrashlytics.so 232384 bytes
+work/unpacked/apk1/lib/arm64-v8a/libcrashlytics-handler.so 222400 bytes
+work/unpacked/apk1/lib/arm64-v8a/libcrashlytics-trampoline.so 9152 bytes
+work/unpacked/apk1/lib/arm64-v8a/libdatastore_shared_counter.so 7112 bytes

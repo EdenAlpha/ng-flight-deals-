@@ -1,0 +1,125 @@
+name: eFootball surgical score/header trace
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current arm64 UE4
+        run: |
+          rm -rf /tmp/efs surgical-output
+          mkdir -p /tmp/efs/bundle /tmp/efs/native surgical-output
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/efs/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/efs/efootball.xapk -d /tmp/efs/bundle
+          APK="$(find /tmp/efs/bundle -name config.arm64_v8a.apk | head -1)"
+          unzip -q "$APK" -d /tmp/efs/native
+          test -f /tmp/efs/native/lib/arm64-v8a/libUE4.so
+      - name: Dissect exact score serializers and packet-header constant
+        run: |
+          cat > /tmp/efs/s.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM,arm64
+          import re,struct,collections
+          P=Path('/tmp/efs/native/lib/arm64-v8a/libUE4.so'); raw=P.read_bytes(); O=Path('surgical-output')
+          with P.open('rb') as f:
+            e=ELFFile(f); t=e.get_section_by_name('.text');tb=t.data();tv=int(t['sh_addr']);r=e.get_section_by_name('.rodata');rb=r.data();rv=int(r['sh_addr'])
+            plt=e.get_section_by_name('.plt');rel=e.get_section_by_name('.rela.plt');plt_names={}
+            if plt is not None and rel is not None:
+              sy=e.get_section(rel['sh_link']);base=int(plt['sh_addr'])+32
+              for i,q in enumerate(rel.iter_relocations()):plt_names[base+i*16]=sy.get_symbol(q['r_info_sym']).name
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM);md.detail=True
+          strings={rv+m.start():m.group().decode('ascii','ignore') for m in re.finditer(rb'[ -~]{4,}',rb)}
+          # Two proven tight score/end clusters.
+          regions=[('score_A',0x7d54f00,0x7d55a80),('score_B',0x7d5cd00,0x7d5d700)]
+          exact={0x7d55184:'END_REASON_A',0x7d556e4:'HOME_SCORE_A',0x7d55700:'AWAY_SCORE_A',0x7d5cf50:'END_REASON_B',0x7d5d350:'HOME_SCORE_B',0x7d5d360:'AWAY_SCORE_B'}
+          def local_refs(ins):
+            reg={}; out=[]
+            for I in ins:
+              op=I.operands
+              if I.mnemonic=='adrp' and len(op)>=2 and op[0].type==arm64.ARM64_OP_REG and op[1].type==arm64.ARM64_OP_IMM:
+                reg[op[0].reg]=(int(op[1].imm),I.address)
+              elif I.mnemonic=='add' and len(op)>=3 and op[1].type==arm64.ARM64_OP_REG and op[2].type==arm64.ARM64_OP_IMM:
+                b=reg.get(op[1].reg)
+                if b and I.address-b[1]<=0x80:
+                  a=b[0]+int(op[2].imm);s=strings.get(a)
+                  if s:out.append((I.address,a,s))
+              elif I.mnemonic=='adr' and len(op)>=2 and op[1].type==arm64.ARM64_OP_IMM:
+                a=int(op[1].imm);s=strings.get(a)
+                if s:out.append((I.address,a,s))
+            return out
+          summary=[]
+          for name,a,z in regions:
+            ins=list(md.disasm(tb[a-tv:z-tv],a)); refs=local_refs(ins); refby=collections.defaultdict(list)
+            for pc,va,s in refs:refby[pc].append((va,s))
+            lines=[f'===== {name} 0x{a:x}-0x{z:x} =====']
+            for I in ins:
+              tags=[]
+              if I.address in exact:tags.append('EXACT='+exact[I.address])
+              for va,s in refby.get(I.address,[]):tags.append(f'STR@0x{va:x}={s[:120]}')
+              if I.mnemonic=='bl' and I.operands and I.operands[0].type==arm64.ARM64_OP_IMM:
+                d=int(I.operands[0].imm);tags.append('CALL='+hex(d));
+                if d in plt_names:tags.append('PLT='+plt_names[d])
+              # highlight loads/stores of byte/halfword/word values: score/end fields likely small integers
+              if I.mnemonic.startswith(('ldr','ldur','str','stur','mov','bl','adr','add')):tags.append('DATA')
+              lines.append(f'0x{I.address:x}: {I.mnemonic:9} {I.op_str}'+(('  ## '+' | '.join(tags)) if tags else ''))
+            O.joinpath(name+'.txt').write_text('\n'.join(lines))
+            summary.append(f'{name}: string_refs={len(refs)} calls={sum(I.mnemonic=="bl" for I in ins)}')
+            summary.extend(f'  0x{pc:x} -> 0x{va:x} {s[:160]}' for pc,va,s in refs)
+
+          # Fast exact xref scan for low-level header/reliability terms; scan AArch64 ADRP+ADD only.
+          terms=['SendOutHeaderOverheadLength','ChannelDatagramLength','RP_P2P_HEADER','RP_RELIABILITY','RP_ENTRY_IDX','RP_PEER_STATUS','RT_ACK','MATCH_STOP_COUNT_BUF_EMPTY_MCACTIVE','MATCH_STOP_COUNT','SEND_COMMAND_MUST_NOT_DROP_COUNT_RECV','CheckTurnEndTrigger']
+          vas=collections.defaultdict(list)
+          for va,s in strings.items():
+            for q in terms:
+              j=s.find(q)
+              if j>=0:vas[q].append(va+j)
+          pages={x&~0xfff for vv in vas.values() for x in vv}; refs=collections.defaultdict(list); mv=memoryview(tb);n=len(tb)//4
+          def sx(x,b):return x-(1<<b) if x&(1<<(b-1)) else x
+          val2term={x:q for q,vv in vas.items() for x in vv}
+          for i in range(n):
+            w=struct.unpack_from('<I',mv,i*4)[0]
+            if (w&0x9f000000)!=0x90000000:continue
+            rd=w&31;imm=sx((((w>>5)&0x7ffff)<<2)|((w>>29)&3),21)<<12;pc=tv+i*4;pg=(pc&~0xfff)+imm
+            if pg not in pages:continue
+            for j in range(1,10):
+              if i+j>=n:break
+              q=struct.unpack_from('<I',mv,(i+j)*4)[0]
+              if (q&0x1f000000)!=0x11000000 or ((q>>30)&1) or ((q>>5)&31)!=rd:continue
+              a=pg+(((q>>10)&0xfff)<<(12 if ((q>>22)&1) else 0))
+              if a in val2term:refs[val2term[a]].append((pc,tv+(i+j)*4,a))
+          h=[]
+          for q in terms:
+            h.append(f'\n=== {q} VAS={[hex(x) for x in vas[q]]} XREFS={[(hex(a),hex(b)) for a,b,_ in refs[q]]} ===')
+            for ap,add,va in refs[q]:
+              lo=max(tv,ap-0x160);hi=min(tv+len(tb),ap+0x280)
+              for I in md.disasm(tb[lo-tv:hi-tv],lo):
+                tag='>>' if ap-4<=I.address<=add+8 else '  '
+                h.append(f'{tag}0x{I.address:x}: {I.mnemonic:9} {I.op_str}')
+          O.joinpath('header_xrefs.txt').write_text('\n'.join(h))
+          O.joinpath('summary.txt').write_text('\n'.join(summary)+ '\n' + '\n'.join(f'{q}: {len(refs[q])} refs' for q in terms))
+          PY
+          python3 /tmp/efs/s.py
+          cat surgical-output/summary.txt
+          echo '=== SCORE A ==='; cat surgical-output/score_A.txt
+          echo '=== SCORE B ==='; cat surgical-output/score_B.txt
+          echo '=== HEADER XREFS ==='; cat surgical-output/header_xrefs.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-score-header-surgical
+          path: surgical-output/
+          retention-days: 7

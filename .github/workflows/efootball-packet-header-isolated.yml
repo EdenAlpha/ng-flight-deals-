@@ -1,0 +1,160 @@
+name: eFootball isolated packet header analysis
+
+on:
+  push:
+    branches: [ efootball-packet-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-packet-analysis-2026-08-23
+      - name: Install
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download arm64 binary
+        run: |
+          rm -rf /tmp/efp packet-output
+          mkdir -p /tmp/efp/bundle /tmp/efp/native packet-output
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/efp/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/efp/efootball.xapk -d /tmp/efp/bundle
+          APK="$(find /tmp/efp/bundle -name config.arm64_v8a.apk | head -1)"
+          unzip -q "$APK" -d /tmp/efp/native
+          test -f /tmp/efp/native/lib/arm64-v8a/libUE4.so
+      - name: Trace packet header/reliability code to raw I/O
+        run: |
+          cat > /tmp/efp/p.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from elftools.dwarf.callframe import FDE
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM,arm64
+          import re,bisect,collections
+          P=Path('/tmp/efp/native/lib/arm64-v8a/libUE4.so'); raw=P.read_bytes(); O=Path('packet-output')
+          terms=['RT_ACK','RP_P2P_HEADER','RELIABILITY','RP_ENTRY_IDX','RP_PEER_STATUS','ChannelDatagramLength',
+          'MATCH_CONTROL_SESSION_SEND_HEADER_SET_DELTATIME_FAIL_COUNT','SEND_COMMAND_MUST_NOT_DROP_COUNT_RECV',
+          'RECEIVED_INVALID_LENGTH','RECEIVED_LENGTH','SENT_COMMAND','HOST_DIRECT','HOST_RELAY','P2PTURNIO',
+          'PUNCHING_FINISHED','START_UDP_HOLE_PUNCHING_COMPLETE','CheckTurnEndTrigger','MATCH_STOP_COUNT',
+          'MATCH_STOP_MAX_ROLLING_COUNT_BUF_EMPTY','HOME_SCORE','AWAY_SCORE','END_REASON','SCORE_SITUATION','ABNORMAL_END_FLAG',
+          'TURN_CHANGEOVER_REASON','TURN_OFF_COMMUNICATE_COUNT','GAME_SERVER_STATS_SEND_URL']
+          with P.open('rb') as f:
+            e=ELFFile(f); t=e.get_section_by_name('.text');tb=t.data();tv=int(t['sh_addr']);r=e.get_section_by_name('.rodata');rb=r.data();rv=int(r['sh_addr'])
+            ranges=[]
+            try:
+              for x in e.get_dwarf_info().EH_CFI_entries():
+                if isinstance(x,FDE):
+                  a=int(x['initial_location']);z=a+int(x['address_range'])
+                  if tv<=a<z<=tv+len(tb):ranges.append((a,z))
+            except Exception:pass
+            ranges=sorted(set(ranges));starts=[a for a,z in ranges]
+            plt=e.get_section_by_name('.plt');rel=e.get_section_by_name('.rela.plt');plt_names={}
+            if plt is not None and rel is not None:
+              sy=e.get_section(rel['sh_link']);base=int(plt['sh_addr'])+32
+              for i,q in enumerate(rel.iter_relocations()):plt_names[base+i*16]=sy.get_symbol(q['r_info_sym']).name
+          def fr(pc):
+            k=bisect.bisect_right(starts,pc)-1
+            if k>=0 and ranges[k][0]<=pc<ranges[k][1]:return ranges[k]
+            return (max(tv,pc-0x300),min(tv+len(tb),pc+0x500))
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM);md.detail=True
+          ins=list(md.disasm(tb,tv))
+          # exact term VAs including terms embedded in larger printable strings
+          vas=collections.defaultdict(set)
+          for m in re.finditer(rb'[ -~]{4,}',rb):
+            s=m.group().decode('ascii','ignore'); base=rv+m.start()
+            for q in terms:
+              st=0
+              while True:
+                j=s.find(q,st)
+                if j<0:break
+                vas[q].add(base+j);st=j+1
+          # ADRP+ADD/LDR/ADR refs
+          refs=collections.defaultdict(list);pg={}
+          alladdr={a:q for q,v in vas.items() for a in v}
+          pages={a&~0xfff for a in alladdr}
+          for I in ins:
+            op=I.operands
+            if I.mnemonic=='adrp' and len(op)>=2 and op[0].type==arm64.ARM64_OP_REG and op[1].type==arm64.ARM64_OP_IMM:
+              if int(op[1].imm) in pages:pg[op[0].reg]=(int(op[1].imm),I.address)
+            elif I.mnemonic=='add' and len(op)>=3 and op[1].type==arm64.ARM64_OP_REG and op[2].type==arm64.ARM64_OP_IMM:
+              b=pg.get(op[1].reg)
+              if b and I.address-b[1]<=0x60:
+                a=b[0]+int(op[2].imm)
+                if a in alladdr:refs[alladdr[a]].append(I.address)
+            elif I.mnemonic=='adr' and len(op)>=2 and op[1].type==arm64.ARM64_OP_IMM:
+              a=int(op[1].imm)
+              if a in alladdr:refs[alladdr[a]].append(I.address)
+          fl=collections.defaultdict(set)
+          for q,pcs in refs.items():
+            for pc in pcs:fl[fr(pc)].add(q)
+          O.joinpath('term_xrefs.txt').write_text('\n'.join(f'{q} vas={[hex(x) for x in sorted(vas[q])]} refs={[hex(x) for x in refs[q]]}' for q in terms))
+          # internal BL graph and direct PLT raw I/O callers
+          callers=collections.defaultdict(list);rawio=collections.defaultdict(list)
+          for I in ins:
+            if I.mnemonic!='bl' or not I.operands or I.operands[0].type!=arm64.ARM64_OP_IMM:continue
+            d=int(I.operands[0].imm);sf=fr(I.address)
+            if tv<=d<tv+len(tb):callers[d].append((I.address,sf))
+            n=plt_names.get(d,'')
+            if n in ('sendto','recvfrom','sendmsg','recvmsg','send','recv','connect','socket','bind'):rawio[sf].append((I.address,n,d))
+          # Ancestor closure from raw network I/O wrappers
+          rawstarts={f[0] for f in rawio};cur=set(rawstarts);anc=set(cur);depthmap={x:0 for x in cur}
+          for dep in range(1,6):
+            nxt=set()
+            for d in cur:
+              for pc,cf in callers.get(d,[]):
+                if cf[0] not in anc:depthmap[cf[0]]=dep;nxt.add(cf[0])
+            anc|=nxt;cur=nxt
+          # Report overlap: packet/string functions that can reach raw socket within <=5 caller hops.
+          ov=[]
+          for f,labs in sorted(fl.items()):
+            ov.append(f'FUNCTION 0x{f[0]:x}-0x{f[1]:x} labels={sorted(labs)} rawio_ancestor_depth={depthmap.get(f[0])}')
+          O.joinpath('packet_functions_to_rawio.txt').write_text('\n'.join(ov))
+          # Direct rawio functions
+          O.joinpath('rawio_functions.txt').write_text('\n'.join(f'FUNCTION 0x{f[0]:x}-0x{f[1]:x} '+repr(v) for f,v in sorted(rawio.items())))
+          # For every labeled function, dump instructions and highlight length/header constants and calls.
+          interesting={26,63,68,70,105,107,4,8,12,13,16,18,20,22,24,26,28,30,32,38,40,42,44,48,55,57}
+          dump=[]
+          for f,labs in sorted(fl.items()):
+            a,z=f;dump.append(f'\n===== 0x{a:x}-0x{z:x} labels={sorted(labs)} rawio_ancestor_depth={depthmap.get(a)} =====')
+            hi=min(z,a+0x5000)
+            for I in md.disasm(tb[a-tv:hi-tv],a):
+              marks=[]
+              if I.mnemonic=='bl' and I.operands and I.operands[0].type==arm64.ARM64_OP_IMM:
+                d=int(I.operands[0].imm);n=plt_names.get(d,'');
+                if n:marks.append('PLT='+n)
+              for op in I.operands:
+                if op.type==arm64.ARM64_OP_IMM and int(op.imm) in interesting:marks.append('IMM='+str(int(op.imm)))
+              pref=' **'+' '.join(marks) if marks else ''
+              dump.append(f'0x{I.address:x}: {I.mnemonic:8} {I.op_str}{pref}')
+          O.joinpath('packet_function_disasm.txt').write_text('\n'.join(dump))
+          # Find all exact immediate 26 in any rawio ancestor function (more selective than global scan).
+          s26=[]
+          for I in ins:
+            ff=fr(I.address)
+            if ff[0] not in anc:continue
+            vals=[int(op.imm) for op in I.operands if op.type==arm64.ARM64_OP_IMM]
+            if 26 in vals:s26.append(f'0x{I.address:x} function=0x{ff[0]:x}-0x{ff[1]:x} depth={depthmap.get(ff[0])} {I.mnemonic} {I.op_str} labels={sorted(fl.get(ff,set()))}')
+          O.joinpath('network_ancestor_immediate_26.txt').write_text('\n'.join(s26))
+          # Compact summary
+          lines=[f'rawio_functions={len(rawio)}',f'rawio_ancestor_functions_5hop={len(anc)}',f'labeled_packet_functions={len(fl)}',f'labeled_in_rawio_ancestor={sum(f[0] in anc for f in fl)}',f'network_ancestor_imm26={len(s26)}']
+          O.joinpath('summary.txt').write_text('\n'.join(lines))
+          PY
+          python3 /tmp/efp/p.py
+          cat packet-output/summary.txt
+          echo '=== XREFS ==='; cat packet-output/term_xrefs.txt
+          echo '=== OVERLAP ==='; cat packet-output/packet_functions_to_rawio.txt
+          echo '=== IMM26 ==='; head -200 packet-output/network_ancestor_immediate_26.txt
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add packet-output
+          git commit -m 'Add eFootball packet header findings'
+          git push origin HEAD:efootball-packet-analysis-2026-08-23

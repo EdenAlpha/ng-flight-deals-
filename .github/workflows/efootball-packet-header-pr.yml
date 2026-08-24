@@ -1,0 +1,52 @@
+name: eFootball packet header PR analysis
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  packet:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current arm64 binary
+        run: |
+          rm -rf /tmp/efp packet-output
+          mkdir -p /tmp/efp/bundle /tmp/efp/native packet-output
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/efp/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/efp/efootball.xapk -d /tmp/efp/bundle
+          APK="$(find /tmp/efp/bundle -name config.arm64_v8a.apk | head -1)"
+          unzip -q "$APK" -d /tmp/efp/native
+          test -f /tmp/efp/native/lib/arm64-v8a/libUE4.so
+      - name: Run embedded packet analyzer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('.github/workflows/efootball-packet-header-isolated.yml').read_text()
+          a=s.index("cat > /tmp/efp/p.py <<'PY'")+len("cat > /tmp/efp/p.py <<'PY'")
+          b=s.index("\n          PY",a)
+          lines=[]
+          for line in s[a:b].splitlines():
+              lines.append(line[10:] if line.startswith('          ') else line)
+          Path('/tmp/efp/p.py').write_text('\n'.join(lines).lstrip('\n'))
+          PY
+          python3 /tmp/efp/p.py
+          cat packet-output/summary.txt
+          echo '=== TARGET XREFS ==='; cat packet-output/term_xrefs.txt
+          echo '=== PACKET->RAWIO ==='; cat packet-output/packet_functions_to_rawio.txt
+          echo '=== NETWORK IMM26 ==='; head -300 packet-output/network_ancestor_immediate_26.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-packet-header-analysis
+          path: packet-output/
+          retention-days: 7

@@ -1,0 +1,41 @@
+eFootball 11.0.1 crypto/P2P layout findings (2026-08-23)
+
+Fresh targeted trace source: libUE4.so from the current jp.konami.pesam native arm64 split.
+
+1. The parser at ~0x7c088e4 references, in one configuration object:
+   - SendOutHeaderOverheadLength
+   - KeyExchangeEncryptionAlgorithm
+   - KeyExchangeEncryptionKey
+   - SessionKeyEncryptionAlgorithm
+   - SessionKeyEncryptionKeyLength
+
+2. Recovered destination layout in the parsed transport-config record (x19):
+   - +0xF0: presence byte for KeyExchangeEncryptionAlgorithm
+   - +0xF4: 32-bit KeyExchangeEncryptionAlgorithm value
+   - +0xF8: presence byte for KeyExchangeEncryptionKey
+   - +0x100: dynamic/string-like KeyExchangeEncryptionKey object copied by helper 0x691d118
+   - +0x118: presence byte for SessionKeyEncryptionAlgorithm
+   - +0x11C: 32-bit SessionKeyEncryptionAlgorithm value
+   - +0x120: presence byte for SessionKeyEncryptionKeyLength
+   - +0x128: 64-bit SessionKeyEncryptionKeyLength value
+
+3. The parser is not isolated generic crypto text. Its direct caller ~0x7bfc91c selects named connection profiles including:
+   CS_LOW_LEVEL
+   P2P_GIVE_UP_QUICKLY_LEVEL
+   P2P_LOW_LEVEL
+   P2P_ADHOC_UNKNOWN_LOW_LEVEL
+   CS_GIVE_UP_QUICKLY_LEVEL
+   P2P_ADHOC_UNKNOWN_GIVE_UP_QUICKLY_LEVEL
+Then it calls the crypto/transport config parser at 0x7c088e4. The parent ~0x7c0dca0 calls ~0x7bfc91c at 0x7c0deec.
+
+4. Important correction on AES evidence: the recovered AES256 xref at ~0x7f9cd94 is part of a general cipher-name/alias registration block. The same block registers AES-128-CBC/AES128/aes128, AES-192-CBC/AES192/aes192, AES-256-CBC/AES256/aes256, aes*-wrap aliases, and ARIA-128/192/256. Therefore the mere presence/xref of AES256 in libUE4.so does NOT prove that eFootball's P2P session payload uses AES-256. We still need to trace the consumer of SessionKeyEncryptionAlgorithm (+0x11C) and the key installation path.
+
+5. Previously recovered exact match/result record offsets remain high-value for the plaintext endpoint:
+   - GAME_PHASE byte: +0x48
+   - HOME_SCORE byte: +0x4B
+   - AWAY_SCORE byte: +0x4C
+The score bytes are adjacent.
+
+6. Current packet conclusion: the observed 26-byte terminal regime is still not proven to contain score. Reliability/header code (RP_P2P_HEADER, RP_RELIABILITY, RT_ACK) remains a plausible explanation. CMD_ADD_SCORE is a rich score/server-command object with goal/assist fields, but no static evidence yet maps that command directly to the 26-byte P2P packet.
+
+Next target: locate reads/consumers of config offsets +0x11C and +0x128, identify the selected algorithm enum and actual crypto implementation/key installation, then follow decrypt/plaintext output into the score/match-state serializers.

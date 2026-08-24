@@ -1,0 +1,1 @@
+Trigger fixed managed-code analysis for eFootball Android networking glue.

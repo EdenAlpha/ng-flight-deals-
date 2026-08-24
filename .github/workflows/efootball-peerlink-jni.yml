@@ -1,0 +1,100 @@
+name: eFootball Konami peerlink JNI trace
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  trace:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+      - name: Install tools
+        run: |
+          python3 -m pip install --break-system-packages capstone pyelftools
+          sudo apt-get update -qq && sudo apt-get install -y -qq unzip binutils
+      - name: Download current arm64 library
+        run: |
+          rm -rf jni-work peerlink-jni-output
+          mkdir -p jni-work/bundle jni-work/native peerlink-jni-output
+          curl -L --fail --retry 5 -A 'Mozilla/5.0' -o jni-work/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q jni-work/efootball.xapk -d jni-work/bundle
+          NATIVE="$(find jni-work/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          unzip -q "$NATIVE" -d jni-work/native
+          cp jni-work/native/lib/arm64-v8a/libUE4.so jni-work/libUE4.so
+      - name: Trace strings and ARM64 xrefs
+        run: |
+          strings -a -t x -n 4 jni-work/libUE4.so | grep -Ei 'jp[/\.]konami[/\.]peerlink|WifiDirect|WifiDirectNsd|NetworkServiceDiscovery|getGroupOwnerHostName|getGroupOwnerPort|getGroupOwnerId|isGroupOwner|startAdvertisement|startDiscovery|stopAdvertisement|stopDiscovery|createGroup|getDetectedServiceInfoList|P2P_ADHOC_(WIFIDIRECTLAN|LAN)|LinkUpMode|direct_online_turn_mode' > peerlink-jni-output/string_hits.txt || true
+          readelf -Ws jni-work/libUE4.so | grep -Ei 'peerlink|wifidirect|jni|java_' > peerlink-jni-output/dynamic_symbol_hits.txt || true
+          python3 - <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import re
+          so=Path('jni-work/libUE4.so')
+          data=so.read_bytes()
+          targets=[
+            b'jp/konami/peerlink/wifidirect/WifiDirect',b'jp.konami.peerlink.wifidirect.WifiDirect',
+            b'WifiDirect',b'getGroupOwnerHostName',b'getGroupOwnerPort',b'getGroupOwnerId',b'isGroupOwner',
+            b'startAdvertisement',b'startDiscovery',b'stopAdvertisement',b'stopDiscovery',b'createGroup',b'getDetectedServiceInfoList',
+            b'P2P_ADHOC_WIFIDIRECTLAN',b'P2P_ADHOC_LAN',b'LinkUpMode',b'direct_online_turn_mode'
+          ]
+          with so.open('rb') as f:
+            elf=ELFFile(f); text=elf.get_section_by_name('.text')
+            tdata=text.data(); tva=text['sh_addr']; toff=text['sh_offset']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          ins=list(md.disasm(tdata,tva)); by={i.address:i for i in ins}
+          # exact occurrences
+          occ={}
+          for t in targets:
+            arr=[]; p=0
+            while True:
+              p=data.find(t,p)
+              if p<0: break
+              arr.append(p); p+=1
+            if arr: occ[t.decode(errors='ignore')]=arr
+          out=[]
+          for name,offs in occ.items():
+            out.append('\n'+'#'*100+'\nTARGET '+name+' offs='+','.join(hex(x) for x in offs[:30]))
+            vas=set(offs) # PIE ELF uses matching file/VA here for these rodata ranges in this binary
+            x=[]
+            for idx,i in enumerate(ins[:-2]):
+              if i.mnemonic!='adrp': continue
+              m=re.match(r'(x\d+), #?(0x[0-9a-f]+)',i.op_str)
+              if not m: continue
+              reg,page=m.group(1),int(m.group(2),16)
+              for j in range(idx+1,min(idx+5,len(ins))):
+                q=ins[j]
+                mm=re.match(rf'{reg}, {reg}, #?(0x[0-9a-f]+|\d+)',q.op_str) if q.mnemonic=='add' else None
+                if mm:
+                  imm=int(mm.group(1),0); va=page+imm
+                  if va in vas: x.append((idx,j,va))
+                  break
+            out.append('xref_count='+str(len(x)))
+            for n,(a,b,va) in enumerate(x[:30]):
+              out.append(f'XREF[{n}] pc={hex(ins[a].address)} va={hex(va)}')
+              lo=max(0,a-18); hi=min(len(ins),b+35)
+              for q in ins[lo:hi]: out.append(f'  {hex(q.address)}: {q.mnemonic:8} {q.op_str}')
+          Path('peerlink-jni-output/xrefs.txt').write_text('\n'.join(out))
+          PY
+      - name: Build concise report
+        run: |
+          {
+            echo '# String hits'; cat peerlink-jni-output/string_hits.txt
+            echo; echo '# Dynamic symbols'; sed -n '1,1200p' peerlink-jni-output/dynamic_symbol_hits.txt
+            echo; echo '# Xrefs'; sed -n '1,12000p' peerlink-jni-output/xrefs.txt
+          } > peerlink-jni-output/report.txt
+      - name: Commit textual results
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add peerlink-jni-output
+          git commit -m 'Add Konami peerlink JNI trace' || exit 0
+          git push origin HEAD:efootball-apk-analysis-2026-08-23

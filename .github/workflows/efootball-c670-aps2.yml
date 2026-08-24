@@ -1,0 +1,128 @@
+name: eFootball c670 APS2 fixed decode
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch: {}
+
+concurrency:
+  group: efootball-c670-aps2-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  aps2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball arm64 binary (runner-side)
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Decode APS2 with corrected semantics
+        run: |
+          cat > /tmp/ef/aps2.py <<'PY'
+          import struct,sys
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          out=[]
+          with p.open('rb') as f:
+              e=ELFFile(f)
+              secs=[s.data() for s in e.iter_sections() if s.header['sh_type']==0x60000002]
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          def vaoff(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def rd64(va):
+              o=vaoff(va)
+              return int.from_bytes(raw[o:o+8],'little') if o is not None else None
+          raw=p.read_bytes()
+          d=[s for s in secs][0]
+          MAXOFF=len(raw)
+
+          def sleb(pos):
+              r=0;sh=0
+              while True:
+                  b=d[pos];pos+=1
+                  r|=(b&0x7f)<<sh;sh+=7
+                  if not b&0x80:
+                      if b&0x40:r-=(1<<sh)
+                      return r,pos
+
+          TARGET=0x7c0c670
+          G_OD,G_I,G_AD,G_HAS=1,2,4,8
+
+          def decode(extra_hdr,limit=None):
+              pos=4
+              count,pos=sleb(pos)
+              for _ in range(extra_hdr):_,pos=sleb(pos)
+              res=[];offset=0;info=0;addend=0;n=0;bad=0
+              while n<count:
+                  gsize,pos=sleb(pos)
+                  gflags,pos=sleb(pos)
+                  gd=None
+                  if gflags&G_OD:gd,pos=sleb(pos)
+                  if gflags&G_I:info,pos=sleb(pos)
+                  if gflags&G_AD and gflags&G_HAS:addend+=sleb(pos)[0]
+                  for _ in range(gsize):
+                      if gflags&G_OD:offset+=gd
+                      else:
+                          dl,pos=sleb(pos);offset+=dl
+                      if not gflags&G_I:info,pos=sleb(pos)
+                      if gflags&G_HAS and not gflags&G_AD:addend+=sleb(pos)[0]
+                      n+=1
+                      if not (0<=offset<MAXOFF):bad+=1
+                      if addend==TARGET:res.append((offset,info&0xffffffff))
+                      if limit and len(res)>=limit:return count,bad,res,n
+              return count,bad,res,n
+
+          best=None
+          for extra in (0,1,2):
+              cnt,bad,res,n=decode(extra,limit=50)
+              line=f'EXTRA_HDR={extra}: count={cnt} early_bad={bad} early_slots={[(hex(a),t) for a,t in res[:10]]}'
+              print(line,file=sys.stderr)
+              out.append(line)
+              if best is None or bad<best[1]:best=(extra,bad)
+
+          extra=best[0]
+          print(f'CHOSEN extra_hdr={extra}',file=sys.stderr)
+          cnt,bad,res,n=decode(extra)
+          out.append(f'FULL extra={extra}: total_relocs={cnt} decoded={n} bad_offsets={bad}')
+          slots=[r for r in res]
+          out.append(f'TARGET_SLOTS({len(slots)}): {[(hex(a),hex(t)) for a,t in slots[:40]]}')
+
+          for sl,_ in slots[:6]:
+              out.append(f'\n=== VTABLE WINDOW around slot {hex(sl)} ===')
+              for va in range(sl-0x80,sl+0x88,8):
+                  v=rd64(va)
+                  mark=' <<<< c670' if v==TARGET else ''
+                  out.append(f'{hex(va)}: {hex(v) if v else "?"}{mark}')
+
+          txt='\n'.join(str(x) for x in out)
+          Path('/tmp/out/c670_aps2.txt').write_text(txt)
+          print(txt[:4000])
+          PY
+          python3 /tmp/ef/aps2.py 2>&1 | tail -60
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-c670-aps2
+          path: /tmp/out/
+          retention-days: 7

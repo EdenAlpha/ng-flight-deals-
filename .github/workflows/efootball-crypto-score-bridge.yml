@@ -1,0 +1,192 @@
+name: eFootball crypto score bridge
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl binutils python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball native split
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          test -f /tmp/ef/native/lib/arm64-v8a/libUE4.so
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Recover crypto, score, and reliability function graph
+        run: |
+          cat > /tmp/ef/bridge.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import struct,collections,sys,re
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr'])
+              loads=[(int(s['p_offset']),int(s['p_filesz']),int(s['p_vaddr'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          def ova(o):
+              for po,sz,va in loads:
+                  if po<=o<po+sz:return va+o-po
+          def sx(x,b): return x-(1<<b) if x&(1<<(b-1)) else x
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          words=len(tb)//4; mv=memoryview(tb)
+
+          terms=[
+            'KeyExchangeEncryptionAlgorithm','KeyExchangeEncryptionKey','SessionKeyEncryptionAlgorithm','SessionKeyEncryptionKeyLength',
+            'AES256','RSA2048','SHA256','InitializeKey','GetKeyLength','GetIVLength','GetMACLength',
+            'HOME_SCORE','AWAY_SCORE','GAME_PHASE','GAME_RESULT','END_REASON','SCORE_SITUATION',
+            'CMD_ADD_SCORE','CmdAddScore.php','CMD_SET_GAME_RESULT','CMD_GET_GAME_RESULT','CMD_CHANGE_GAMEPHASE',
+            'EMatchFlowTask::SendServerMatchEnd','GameplayFinished','ResultPresentation','ROOM_GAME_PHASE_END',
+            'RP_P2P_HEADER','RP_RELIABILITY','RP_ENTRY_IDX','RP_PEER_STATUS','RT_ACK','MATCH_STOP_COUNT','SendOutHeaderOverheadLength','ChannelDatagramLength',
+            'goal_score','goal_side','goal_team_id','goal_player_id','goal_user_id','goal_gameplayer_id','goal_player_side','assist_user_id','assist_gameplayer_id','assist_side'
+          ]
+          labels={}
+          for term in terms:
+              start=0
+              while True:
+                  o=raw.find(term.encode(),start)
+                  if o<0: break
+                  va=ova(o)
+                  if va is not None: labels.setdefault(va,[]).append(term)
+                  start=o+1
+
+          # Function starts: ARM64 frame prologues plus .text base.  This is intentionally approximate but deterministic.
+          starts=[tva]
+          for i in range(words):
+              w=struct.unpack_from('<I',mv,i*4)[0]
+              # stp x29,x30,[sp,#imm]! common prologue mask
+              if (w & 0xffc07fff) == 0xa9807bfd:
+                  starts.append(tva+i*4)
+          starts=sorted(set(starts))
+          def fstart(pc):
+              import bisect
+              j=bisect.bisect_right(starts,pc)-1
+              return starts[j] if j>=0 else tva
+          def fend(fs):
+              import bisect
+              j=bisect.bisect_right(starts,fs)
+              return starts[j] if j<len(starts) else tva+len(tb)
+
+          # ADRP+ADD string references.
+          pages={a&~0xfff for a in labels}; refs=collections.defaultdict(list)
+          for idx in range(words):
+              w=struct.unpack_from('<I',mv,idx*4)[0]
+              if (w&0x9f000000)!=0x90000000: continue
+              rd=w&31; imm=sx((((w>>5)&0x7ffff)<<2)|((w>>29)&3),21)<<12
+              pc=tva+idx*4; page=(pc&~0xfff)+imm
+              if page not in pages: continue
+              for j in range(1,10):
+                  if idx+j>=words: break
+                  w2=struct.unpack_from('<I',mv,(idx+j)*4)[0]
+                  if (w2&0x1f000000)!=0x11000000 or ((w2>>30)&1) or ((w2>>5)&31)!=rd: continue
+                  cand=page+(((w2>>10)&0xfff)<<(12 if ((w2>>22)&1) else 0))
+                  if cand in labels: refs[cand].append((pc,tva+(idx+j)*4))
+
+          # Direct BL graph across entire .text.
+          calls=collections.defaultdict(list); rev=collections.defaultdict(list)
+          for idx in range(words):
+              w=struct.unpack_from('<I',mv,idx*4)[0]
+              if (w&0xfc000000)==0x94000000:
+                  pc=tva+idx*4; imm=sx(w&0x03ffffff,26)<<2; dst=pc+imm
+                  fs=fstart(pc)
+                  calls[fs].append((pc,dst)); rev[dst].append((fs,pc))
+
+          # Functions containing target-string references.
+          funcs=collections.defaultdict(lambda: collections.defaultdict(list))
+          for sva,names in labels.items():
+              for pc,addpc in refs.get(sva,[]):
+                  fs=fstart(pc)
+                  for n in names: funcs[fs][n].append(pc)
+
+          def disasm_func(fs, maxins=900):
+              fe=min(fend(fs),fs+0x3000)
+              data=tb[fs-tva:fe-tva]
+              return list(md.disasm(data,fs))[:maxins]
+
+          def near_strings(fs):
+              out=[]
+              for nmap in [funcs.get(fs,{})]:
+                  for n,pcs in nmap.items(): out.append((n,pcs))
+              return out
+
+          report=[]
+          report.append(f'libUE4 text=0x{tva:x}-0x{tva+len(tb):x} prologue_starts={len(starts)} target_string_vas={len(labels)}')
+          report.append('\n=== TARGET STRING INVENTORY ===')
+          for va,n in sorted(labels.items()): report.append(f'0x{va:x} refs={len(refs.get(va,[]))} terms={"|".join(n)}')
+          report.append('\n=== FUNCTIONS WITH TARGET STRING XREFS ===')
+          for fs,nmap in sorted(funcs.items()):
+              report.append(f'\nFUNCTION 0x{fs:x} end~0x{fend(fs):x}')
+              for n,pcs in nmap.items(): report.append(f'  STR {n}: '+','.join(hex(x) for x in pcs))
+              c=collections.Counter(dst for _,dst in calls.get(fs,[]))
+              report.append('  BL '+', '.join(f'0x{k:x}x{v}' for k,v in c.most_common(40)))
+              report.append('  CALLERS_EXACT '+', '.join(f'func=0x{a:x}@0x{pc:x}' for a,pc in rev.get(fs,[])[:80]))
+              ins=disasm_func(fs)
+              marked=set(pc for pcs in nmap.values() for pc in pcs)
+              for z in ins:
+                  if any(abs(z.address-pc)<=0x54 for pc in marked):
+                      report.append(f'    0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          # Score structure: recover explicit source offsets used immediately around HOME/AWAY/GAME_PHASE serializer xrefs.
+          report.append('\n=== SCORE FIELD MEMORY OFFSETS ===')
+          score_terms={'HOME_SCORE','AWAY_SCORE','GAME_PHASE','GAME_RESULT','END_REASON','SCORE_SITUATION'}
+          for fs,nmap in sorted(funcs.items()):
+              if not (score_terms & set(nmap)): continue
+              report.append(f'FUNCTION 0x{fs:x} score_terms={sorted(score_terms & set(nmap))}')
+              for z in disasm_func(fs,1400):
+                  if re.search(r'\[(x19|x20|x21|x22|x23|x24|x25|x26|x27|x28), #0x[0-9a-f]+\]',z.op_str) and z.mnemonic.startswith(('ldr','ldur','str','stur')):
+                      if any(abs(z.address-p)<=0x80 for pcs in nmap.values() for p in pcs):
+                          report.append(f'  0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          # Reverse graph: target functions -> callers -> callers, annotated with any target strings in those callers.
+          seeds=sorted(funcs)
+          report.append('\n=== TWO-HOP REVERSE CALL GRAPH ===')
+          for seed in seeds:
+              names=set(funcs[seed])
+              if not any(('Encryption' in n or n in {'AES256','RSA2048','SHA256','InitializeKey','GetKeyLength','GetIVLength','GetMACLength','HOME_SCORE','AWAY_SCORE','CMD_ADD_SCORE','RP_P2P_HEADER','RP_RELIABILITY','RT_ACK','MATCH_STOP_COUNT'}) for n in names):
+                  continue
+              report.append(f'\nSEED 0x{seed:x} names={sorted(names)}')
+              first=rev.get(seed,[])[:100]
+              for caller,pc in first:
+                  report.append(f'  <- 0x{caller:x} call@0x{pc:x} strings={sorted(funcs.get(caller,{}))}')
+                  for c2,pc2 in rev.get(caller,[])[:40]:
+                      report.append(f'       <- 0x{c2:x} call@0x{pc2:x} strings={sorted(funcs.get(c2,{}))}')
+
+          # Direct disassembly around crypto xrefs, including nearby loads/stores and calls.
+          report.append('\n=== CRYPTO XREF SURGERY ===')
+          for fs,nmap in sorted(funcs.items()):
+              crypto=[n for n in nmap if ('Encryption' in n or n in {'AES256','RSA2048','SHA256','InitializeKey','GetKeyLength','GetIVLength','GetMACLength'})]
+              if not crypto: continue
+              report.append(f'\nCRYPTO_FUNC 0x{fs:x} names={crypto}')
+              xpcs=[p for n in crypto for p in nmap[n]]
+              for z in disasm_func(fs,1600):
+                  if any(abs(z.address-p)<=0x180 for p in xpcs):
+                      report.append(f'  0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          Path('/tmp/out/crypto_score_bridge.txt').write_text('\n'.join(report),errors='ignore')
+          PY
+          python3 /tmp/ef/bridge.py
+          sed -n '1,5000p' /tmp/out/crypto_score_bridge.txt
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-crypto-score-bridge
+          path: /tmp/out/
+          retention-days: 7

@@ -1,0 +1,37 @@
+
+Dynamic section at offset 0x98cca40 contains 34 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libmediandk.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libgadsme.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libz.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [liblog.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libdl.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libOpenSLES.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libandroid.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libEGL.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libGLESv3.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libm.so]
+ 0x000000000000000e (SONAME)             Library soname: [libUE4.so]
+ 0x000000000000001e (FLAGS)              BIND_NOW
+ 0x000000006ffffffb (FLAGS_1)            Flags: NOW
+ 0x0000000060000011 (Operating System specific: 60000011)                0x2ed270
+ 0x0000000060000012 (Operating System specific: 60000012)                0x3de65a
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x0000000000000017 (JMPREL)             0x6cb8d0
+ 0x0000000000000002 (PLTRELSZ)           368280 (bytes)
+ 0x0000000000000003 (PLTGOT)             0x98e4d20
+ 0x0000000000000014 (PLTREL)             RELA
+ 0x0000000000000006 (SYMTAB)             0x328
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000005 (STRTAB)             0x111f04
+ 0x000000000000000a (STRSZ)              1946472 (bytes)
+ 0x000000006ffffef5 (GNU_HASH)           0xd8ff0
+ 0x0000000000000019 (INIT_ARRAY)         0x98bd898
+ 0x000000000000001b (INIT_ARRAYSZ)       94632 (bytes)
+ 0x000000000000001a (FINI_ARRAY)         0x98bd888
+ 0x000000000000001c (FINI_ARRAYSZ)       16 (bytes)
+ 0x000000006ffffff0 (VERSYM)             0xc84d0
+ 0x000000006ffffffe (VERNEED)            0xd8fa0
+ 0x000000006fffffff (VERNEEDNUM)         2
+ 0x0000000000000000 (NULL)               0x0

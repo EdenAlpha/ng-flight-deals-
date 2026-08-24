@@ -1,0 +1,280 @@
+
+### NetworkServiceDiscovery.java
+9: import java.net.NetworkInterface;
+43: public DetectedServiceInfo() {
+47: public DetectedServiceInfo(DetectedServiceInfo detectedServiceInfo) {
+72: public void setAttribute(Map map) {
+93: public void setHostName(String str) {
+98: public void setPort(int i) {
+103: public void setServiceName(String str) {
+108: public void setServiceType(String str) {
+112: public boolean equals(Object obj) {
+143: public Map<String, String> getAttribute() {
+147: public String getHostName() {
+151: public int getPort() {
+155: public String getServiceName() {
+159: public String getServiceType() {
+163: public int hashCode() {
+178: public DiscoveryServiceInfo() {
+181: public DiscoveryServiceInfo(DiscoveryServiceInfo discoveryServiceInfo) {
+186: public boolean isValid() {
+191: public boolean equals(Object obj) {
+203: public String getServiceType() {
+207: public int hashCode() {
+215: public void setServiceType(String str) {
+226: public ServiceInfo() {
+230: public ServiceInfo(ServiceInfo serviceInfo) {
+254: public boolean isValid() {
+260: public boolean equals(Object obj) {
+288: public Map<String, String> getAttribute() {
+292: public int getPort() {
+296: public String getServiceName() {
+300: public String getServiceType() {
+304: public int hashCode() {
+313: public void setAttribute(String str, String str2) {
+320: public void setPort(int i) {
+324: public void setServiceName(String str) {
+328: public void setServiceType(String str) {
+333: public NetworkServiceDiscovery(Activity activity) {
+346: Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+368: public void destruct() {
+382: public void run() {
+404: public List<DetectedServiceInfo> getDetectedServiceInfoList() {
+426: public List<ServiceInfo> getRegisteredServiceInfoList() {
+446: public boolean registerService(final ServiceInfo serviceInfo) {
+456: public void run() {
+485: public boolean startServiceDiscovery(DiscoveryServiceInfo discoveryServiceInfo) {
+499: public void serviceAdded(ServiceEvent serviceEvent) {
+527: public void serviceRemoved(ServiceEvent serviceEvent) {
+535: public void serviceResolved(ServiceEvent serviceEvent) {
+580: public boolean stopServiceDiscovery() {
+588: public void serviceAdded(ServiceEvent serviceEvent) {
+592: public void serviceRemoved(ServiceEvent serviceEvent) {
+596: public void serviceResolved(ServiceEvent serviceEvent) {
+618: public boolean unregisterService() {
+624: public void run() {
+
+### WifiDirect.java
+8: import android.net.wifi.p2p.WifiP2pConfig;
+11: import android.net.wifi.p2p.WifiP2pManager;
+34: private WifiP2pManager.Channel mChannel;
+40: private WifiP2pManager mWifiP2pManager;
+56: public boolean isValid() {
+62: public Map<String, String> getAttribute() {
+66: public String getId() {
+70: public int getPort() {
+74: public String getServiceId() {
+78: public void setAttribute(String str, String str2) {
+85: public void setId(String str) {
+89: public void setPort(int i) {
+93: public void setServiceId(String str) {
+131: private Task() {
+135: public void run() {
+140: private NetworkInfo(Config config) {
+152: public synchronized void changeConnectionState(ConnectionState connectionState) {
+157: public synchronized void init() {
+164: public synchronized void set(WifiP2pInfo wifiP2pInfo) {
+169: public synchronized void set(ServiceInfo serviceInfo) {
+174: public void stopDelayDisconnect() {
+174: public void stopDelayDisconnect() {
+182: public synchronized boolean tryDelayDisconnect() {
+182: public synchronized boolean tryDelayDisconnect() {
+190: public synchronized ConnectionState getConnectionState() {
+194: public synchronized Map<String, String> getGroupOwnerAttribute() {
+210: public synchronized String getGroupOwnerHostName() {
+213: return this.mWifiP2pInfo.groupOwnerAddress.getHostName();
+218: public synchronized String getGroupOwnerId() {
+230: public synchronized int getGroupOwnerPort() {
+246: public synchronized boolean isGroupOwner() {
+258: public Receiver() {
+268: public void destruct() {
+275: protected void finalize() {
+280: public void onReceive(Context context, Intent intent) {
+307: wifiDirect2.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.1
+308: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+309: public void onFailure(int i) {
+313: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+314: public void onSuccess() {
+328: if (wifiDirect3.mNetworkInfo.tryDelayDisconnect()) {
+334: wifiDirect3.mNetworkInfo.stopDelayDisconnect();
+337: WifiDirect.this.mWifiP2pManager.requestConnectionInfo(WifiDirect.this.mChannel, new WifiP2pManager.ConnectionInfoListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.3
+338: @Override // android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener
+339: public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
+344: WifiDirect.this.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.3.1
+345: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+346: public void onFailure(int i) {
+350: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+351: public void onSuccess() {
+363: WifiDirect.this.mWifiP2pManager.removeGroup(WifiDirect.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.Receiver.2
+364: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+365: public void onFailure(int i) {
+369: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+370: public void onSuccess() {
+381: public ServiceInfo(ServiceInfo serviceInfo) {
+385: private ServiceInfo(WifiDirectNsd.DetectedServiceInfo detectedServiceInfo) {
+390: public WifiP2pDevice getDevice() {
+394: public boolean equals(Object obj) {
+406: public Map<String, String> getAttribute() {
+430: public String getId() {
+435: public int getPort() {
+444: public int hashCode() {
+449: public WifiDirect(Config config, Activity activity) throws IllegalArgumentException {
+456: WifiP2pManager wifiP2pManager = (WifiP2pManager) activity.getSystemService("wifip2p");
+463: this.mWifiP2pManager = wifiP2pManager;
+464: this.mChannel = wifiP2pManager.initialize(activity, activity.getMainLooper(), new WifiP2pManager.ChannelListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.1
+465: @Override // android.net.wifi.p2p.WifiP2pManager.ChannelListener
+466: public void onChannelDisconnected() {
+471: this.mWifiDirectNsd = new WifiDirectNsd(this.mWifiP2pManager, this.mChannel);
+476: public boolean close() {
+477: if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() == NetworkInfo.ConnectionState.OPEN || this.mNetworkInfo.getConnectionState() == NetworkInfo.ConnectionState.CLOSED) {
+482: WifiP2pManager wifiP2pManager = this.mWifiP2pManager;
+484: wifiP2pManager.cancelConnect(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.4
+485: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+486: public void onFailure(int i) {
+490: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+491: public void onSuccess() {
+496: wifiP2pManager.removeGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.5
+497: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+498: public void onFailure(int i) {
+502: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+503: public void onSuccess() {
+512: public boolean connect(ServiceInfo serviceInfo) {
+512: public boolean connect(ServiceInfo serviceInfo) {
+513: if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() != NetworkInfo.ConnectionState.OPEN) {
+525: WifiP2pConfig wifiP2pConfig = new WifiP2pConfig();
+528: this.mWifiP2pManager.connect(this.mChannel, wifiP2pConfig, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.3
+529: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+530: public void onFailure(int i) {
+535: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+536: public void onSuccess() {
+545: public boolean createGroup() {
+545: public boolean createGroup() {
+546: if (this.mWifiP2pManager == null || this.mChannel == null || this.mDeviceState == DeviceState.UNSUPPORTED || this.mDeviceState == DeviceState.INACTIVATED || this.mNetworkInfo.getConnectionState() != NetworkInfo.ConnectionState.OPEN) {
+549: this.mWifiP2pManager.createGroup(this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirect.2
+550: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+551: public void onFailure(int i) {
+552: Logger.m968e("WifiDirect", "Failed to createGroup. (error = " + i + ")");
+556: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+557: public void onSuccess() {
+565: public void destruct() {
+579: this.mWifiP2pManager = null;
+584: public AdvertisementState getAdvertisementState() {
+606: public List<ServiceInfo> getDetectedServiceInfoList() {
+622: public DeviceState getDeviceState() {
+626: public DiscoveryState getDiscoveryState() {
+636: public NetworkInfo getNetworkInfo() {
+640: public boolean startAdvertisement() {
+661: public boolean startDiscovery() {
+679: public boolean stopAdvertisement() {
+683: public boolean stopDiscovery() {
+
+### WifiDirectNsd.java
+4: import android.net.wifi.p2p.WifiP2pManager;
+24: private WifiP2pManager.Channel mChannel;
+25: private WifiP2pManager mWifiP2pManager;
+38: public DetectedServiceInfo() {
+41: public DetectedServiceInfo(DetectedServiceInfo detectedServiceInfo) {
+64: public void setAttribute(Map map) {
+85: public void setDevice(WifiP2pDevice wifiP2pDevice) {
+94: public void setServiceName(String str) {
+99: public void setServiceType(String str) {
+103: public boolean equals(Object obj) {
+132: public Map<String, String> getAttribute() {
+136: public WifiP2pDevice getDevice() {
+140: public String getServiceName() {
+144: public String getServiceType() {
+148: public int hashCode() {
+165: private Task() {
+169: public void run() {
+180: WifiDirectNsd.this.mWifiP2pManager.discoverServices(WifiDirectNsd.this.mChannel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.DiscoverService.Task.1
+181: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+182: public void onFailure(int i) {
+186: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+187: public void onSuccess() {
+194: private DiscoverService() {
+199: public void destruct() {
+207: protected void finalize() {
+211: public boolean start() {
+220: public void stop() {
+241: public boolean equals(Object obj) {
+267: public int hashCode() {
+278: public DiscoveryServiceInfo() {
+281: public DiscoveryServiceInfo(DiscoveryServiceInfo discoveryServiceInfo) {
+286: public boolean isValid() {
+290: public boolean equals(Object obj) {
+302: public String getServiceType() {
+306: public int hashCode() {
+314: public void setServiceType(String str) {
+338: public ServiceInfo() {
+341: public ServiceInfo(ServiceInfo serviceInfo) {
+363: public boolean isValid() {
+367: public boolean equals(Object obj) {
+393: public Map<String, String> getAttribute() {
+397: public String getServiceName() {
+401: public String getServiceType() {
+405: public int hashCode() {
+414: public void setAttribute(String str, String str2) {
+421: public void setServiceName(String str) {
+425: public void setServiceType(String str) {
+456: public WifiDirectNsd(WifiP2pManager wifiP2pManager, WifiP2pManager.Channel channel) {
+456: public WifiDirectNsd(WifiP2pManager wifiP2pManager, WifiP2pManager.Channel channel) {
+457: this.mWifiP2pManager = wifiP2pManager;
+459: wifiP2pManager.setDnsSdResponseListeners(channel, new WifiP2pManager.DnsSdServiceResponseListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.1
+460: @Override // android.net.wifi.p2p.WifiP2pManager.DnsSdServiceResponseListener
+461: public void onDnsSdServiceAvailable(String str, String str2, WifiP2pDevice wifiP2pDevice) {
+467: }, new WifiP2pManager.DnsSdTxtRecordListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.2
+468: @Override // android.net.wifi.p2p.WifiP2pManager.DnsSdTxtRecordListener
+469: public void onDnsSdTxtRecordAvailable(String str, Map<String, String> map, WifiP2pDevice wifiP2pDevice) {
+477: public static boolean isServiceNameValid(String str) {
+482: public static boolean isServiceTypeValid(String str) {
+486: public void destruct() {
+497: this.mWifiP2pManager = null;
+500: public List<DetectedServiceInfo> getDetectedServiceInfoList() {
+529: public RegisterDiscoveryServiceState getRegisterDiscoveryServiceState(DiscoveryServiceInfo discoveryServiceInfo) {
+533: public RegisterServiceState getRegisterServiceState(ServiceInfo serviceInfo) {
+537: public boolean registerDiscoveryService(DiscoveryServiceInfo discoveryServiceInfo) {
+538: if (this.mWifiP2pManager == null || this.mChannel == null || !discoveryServiceInfo.isValid() || this.mRegisteredDiscoveryService.containsKey(discoveryServiceInfo)) {
+544: this.mWifiP2pManager.addServiceRequest(this.mChannel, wifiP2pDnsSdServiceRequestNewInstance, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.6
+545: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+546: public void onFailure(int i) {
+551: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+552: public void onSuccess() {
+559: public boolean registerService(ServiceInfo serviceInfo) {
+560: if (this.mWifiP2pManager == null || this.mChannel == null || !serviceInfo.isValid() || this.mRegisteredService.containsKey(serviceInfo)) {
+566: this.mWifiP2pManager.addLocalService(this.mChannel, wifiP2pDnsSdServiceInfoNewInstance, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.3
+567: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+568: public void onFailure(int i) {
+573: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+574: public void onSuccess() {
+581: public boolean startDiscovery() {
+588: public boolean stopDiscovery() {
+596: public boolean unregisterDiscoveryService() {
+597: WifiP2pManager.Channel channel;
+598: WifiP2pManager wifiP2pManager = this.mWifiP2pManager;
+602: wifiP2pManager.clearServiceRequests(channel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.8
+603: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+604: public void onFailure(int i) {
+608: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+609: public void onSuccess() {
+617: public boolean unregisterDiscoveryService(DiscoveryServiceInfo discoveryServiceInfo) {
+620: if (this.mWifiP2pManager == null || this.mChannel == null || (wifiP2pServiceRequest = this.mRegisteredDiscoveryService.get((discoveryServiceInfo2 = new DiscoveryServiceInfo(discoveryServiceInfo)))) == null) {
+623: this.mWifiP2pManager.removeServiceRequest(this.mChannel, wifiP2pServiceRequest, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.7
+624: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+625: public void onFailure(int i) {
+629: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+630: public void onSuccess() {
+638: public boolean unregisterService() {
+639: WifiP2pManager.Channel channel;
+640: WifiP2pManager wifiP2pManager = this.mWifiP2pManager;
+644: wifiP2pManager.clearLocalServices(channel, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.5
+645: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+646: public void onFailure(int i) {
+650: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+651: public void onSuccess() {
+659: public boolean unregisterService(ServiceInfo serviceInfo) {
+662: if (this.mWifiP2pManager == null || this.mChannel == null || (wifiP2pServiceInfo = this.mRegisteredService.get((serviceInfo2 = new ServiceInfo(serviceInfo)))) == null) {
+665: this.mWifiP2pManager.removeLocalService(this.mChannel, wifiP2pServiceInfo, new WifiP2pManager.ActionListener() { // from class: jp.konami.peerlink.wifidirect.WifiDirectNsd.4
+666: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+667: public void onFailure(int i) {
+671: @Override // android.net.wifi.p2p.WifiP2pManager.ActionListener
+672: public void onSuccess() {

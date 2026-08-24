@@ -1,0 +1,144 @@
+name: eFootball ARM64 focused xref analysis
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  xref:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+      - name: Install analysis tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y unzip python3 python3-pip file
+          python3 -m pip install --break-system-packages pyelftools capstone
+      - name: Download current eFootball ARM64 split
+        run: |
+          set -euxo pipefail
+          rm -rf xr-work xref-output
+          mkdir -p xr-work/bundle xr-work/native xref-output
+          curl -L --fail --retry 5 --retry-delay 3 -A 'Mozilla/5.0' -o xr-work/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q xr-work/efootball.xapk -d xr-work/bundle
+          NATIVE="$(find xr-work/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d xr-work/native
+          test -f xr-work/native/lib/arm64-v8a/libUE4.so
+          file xr-work/native/lib/arm64-v8a/libUE4.so
+      - name: Locate strings, resolve AArch64 ADRP/ADD xrefs, disassemble neighborhoods
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import struct
+
+          p=Path('xr-work/native/lib/arm64-v8a/libUE4.so')
+          data=p.read_bytes()
+          terms=[
+            'EMatchFlowTask::SendServerMatchEnd','EMatchFlowTask::WaitTimeup','EMatchFlowTask::DemoTimeupTrans',
+            'EPKR_GamePhase::GameplayFinished','EPKR_GamePhase::ResultPresentation','ROOM_GAME_PHASE_END',
+            'CMD_CHANGE_GAMEPHASE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT','CMD_ADD_SCORE',
+            'MatchScoreChanged','m_homeScore','m_awayScore','GetGameScore','SetHomeScore','SetAwayScore',
+            'MatchResultTimeUpDemo','CheckMatchResult','ADDED_TIME','m_isExtraTime','NUM_GUESTS_END_MATCH',
+            'P2P_ADHOC_WIFIDIRECTLAN','P2P_ADHOC_WIFIDIRECTLAN_LOW_LEVEL','P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL',
+            'P2P_ADHOC_LAN','LOCAL_GAMERELAY','CMD_SET_LOCAL_GAMERELAY_LIST','TaskEvCompeLocalGamerelay',
+            'OnlineSystemMultiplaySessionStrategyP2pFullMeshWithTurn.cpp','HOST_DIRECT','HOST_RELAY',
+            'START_UDP_HOLE_PUNCHING','PUNCHING_FINISHED','MATCHING_STATE_STUN_CHECK'
+          ]
+
+          with p.open('rb') as f:
+            elf=ELFFile(f)
+            text=elf.get_section_by_name('.text')
+            text_addr=text['sh_addr']; text_off=text['sh_offset']; text_bytes=text.data()
+            loads=[]
+            for seg in elf.iter_segments():
+              if seg['p_type']=='PT_LOAD':
+                loads.append((seg['p_offset'],seg['p_offset']+seg['p_filesz'],seg['p_vaddr']))
+          def off_to_va(off):
+            for a,b,v in loads:
+              if a<=off<b:return v+(off-a)
+            return None
+          occurrences={}
+          for t in terms:
+            b=t.encode(); pos=[]; s=0
+            while True:
+              i=data.find(b,s)
+              if i<0:break
+              pos.append((i,off_to_va(i))); s=i+1
+            occurrences[t]=pos
+
+          targets={va:(t,off) for t,ls in occurrences.items() for off,va in ls if va is not None}
+          target_pages={va & ~0xfff for va in targets}
+          refs={va:[] for va in targets}
+          n=len(text_bytes)//4
+          words=memoryview(text_bytes)
+          def signext(x,bits):
+            return x-(1<<bits) if x&(1<<(bits-1)) else x
+          for idx in range(n):
+            w=struct.unpack_from('<I',words,idx*4)[0]
+            # ADRP Xd, imm
+            if (w & 0x9f000000) != 0x90000000: continue
+            rd=w&31; immlo=(w>>29)&3; immhi=(w>>5)&0x7ffff
+            imm=signext((immhi<<2)|immlo,21)<<12
+            pc=text_addr+idx*4
+            page=(pc & ~0xfff)+imm
+            if page not in target_pages: continue
+            # Look up to 8 instructions ahead for ADD (immediate) using ADRP reg.
+            for j in range(1,9):
+              if idx+j>=n:break
+              w2=struct.unpack_from('<I',words,(idx+j)*4)[0]
+              if (w2 & 0x7f000000)==0x11000000: # ADD/SUB immediate family; reject SUB below
+                op=(w2>>30)&1
+                if op: continue
+                rn=(w2>>5)&31
+                if rn!=rd: continue
+                imm12=(w2>>10)&0xfff; sh=(w2>>22)&1
+                add=imm12<<(12 if sh else 0)
+                cand=page+add
+                if cand in targets:
+                  refs[cand].append((pc,text_addr+(idx+j)*4,idx,j))
+            # Also common LDR [ADRP + imm] cannot directly yield string; skipped deliberately.
+
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM)
+          md.detail=False
+          report=[]
+          report.append('# eFootball 11.0.1 ARM64 focused xref analysis')
+          report.append(f'lib size={len(data)} text_va=0x{text_addr:x} text_size={len(text_bytes)}')
+          for t in terms:
+            report.append('\n## '+t)
+            ls=occurrences[t]
+            if not ls:
+              report.append('STRING_NOT_FOUND'); continue
+            for off,va in ls:
+              report.append(f'string file_off=0x{off:x} va={"0x%x"%va if va is not None else "?"}')
+              rr=refs.get(va,[])
+              report.append(f'adrp_add_xrefs={len(rr)}')
+              for k,(adrp_va,ref_va,idx,j) in enumerate(rr[:30]):
+                report.append(f'  XREF[{k}] adrp=0x{adrp_va:x} materialize=0x{ref_va:x}')
+                lo=max(0,(idx-80)*4); hi=min(len(text_bytes),(idx+120)*4)
+                code=bytes(text_bytes[lo:hi]); base=text_addr+lo
+                for ins in md.disasm(code,base):
+                  mark='>>' if abs(ins.address-adrp_va)<=32 else '  '
+                  report.append(f'{mark} 0x{ins.address:x}: {ins.mnemonic} {ins.op_str}')
+                report.append('  ----')
+          Path('xref-output/xref_report.md').write_text('\n'.join(report),errors='ignore')
+          Path('xref-output/string_inventory.txt').write_text('\n'.join(f'{t}\t{occurrences[t]}' for t in terms))
+          PY
+      - name: Commit textual xref results
+        run: |
+          set -euxo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add xref-output
+          git commit -m 'Add eFootball ARM64 focused xref analysis' || exit 0
+          git push origin HEAD:efootball-apk-analysis-2026-08-23

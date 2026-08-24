@@ -1,0 +1,94 @@
+name: eFootball crypto layout trace
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball native split
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Trace exact config layout and callers
+        run: |
+          cat > /tmp/ef/layout.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import struct,re
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr'])
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz']),int(s['p_memsz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          def vaoff(va):
+              for sv,so,fs,ms in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+180].split(b'\0',1)[0]
+              if len(b)<4:return None
+              if sum(32<=x<127 for x in b)/len(b)<.92:return None
+              return b.decode('ascii','replace')
+          def sx(x,b):return x-(1<<b) if x&(1<<(b-1)) else x
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          ranges=[
+            ('crypto_config_tail',0x7c094f0,0x7c09bd0),
+            ('crypto_config_caller',0x7bfc91c,0x7bfd650),
+            ('crypto_config_parent',0x7c0dca0,0x7c0dfd0),
+            ('aes_registry',0x7f9be70,0x7f9cff0),
+          ]
+          out=[]
+          for name,a,b in ranges:
+              out.append(f'\n===== {name} 0x{a:x}-0x{b:x} =====')
+              data=tb[a-tva:b-tva]; ins=list(md.disasm(data,a))
+              # precompute adrp/add string annotations
+              ann={}
+              for i,z in enumerate(ins):
+                  if z.mnemonic!='adrp': continue
+                  m=re.match(r'x(\d+), #0x([0-9a-f]+)',z.op_str)
+                  if not m: continue
+                  reg='x'+m.group(1); page=int(m.group(2),16)
+                  for q in ins[i+1:i+9]:
+                      mm=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                      if mm:
+                          va=page+int(mm.group(1),16); s=cstr(va)
+                          if s: ann[q.address]=f'  ; STR@0x{va:x}={s!r}'
+                          break
+              for z in ins:
+                  mark=ann.get(z.address,'')
+                  # emphasize writes into likely destination/config object and calls
+                  extra=''
+                  if re.search(r'\[x19(?:, #0x[0-9a-f]+)?\]',z.op_str): extra+='  <X19>'
+                  if z.mnemonic in ('bl','blr'): extra+='  <CALL>'
+                  out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{mark}{extra}')
+          Path('/tmp/out/crypto_layout.txt').write_text('\n'.join(out))
+          PY
+          python3 /tmp/ef/layout.py
+          cat /tmp/out/crypto_layout.txt
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-crypto-layout
+          path: /tmp/out/
+          retention-days: 7

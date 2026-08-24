@@ -1,0 +1,153 @@
+name: eFootball APK report to branch
+
+on:
+  push:
+    branches: [ efootball-apk-analysis-2026-08-23 ]
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-apk-analysis-2026-08-23
+
+      - name: Install tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y unzip binutils file ripgrep openjdk-17-jre-headless
+          curl -L --fail --retry 3 -o /tmp/jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.5/jadx-1.5.5.zip
+          sudo mkdir -p /opt/jadx
+          sudo unzip -q /tmp/jadx.zip -d /opt/jadx
+          sudo chmod +x /opt/jadx/bin/jadx
+
+      - name: Download current eFootball bundle
+        run: |
+          set -euxo pipefail
+          rm -rf work analysis-output
+          mkdir -p work/bundle work/apks work/unpacked work/jadx analysis-output/native
+          curl -L --fail --retry 5 --retry-delay 3 -A 'Mozilla/5.0' -o work/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          file work/efootball.xapk
+          unzip -q work/efootball.xapk -d work/bundle
+          find work/bundle -type f -name '*.apk' -exec cp '{}' work/apks/ \;
+          test -n "$(find work/apks -type f -name '*.apk' -print -quit)"
+
+      - name: Verify identity and unpack
+        run: |
+          set -euxo pipefail
+          {
+            echo '# eFootball APK surgical static analysis'
+            echo
+            date -u
+            echo
+            echo '## APK bundle inventory'
+            find work/apks -type f -name '*.apk' -printf '%f %s bytes\n' | sort
+            echo
+            echo '## SHA-256'
+            sha256sum work/apks/*.apk
+            echo
+            echo '## APK metadata'
+            for a in work/apks/*.apk; do
+              echo "### $a"
+              ${ANDROID_HOME}/build-tools/36.0.0/aapt2 dump badging "$a" 2>/dev/null | head -40 || true
+            done
+            echo
+            echo '## Signing certificates'
+            for a in work/apks/*.apk; do
+              echo "### $a"
+              keytool -printcert -jarfile "$a" 2>&1 | head -35 || true
+            done
+          } > analysis-output/report.md
+
+          n=0
+          for a in work/apks/*.apk; do
+            n=$((n+1)); d="work/unpacked/apk$n"; mkdir -p "$d"; unzip -q -o "$a" -d "$d" || true
+          done
+          find work/unpacked -type f -name '*.so' -printf '%p %s bytes\n' | sort -k2 -nr > analysis-output/native_libraries.txt
+          find work/unpacked -type f -printf '%p %s bytes\n' | sort -k2 -nr | head -250 > analysis-output/largest_files.txt
+
+      - name: Decompile managed code
+        run: |
+          set -euxo pipefail
+          BASE="$(find work/apks -type f -name '*.apk' | sort | head -n1)"
+          /opt/jadx/bin/jadx --no-debug-info --show-bad-code --deobf -j 4 -d work/jadx "$BASE" > analysis-output/jadx.log 2>&1 || true
+          echo "JADX files: $(find work/jadx -type f | wc -l)" >> analysis-output/report.md
+
+      - name: Analyze native libraries and strings
+        run: |
+          set -euxo pipefail
+          TERMS='stun|turn\.konami|turn|ice|relay|dtls|boringssl|openssl|xor.?mapped|mapped.?address|message.?integrity|fingerprint|change.?request|response.?port|bc\.googleusercontent|googleusercontent|udp|datagram|socket|peer.?to.?peer|p2p|friend.?match|match.?result|result.?match|final.?score|score|winner|loser|victory|defeat|draw|half.?time|full.?time|extra.?time|added.?time|stoppage|abbrev|abbreviation|short.?name|team.?code|match.?clock|game.?clock|pause|resume'
+          : > analysis-output/native_keyword_hits.txt
+          : > analysis-output/native_elf_hits.txt
+          find work/unpacked -type f -name '*.so' -print0 | while IFS= read -r -d '' so; do
+            key="$(basename "$so")"
+            echo "===== $so =====" >> analysis-output/native_elf_hits.txt
+            readelf -d "$so" 2>/dev/null | grep -E 'NEEDED|SONAME' >> analysis-output/native_elf_hits.txt || true
+            readelf -Ws "$so" 2>/dev/null | grep -Ei "$TERMS" | head -1000 >> analysis-output/native_elf_hits.txt || true
+            strings -a -n 5 "$so" | grep -Ein "$TERMS" | head -4000 | sed "s#^#$so:#" >> analysis-output/native_keyword_hits.txt || true
+          done
+
+          rg -n -i --hidden "$TERMS" work/jadx > analysis-output/jadx_keyword_hits.txt || true
+          find work/unpacked -type f \( -name '*.xml' -o -name '*.json' -o -name '*.txt' -o -name '*.properties' -o -name '*.csv' \) -print0 | xargs -0 grep -Ein "$TERMS" 2>/dev/null | head -30000 > analysis-output/resource_keyword_hits.txt || true
+
+      - name: Extract endpoints and candidate protocol constants
+        run: |
+          set -euxo pipefail
+          find work/unpacked -type f -name '*.so' -print0 | xargs -0 strings -a -n 5 2>/dev/null > /tmp/native_strings.txt || true
+          {
+            grep -Eio '([a-z0-9-]+\.)+(konami\.com|googleusercontent\.com|googleapis\.com|gstatic\.com)' /tmp/native_strings.txt || true
+            rg -o -i 'https?://[^ "<>]+' work/jadx 2>/dev/null || true
+          } | sort -u > analysis-output/endpoints.txt
+
+          python3 - <<'PY'
+          from pathlib import Path
+          pats={'080A_be':'080a','090A_be':'090a','080B_be':'080b','090B_be':'090b','080C_be':'080c','090C_be':'090c','080A_le':'0a08','090A_le':'0a09','080B_le':'0b08','090B_le':'0b09','080C_le':'0c08','090C_le':'0c09'}
+          rows=[]
+          for p in Path('work/unpacked').rglob('*'):
+              if not p.is_file() or p.suffix not in {'.so','.dex','.bin','.dat','.pak'} or p.stat().st_size>650_000_000: continue
+              try: data=p.read_bytes()
+              except: continue
+              c={k:data.count(bytes.fromhex(v)) for k,v in pats.items()}
+              if any(c.values()): rows.append(str(p)+' '+ ' '.join(f'{k}={v}' for k,v in c.items()))
+          Path('analysis-output/connectivity_constants.txt').write_text('\n'.join(rows))
+          PY
+
+      - name: Build compact report
+        run: |
+          {
+            echo
+            echo '## Largest files'; sed -n '1,120p' analysis-output/largest_files.txt
+            echo
+            echo '## Native libraries'; cat analysis-output/native_libraries.txt
+            echo
+            echo '## Endpoints'; sed -n '1,1500p' analysis-output/endpoints.txt
+            echo
+            echo '## Keyword counts'; wc -l analysis-output/*keyword_hits.txt || true
+            echo
+            echo '## High-value native hits'; sed -n '1,2500p' analysis-output/native_keyword_hits.txt
+            echo
+            echo '## High-value JADX hits'; sed -n '1,1500p' analysis-output/jadx_keyword_hits.txt
+            echo
+            echo '## Resource hits'; sed -n '1,1000p' analysis-output/resource_keyword_hits.txt
+            echo
+            echo '## Connectivity constant counts'; cat analysis-output/connectivity_constants.txt
+            echo
+            echo '## ELF hits'; sed -n '1,1800p' analysis-output/native_elf_hits.txt
+            echo
+            echo '## JADX tail'; tail -120 analysis-output/jadx.log
+          } >> analysis-output/report.md
+
+      - name: Commit textual analysis back to branch
+        run: |
+          set -euxo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add analysis-output
+          git commit -m 'Add eFootball APK surgical analysis output' || exit 0
+          git push origin HEAD:efootball-apk-analysis-2026-08-23

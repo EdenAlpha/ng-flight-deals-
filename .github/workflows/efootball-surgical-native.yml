@@ -1,0 +1,113 @@
+name: eFootball surgical native analysis
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip python3 python3-pip file binutils >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball
+        run: |
+          mkdir -p /tmp/ef/bundle /tmp/ef/base /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          BASE="$(find /tmp/ef/bundle -maxdepth 2 -type f -name 'jp.konami.pesam.apk' | head -n1)"
+          NATIVE="$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          cp "$BASE" /tmp/ef/base.apk
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          test -f /tmp/ef/native/lib/arm64-v8a/libUE4.so
+      - name: Managed/native PeerLink reachability
+        run: |
+          SO=/tmp/ef/native/lib/arm64-v8a/libUE4.so
+          echo '=== NATIVE EXACT PEERLINK/JNI STRINGS ===' > /tmp/out/peerlink_jni.txt
+          strings -a -t x "$SO" | grep -Ei 'jp[./]konami[./]peerlink|NetworkServiceDiscovery|WifiDirectNsd|WifiDirect|BluetoothLowEnergySocket|BluetoothLowEnergy|BluetoothClassic|JP_KONAMI_PEERLINK|FindClass|RegisterNatives|GetMethodID|GetStaticMethodID|CallObjectMethod|CallBooleanMethod' >> /tmp/out/peerlink_jni.txt || true
+          echo '=== DEX REFERENCES OUTSIDE DECLARATION NAMES ===' > /tmp/out/dex_peerlink_strings.txt
+          for dex in $(zipinfo -1 /tmp/ef/base.apk | grep '^classes.*\.dex$'); do
+            echo "--- $dex ---" >> /tmp/out/dex_peerlink_strings.txt
+            unzip -p /tmp/ef/base.apk "$dex" | strings | grep -Ei 'jp/konami/peerlink|jp\.konami\.peerlink|NetworkServiceDiscovery|WifiDirect|BluetoothClassic|BluetoothLowEnergy' >> /tmp/out/dex_peerlink_strings.txt || true
+          done
+      - name: Surgical xref windows
+        run: |
+          cat > /tmp/ef/surgical.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import struct,re
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          d=p.read_bytes()
+          with p.open('rb') as f:
+            e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); toff=int(text['sh_offset'])
+            loads=[(int(s['p_offset']),int(s['p_filesz']),int(s['p_vaddr'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          terms=['P2P_ADHOC_WIFIDIRECTLAN_LOW_LEVEL','P2P_ADHOC_WIFIDIRECTLAN_HIGH_LEVEL','P2P_ADHOC_LAN_LOW_LEVEL','P2P_ADHOC_LAN_HIGH_LEVEL','direct_online_turn_mode','LinkUpMode','CMD_CHANGE_GAMEPHASE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT','CMD_ADD_SCORE','EMatchFlowTask::SendServerMatchEnd','Match/End/MatchEnd','NUM_GUESTS_END_MATCH','GAME_RESULT','END_REASON','MatchCommand']
+          def ova(o):
+            for po,sz,va in loads:
+              if po<=o<po+sz:return va+o-po
+          labels={}
+          for term in terms:
+            s=0
+            while 1:
+              o=d.find(term.encode(),s)
+              if o<0:break
+              va=ova(o)
+              if va is not None: labels[va]=(term,o)
+              s=o+1
+          pages={a&~0xfff for a in labels}; refs={a:[] for a in labels}
+          mv=memoryview(tb); words=len(tb)//4
+          def sx(x,b):return x-(1<<b) if x&(1<<(b-1)) else x
+          for idx in range(words):
+            w=struct.unpack_from('<I',mv,idx*4)[0]
+            if (w&0x9f000000)!=0x90000000:continue
+            rd=w&31; imm=sx((((w>>5)&0x7ffff)<<2)|((w>>29)&3),21)<<12
+            pc=tva+idx*4; page=(pc&~0xfff)+imm
+            if page not in pages:continue
+            for j in range(1,9):
+              if idx+j>=words:break
+              w2=struct.unpack_from('<I',mv,(idx+j)*4)[0]
+              if (w2&0x1f000000)!=0x11000000 or ((w2>>30)&1) or ((w2>>5)&31)!=rd:continue
+              cand=page+(((w2>>10)&0xfff)<<(12 if ((w2>>22)&1) else 0))
+              if cand in refs:refs[cand].append((pc,tva+(idx+j)*4))
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM)
+          def text_slice(va0,va1):
+            lo=max(tva,va0); hi=min(tva+len(tb),va1)
+            return tb[lo-tva:hi-tva],lo
+          out=[]
+          out.append('=== XREF SUMMARY ===')
+          for va,(term,o) in labels.items():
+            out.append(f'{term} strVA=0x{va:x} xrefs='+','.join(f'0x{a:x}' for a,b in refs[va]))
+          interesting=[]
+          for va,rr in refs.items():
+            for pc,addpc in rr: interesting.append((labels[va][0],pc,va))
+          out.append('\n=== LIMITED DISASSEMBLY AROUND EACH XREF ===')
+          seen=set()
+          for term,pc,sva in sorted(interesting,key=lambda x:x[1]):
+            key=(pc//0x400,term)
+            if key in seen:continue
+            seen.add(key)
+            b,start=text_slice(pc-0x180,pc+0x380)
+            out.append(f'\n--- {term} xref=0x{pc:x} string=0x{sva:x} ---')
+            for ins in md.disasm(b,start):
+              mark='>>' if abs(ins.address-pc)<=0x10 else '  '
+              out.append(f'{mark} 0x{ins.address:x}: {ins.mnemonic:8} {ins.op_str}')
+          Path('/tmp/out/surgical_xrefs.txt').write_text('\n'.join(out))
+          PY
+          python3 /tmp/ef/surgical.py
+      - name: Match-control vocabulary neighborhoods
+        run: |
+          SO=/tmp/ef/native/lib/arm64-v8a/libUE4.so
+          strings -a -t x "$SO" | grep -Ei 'MatchCommand|MATCH_CONTROL|GAME_RESULT|END_REASON|ABNORMALEND|STRANGE_MATCH_END|wait_game_result|game_result_timeout|CMD_(ADD_SCORE|CHANGE_GAMEPHASE|GET_GAME_RESULT|SET_GAME_RESULT)|SetHomeScore|SetAwayScore|GetMatchPhase|WaitTimeup|SendServerMatchEnd|Match/End/MatchEnd|NUM_(LOCAL_)?GUESTS_END_MATCH|NUM_NODES_END_MATCH' > /tmp/out/match_control_strings.txt || true
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-surgical-native
+          path: /tmp/out/
+          retention-days: 7
