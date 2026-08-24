@@ -6,7 +6,7 @@ on:
     paths: [ '.github/workflows/efootball-score-wire-surgery-v2.yml' ]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   surgery:
@@ -66,7 +66,6 @@ jobs:
                   pos=o+1
           pages={v&~0xfff for v in labels}
 
-          # Function starts + direct BL graph in one raw ARM64 pass.
           starts=[tva]; calls=collections.defaultdict(list); rev=collections.defaultdict(list)
           for i in range(words):
               w=struct.unpack_from('<I',mv,i*4)[0]; pc=tva+i*4
@@ -85,7 +84,6 @@ jobs:
               for d in ds:
                   func_calls[fs].append((pc,d)); rev[d].append((fs,pc))
 
-          # ADRP+ADD/LDR exact references to target strings.
           refs=collections.defaultdict(list)
           for i in range(words):
               w=struct.unpack_from('<I',mv,i*4)[0]
@@ -96,11 +94,9 @@ jobs:
               for j in range(1,12):
                   if i+j>=words:break
                   w2=struct.unpack_from('<I',mv,(i+j)*4)[0]; pc2=tva+(i+j)*4
-                  # ADD immediate using same base reg
                   if (w2&0x1f000000)==0x11000000 and not ((w2>>30)&1) and ((w2>>5)&31)==rd:
                       cand=page+(((w2>>10)&0xfff)<<(12 if ((w2>>22)&1) else 0))
                       if cand in labels: refs[cand].append((pc,pc2,'ADD'));break
-                  # LDR unsigned-immediate can load pointer from literal table on same page; keep candidate address
                   if (w2&0x3b000000)==0x39000000 and ((w2>>5)&31)==rd:
                       scale=(w2>>30)&3; cand=page+(((w2>>10)&0xfff)<<scale)
                       if cand in labels: refs[cand].append((pc,pc2,'LDR'));break
@@ -115,12 +111,10 @@ jobs:
               hi=min(fend(fs),fs+cap); return list(md.disasm(tb[fs-tva:hi-tva],fs))
           def called_by(fs): return rev.get(fs,[])
           def printable_near(va,r=0x180):
-              out=[]
-              # VA->file offset
               off=None
               for po,sz,pv in loads:
                   if pv<=va<pv+sz:off=po+va-pv;break
-              if off is None:return out
+              if off is None:return []
               ch=raw[max(0,off-r):min(len(raw),off+r)]
               return [x.decode('ascii','replace') for x in re.findall(rb'[ -~]{5,}',ch)[:40]]
 
@@ -135,7 +129,6 @@ jobs:
           out.append('\n=== FUNCTIONS REFERENCING CUSTOM CRYPTO/P2P TERMS ===')
           interesting=set()
           for fs,nmap in sorted(funcs.items()):
-              if not any(n in nmap for n in needles):continue
               interesting.add(fs)
               out.append(f'\nFUNC 0x{fs:x}-0x{fend(fs):x} terms={sorted(nmap)}')
               out.append('CALLERS '+', '.join(f'0x{c:x}@0x{s:x}' for c,s in called_by(fs)[:80]))
@@ -145,23 +138,20 @@ jobs:
                   if any(abs(z.address-m)<=0x240 for m in marks):
                       out.append(f'  0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
 
-          # Known direct transport/reliability/score functions from prior surgery.
           known={
             0x7c088e4:'crypto_config_parser',0x7bfc91c:'profile_loader',0x7c0dca0:'transport_parent',0x7c1234c:'transport_caller',
             0x7ceafc4:'p2p_reliability',0x7cec4ac:'rt_ack',0x7cf85d4:'reliability_parser',
-            0x75adb2c:'cmd_add_score',0x7d4724c:'score_serializer_A_old',0x7d55600:'score_serializer_A_region',0x7d5d200:'score_serializer_B_region'
+            0x75adb2c:'cmd_add_score',0x7d55600:'score_serializer_A_region',0x7d5d200:'score_serializer_B_region'
           }
           out.append('\n=== KNOWN TRANSPORT / SCORE CALL NEIGHBORHOODS ===')
           for a,n in known.items():
               fs=fstart(a)
               out.append(f'\nKNOWN {n} address=0x{a:x} func~0x{fs:x}-0x{fend(fs):x}')
               out.append('CALLERS '+', '.join(f'0x{c:x}@0x{s:x}' for c,s in called_by(a)[:80]))
-              # Calls made in containing function, emphasize calls to interesting funcs and local neighbors
               for s,d in func_calls.get(fs,[]):
                   if d in interesting or abs(s-a)<0x500:
                       out.append(f'  CALL 0x{s:x} -> 0x{d:x}'+(' [INTERESTING]' if d in interesting else ''))
 
-          # Graph distance between custom-crypto string functions and reliability parser / score serializers.
           revfunc=collections.defaultdict(set); fwdfunc=collections.defaultdict(set)
           for fs,arr in func_calls.items():
               for _,d in arr:
@@ -191,3 +181,15 @@ jobs:
           name: efootball-direct-p2p-score-wire-v2
           path: /tmp/out/
           retention-days: 7
+      - name: Persist report on research branch
+        run: |
+          mkdir -p analysis-output
+          cp /tmp/out/direct_p2p_score_wire.txt analysis-output/efootball-direct-p2p-score-wire-v2.txt
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-direct-p2p-score-wire-v2.sha256.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add analysis-output/efootball-direct-p2p-score-wire-v2.txt analysis-output/efootball-direct-p2p-score-wire-v2.sha256.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add eFootball direct P2P score wire surgery report'
+            git push origin HEAD:efootball-score-wire-surgery-2026-08-24
+          fi
