@@ -1,0 +1,154 @@
+name: eFootball score wire dataflow v5
+
+on:
+  push:
+    branches: [ efootball-score-wire-bridge-v3-2026-08-24 ]
+    paths:
+      - '.github/workflows/efootball-score-wire-dataflow-v5.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  dataflow:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball native binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Recover profile-to-P2P crypto dataflow
+        run: |
+          cat > /tmp/ef/dataflow.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re, bisect
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM)
+          md.detail=False
+
+          def off(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va,n=180):
+              o=off(va)
+              if o is None:return None
+              b=raw[o:o+n].split(b'\0',1)[0]
+              if len(b)<3:return None
+              if sum(32<=x<127 for x in b)/max(1,len(b))<.93:return None
+              return b.decode('ascii','replace')
+          def ins(lo,hi):return list(md.disasm(tb[lo-tva:hi-tva],lo))
+          def dump(out,title,lo,hi,filters=None):
+              out.append(f'\n=== {title} 0x{lo:x}-0x{hi:x} ===')
+              body=ins(lo,hi)
+              for i,z in enumerate(body):
+                  if filters and not any(re.search(f,z.op_str,re.I) or re.search(f,z.mnemonic,re.I) for f in filters):continue
+                  extra=''
+                  if z.mnemonic=='adrp':
+                      m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if m:
+                          reg,page=m.group(1),int(m.group(2),16)
+                          for q in body[i+1:i+8]:
+                              m2=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                              if m2:
+                                  s=cstr(page+int(m2.group(1),16))
+                                  if s:extra=f' ; STR={s!r}'
+                                  break
+                  out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{extra}')
+
+          out=[]
+          out.append('Known chain: transport_parent 0x7c0dca0 -> profile_loader 0x7bfc91c -> crypto_profile_parser 0x7c088e4; same parent later -> P2P mode consumer 0x7bf9ecc.')
+
+          dump(out,'PARENT PROFILE LOAD CALLSITE',0x7c0de70,0x7c0df40)
+          dump(out,'PARENT PROFILE OBJECT USE THROUGH P2P CONSUMER',0x7c0df40,0x7c0e330)
+          dump(out,'PROFILE LOADER CRYPTO PARSER + COPY',0x7bfd410,0x7bfd650)
+          dump(out,'CRYPTO PARSER KEY-EXCHANGE FIELDS',0x7c08db0,0x7c08fb0)
+          dump(out,'CRYPTO PARSER SESSION FIELDS',0x7c09580,0x7c096b0)
+          dump(out,'P2P MODE CONSUMER CORE',0x7bf9ecc,0x7bfb160)
+
+          # Compact register/object usage views.
+          dump(out,'PARENT x22 PROFILE FIELD ACCESSES',0x7c0dca0,0x7c0e330,[r'x22'])
+          dump(out,'PROFILE LOADER x19 OBJECT WRITES',0x7bfc91c,0x7bfdbf4,[r'\[x19',r'x19,'])
+
+          # Enumerate crypto-like strings and direct ADRP/ADD refs in .text.
+          terms=re.compile(r'(encrypt|decrypt|cipher|aes|chacha|salsa|gcm|cbc|ctr|keyexchange|sessionkey|scramble|p2p|reliab)',re.I)
+          strings=[]
+          for sv,so,fs in loads:
+              data=raw[so:so+fs]
+              i=0
+              while i<len(data):
+                  j=i
+                  while j<len(data) and 32<=data[j]<127:j+=1
+                  if j-i>=4:
+                      s=data[i:j].decode('ascii','ignore')
+                      if terms.search(s):strings.append((sv+i,s))
+                  i=max(j+1,i+1)
+          # Dedup and keep high-signal manageable output.
+          seen=set(); strings=[x for x in strings if not (x[1] in seen or seen.add(x[1]))]
+          out.append('\n=== CRYPTO/P2P STRING CATALOG ===')
+          for va,s in strings[:700]:out.append(f'0x{va:x} {s}')
+
+          # Build xrefs only for high-signal exact strings.
+          needles=['KeyExchangeEncryptionAlgorithm','KeyExchangeEncryptionKey','SessionKeyEncryptionAlgorithm','SessionKeyEncryptionKeyLength','EncryptionAlgorithm','EncryptionKeyLength','ScrambleCode','pes-custom-encrypt','P2P_HIGH_LEVEL','P2P_LOW_LEVEL','RP_RELIABILITY','RP_DATA_CAST']
+          target={va:s for va,s in strings if any(n.lower() in s.lower() for n in needles)}
+          body=ins(tva,tend)
+          pending={}
+          refs=[]
+          for z in body:
+              if z.mnemonic=='adrp':
+                  m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                  if m:pending[m.group(1)]=(z.address,int(m.group(2),16))
+              elif z.mnemonic=='add':
+                  m=re.match(r'(x\d+), \1, #0x([0-9a-f]+)',z.op_str)
+                  if m and m.group(1) in pending:
+                      a,page=pending[m.group(1)]; va=page+int(m.group(2),16)
+                      for tv,s in target.items():
+                          if tv==va:refs.append((s,a,z.address))
+          out.append('\n=== HIGH-SIGNAL STRING XREFS ===')
+          for s,a,b in refs:out.append(f'{s!r}: adrp@0x{a:x} add@0x{b:x}')
+
+          # Explicit semantic field facts from the parser local struct as established
+          # by nearby stores. This is emitted next to raw disassembly for auditability.
+          out.append('\n=== RECOVERED PARSER LOCAL FIELD FACTS ===')
+          out.append('KeyExchangeEncryptionAlgorithm: presence byte at parser local +0x150, value u32 at +0x154 (observed stores 0x7c08e60/0x7c08e64).')
+          out.append('KeyExchangeEncryptionKey: parsed immediately after algorithm via string/object helper starting at 0x7c08e74.')
+          out.append('SessionKeyEncryptionAlgorithm: parser xref begins at 0x7c09610.')
+          out.append('SessionKeyEncryptionKeyLength: parser xref begins at 0x7c09640.')
+          out.append('Profile loader copies parser result beginning at stack +0x260 into its outbound profile representation when parse succeeds.')
+          out.append('Parent passes profile fields [x22+0x20], [x22+0x28], and [x22+0x100] into P2P mode consumer 0x7bf9ecc at 0x7c0e244.')
+
+          Path('/tmp/out/efootball-score-wire-dataflow-v5.txt').write_text('\n'.join(out))
+          print('\n'.join(out[:1100]))
+          PY
+          python3 /tmp/ef/dataflow.py
+      - name: Commit report
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-score-wire-dataflow-v5.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-score-wire-dataflow-v5.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/
+          git commit -m 'Add eFootball crypto profile to P2P dataflow report' || exit 0
+          git push
