@@ -1,0 +1,145 @@
+name: eFootball P2P crypto schema v6
+
+on:
+  push:
+    branches: [ efootball-score-wire-bridge-v3-2026-08-24 ]
+    paths:
+      - '.github/workflows/efootball-crypto-schema-v6.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  schema:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip binutils >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball package
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Extract crypto parser schema and package evidence
+        run: |
+          cat > /tmp/ef/schema.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re, subprocess, os
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr'])
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM)
+
+          def vaoff(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va,n=240):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+n].split(b'\0',1)[0]
+              if len(b)<3:return None
+              if sum(32<=x<127 for x in b)/max(1,len(b))<.90:return None
+              return b.decode('ascii','replace')
+          def dis(lo,hi):return list(md.disasm(tb[lo-tva:hi-tva],lo))
+
+          out=[]
+          regions=[
+              ('crypto_profile_parser',0x7c088e4,0x7c0986c),
+              ('adjacent_network_config',0x7c0986c,0x7c0b300),
+              ('profile_loader_crypto_area',0x7bfd120,0x7bfd620),
+              ('p2p_mode_consumer',0x7bf9ecc,0x7bfb458),
+          ]
+
+          for name,lo,hi in regions:
+              body=dis(lo,hi)
+              out.append(f'\n=== {name} 0x{lo:x}-0x{hi:x} STRING XREF SCHEMA ===')
+              for i,z in enumerate(body):
+                  if z.mnemonic!='adrp':continue
+                  m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                  if not m:continue
+                  reg,page=m.group(1),int(m.group(2),16)
+                  found=None
+                  for q in body[i+1:i+8]:
+                      if q.address-z.address>28:break
+                      m2=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                      if m2:
+                          va=page+int(m2.group(1),16); s=cstr(va)
+                          if s:found=(q.address,va,s)
+                          break
+                  if not found:continue
+                  qaddr,va,s=found
+                  # For parser-like strings, annotate the next direct helper call and nearby stores.
+                  nxt=[]
+                  for r in body[i+1:i+18]:
+                      if r.address-z.address>72:break
+                      if r.mnemonic=='bl' or r.mnemonic.startswith('str') or r.mnemonic.startswith('ldr'):
+                          nxt.append(f'0x{r.address:x}:{r.mnemonic} {r.op_str}')
+                  out.append(f'0x{z.address:x}/0x{qaddr:x} str@0x{va:x} {s!r}')
+                  if nxt:out.append('  nearby: '+' | '.join(nxt[:12]))
+
+          # Focused complete disassembly around the known crypto keys.
+          out.append('\n=== KNOWN KEY FIELD DISASSEMBLY ===')
+          for lo,hi in [(0x7c08df0,0x7c08f30),(0x7c095c0,0x7c09690)]:
+              for z in dis(lo,hi):out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          # Find algorithm-like literals anywhere in libUE4 strings.
+          out.append('\n=== ALGORITHM / CRYPTO LITERALS IN libUE4 ===')
+          pats=re.compile(r'(aes|chacha|salsa|poly1305|gcm|ccm|cbc|ctr|cfb|ofb|rc4|blowfish|twofish|xtea|xxtea|encrypt|decrypt|cipher|session.?key|key.?exchange|scramble)',re.I)
+          seen=set()
+          for sv,so,fs in loads:
+              data=raw[so:so+fs]; i=0
+              while i<len(data):
+                  j=i
+                  while j<len(data) and 32<=data[j]<127:j+=1
+                  if j-i>=3:
+                      s=data[i:j].decode('ascii','ignore')
+                      if pats.search(s) and s not in seen:
+                          seen.add(s);out.append(f'0x{sv+i:x} {s}')
+                  i=max(j+1,i+1)
+
+          # Search every non-libUE4 package member for literal keys/algorithms.
+          out.append('\n=== NON-libUE4 PACKAGE MATCHES ===')
+          needles=[b'KeyExchangeEncryptionAlgorithm',b'KeyExchangeEncryptionKey',b'SessionKeyEncryptionAlgorithm',b'SessionKeyEncryptionKeyLength',b'pes-custom-encrypt',b'ScrambleCode']
+          root=Path('/tmp/ef/bundle')
+          for f in root.rglob('*'):
+              if not f.is_file():continue
+              if f.name=='libUE4.so':continue
+              try:data=f.read_bytes()
+              except:continue
+              hits=[n.decode() for n in needles if n in data]
+              if hits:out.append(f'{f.relative_to(root)} size={len(data)} hits={hits}')
+
+          out.append('\n=== INTERPRETATION TARGET ===')
+          out.append('The key question is whether the shipping package contains concrete algorithm/key values or only schema names. Concrete values outside libUE4 would make passive decryption materially easier; schema-only evidence means session values are supplied at runtime and key-exchange dataflow must be traced next.')
+
+          Path('/tmp/out/efootball-crypto-schema-v6.txt').write_text('\n'.join(out))
+          print('\n'.join(out[:1400]))
+          PY
+          python3 /tmp/ef/schema.py
+      - name: Commit report
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-crypto-schema-v6.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-crypto-schema-v6.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/efootball-crypto-schema-v6.txt analysis-output/efootball-crypto-schema-v6.sha256.txt
+          git commit -m 'Add eFootball P2P crypto configuration schema report'
+          git push
