@@ -1,0 +1,2660 @@
+Known chain: transport_parent 0x7c0dca0 -> profile_loader 0x7bfc91c -> crypto_profile_parser 0x7c088e4; same parent later -> P2P mode consumer 0x7bf9ecc.
+
+=== PARENT PROFILE LOAD CALLSITE 0x7c0de70-0x7c0df40 ===
+0x7c0de70: ldr       x8, [x8, #0x10]
+0x7c0de74: blr       x8
+0x7c0de78: mov       x0, x20
+0x7c0de7c: bl        #0x8b388f0
+0x7c0de80: mov       x0, x21
+0x7c0de84: bl        #0x8b388f0
+0x7c0de88: adrp      x8, #0x699d000
+0x7c0de8c: add       x8, x8, #0x914
+0x7c0de90: cmp       x27, #0
+0x7c0de94: csel      x8, xzr, x8, eq
+0x7c0de98: cbz       x8, #0x7c0debc
+0x7c0de9c: b         #0x7c0dec4
+0x7c0dea0: mov       x27, xzr
+0x7c0dea4: mov       x20, xzr
+0x7c0dea8: adrp      x8, #0x699d000
+0x7c0deac: add       x8, x8, #0x914
+0x7c0deb0: cmp       x27, #0
+0x7c0deb4: csel      x8, xzr, x8, eq
+0x7c0deb8: cbnz      x8, #0x7c0dec4
+0x7c0debc: mov       w8, #1
+0x7c0dec0: tbnz      w8, #0, #0x7c0e3a8
+0x7c0dec4: ldr       w1, [x24]
+0x7c0dec8: cmp       w1, #3
+0x7c0decc: b.ne      #0x7c0dedc
+0x7c0ded0: mov       x21, xzr
+0x7c0ded4: stp       xzr, xzr, [sp]
+0x7c0ded8: b         #0x7c0df64
+0x7c0dedc: ldr       w2, [x22, #0x28]
+0x7c0dee0: add       x0, x27, #1
+0x7c0dee4: ldrb      w3, [x22, #0x100]
+0x7c0dee8: add       x8, sp, #0x10
+0x7c0deec: bl        #0x7bfc91c
+0x7c0def0: ldp       x28, x21, [sp, #0x10]
+0x7c0def4: cbz       x21, #0x7c0df34
+0x7c0def8: add       x1, x21, #8
+0x7c0defc: mov       w0, #1
+0x7c0df00: bl        #0x8b34e90
+0x7c0df04: ldr       x25, [sp, #0x18]
+0x7c0df08: cbz       x25, #0x7c0df34
+0x7c0df0c: add       x1, x25, #8
+0x7c0df10: mov       x0, #-1
+0x7c0df14: bl        #0x8b34ef0
+0x7c0df18: cbnz      x0, #0x7c0df34
+0x7c0df1c: ldr       x8, [x25]
+0x7c0df20: mov       x0, x25
+0x7c0df24: ldr       x8, [x8, #0x10]
+0x7c0df28: blr       x8
+0x7c0df2c: mov       x0, x25
+0x7c0df30: bl        #0x8b388f0
+0x7c0df34: nop       
+0x7c0df38: adr       x8, #0x7c100fc
+0x7c0df3c: cmp       x28, #0
+
+=== PARENT PROFILE OBJECT USE THROUGH P2P CONSUMER 0x7c0df40-0x7c0e330 ===
+0x7c0df40: csel      x8, xzr, x8, eq
+0x7c0df44: cbnz      x8, #0x7c0df50
+0x7c0df48: mov       w8, #1
+0x7c0df4c: tbnz      w8, #0, #0x7c0e37c
+0x7c0df50: stp       x28, x21, [sp]
+0x7c0df54: cbz       x21, #0x7c0df64
+0x7c0df58: add       x1, x21, #8
+0x7c0df5c: mov       w0, #1
+0x7c0df60: bl        #0x8b34e90
+0x7c0df64: add       x8, sp, #0x10
+0x7c0df68: strb      wzr, [sp, #0x1c]
+0x7c0df6c: add       x9, x8, #0x180
+0x7c0df70: add       x25, x8, #0x3e0
+0x7c0df74: movi      v0.2d, #0000000000000000
+0x7c0df78: mov       x0, x25
+0x7c0df7c: str       wzr, [sp, #0x20]
+0x7c0df80: stur      xzr, [x9, #4]
+0x7c0df84: add       x9, x8, #0x3a8
+0x7c0df88: strb      wzr, [sp, #0x28]
+0x7c0df8c: str       xzr, [sp, #0x30]
+0x7c0df90: strb      wzr, [sp, #0x38]
+0x7c0df94: str       wzr, [sp, #0x3c]
+0x7c0df98: strb      wzr, [sp, #0x40]
+0x7c0df9c: str       wzr, [sp, #0x44]
+0x7c0dfa0: strb      wzr, [sp, #0x48]
+0x7c0dfa4: str       wzr, [sp, #0x4c]
+0x7c0dfa8: strb      wzr, [sp, #0x50]
+0x7c0dfac: strb      wzr, [sp, #0x98]
+0x7c0dfb0: str       xzr, [sp, #0xa0]
+0x7c0dfb4: strb      wzr, [sp, #0xa8]
+0x7c0dfb8: str       xzr, [sp, #0xb0]
+0x7c0dfbc: strb      wzr, [sp, #0xb8]
+0x7c0dfc0: str       wzr, [sp, #0xbc]
+0x7c0dfc4: strb      wzr, [sp, #0xc0]
+0x7c0dfc8: str       wzr, [sp, #0xc4]
+0x7c0dfcc: strb      wzr, [sp, #0xc8]
+0x7c0dfd0: str       wzr, [sp, #0xcc]
+0x7c0dfd4: strb      wzr, [sp, #0xd0]
+0x7c0dfd8: str       xzr, [sp, #0xd8]
+0x7c0dfdc: strb      wzr, [sp, #0xe0]
+0x7c0dfe0: str       wzr, [sp, #0xe4]
+0x7c0dfe4: strb      wzr, [sp, #0xe8]
+0x7c0dfe8: str       wzr, [sp, #0xec]
+0x7c0dfec: strb      wzr, [sp, #0xf0]
+0x7c0dff0: str       wzr, [sp, #0xf4]
+0x7c0dff4: strb      wzr, [sp, #0xf8]
+0x7c0dff8: str       wzr, [sp, #0xfc]
+0x7c0dffc: strh      wzr, [sp, #0x100]
+0x7c0e000: strb      wzr, [sp, #0x104]
+0x7c0e004: str       wzr, [sp, #0x108]
+0x7c0e008: strb      wzr, [sp, #0x10c]
+0x7c0e00c: str       wzr, [sp, #0x110]
+0x7c0e010: strb      wzr, [sp, #0x114]
+0x7c0e014: str       wzr, [sp, #0x118]
+0x7c0e018: strb      wzr, [sp, #0x11c]
+0x7c0e01c: str       wzr, [sp, #0x120]
+0x7c0e020: strb      wzr, [sp, #0x124]
+0x7c0e024: str       wzr, [sp, #0x128]
+0x7c0e028: strb      wzr, [sp, #0x12c]
+0x7c0e02c: str       wzr, [sp, #0x130]
+0x7c0e030: strb      wzr, [sp, #0x134]
+0x7c0e034: str       wzr, [sp, #0x138]
+0x7c0e038: strb      wzr, [sp, #0x13c]
+0x7c0e03c: str       wzr, [sp, #0x140]
+0x7c0e040: strb      wzr, [sp, #0x144]
+0x7c0e044: str       wzr, [sp, #0x148]
+0x7c0e048: strb      wzr, [sp, #0x14c]
+0x7c0e04c: str       wzr, [sp, #0x150]
+0x7c0e050: strb      wzr, [sp, #0x154]
+0x7c0e054: str       wzr, [sp, #0x158]
+0x7c0e058: strb      wzr, [sp, #0x15c]
+0x7c0e05c: str       wzr, [sp, #0x160]
+0x7c0e060: strb      wzr, [sp, #0x164]
+0x7c0e064: str       wzr, [sp, #0x168]
+0x7c0e068: strb      wzr, [sp, #0x16c]
+0x7c0e06c: str       wzr, [sp, #0x170]
+0x7c0e070: strb      wzr, [sp, #0x174]
+0x7c0e074: str       wzr, [sp, #0x178]
+0x7c0e078: strb      wzr, [sp, #0x180]
+0x7c0e07c: str       xzr, [sp, #0x188]
+0x7c0e080: strb      wzr, [sp, #0x190]
+0x7c0e084: strb      wzr, [sp, #0x1a0]
+0x7c0e088: str       wzr, [sp, #0x1a4]
+0x7c0e08c: strb      wzr, [sp, #0x1a8]
+0x7c0e090: str       wzr, [sp, #0x1ac]
+0x7c0e094: strb      wzr, [sp, #0x1b0]
+0x7c0e098: str       wzr, [sp, #0x1b4]
+0x7c0e09c: strb      wzr, [sp, #0x1b8]
+0x7c0e0a0: strh      wzr, [sp, #0x1c0]
+0x7c0e0a4: strb      wzr, [sp, #0x1d8]
+0x7c0e0a8: str       wzr, [sp, #0x1dc]
+0x7c0e0ac: strb      wzr, [sp, #0x1e0]
+0x7c0e0b0: str       wzr, [sp, #0x1e4]
+0x7c0e0b4: strb      wzr, [sp, #0x1e8]
+0x7c0e0b8: str       wzr, [sp, #0x1ec]
+0x7c0e0bc: strb      wzr, [sp, #0x1f0]
+0x7c0e0c0: str       wzr, [sp, #0x1f4]
+0x7c0e0c4: strb      wzr, [sp, #0x1f8]
+0x7c0e0c8: str       wzr, [sp, #0x1fc]
+0x7c0e0cc: strb      wzr, [sp, #0x200]
+0x7c0e0d0: str       wzr, [sp, #0x204]
+0x7c0e0d4: strb      wzr, [sp, #0x208]
+0x7c0e0d8: str       wzr, [sp, #0x20c]
+0x7c0e0dc: strh      wzr, [sp, #0x210]
+0x7c0e0e0: strb      wzr, [sp, #0x218]
+0x7c0e0e4: str       xzr, [sp, #0x220]
+0x7c0e0e8: strh      wzr, [sp, #0x228]
+0x7c0e0ec: strb      wzr, [sp, #0x230]
+0x7c0e0f0: str       xzr, [sp, #0x238]
+0x7c0e0f4: strb      wzr, [sp, #0x240]
+0x7c0e0f8: str       wzr, [sp, #0x244]
+0x7c0e0fc: strb      wzr, [sp, #0x248]
+0x7c0e100: str       xzr, [sp, #0x250]
+0x7c0e104: strb      wzr, [sp, #0x258]
+0x7c0e108: str       wzr, [sp, #0x25c]
+0x7c0e10c: strb      wzr, [sp, #0x260]
+0x7c0e110: str       xzr, [sp, #0x268]
+0x7c0e114: strb      wzr, [sp, #0x270]
+0x7c0e118: str       wzr, [sp, #0x274]
+0x7c0e11c: strb      wzr, [sp, #0x278]
+0x7c0e120: str       xzr, [sp, #0x280]
+0x7c0e124: strb      wzr, [sp, #0x288]
+0x7c0e128: str       xzr, [sp, #0x290]
+0x7c0e12c: strb      wzr, [sp, #0x298]
+0x7c0e130: str       xzr, [sp, #0x2a0]
+0x7c0e134: strb      wzr, [sp, #0x2a8]
+0x7c0e138: str       xzr, [sp, #0x2b0]
+0x7c0e13c: strb      wzr, [sp, #0x2b8]
+0x7c0e140: str       xzr, [sp, #0x2c0]
+0x7c0e144: strb      wzr, [sp, #0x2c8]
+0x7c0e148: str       wzr, [sp, #0x2cc]
+0x7c0e14c: strb      wzr, [sp, #0x2d0]
+0x7c0e150: str       wzr, [sp, #0x2d4]
+0x7c0e154: strb      wzr, [sp, #0x2d8]
+0x7c0e158: str       xzr, [sp, #0x2e0]
+0x7c0e15c: strb      wzr, [sp, #0x2e8]
+0x7c0e160: str       wzr, [sp, #0x2ec]
+0x7c0e164: strb      wzr, [sp, #0x2f0]
+0x7c0e168: str       wzr, [sp, #0x2f4]
+0x7c0e16c: strb      wzr, [sp, #0x2f8]
+0x7c0e170: str       wzr, [sp, #0x2fc]
+0x7c0e174: strb      wzr, [sp, #0x300]
+0x7c0e178: str       wzr, [sp, #0x304]
+0x7c0e17c: strb      wzr, [sp, #0x308]
+0x7c0e180: str       wzr, [sp, #0x30c]
+0x7c0e184: strh      wzr, [sp, #0x310]
+0x7c0e188: strb      wzr, [sp, #0x314]
+0x7c0e18c: str       wzr, [sp, #0x318]
+0x7c0e190: strb      wzr, [sp, #0x31c]
+0x7c0e194: str       wzr, [sp, #0x320]
+0x7c0e198: strb      wzr, [sp, #0x324]
+0x7c0e19c: str       xzr, [sp, #0x338]
+0x7c0e1a0: strb      wzr, [sp, #0x340]
+0x7c0e1a4: str       wzr, [sp, #0x344]
+0x7c0e1a8: strb      wzr, [sp, #0x348]
+0x7c0e1ac: str       xzr, [sp, #0x350]
+0x7c0e1b0: strb      wzr, [sp, #0x358]
+0x7c0e1b4: str       wzr, [sp, #0x35c]
+0x7c0e1b8: strh      wzr, [sp, #0x360]
+0x7c0e1bc: strb      wzr, [sp, #0x368]
+0x7c0e1c0: str       xzr, [sp, #0x370]
+0x7c0e1c4: strb      wzr, [sp, #0x378]
+0x7c0e1c8: str       xzr, [sp, #0x380]
+0x7c0e1cc: strh      wzr, [sp, #0x388]
+0x7c0e1d0: strb      wzr, [sp, #0x390]
+0x7c0e1d4: str       xzr, [sp, #0x398]
+0x7c0e1d8: strh      wzr, [sp, #0x3a0]
+0x7c0e1dc: strb      wzr, [sp, #0x3a4]
+0x7c0e1e0: str       wzr, [sp, #0x3a8]
+0x7c0e1e4: strh      wzr, [sp, #0x3ac]
+0x7c0e1e8: strb      wzr, [sp, #0x3b0]
+0x7c0e1ec: str       wzr, [sp, #0x3b4]
+0x7c0e1f0: strb      wzr, [sp, #0x3b8]
+0x7c0e1f4: strh      wzr, [sp, #0x18]
+0x7c0e1f8: str       xzr, [sp, #0x10]
+0x7c0e1fc: stp       xzr, xzr, [sp, #0x58]
+0x7c0e200: strb      wzr, [sp, #0x70]
+0x7c0e204: str       xzr, [sp, #0x68]
+0x7c0e208: stp       xzr, xzr, [sp, #0x78]
+0x7c0e20c: strh      wzr, [sp, #0x90]
+0x7c0e210: str       xzr, [sp, #0x88]
+0x7c0e214: strh      wzr, [sp, #0x19c]
+0x7c0e218: strb      wzr, [sp, #0x330]
+0x7c0e21c: str       xzr, [sp, #0x328]
+0x7c0e220: stur      xzr, [x9, #4]
+0x7c0e224: stur      xzr, [x9, #9]
+0x7c0e228: stp       q0, q0, [sp, #0x3d0]
+0x7c0e22c: bl        #0x7c73b00
+0x7c0e230: ldr       w2, [x22, #0x20]
+0x7c0e234: add       x0, x27, #1
+0x7c0e238: ldr       w3, [x22, #0x28]
+0x7c0e23c: add       x1, sp, #0x10
+0x7c0e240: ldrb      w4, [x22, #0x100]
+0x7c0e244: bl        #0x7bf9ecc
+0x7c0e248: tbz       w0, #0, #0x7c0e304
+0x7c0e24c: mov       x0, x25
+0x7c0e250: mov       x1, x24
+0x7c0e254: add       x27, x23, #0x110
+0x7c0e258: bl        #0x7c0e53c
+0x7c0e25c: ldr       w8, [x24]
+0x7c0e260: cmp       w8, #3
+0x7c0e264: b.eq      #0x7c0e298
+0x7c0e268: cmp       w8, #1
+0x7c0e26c: b.eq      #0x7c0e2b0
+0x7c0e270: cbnz      w8, #0x7c0e304
+0x7c0e274: bl        #0x7c10200
+0x7c0e278: tbz       w0, #0, #0x7c0e2d4
+0x7c0e27c: mov       w0, #0xbe0
+0x7c0e280: bl        #0x8b35260
+0x7c0e284: add       x1, sp, #0x10
+0x7c0e288: mov       x2, sp
+0x7c0e28c: mov       x22, x0
+0x7c0e290: bl        #0x7c54020
+0x7c0e294: b         #0x7c0e2ec
+0x7c0e298: mov       w0, #0xb90
+0x7c0e29c: bl        #0x8b35260
+0x7c0e2a0: add       x1, sp, #0x10
+0x7c0e2a4: mov       x22, x0
+0x7c0e2a8: bl        #0x7c557e0
+0x7c0e2ac: b         #0x7c0e2ec
+0x7c0e2b0: bl        #0x7c10200
+0x7c0e2b4: tbz       w0, #0, #0x7c0e430
+0x7c0e2b8: mov       w0, #0xbe0
+0x7c0e2bc: bl        #0x8b35260
+0x7c0e2c0: add       x1, sp, #0x10
+0x7c0e2c4: mov       x2, sp
+0x7c0e2c8: mov       x22, x0
+0x7c0e2cc: bl        #0x7c56740
+0x7c0e2d0: b         #0x7c0e2ec
+0x7c0e2d4: mov       w0, #0x11b0
+0x7c0e2d8: bl        #0x8b35260
+0x7c0e2dc: add       x1, sp, #0x10
+0x7c0e2e0: mov       x2, sp
+0x7c0e2e4: mov       x22, x0
+0x7c0e2e8: bl        #0x7c2eca8
+0x7c0e2ec: ldr       x0, [x27]
+0x7c0e2f0: str       x22, [x27]
+0x7c0e2f4: cbz       x0, #0x7c0e304
+0x7c0e2f8: ldr       x8, [x0]
+0x7c0e2fc: ldr       x8, [x8, #8]
+0x7c0e300: blr       x8
+0x7c0e304: mov       x0, x25
+0x7c0e308: bl        #0x7a5544c
+0x7c0e30c: ldr       x0, [sp, #0x3d0]
+0x7c0e310: cbz       x0, #0x7c0e31c
+0x7c0e314: str       x0, [sp, #0x3d8]
+0x7c0e318: bl        #0x2efa56c
+0x7c0e31c: ldrb      w8, [sp, #0x1c0]
+0x7c0e320: tbz       w8, #0, #0x7c0e32c
+0x7c0e324: ldr       x0, [sp, #0x1d0]
+0x7c0e328: bl        #0x2efa56c
+0x7c0e32c: ldr       x0, [sp, #0x78]
+
+=== PROFILE LOADER CRYPTO PARSER + COPY 0x7bfd410-0x7bfd650 ===
+0x7bfd410: mov       x0, x28
+0x7bfd414: bl        #0x2efc42c
+0x7bfd418: adrp      x2, #0xc02000 ; STR='P2P_ADHOC_UNKNOWN_LOW_LEVEL'
+0x7bfd41c: add       x2, x2, #0x3f1
+0x7bfd420: b         #0x7bfd448
+0x7bfd424: mov       x0, x28
+0x7bfd428: bl        #0x2efc42c
+0x7bfd42c: adrp      x2, #0xa72000 ; STR='CS_GIVE_UP_QUICKLY_LEVEL'
+0x7bfd430: add       x2, x2, #0x10b
+0x7bfd434: b         #0x7bfd448
+0x7bfd438: mov       x0, x28
+0x7bfd43c: bl        #0x2efc42c
+0x7bfd440: adrp      x2, #0xa72000 ; STR='P2P_ADHOC_UNKNOWN_GIVE_UP_QUICKLY_LEVEL'
+0x7bfd444: add       x2, x2, #0x124
+0x7bfd448: mov       x0, x27
+0x7bfd44c: mov       x1, x26
+0x7bfd450: bl        #0x7d2ad08
+0x7bfd454: mov       w20, w0
+0x7bfd458: mov       x0, x21
+0x7bfd45c: bl        #0x8b38640
+0x7bfd460: and       w8, w20, #1
+0x7bfd464: ldurb     w9, [x29, #-0x38]
+0x7bfd468: sturb     w8, [x29, #-0x58]
+0x7bfd46c: cbz       w9, #0x7bfd8f0
+0x7bfd470: add       x0, sp, #0x260
+0x7bfd474: mov       x1, x25
+0x7bfd478: bl        #0x7c088e4
+0x7bfd47c: mov       w21, w0
+0x7bfd480: ldurb     w8, [x29, #-0x58]
+0x7bfd484: ldp       w28, w27, [sp, #0x24]
+0x7bfd488: ldr       w20, [sp, #0x100]
+0x7bfd48c: ldr       x22, [sp, #0x18]
+0x7bfd490: cbz       w8, #0x7bfd4a4
+0x7bfd494: add       x0, sp, #0x260
+0x7bfd498: mov       x1, x26
+0x7bfd49c: bl        #0x7c088e4
+0x7bfd4a0: orr       w21, w21, w0
+0x7bfd4a4: mov       x0, x26
+0x7bfd4a8: bl        #0x2f91730
+0x7bfd4ac: mov       x0, x25
+0x7bfd4b0: bl        #0x2f91730
+0x7bfd4b4: ldr       w25, [sp, #0x14]
+0x7bfd4b8: ldr       x26, [sp, #8]
+0x7bfd4bc: tbz       w21, #0, #0x7bfd608
+0x7bfd4c0: ldrb      w9, [sp, #0x260]
+0x7bfd4c4: add       x8, sp, #0x260
+0x7bfd4c8: ldr       x10, [sp, #0x268]
+0x7bfd4cc: add       x22, x8, #0x118
+0x7bfd4d0: ldrb      w11, [sp, #0x270]
+0x7bfd4d4: add       x20, x19, #0x11c
+0x7bfd4d8: ldr       x8, [sp, #0x278]
+0x7bfd4dc: strb      w9, [sp, #0x130]
+0x7bfd4e0: ldrb      w9, [sp, #0x280]
+0x7bfd4e4: str       x10, [sp, #0x138]
+0x7bfd4e8: ldr       w10, [sp, #0x284]
+0x7bfd4ec: strb      w11, [sp, #0x140]
+0x7bfd4f0: ldrb      w11, [sp, #0x288]
+0x7bfd4f4: str       x8, [sp, #0x148]
+0x7bfd4f8: ldr       w8, [sp, #0x28c]
+0x7bfd4fc: strb      w9, [sp, #0x150]
+0x7bfd500: ldrb      w9, [sp, #0x290]
+0x7bfd504: str       w10, [sp, #0x154]
+0x7bfd508: ldr       x10, [sp, #0x298]
+0x7bfd50c: strb      w11, [sp, #0x158]
+0x7bfd510: ldrb      w11, [sp, #0x2a0]
+0x7bfd514: str       w8, [sp, #0x15c]
+0x7bfd518: ldr       x8, [sp, #0x2a8]
+0x7bfd51c: strb      w9, [sp, #0x160]
+0x7bfd520: ldrb      w9, [sp, #0x2b0]
+0x7bfd524: str       x10, [sp, #0x168]
+0x7bfd528: ldr       x10, [sp, #0x2b8]
+0x7bfd52c: strb      w11, [sp, #0x170]
+0x7bfd530: ldrb      w11, [sp, #0x2c0]
+0x7bfd534: str       x8, [sp, #0x178]
+0x7bfd538: ldr       x8, [sp, #0x2c8]
+0x7bfd53c: strb      w9, [sp, #0x180]
+0x7bfd540: ldrb      w9, [sp, #0x2d0]
+0x7bfd544: str       x10, [sp, #0x188]
+0x7bfd548: ldr       x10, [sp, #0x2d8]
+0x7bfd54c: strb      w11, [sp, #0x190]
+0x7bfd550: ldrb      w11, [sp, #0x2e0]
+0x7bfd554: str       x8, [sp, #0x198]
+0x7bfd558: ldr       x8, [sp, #0x2e8]
+0x7bfd55c: strb      w9, [sp, #0x1a0]
+0x7bfd560: ldrb      w9, [sp, #0x2f0]
+0x7bfd564: str       x10, [sp, #0x1a8]
+0x7bfd568: ldr       x10, [sp, #0x2f8]
+0x7bfd56c: strb      w11, [sp, #0x1b0]
+0x7bfd570: ldrb      w11, [sp, #0x300]
+0x7bfd574: str       x8, [sp, #0x1b8]
+0x7bfd578: ldr       w8, [sp, #0x304]
+0x7bfd57c: strb      w9, [sp, #0x1c0]
+0x7bfd580: ldrb      w9, [sp, #0x308]
+0x7bfd584: str       x10, [sp, #0x1c8]
+0x7bfd588: ldr       x10, [sp, #0x310]
+0x7bfd58c: strb      w11, [sp, #0x1d0]
+0x7bfd590: ldrb      w11, [sp, #0x318]
+0x7bfd594: str       w8, [sp, #0x1d4]
+0x7bfd598: ldr       x8, [sp, #0x320]
+0x7bfd59c: strb      w9, [sp, #0x1d8]
+0x7bfd5a0: ldrb      w9, [sp, #0x328]
+0x7bfd5a4: str       x10, [sp, #0x1e0]
+0x7bfd5a8: ldr       w10, [sp, #0x32c]
+0x7bfd5ac: strb      w11, [sp, #0x1e8]
+0x7bfd5b0: ldrb      w11, [sp, #0x330]
+0x7bfd5b4: str       x8, [sp, #0x1f0]
+0x7bfd5b8: ldr       x8, [sp, #0x338]
+0x7bfd5bc: strb      w9, [sp, #0x1f8]
+0x7bfd5c0: ldrb      w9, [sp, #0x340]
+0x7bfd5c4: str       w10, [sp, #0x1fc]
+0x7bfd5c8: ldr       x10, [sp, #0x348]
+0x7bfd5cc: strb      w11, [sp, #0x200]
+0x7bfd5d0: ldrb      w11, [sp, #0x350]
+0x7bfd5d4: str       x8, [sp, #0x208]
+0x7bfd5d8: ldr       w8, [sp, #0x354]
+0x7bfd5dc: strb      w9, [sp, #0x210]
+0x7bfd5e0: ldrb      w9, [sp, #0x358]
+0x7bfd5e4: add       x21, x19, #0x120
+0x7bfd5e8: ldr       x24, [sp, #0x368]
+0x7bfd5ec: add       x19, x19, #0x128
+0x7bfd5f0: ldr       x1, [sp, #0x360]
+0x7bfd5f4: str       x10, [sp, #0x218]
+0x7bfd5f8: strb      w11, [sp, #0x220]
+0x7bfd5fc: str       w8, [sp, #0x224]
+0x7bfd600: strb      w9, [sp, #0x228]
+0x7bfd604: b         #0x7bfd734
+0x7bfd608: ldr       w8, [sp, #0x104]
+0x7bfd60c: cbz       w8, #0x7bfd8e4
+0x7bfd610: ldr       w8, [sp, #0xf8]
+0x7bfd614: strb      w20, [sp, #0x130]
+0x7bfd618: add       x20, sp, #0x124
+0x7bfd61c: str       x22, [sp, #0x138]
+0x7bfd620: add       x21, sp, #0x120
+0x7bfd624: add       x19, sp, #0x118
+0x7bfd628: strb      w8, [sp, #0x150]
+0x7bfd62c: ldr       w8, [sp, #0xf4]
+0x7bfd630: add       x22, sp, #0x128
+0x7bfd634: mov       x1, x23
+0x7bfd638: strb      w25, [sp, #0x140]
+0x7bfd63c: str       w8, [sp, #0x154]
+0x7bfd640: ldr       w8, [sp, #0xf0]
+0x7bfd644: str       x26, [sp, #0x148]
+0x7bfd648: str       w27, [sp, #0x224]
+0x7bfd64c: strb      w8, [sp, #0x158]
+
+=== CRYPTO PARSER KEY-EXCHANGE FIELDS 0x7c08db0-0x7c08fb0 ===
+0x7c08db0: strb      w24, [sp, #0x118]
+0x7c08db4: str       x8, [sp, #0x120]
+0x7c08db8: adrp      x2, #0xb43000 ; STR='LinkUpMode'
+0x7c08dbc: add       x2, x2, #0xa34
+0x7c08dc0: add       x0, sp, #0x1d0
+0x7c08dc4: add       x1, sp, #0x220
+0x7c08dc8: str       wzr, [sp, #0x220]
+0x7c08dcc: bl        #0x7d2a948
+0x7c08dd0: tbz       w0, #0, #0x7c08de4
+0x7c08dd4: mov       w24, #1
+0x7c08dd8: ldr       w8, [sp, #0x220]
+0x7c08ddc: strb      w24, [sp, #0x128]
+0x7c08de0: str       w8, [sp, #0x12c]
+0x7c08de4: adrp      x2, #0xa38000 ; STR='KeyExchangeTimeoutUs'
+0x7c08de8: add       x2, x2, #0x772
+0x7c08dec: add       x0, sp, #0x1d0
+0x7c08df0: add       x1, sp, #0x220
+0x7c08df4: str       xzr, [sp, #0x220]
+0x7c08df8: bl        #0x7d2aa38
+0x7c08dfc: tbz       w0, #0, #0x7c08e10
+0x7c08e00: mov       w24, #1
+0x7c08e04: ldr       x8, [sp, #0x220]
+0x7c08e08: strb      w24, [sp, #0x130]
+0x7c08e0c: str       x8, [sp, #0x138]
+0x7c08e10: adrp      x2, #0xb43000 ; STR='KeyExcahngeRetransmissionTimeoutUs'
+0x7c08e14: add       x2, x2, #0xa3f
+0x7c08e18: add       x0, sp, #0x1d0
+0x7c08e1c: add       x1, sp, #0x220
+0x7c08e20: str       xzr, [sp, #0x220]
+0x7c08e24: bl        #0x7d2aa38
+0x7c08e28: tbz       w0, #0, #0x7c08e3c
+0x7c08e2c: mov       w24, #1
+0x7c08e30: ldr       x8, [sp, #0x220]
+0x7c08e34: strb      w24, [sp, #0x140]
+0x7c08e38: str       x8, [sp, #0x148]
+0x7c08e3c: adrp      x2, #0xbb6000 ; STR='KeyExchangeEncryptionAlgorithm'
+0x7c08e40: add       x2, x2, #0x776
+0x7c08e44: add       x0, sp, #0x1d0
+0x7c08e48: add       x1, sp, #0x220
+0x7c08e4c: str       wzr, [sp, #0x220]
+0x7c08e50: bl        #0x7d2a948
+0x7c08e54: tbz       w0, #0, #0x7c08e68
+0x7c08e58: mov       w24, #1
+0x7c08e5c: ldr       w8, [sp, #0x220]
+0x7c08e60: strb      w24, [sp, #0x150]
+0x7c08e64: str       w8, [sp, #0x154]
+0x7c08e68: add       x0, sp, #0x1b8
+0x7c08e6c: mov       w1, wzr
+0x7c08e70: bl        #0x2f912cc
+0x7c08e74: adrp      x2, #0xa97000 ; STR='KeyExchangeEncryptionKey'
+0x7c08e78: add       x2, x2, #0xebc
+0x7c08e7c: add       x0, sp, #0x1d0
+0x7c08e80: add       x1, sp, #0x1b8
+0x7c08e84: bl        #0x7d2ad08
+0x7c08e88: mov       w21, wzr
+0x7c08e8c: tbz       w0, #0, #0x7c09608
+0x7c08e90: add       x0, sp, #0x1b8
+0x7c08e94: str       w24, [sp, #4]
+0x7c08e98: bl        #0x2f91e8c
+0x7c08e9c: cbz       w0, #0x7c09548
+0x7c08ea0: mov       w20, w0
+0x7c08ea4: mov       w1, wzr
+0x7c08ea8: mov       x0, x20
+0x7c08eac: bl        #0x2efa4dc
+0x7c08eb0: mov       x22, x0
+0x7c08eb4: add       x25, x0, x20
+0x7c08eb8: add       x0, sp, #0x1b8
+0x7c08ebc: bl        #0x2f91e8c
+0x7c08ec0: cbz       w0, #0x7c0955c
+0x7c08ec4: add       x9, sp, #0x220
+0x7c08ec8: add       x8, sp, #0x1a0
+0x7c08ecc: orr       x10, x9, #1
+0x7c08ed0: orr       x8, x8, #1
+0x7c08ed4: mov       w23, wzr
+0x7c08ed8: add       x28, x9, #0x80
+0x7c08edc: add       x26, x9, #0x18
+0x7c08ee0: adrp      x27, #0x8cc7000
+0x7c08ee4: add       x27, x27, #0x790
+0x7c08ee8: stp       x8, x10, [sp, #0x38]
+0x7c08eec: add       x10, x9, #0x10
+0x7c08ef0: add       x8, x9, #0x58
+0x7c08ef4: mov       x20, x22
+0x7c08ef8: str       x28, [sp, #0x20]
+0x7c08efc: stp       x8, x10, [sp, #0x28]
+0x7c08f00: b         #0x7c08f1c
+0x7c08f04: add       x20, x20, #1
+0x7c08f08: add       x0, sp, #0x1b8
+0x7c08f0c: add       w23, w23, #1
+0x7c08f10: bl        #0x2f91e8c
+0x7c08f14: cmp       w23, w0
+0x7c08f18: b.hs      #0x7c09414
+0x7c08f1c: add       x0, sp, #0x1b8
+0x7c08f20: mov       w1, w23
+0x7c08f24: bl        #0x2f921d0
+0x7c08f28: bl        #0x2f93008
+0x7c08f2c: tbz       w0, #0, #0x7c08f54
+0x7c08f30: add       x0, sp, #0x1b8
+0x7c08f34: mov       w1, w23
+0x7c08f38: bl        #0x2f921d0
+0x7c08f3c: bl        #0x2f91ad4
+0x7c08f40: mov       w21, w0
+0x7c08f44: cmp       x20, x25
+0x7c08f48: b.eq      #0x7c090ac
+0x7c08f4c: strb      w21, [x20], #1
+0x7c08f50: b         #0x7c08f08
+0x7c08f54: add       x0, sp, #0x1b8
+0x7c08f58: mov       w1, w23
+0x7c08f5c: stp       xzr, xzr, [sp, #0x1a0]
+0x7c08f60: str       xzr, [sp, #0x1b0]
+0x7c08f64: bl        #0x2f921d0
+0x7c08f68: bl        #0x2f9303c
+0x7c08f6c: tbz       w0, #0, #0x7c09570
+0x7c08f70: add       x0, sp, #0x1b8
+0x7c08f74: mov       w1, w23
+0x7c08f78: bl        #0x2f921d0
+0x7c08f7c: add       x8, sp, #0x220
+0x7c08f80: bl        #0x2f919d8
+0x7c08f84: ldrb      w8, [sp, #0x220]
+0x7c08f88: add       x0, sp, #0x1a0
+0x7c08f8c: ldr       x9, [sp, #0x230]
+0x7c08f90: ldr       x10, [sp, #0x228]
+0x7c08f94: ldr       x11, [sp, #0x40]
+0x7c08f98: tst       w8, #1
+0x7c08f9c: lsr       x8, x8, #1
+0x7c08fa0: csel      x2, x8, x10, eq
+0x7c08fa4: csel      x1, x11, x9, eq
+0x7c08fa8: bl        #0x2efb614
+0x7c08fac: ldrb      w8, [sp, #0x220]
+
+=== CRYPTO PARSER SESSION FIELDS 0x7c09580-0x7c096b0 ===
+0x7c09580: ldr       x26, [sp, #0x10]
+0x7c09584: mov       w21, wzr
+0x7c09588: adrp      x27, #0x97a2000
+0x7c0958c: add       x27, x27, #0x9d8
+0x7c09590: b         #0x7c095f4
+0x7c09594: ldr       x26, [sp, #0x10]
+0x7c09598: mov       x23, xzr
+0x7c0959c: mov       x20, xzr
+0x7c095a0: mov       x21, xzr
+0x7c095a4: mov       x25, xzr
+0x7c095a8: adrp      x27, #0x97a2000
+0x7c095ac: add       x27, x27, #0x9d8
+0x7c095b0: b         #0x7c095c4
+0x7c095b4: mov       x20, xzr
+0x7c095b8: mov       x21, xzr
+0x7c095bc: mov       x25, xzr
+0x7c095c0: ldr       x26, [sp, #0x10]
+0x7c095c4: mov       w8, #1
+0x7c095c8: ldr       x0, [sp, #0x160]
+0x7c095cc: strb      w8, [sp, #0x158]
+0x7c095d0: cbz       x0, #0x7c095dc
+0x7c095d4: str       x0, [sp, #0x168]
+0x7c095d8: bl        #0x2efa56c
+0x7c095dc: stp       x25, x21, [sp, #0x160]
+0x7c095e0: str       x20, [sp, #0x170]
+0x7c095e4: cbz       x23, #0x7c095f0
+0x7c095e8: mov       x0, x23
+0x7c095ec: bl        #0x2efa56c
+0x7c095f0: mov       w21, #1
+0x7c095f4: ldr       x23, [sp, #0x18]
+0x7c095f8: ldr       w24, [sp, #4]
+0x7c095fc: cbz       x22, #0x7c09608
+0x7c09600: mov       x0, x22
+0x7c09604: bl        #0x2efa56c
+0x7c09608: add       x0, sp, #0x1b8
+0x7c0960c: bl        #0x2f91730
+0x7c09610: adrp      x2, #0xae3000 ; STR='SessionKeyEncryptionAlgorithm'
+0x7c09614: add       x2, x2, #0xc90
+0x7c09618: add       x0, sp, #0x1d0
+0x7c0961c: add       x1, sp, #0x220
+0x7c09620: str       wzr, [sp, #0x220]
+0x7c09624: bl        #0x7d2a948
+0x7c09628: mov       w20, w0
+0x7c0962c: tbz       w0, #0, #0x7c09640
+0x7c09630: mov       w8, #1
+0x7c09634: ldr       w9, [sp, #0x220]
+0x7c09638: strb      w8, [sp, #0x178]
+0x7c0963c: str       w9, [sp, #0x17c]
+0x7c09640: adrp      x2, #0xa97000 ; STR='SessionKeyEncryptionKeyLength'
+0x7c09644: add       x2, x2, #0xed5
+0x7c09648: add       x0, sp, #0x1d0
+0x7c0964c: add       x1, sp, #0x220
+0x7c09650: str       xzr, [sp, #0x220]
+0x7c09654: bl        #0x7d2aa38
+0x7c09658: tbz       w0, #0, #0x7c09674
+0x7c0965c: mov       w8, #1
+0x7c09660: ldr       x9, [sp, #0x220]
+0x7c09664: ldr       x20, [sp, #8]
+0x7c09668: strb      w8, [sp, #0x180]
+0x7c0966c: str       x9, [sp, #0x188]
+0x7c09670: b         #0x7c09684
+0x7c09674: orr       w8, w21, w20
+0x7c09678: ldr       x20, [sp, #8]
+0x7c0967c: orr       w8, w8, w24
+0x7c09680: tbz       w8, #0, #0x7c097ec
+0x7c09684: ldrb      w8, [sp, #0x60]
+0x7c09688: ldr       x9, [sp, #0x68]
+0x7c0968c: ldrb      w10, [sp, #0x70]
+0x7c09690: strb      w8, [x19]
+0x7c09694: ldr       x8, [sp, #0x78]
+0x7c09698: str       x9, [x19, #8]
+0x7c0969c: ldrb      w9, [sp, #0x80]
+0x7c096a0: strb      w10, [x19, #0x10]
+0x7c096a4: ldr       w10, [sp, #0x84]
+0x7c096a8: str       x8, [x19, #0x18]
+0x7c096ac: ldrb      w8, [sp, #0x88]
+
+=== P2P MODE CONSUMER CORE 0x7bf9ecc-0x7bfb160 ===
+0x7bf9ecc: stp       x29, x30, [sp, #-0x60]!
+0x7bf9ed0: stp       x28, x27, [sp, #0x10]
+0x7bf9ed4: stp       x26, x25, [sp, #0x20]
+0x7bf9ed8: stp       x24, x23, [sp, #0x30]
+0x7bf9edc: stp       x22, x21, [sp, #0x40]
+0x7bf9ee0: stp       x20, x19, [sp, #0x50]
+0x7bf9ee4: mov       x29, sp
+0x7bf9ee8: sub       sp, sp, #0x830
+0x7bf9eec: str       x1, [sp, #0x18]
+0x7bf9ef0: mrs       x26, tpidr_el0
+0x7bf9ef4: ldr       x8, [x26, #0x28]
+0x7bf9ef8: adrp      x10, #0xc1b000
+0x7bf9efc: movi      v0.2d, #0000000000000000
+0x7bf9f00: mov       w0, #0x1a3
+0x7bf9f04: mov       w1, wzr
+0x7bf9f08: mov       w27, w4
+0x7bf9f0c: stur      x8, [x29, #-0x10]
+0x7bf9f10: add       x8, sp, #0x20
+0x7bf9f14: add       x9, x8, #0x180
+0x7bf9f18: add       x8, x8, #0x3a8
+0x7bf9f1c: stp       q0, q0, [sp, #0x3e0]
+0x7bf9f20: mov       w19, w3
+0x7bf9f24: str       wzr, [sp, #0x410]
+0x7bf9f28: mov       w20, w2
+0x7bf9f2c: stur      xzr, [x8, #4]
+0x7bf9f30: str       wzr, [sp, #0x42c]
+0x7bf9f34: stur      xzr, [x8, #9]
+0x7bf9f38: add       x8, sp, #0x400
+0x7bf9f3c: str       wzr, [sp, #0x434]
+0x7bf9f40: str       q0, [sp, #0x7c0]
+0x7bf9f44: str       q0, [sp, #0x7d0]
+0x7bf9f48: ldr       d0, [x10, #0xf98]
+0x7bf9f4c: stur      xzr, [x9, #4]
+0x7bf9f50: add       x9, x8, #0x180
+0x7bf9f54: add       x8, x8, #0x3a8
+0x7bf9f58: mov       w10, #1
+0x7bf9f5c: strb      wzr, [sp, #0x2c]
+0x7bf9f60: stur      xzr, [x9, #4]
+0x7bf9f64: mov       w9, #0x2710
+0x7bf9f68: stur      xzr, [x8, #4]
+0x7bf9f6c: str       wzr, [sp, #0x30]
+0x7bf9f70: str       w9, [sp, #0x410]
+0x7bf9f74: strb      wzr, [sp, #0x38]
+0x7bf9f78: str       xzr, [sp, #0x40]
+0x7bf9f7c: strb      wzr, [sp, #0x48]
+0x7bf9f80: str       wzr, [sp, #0x4c]
+0x7bf9f84: strb      wzr, [sp, #0x50]
+0x7bf9f88: str       wzr, [sp, #0x54]
+0x7bf9f8c: strb      wzr, [sp, #0x58]
+0x7bf9f90: str       wzr, [sp, #0x5c]
+0x7bf9f94: strb      wzr, [sp, #0x60]
+0x7bf9f98: strb      wzr, [sp, #0xa8]
+0x7bf9f9c: str       xzr, [sp, #0xb0]
+0x7bf9fa0: strb      wzr, [sp, #0xb8]
+0x7bf9fa4: str       xzr, [sp, #0xc0]
+0x7bf9fa8: strb      wzr, [sp, #0xc8]
+0x7bf9fac: str       wzr, [sp, #0xcc]
+0x7bf9fb0: strb      wzr, [sp, #0xd0]
+0x7bf9fb4: str       wzr, [sp, #0xd4]
+0x7bf9fb8: strb      wzr, [sp, #0xd8]
+0x7bf9fbc: str       wzr, [sp, #0xdc]
+0x7bf9fc0: strb      wzr, [sp, #0xe0]
+0x7bf9fc4: str       xzr, [sp, #0xe8]
+0x7bf9fc8: strb      wzr, [sp, #0xf0]
+0x7bf9fcc: str       wzr, [sp, #0xf4]
+0x7bf9fd0: strb      wzr, [sp, #0xf8]
+0x7bf9fd4: str       wzr, [sp, #0xfc]
+0x7bf9fd8: strb      wzr, [sp, #0x100]
+0x7bf9fdc: str       wzr, [sp, #0x104]
+0x7bf9fe0: strb      wzr, [sp, #0x108]
+0x7bf9fe4: str       wzr, [sp, #0x10c]
+0x7bf9fe8: strh      wzr, [sp, #0x110]
+0x7bf9fec: strb      wzr, [sp, #0x114]
+0x7bf9ff0: str       wzr, [sp, #0x118]
+0x7bf9ff4: strb      wzr, [sp, #0x11c]
+0x7bf9ff8: str       wzr, [sp, #0x120]
+0x7bf9ffc: strb      wzr, [sp, #0x124]
+0x7bfa000: str       wzr, [sp, #0x128]
+0x7bfa004: strb      wzr, [sp, #0x12c]
+0x7bfa008: str       wzr, [sp, #0x130]
+0x7bfa00c: strb      wzr, [sp, #0x134]
+0x7bfa010: str       wzr, [sp, #0x138]
+0x7bfa014: strb      wzr, [sp, #0x13c]
+0x7bfa018: str       wzr, [sp, #0x140]
+0x7bfa01c: strb      wzr, [sp, #0x144]
+0x7bfa020: str       wzr, [sp, #0x148]
+0x7bfa024: strb      wzr, [sp, #0x14c]
+0x7bfa028: str       wzr, [sp, #0x150]
+0x7bfa02c: strb      wzr, [sp, #0x154]
+0x7bfa030: str       wzr, [sp, #0x158]
+0x7bfa034: strb      wzr, [sp, #0x15c]
+0x7bfa038: str       wzr, [sp, #0x160]
+0x7bfa03c: strb      wzr, [sp, #0x164]
+0x7bfa040: str       wzr, [sp, #0x168]
+0x7bfa044: strb      wzr, [sp, #0x16c]
+0x7bfa048: str       wzr, [sp, #0x170]
+0x7bfa04c: strb      wzr, [sp, #0x174]
+0x7bfa050: str       wzr, [sp, #0x178]
+0x7bfa054: strb      wzr, [sp, #0x17c]
+0x7bfa058: str       wzr, [sp, #0x180]
+0x7bfa05c: strb      wzr, [sp, #0x184]
+0x7bfa060: str       wzr, [sp, #0x188]
+0x7bfa064: strb      wzr, [sp, #0x190]
+0x7bfa068: str       xzr, [sp, #0x198]
+0x7bfa06c: strb      wzr, [sp, #0x1a0]
+0x7bfa070: strb      wzr, [sp, #0x1b0]
+0x7bfa074: str       wzr, [sp, #0x1b4]
+0x7bfa078: strb      wzr, [sp, #0x1b8]
+0x7bfa07c: str       wzr, [sp, #0x1bc]
+0x7bfa080: strb      wzr, [sp, #0x1c0]
+0x7bfa084: str       wzr, [sp, #0x1c4]
+0x7bfa088: strb      wzr, [sp, #0x1c8]
+0x7bfa08c: strh      wzr, [sp, #0x1d0]
+0x7bfa090: strb      wzr, [sp, #0x1e8]
+0x7bfa094: str       wzr, [sp, #0x1ec]
+0x7bfa098: strb      wzr, [sp, #0x1f0]
+0x7bfa09c: str       wzr, [sp, #0x1f4]
+0x7bfa0a0: strb      wzr, [sp, #0x1f8]
+0x7bfa0a4: str       wzr, [sp, #0x1fc]
+0x7bfa0a8: stur      xzr, [x8, #9]
+0x7bfa0ac: mov       w8, #0x3a98
+0x7bfa0b0: str       w9, [sp, #0x434]
+0x7bfa0b4: mov       w9, #0x101
+0x7bfa0b8: strb      wzr, [sp, #0x200]
+0x7bfa0bc: str       w8, [sp, #0x42c]
+0x7bfa0c0: mov       w8, #0x3e8
+0x7bfa0c4: str       wzr, [sp, #0x204]
+0x7bfa0c8: strb      wzr, [sp, #0x208]
+0x7bfa0cc: str       wzr, [sp, #0x20c]
+0x7bfa0d0: strb      wzr, [sp, #0x210]
+0x7bfa0d4: str       wzr, [sp, #0x214]
+0x7bfa0d8: strb      wzr, [sp, #0x218]
+0x7bfa0dc: str       wzr, [sp, #0x21c]
+0x7bfa0e0: strh      wzr, [sp, #0x220]
+0x7bfa0e4: strb      wzr, [sp, #0x228]
+0x7bfa0e8: str       xzr, [sp, #0x230]
+0x7bfa0ec: strh      wzr, [sp, #0x238]
+0x7bfa0f0: strb      wzr, [sp, #0x240]
+0x7bfa0f4: str       xzr, [sp, #0x248]
+0x7bfa0f8: strb      wzr, [sp, #0x250]
+0x7bfa0fc: str       wzr, [sp, #0x254]
+0x7bfa100: strb      wzr, [sp, #0x258]
+0x7bfa104: str       xzr, [sp, #0x260]
+0x7bfa108: strb      wzr, [sp, #0x268]
+0x7bfa10c: str       wzr, [sp, #0x26c]
+0x7bfa110: strb      wzr, [sp, #0x270]
+0x7bfa114: str       xzr, [sp, #0x278]
+0x7bfa118: strb      wzr, [sp, #0x280]
+0x7bfa11c: str       wzr, [sp, #0x284]
+0x7bfa120: strb      wzr, [sp, #0x288]
+0x7bfa124: str       xzr, [sp, #0x290]
+0x7bfa128: strb      wzr, [sp, #0x298]
+0x7bfa12c: str       xzr, [sp, #0x2a0]
+0x7bfa130: strb      wzr, [sp, #0x2a8]
+0x7bfa134: str       xzr, [sp, #0x2b0]
+0x7bfa138: strb      wzr, [sp, #0x2b8]
+0x7bfa13c: str       xzr, [sp, #0x2c0]
+0x7bfa140: strb      wzr, [sp, #0x2c8]
+0x7bfa144: str       xzr, [sp, #0x2d0]
+0x7bfa148: strb      wzr, [sp, #0x2d8]
+0x7bfa14c: str       wzr, [sp, #0x2dc]
+0x7bfa150: strb      wzr, [sp, #0x2e0]
+0x7bfa154: str       wzr, [sp, #0x2e4]
+0x7bfa158: strb      wzr, [sp, #0x2e8]
+0x7bfa15c: str       xzr, [sp, #0x2f0]
+0x7bfa160: strb      wzr, [sp, #0x2f8]
+0x7bfa164: str       wzr, [sp, #0x2fc]
+0x7bfa168: strb      wzr, [sp, #0x300]
+0x7bfa16c: str       wzr, [sp, #0x304]
+0x7bfa170: strb      wzr, [sp, #0x308]
+0x7bfa174: str       wzr, [sp, #0x30c]
+0x7bfa178: strb      wzr, [sp, #0x310]
+0x7bfa17c: str       wzr, [sp, #0x314]
+0x7bfa180: strb      wzr, [sp, #0x318]
+0x7bfa184: str       wzr, [sp, #0x31c]
+0x7bfa188: strh      wzr, [sp, #0x320]
+0x7bfa18c: strb      wzr, [sp, #0x324]
+0x7bfa190: str       wzr, [sp, #0x328]
+0x7bfa194: strb      wzr, [sp, #0x32c]
+0x7bfa198: str       wzr, [sp, #0x330]
+0x7bfa19c: strb      wzr, [sp, #0x334]
+0x7bfa1a0: str       xzr, [sp, #0x348]
+0x7bfa1a4: strb      wzr, [sp, #0x350]
+0x7bfa1a8: str       wzr, [sp, #0x354]
+0x7bfa1ac: strb      wzr, [sp, #0x358]
+0x7bfa1b0: str       xzr, [sp, #0x360]
+0x7bfa1b4: strb      wzr, [sp, #0x368]
+0x7bfa1b8: str       wzr, [sp, #0x36c]
+0x7bfa1bc: strh      wzr, [sp, #0x370]
+0x7bfa1c0: strb      wzr, [sp, #0x378]
+0x7bfa1c4: str       xzr, [sp, #0x380]
+0x7bfa1c8: strb      wzr, [sp, #0x388]
+0x7bfa1cc: str       xzr, [sp, #0x390]
+0x7bfa1d0: strh      wzr, [sp, #0x398]
+0x7bfa1d4: strb      wzr, [sp, #0x3a0]
+0x7bfa1d8: str       xzr, [sp, #0x3a8]
+0x7bfa1dc: strh      wzr, [sp, #0x3b0]
+0x7bfa1e0: strb      wzr, [sp, #0x3b4]
+0x7bfa1e4: str       wzr, [sp, #0x3b8]
+0x7bfa1e8: strh      wzr, [sp, #0x3bc]
+0x7bfa1ec: strb      wzr, [sp, #0x3c0]
+0x7bfa1f0: str       wzr, [sp, #0x3c4]
+0x7bfa1f4: strb      wzr, [sp, #0x3c8]
+0x7bfa1f8: strh      wzr, [sp, #0x28]
+0x7bfa1fc: str       xzr, [sp, #0x20]
+0x7bfa200: stp       xzr, xzr, [sp, #0x68]
+0x7bfa204: strb      wzr, [sp, #0x80]
+0x7bfa208: str       xzr, [sp, #0x78]
+0x7bfa20c: stp       xzr, xzr, [sp, #0x88]
+0x7bfa210: strh      wzr, [sp, #0xa0]
+0x7bfa214: str       xzr, [sp, #0x98]
+0x7bfa218: strh      wzr, [sp, #0x1ac]
+0x7bfa21c: strb      wzr, [sp, #0x340]
+0x7bfa220: str       xzr, [sp, #0x338]
+0x7bfa224: strb      wzr, [sp, #0x40c]
+0x7bfa228: strb      wzr, [sp, #0x418]
+0x7bfa22c: str       xzr, [sp, #0x420]
+0x7bfa230: strb      wzr, [sp, #0x428]
+0x7bfa234: strb      wzr, [sp, #0x430]
+0x7bfa238: strb      wzr, [sp, #0x438]
+0x7bfa23c: str       wzr, [sp, #0x43c]
+0x7bfa240: strb      wzr, [sp, #0x440]
+0x7bfa244: strb      wzr, [sp, #0x488]
+0x7bfa248: str       xzr, [sp, #0x490]
+0x7bfa24c: strb      wzr, [sp, #0x498]
+0x7bfa250: str       xzr, [sp, #0x4a0]
+0x7bfa254: strb      wzr, [sp, #0x4a8]
+0x7bfa258: str       wzr, [sp, #0x4ac]
+0x7bfa25c: strb      wzr, [sp, #0x4b0]
+0x7bfa260: str       wzr, [sp, #0x4b4]
+0x7bfa264: strb      wzr, [sp, #0x4b8]
+0x7bfa268: str       wzr, [sp, #0x4bc]
+0x7bfa26c: strb      wzr, [sp, #0x4c0]
+0x7bfa270: str       xzr, [sp, #0x4c8]
+0x7bfa274: strb      wzr, [sp, #0x4d0]
+0x7bfa278: str       wzr, [sp, #0x4d4]
+0x7bfa27c: strb      wzr, [sp, #0x4d8]
+0x7bfa280: str       wzr, [sp, #0x4dc]
+0x7bfa284: strb      wzr, [sp, #0x4e0]
+0x7bfa288: str       wzr, [sp, #0x4e4]
+0x7bfa28c: strb      wzr, [sp, #0x4e8]
+0x7bfa290: str       wzr, [sp, #0x4ec]
+0x7bfa294: strh      wzr, [sp, #0x4f0]
+0x7bfa298: strb      wzr, [sp, #0x4f4]
+0x7bfa29c: str       wzr, [sp, #0x4f8]
+0x7bfa2a0: strb      wzr, [sp, #0x4fc]
+0x7bfa2a4: str       wzr, [sp, #0x500]
+0x7bfa2a8: strb      wzr, [sp, #0x504]
+0x7bfa2ac: str       wzr, [sp, #0x508]
+0x7bfa2b0: strb      wzr, [sp, #0x50c]
+0x7bfa2b4: str       wzr, [sp, #0x510]
+0x7bfa2b8: strb      wzr, [sp, #0x514]
+0x7bfa2bc: str       wzr, [sp, #0x518]
+0x7bfa2c0: strb      wzr, [sp, #0x51c]
+0x7bfa2c4: str       wzr, [sp, #0x520]
+0x7bfa2c8: strb      wzr, [sp, #0x524]
+0x7bfa2cc: str       wzr, [sp, #0x528]
+0x7bfa2d0: strb      wzr, [sp, #0x52c]
+0x7bfa2d4: str       wzr, [sp, #0x530]
+0x7bfa2d8: strb      wzr, [sp, #0x534]
+0x7bfa2dc: str       wzr, [sp, #0x538]
+0x7bfa2e0: strb      wzr, [sp, #0x53c]
+0x7bfa2e4: str       wzr, [sp, #0x540]
+0x7bfa2e8: strb      wzr, [sp, #0x544]
+0x7bfa2ec: str       wzr, [sp, #0x548]
+0x7bfa2f0: strb      wzr, [sp, #0x54c]
+0x7bfa2f4: str       wzr, [sp, #0x550]
+0x7bfa2f8: strb      wzr, [sp, #0x554]
+0x7bfa2fc: str       wzr, [sp, #0x558]
+0x7bfa300: strb      wzr, [sp, #0x55c]
+0x7bfa304: str       wzr, [sp, #0x560]
+0x7bfa308: strb      wzr, [sp, #0x564]
+0x7bfa30c: str       wzr, [sp, #0x568]
+0x7bfa310: strb      wzr, [sp, #0x570]
+0x7bfa314: str       xzr, [sp, #0x578]
+0x7bfa318: strb      wzr, [sp, #0x580]
+0x7bfa31c: strb      wzr, [sp, #0x590]
+0x7bfa320: str       wzr, [sp, #0x594]
+0x7bfa324: strb      wzr, [sp, #0x598]
+0x7bfa328: str       wzr, [sp, #0x59c]
+0x7bfa32c: strb      wzr, [sp, #0x5a0]
+0x7bfa330: str       wzr, [sp, #0x5a4]
+0x7bfa334: strb      wzr, [sp, #0x5a8]
+0x7bfa338: strh      wzr, [sp, #0x5b0]
+0x7bfa33c: strb      wzr, [sp, #0x5c8]
+0x7bfa340: str       wzr, [sp, #0x5cc]
+0x7bfa344: strb      wzr, [sp, #0x5d0]
+0x7bfa348: str       wzr, [sp, #0x5d4]
+0x7bfa34c: strb      wzr, [sp, #0x5d8]
+0x7bfa350: str       wzr, [sp, #0x5dc]
+0x7bfa354: strb      wzr, [sp, #0x5e0]
+0x7bfa358: str       wzr, [sp, #0x5e4]
+0x7bfa35c: strb      wzr, [sp, #0x5e8]
+0x7bfa360: str       wzr, [sp, #0x5ec]
+0x7bfa364: strb      wzr, [sp, #0x5f0]
+0x7bfa368: str       wzr, [sp, #0x5f4]
+0x7bfa36c: strb      wzr, [sp, #0x5f8]
+0x7bfa370: str       wzr, [sp, #0x5fc]
+0x7bfa374: strh      wzr, [sp, #0x600]
+0x7bfa378: strb      wzr, [sp, #0x608]
+0x7bfa37c: str       xzr, [sp, #0x610]
+0x7bfa380: strh      wzr, [sp, #0x618]
+0x7bfa384: strb      wzr, [sp, #0x620]
+0x7bfa388: str       xzr, [sp, #0x628]
+0x7bfa38c: strb      wzr, [sp, #0x630]
+0x7bfa390: str       wzr, [sp, #0x634]
+0x7bfa394: strb      wzr, [sp, #0x638]
+0x7bfa398: str       xzr, [sp, #0x640]
+0x7bfa39c: strb      wzr, [sp, #0x648]
+0x7bfa3a0: str       wzr, [sp, #0x64c]
+0x7bfa3a4: strb      wzr, [sp, #0x650]
+0x7bfa3a8: str       xzr, [sp, #0x658]
+0x7bfa3ac: strb      wzr, [sp, #0x660]
+0x7bfa3b0: str       wzr, [sp, #0x664]
+0x7bfa3b4: strb      wzr, [sp, #0x668]
+0x7bfa3b8: str       xzr, [sp, #0x670]
+0x7bfa3bc: strb      wzr, [sp, #0x678]
+0x7bfa3c0: str       xzr, [sp, #0x680]
+0x7bfa3c4: strb      wzr, [sp, #0x688]
+0x7bfa3c8: str       xzr, [sp, #0x690]
+0x7bfa3cc: strb      wzr, [sp, #0x698]
+0x7bfa3d0: str       xzr, [sp, #0x6a0]
+0x7bfa3d4: strb      wzr, [sp, #0x6a8]
+0x7bfa3d8: str       xzr, [sp, #0x6b0]
+0x7bfa3dc: strb      wzr, [sp, #0x6b8]
+0x7bfa3e0: str       wzr, [sp, #0x6bc]
+0x7bfa3e4: strb      wzr, [sp, #0x6c0]
+0x7bfa3e8: str       wzr, [sp, #0x6c4]
+0x7bfa3ec: strb      wzr, [sp, #0x6c8]
+0x7bfa3f0: str       xzr, [sp, #0x6d0]
+0x7bfa3f4: strb      wzr, [sp, #0x6d8]
+0x7bfa3f8: str       wzr, [sp, #0x6dc]
+0x7bfa3fc: strb      wzr, [sp, #0x6e0]
+0x7bfa400: str       wzr, [sp, #0x6e4]
+0x7bfa404: strb      wzr, [sp, #0x6e8]
+0x7bfa408: str       wzr, [sp, #0x6ec]
+0x7bfa40c: strb      wzr, [sp, #0x6f0]
+0x7bfa410: str       wzr, [sp, #0x6f4]
+0x7bfa414: strb      wzr, [sp, #0x6f8]
+0x7bfa418: str       wzr, [sp, #0x6fc]
+0x7bfa41c: strh      wzr, [sp, #0x700]
+0x7bfa420: strb      wzr, [sp, #0x704]
+0x7bfa424: str       wzr, [sp, #0x708]
+0x7bfa428: strb      wzr, [sp, #0x70c]
+0x7bfa42c: str       wzr, [sp, #0x710]
+0x7bfa430: strb      wzr, [sp, #0x714]
+0x7bfa434: str       xzr, [sp, #0x728]
+0x7bfa438: strb      wzr, [sp, #0x730]
+0x7bfa43c: str       wzr, [sp, #0x734]
+0x7bfa440: strb      wzr, [sp, #0x738]
+0x7bfa444: str       xzr, [sp, #0x740]
+0x7bfa448: strb      wzr, [sp, #0x748]
+0x7bfa44c: str       wzr, [sp, #0x74c]
+0x7bfa450: strh      wzr, [sp, #0x750]
+0x7bfa454: strb      wzr, [sp, #0x758]
+0x7bfa458: str       xzr, [sp, #0x760]
+0x7bfa45c: strb      wzr, [sp, #0x768]
+0x7bfa460: str       xzr, [sp, #0x770]
+0x7bfa464: strh      wzr, [sp, #0x778]
+0x7bfa468: strb      wzr, [sp, #0x780]
+0x7bfa46c: str       xzr, [sp, #0x788]
+0x7bfa470: strh      wzr, [sp, #0x790]
+0x7bfa474: strb      wzr, [sp, #0x794]
+0x7bfa478: str       wzr, [sp, #0x798]
+0x7bfa47c: strh      wzr, [sp, #0x79c]
+0x7bfa480: strb      wzr, [sp, #0x7a0]
+0x7bfa484: str       wzr, [sp, #0x7a4]
+0x7bfa488: strb      wzr, [sp, #0x7a8]
+0x7bfa48c: str       xzr, [sp, #0x450]
+0x7bfa490: str       xzr, [sp, #0x448]
+0x7bfa494: strb      wzr, [sp, #0x460]
+0x7bfa498: str       xzr, [sp, #0x458]
+0x7bfa49c: str       xzr, [sp, #0x470]
+0x7bfa4a0: str       xzr, [sp, #0x468]
+0x7bfa4a4: str       xzr, [sp, #0x478]
+0x7bfa4a8: strh      wzr, [sp, #0x58c]
+0x7bfa4ac: strb      wzr, [sp, #0x720]
+0x7bfa4b0: str       xzr, [sp, #0x718]
+0x7bfa4b4: str       d0, [sp, #0x400]
+0x7bfa4b8: strh      w10, [sp, #0x408]
+0x7bfa4bc: strb      w10, [sp, #0x40c]
+0x7bfa4c0: strb      w10, [sp, #0x418]
+0x7bfa4c4: str       xzr, [sp, #0x420]
+0x7bfa4c8: strb      w10, [sp, #0x428]
+0x7bfa4cc: strb      w10, [sp, #0x430]
+0x7bfa4d0: strb      w10, [sp, #0x438]
+0x7bfa4d4: str       w8, [sp, #0x43c]
+0x7bfa4d8: strh      w9, [sp, #0x480]
+0x7bfa4dc: bl        #0x2efa4dc
+0x7bfa4e0: adrp      x1, #0xc8e000
+0x7bfa4e4: add       x1, x1, #0xf60
+0x7bfa4e8: mov       w2, #0x1a3
+0x7bfa4ec: mov       x23, x0
+0x7bfa4f0: bl        #0x8b35300
+0x7bfa4f4: mov       w0, #0x1a3
+0x7bfa4f8: mov       w1, wzr
+0x7bfa4fc: bl        #0x2efa4dc
+0x7bfa500: mov       x24, x0
+0x7bfa504: mov       x9, xzr
+0x7bfa508: mov       x8, x0
+0x7bfa50c: sub       x10, x0, x23
+0x7bfa510: cmp       x10, #0x20
+0x7bfa514: b.lo      #0x7bfa588
+0x7bfa518: ldp       q0, q1, [x23]
+0x7bfa51c: add       x8, x24, #0x1a0
+0x7bfa520: mov       w9, #0x1a0
+0x7bfa524: stp       q0, q1, [x24]
+0x7bfa528: ldp       q0, q1, [x23, #0x20]
+0x7bfa52c: stp       q0, q1, [x24, #0x20]
+0x7bfa530: ldp       q0, q1, [x23, #0x40]
+0x7bfa534: stp       q0, q1, [x24, #0x40]
+0x7bfa538: ldp       q0, q1, [x23, #0x60]
+0x7bfa53c: stp       q0, q1, [x24, #0x60]
+0x7bfa540: ldp       q0, q1, [x23, #0x80]
+0x7bfa544: stp       q0, q1, [x24, #0x80]
+0x7bfa548: ldp       q0, q1, [x23, #0xa0]
+0x7bfa54c: stp       q0, q1, [x24, #0xa0]
+0x7bfa550: ldp       q0, q1, [x23, #0xc0]
+0x7bfa554: stp       q0, q1, [x24, #0xc0]
+0x7bfa558: ldp       q0, q1, [x23, #0xe0]
+0x7bfa55c: stp       q0, q1, [x24, #0xe0]
+0x7bfa560: ldp       q0, q1, [x23, #0x100]
+0x7bfa564: stp       q0, q1, [x24, #0x100]
+0x7bfa568: ldp       q0, q1, [x23, #0x120]
+0x7bfa56c: stp       q0, q1, [x24, #0x120]
+0x7bfa570: ldp       q0, q1, [x23, #0x140]
+0x7bfa574: stp       q0, q1, [x24, #0x140]
+0x7bfa578: ldp       q0, q1, [x23, #0x160]
+0x7bfa57c: stp       q0, q1, [x24, #0x160]
+0x7bfa580: ldp       q0, q1, [x23, #0x180]
+0x7bfa584: stp       q0, q1, [x24, #0x180]
+0x7bfa588: mov       w10, #0x1a3
+0x7bfa58c: str       w19, [sp, #0x14]
+0x7bfa590: mov       x19, xzr
+0x7bfa594: sub       x10, x10, x9
+0x7bfa598: add       x9, x23, x9
+0x7bfa59c: ldrb      w11, [x9, x19]
+0x7bfa5a0: strb      w11, [x8, x19]
+0x7bfa5a4: add       x19, x19, #1
+0x7bfa5a8: cmp       x10, x19
+0x7bfa5ac: b.ne      #0x7bfa59c
+0x7bfa5b0: add       x21, x8, x19
+0x7bfa5b4: str       w20, [sp, #0x10]
+0x7bfa5b8: cmp       x21, x24
+0x7bfa5bc: b.eq      #0x7bfaddc
+0x7bfa5c0: sub       x20, x8, x24
+0x7bfa5c4: add       x0, x20, x19
+0x7bfa5c8: tbnz      x0, #0x3f, #0x7bfb444
+0x7bfa5cc: mov       w1, wzr
+0x7bfa5d0: bl        #0x2efa4dc
+0x7bfa5d4: mov       x25, x0
+0x7bfa5d8: mov       x9, x24
+0x7bfa5dc: mov       x22, x0
+0x7bfa5e0: sub       x8, x0, x24
+0x7bfa5e4: cmp       x8, #0x20
+0x7bfa5e8: b.lo      #0x7bfa65c
+0x7bfa5ec: ldp       q0, q1, [x24]
+0x7bfa5f0: add       x22, x25, #0x1a0
+0x7bfa5f4: add       x9, x24, #0x1a0
+0x7bfa5f8: stp       q0, q1, [x25]
+0x7bfa5fc: ldp       q0, q1, [x24, #0x20]
+0x7bfa600: stp       q0, q1, [x25, #0x20]
+0x7bfa604: ldp       q0, q1, [x24, #0x40]
+0x7bfa608: stp       q0, q1, [x25, #0x40]
+0x7bfa60c: ldp       q0, q1, [x24, #0x60]
+0x7bfa610: stp       q0, q1, [x25, #0x60]
+0x7bfa614: ldp       q0, q1, [x24, #0x80]
+0x7bfa618: stp       q0, q1, [x25, #0x80]
+0x7bfa61c: ldp       q0, q1, [x24, #0xa0]
+0x7bfa620: stp       q0, q1, [x25, #0xa0]
+0x7bfa624: ldp       q0, q1, [x24, #0xc0]
+0x7bfa628: stp       q0, q1, [x25, #0xc0]
+0x7bfa62c: ldp       q0, q1, [x24, #0xe0]
+0x7bfa630: stp       q0, q1, [x25, #0xe0]
+0x7bfa634: ldp       q0, q1, [x24, #0x100]
+0x7bfa638: stp       q0, q1, [x25, #0x100]
+0x7bfa63c: ldp       q0, q1, [x24, #0x120]
+0x7bfa640: stp       q0, q1, [x25, #0x120]
+0x7bfa644: ldp       q0, q1, [x24, #0x140]
+0x7bfa648: stp       q0, q1, [x25, #0x140]
+0x7bfa64c: ldp       q0, q1, [x24, #0x160]
+0x7bfa650: stp       q0, q1, [x25, #0x160]
+0x7bfa654: ldp       q0, q1, [x24, #0x180]
+0x7bfa658: stp       q0, q1, [x25, #0x180]
+0x7bfa65c: sub       x8, x21, #1
+0x7bfa660: sub       x9, x9, #1
+0x7bfa664: ldrb      w10, [x9, #1]!
+0x7bfa668: cmp       x8, x9
+0x7bfa66c: strb      w10, [x22], #1
+0x7bfa670: b.ne      #0x7bfa664
+0x7bfa674: add       x8, x25, x19
+0x7bfa678: add       x19, x8, x20
+0x7bfa67c: mov       w8, #1
+0x7bfa680: ldr       x0, [sp, #0x448]
+0x7bfa684: strb      w8, [sp, #0x440]
+0x7bfa688: cbz       x0, #0x7bfa690
+0x7bfa68c: bl        #0x2efa56c
+0x7bfa690: str       x25, [sp, #0x448]
+0x7bfa694: str       x22, [sp, #0x450]
+0x7bfa698: str       x19, [sp, #0x458]
+0x7bfa69c: cbz       x24, #0x7bfa6a8
+0x7bfa6a0: mov       x0, x24
+0x7bfa6a4: bl        #0x2efa56c
+0x7bfa6a8: cbz       x23, #0x7bfa6b4
+0x7bfa6ac: mov       x0, x23
+0x7bfa6b0: bl        #0x2efa56c
+0x7bfa6b4: mov       w0, #0x187
+0x7bfa6b8: mov       w1, wzr
+0x7bfa6bc: bl        #0x2efa4dc
+0x7bfa6c0: adrp      x1, #0xc8f000
+0x7bfa6c4: add       x1, x1, #0x103
+0x7bfa6c8: mov       w2, #0x187
+0x7bfa6cc: mov       x23, x0
+0x7bfa6d0: bl        #0x8b35300
+0x7bfa6d4: mov       w0, #0x187
+0x7bfa6d8: mov       w1, wzr
+0x7bfa6dc: bl        #0x2efa4dc
+0x7bfa6e0: mov       x24, x0
+0x7bfa6e4: sub       x8, x0, x23
+0x7bfa6e8: cmp       x8, #0x20
+0x7bfa6ec: b.hs      #0x7bfa6fc
+0x7bfa6f0: mov       x10, xzr
+0x7bfa6f4: mov       x8, x24
+0x7bfa6f8: b         #0x7bfa764
+0x7bfa6fc: ldp       q0, q1, [x23]
+0x7bfa700: add       x8, x24, #0x180
+0x7bfa704: mov       w10, #0x180
+0x7bfa708: stp       q0, q1, [x24]
+0x7bfa70c: ldp       q0, q1, [x23, #0x20]
+0x7bfa710: stp       q0, q1, [x24, #0x20]
+0x7bfa714: ldp       q0, q1, [x23, #0x40]
+0x7bfa718: stp       q0, q1, [x24, #0x40]
+0x7bfa71c: ldp       q0, q1, [x23, #0x60]
+0x7bfa720: stp       q0, q1, [x24, #0x60]
+0x7bfa724: ldp       q0, q1, [x23, #0x80]
+0x7bfa728: stp       q0, q1, [x24, #0x80]
+0x7bfa72c: ldp       q0, q1, [x23, #0xa0]
+0x7bfa730: stp       q0, q1, [x24, #0xa0]
+0x7bfa734: ldp       q0, q1, [x23, #0xc0]
+0x7bfa738: stp       q0, q1, [x24, #0xc0]
+0x7bfa73c: ldp       q0, q1, [x23, #0xe0]
+0x7bfa740: stp       q0, q1, [x24, #0xe0]
+0x7bfa744: ldp       q0, q1, [x23, #0x100]
+0x7bfa748: stp       q0, q1, [x24, #0x100]
+0x7bfa74c: ldp       q0, q1, [x23, #0x120]
+0x7bfa750: stp       q0, q1, [x24, #0x120]
+0x7bfa754: ldp       q0, q1, [x23, #0x140]
+0x7bfa758: stp       q0, q1, [x24, #0x140]
+0x7bfa75c: ldp       q0, q1, [x23, #0x160]
+0x7bfa760: stp       q0, q1, [x24, #0x160]
+0x7bfa764: mov       w9, #0x187
+0x7bfa768: mov       x19, xzr
+0x7bfa76c: sub       x9, x9, x10
+0x7bfa770: add       x10, x23, x10
+0x7bfa774: ldrb      w11, [x10, x19]
+0x7bfa778: strb      w11, [x8, x19]
+0x7bfa77c: add       x19, x19, #1
+0x7bfa780: cmp       x9, x19
+0x7bfa784: b.ne      #0x7bfa774
+0x7bfa788: add       x21, x8, x19
+0x7bfa78c: cmp       x21, x24
+0x7bfa790: b.eq      #0x7bfadfc
+0x7bfa794: sub       x20, x8, x24
+0x7bfa798: add       x0, x20, x19
+0x7bfa79c: tbnz      x0, #0x3f, #0x7bfb448
+0x7bfa7a0: mov       w1, wzr
+0x7bfa7a4: bl        #0x2efa4dc
+0x7bfa7a8: mov       x25, x0
+0x7bfa7ac: mov       x9, x24
+0x7bfa7b0: mov       x22, x0
+0x7bfa7b4: sub       x8, x0, x24
+0x7bfa7b8: cmp       x8, #0x20
+0x7bfa7bc: b.lo      #0x7bfa828
+0x7bfa7c0: ldp       q0, q1, [x24]
+0x7bfa7c4: add       x22, x25, #0x180
+0x7bfa7c8: add       x9, x24, #0x180
+0x7bfa7cc: stp       q0, q1, [x25]
+0x7bfa7d0: ldp       q0, q1, [x24, #0x20]
+0x7bfa7d4: stp       q0, q1, [x25, #0x20]
+0x7bfa7d8: ldp       q0, q1, [x24, #0x40]
+0x7bfa7dc: stp       q0, q1, [x25, #0x40]
+0x7bfa7e0: ldp       q0, q1, [x24, #0x60]
+0x7bfa7e4: stp       q0, q1, [x25, #0x60]
+0x7bfa7e8: ldp       q0, q1, [x24, #0x80]
+0x7bfa7ec: stp       q0, q1, [x25, #0x80]
+0x7bfa7f0: ldp       q0, q1, [x24, #0xa0]
+0x7bfa7f4: stp       q0, q1, [x25, #0xa0]
+0x7bfa7f8: ldp       q0, q1, [x24, #0xc0]
+0x7bfa7fc: stp       q0, q1, [x25, #0xc0]
+0x7bfa800: ldp       q0, q1, [x24, #0xe0]
+0x7bfa804: stp       q0, q1, [x25, #0xe0]
+0x7bfa808: ldp       q0, q1, [x24, #0x100]
+0x7bfa80c: stp       q0, q1, [x25, #0x100]
+0x7bfa810: ldp       q0, q1, [x24, #0x120]
+0x7bfa814: stp       q0, q1, [x25, #0x120]
+0x7bfa818: ldp       q0, q1, [x24, #0x140]
+0x7bfa81c: stp       q0, q1, [x25, #0x140]
+0x7bfa820: ldp       q0, q1, [x24, #0x160]
+0x7bfa824: stp       q0, q1, [x25, #0x160]
+0x7bfa828: sub       x8, x21, #1
+0x7bfa82c: sub       x9, x9, #1
+0x7bfa830: ldrb      w10, [x9, #1]!
+0x7bfa834: cmp       x8, x9
+0x7bfa838: strb      w10, [x22], #1
+0x7bfa83c: b.ne      #0x7bfa830
+0x7bfa840: add       x8, x25, x19
+0x7bfa844: add       x19, x8, x20
+0x7bfa848: mov       w8, #1
+0x7bfa84c: ldr       x0, [sp, #0x468]
+0x7bfa850: strb      w8, [sp, #0x460]
+0x7bfa854: cbz       x0, #0x7bfa85c
+0x7bfa858: bl        #0x2efa56c
+0x7bfa85c: str       x25, [sp, #0x468]
+0x7bfa860: str       x22, [sp, #0x470]
+0x7bfa864: str       x19, [sp, #0x478]
+0x7bfa868: cbz       x24, #0x7bfa874
+0x7bfa86c: mov       x0, x24
+0x7bfa870: bl        #0x2efa56c
+0x7bfa874: mov       w0, #0x187
+0x7bfa878: mov       w1, wzr
+0x7bfa87c: bl        #0x2efa4dc
+0x7bfa880: mov       x24, x0
+0x7bfa884: sub       x8, x0, x23
+0x7bfa888: cmp       x8, #0x20
+0x7bfa88c: b.hs      #0x7bfa89c
+0x7bfa890: mov       x10, xzr
+0x7bfa894: mov       x8, x24
+0x7bfa898: b         #0x7bfa904
+0x7bfa89c: ldp       q0, q1, [x23]
+0x7bfa8a0: add       x8, x24, #0x180
+0x7bfa8a4: mov       w10, #0x180
+0x7bfa8a8: stp       q0, q1, [x24]
+0x7bfa8ac: ldp       q0, q1, [x23, #0x20]
+0x7bfa8b0: stp       q0, q1, [x24, #0x20]
+0x7bfa8b4: ldp       q0, q1, [x23, #0x40]
+0x7bfa8b8: stp       q0, q1, [x24, #0x40]
+0x7bfa8bc: ldp       q0, q1, [x23, #0x60]
+0x7bfa8c0: stp       q0, q1, [x24, #0x60]
+0x7bfa8c4: ldp       q0, q1, [x23, #0x80]
+0x7bfa8c8: stp       q0, q1, [x24, #0x80]
+0x7bfa8cc: ldp       q0, q1, [x23, #0xa0]
+0x7bfa8d0: stp       q0, q1, [x24, #0xa0]
+0x7bfa8d4: ldp       q0, q1, [x23, #0xc0]
+0x7bfa8d8: stp       q0, q1, [x24, #0xc0]
+0x7bfa8dc: ldp       q0, q1, [x23, #0xe0]
+0x7bfa8e0: stp       q0, q1, [x24, #0xe0]
+0x7bfa8e4: ldp       q0, q1, [x23, #0x100]
+0x7bfa8e8: stp       q0, q1, [x24, #0x100]
+0x7bfa8ec: ldp       q0, q1, [x23, #0x120]
+0x7bfa8f0: stp       q0, q1, [x24, #0x120]
+0x7bfa8f4: ldp       q0, q1, [x23, #0x140]
+0x7bfa8f8: stp       q0, q1, [x24, #0x140]
+0x7bfa8fc: ldp       q0, q1, [x23, #0x160]
+0x7bfa900: stp       q0, q1, [x24, #0x160]
+0x7bfa904: mov       w9, #0x187
+0x7bfa908: mov       x19, xzr
+0x7bfa90c: sub       x9, x9, x10
+0x7bfa910: add       x10, x23, x10
+0x7bfa914: ldrb      w11, [x10, x19]
+0x7bfa918: strb      w11, [x8, x19]
+0x7bfa91c: add       x19, x19, #1
+0x7bfa920: cmp       x9, x19
+0x7bfa924: b.ne      #0x7bfa914
+0x7bfa928: add       x21, x8, x19
+0x7bfa92c: cmp       x21, x24
+0x7bfa930: b.eq      #0x7bfae1c
+0x7bfa934: sub       x20, x8, x24
+0x7bfa938: add       x0, x20, x19
+0x7bfa93c: tbnz      x0, #0x3f, #0x7bfb44c
+0x7bfa940: mov       w1, wzr
+0x7bfa944: bl        #0x2efa4dc
+0x7bfa948: mov       x25, x0
+0x7bfa94c: mov       x9, x24
+0x7bfa950: mov       x22, x0
+0x7bfa954: sub       x8, x0, x24
+0x7bfa958: cmp       x8, #0x20
+0x7bfa95c: b.lo      #0x7bfa9c8
+0x7bfa960: ldp       q0, q1, [x24]
+0x7bfa964: add       x22, x25, #0x180
+0x7bfa968: add       x9, x24, #0x180
+0x7bfa96c: stp       q0, q1, [x25]
+0x7bfa970: ldp       q0, q1, [x24, #0x20]
+0x7bfa974: stp       q0, q1, [x25, #0x20]
+0x7bfa978: ldp       q0, q1, [x24, #0x40]
+0x7bfa97c: stp       q0, q1, [x25, #0x40]
+0x7bfa980: ldp       q0, q1, [x24, #0x60]
+0x7bfa984: stp       q0, q1, [x25, #0x60]
+0x7bfa988: ldp       q0, q1, [x24, #0x80]
+0x7bfa98c: stp       q0, q1, [x25, #0x80]
+0x7bfa990: ldp       q0, q1, [x24, #0xa0]
+0x7bfa994: stp       q0, q1, [x25, #0xa0]
+0x7bfa998: ldp       q0, q1, [x24, #0xc0]
+0x7bfa99c: stp       q0, q1, [x25, #0xc0]
+0x7bfa9a0: ldp       q0, q1, [x24, #0xe0]
+0x7bfa9a4: stp       q0, q1, [x25, #0xe0]
+0x7bfa9a8: ldp       q0, q1, [x24, #0x100]
+0x7bfa9ac: stp       q0, q1, [x25, #0x100]
+0x7bfa9b0: ldp       q0, q1, [x24, #0x120]
+0x7bfa9b4: stp       q0, q1, [x25, #0x120]
+0x7bfa9b8: ldp       q0, q1, [x24, #0x140]
+0x7bfa9bc: stp       q0, q1, [x25, #0x140]
+0x7bfa9c0: ldp       q0, q1, [x24, #0x160]
+0x7bfa9c4: stp       q0, q1, [x25, #0x160]
+0x7bfa9c8: sub       x8, x21, #1
+0x7bfa9cc: sub       x9, x9, #1
+0x7bfa9d0: ldrb      w10, [x9, #1]!
+0x7bfa9d4: cmp       x8, x9
+0x7bfa9d8: strb      w10, [x22], #1
+0x7bfa9dc: b.ne      #0x7bfa9d0
+0x7bfa9e0: add       x8, x25, x19
+0x7bfa9e4: add       x19, x8, x20
+0x7bfa9e8: mov       w8, #1
+0x7bfa9ec: ldr       x0, [sp, #0x7c0]
+0x7bfa9f0: strb      w8, [sp, #0x7b8]
+0x7bfa9f4: cbz       x0, #0x7bfa9fc
+0x7bfa9f8: bl        #0x2efa56c
+0x7bfa9fc: str       x25, [sp, #0x7c0]
+0x7bfaa00: str       x22, [sp, #0x7c8]
+0x7bfaa04: str       x19, [sp, #0x7d0]
+0x7bfaa08: cbz       x24, #0x7bfaa14
+0x7bfaa0c: mov       x0, x24
+0x7bfaa10: bl        #0x2efa56c
+0x7bfaa14: mov       x21, x26
+0x7bfaa18: str       w27, [sp, #0xc]
+0x7bfaa1c: cbz       x23, #0x7bfaa28
+0x7bfaa20: mov       x0, x23
+0x7bfaa24: bl        #0x2efa56c
+0x7bfaa28: mov       w8, #0x4ac
+0x7bfaa2c: mov       w9, #0x7840
+0x7bfaa30: movk      w9, #0x17d, lsl #16
+0x7bfaa34: mov       w20, #1
+0x7bfaa38: mov       w23, #0x7530
+0x7bfaa3c: mov       w27, #0x2710
+0x7bfaa40: str       x8, [sp, #0x490]
+0x7bfaa44: mov       w8, #0x1388
+0x7bfaa48: str       x9, [sp, #0x4a0]
+0x7bfaa4c: mov       w9, #0x1d4c
+0x7bfaa50: mov       w24, #0x101
+0x7bfaa54: mov       w26, #0x3e8
+0x7bfaa58: str       w8, [sp, #0x4ac]
+0x7bfaa5c: mov       w19, #0xea60
+0x7bfaa60: str       w8, [sp, #0x4b4]
+0x7bfaa64: mov       w25, #3
+0x7bfaa68: str       w8, [sp, #0x4ec]
+0x7bfaa6c: mov       w22, #0x3e800000
+0x7bfaa70: str       w8, [sp, #0x4f8]
+0x7bfaa74: mov       w28, #0x1010101
+0x7bfaa78: str       w8, [sp, #0x530]
+0x7bfaa7c: mov       w8, #0x5f90
+0x7bfaa80: movk      w8, #1, lsl #16
+0x7bfaa84: str       w9, [sp, #0x4d4]
+0x7bfaa88: mov       w9, #0x3a98
+0x7bfaa8c: add       x0, sp, #0x400
+0x7bfaa90: sub       x1, x29, #0x30
+0x7bfaa94: strb      w20, [sp, #0x488]
+0x7bfaa98: str       w8, [sp, #0x560]
+0x7bfaa9c: mov       w8, #5
+0x7bfaaa0: strb      w20, [sp, #0x498]
+0x7bfaaa4: strb      w20, [sp, #0x4a8]
+0x7bfaaa8: str       x8, [sp, #0x578]
+0x7bfaaac: mov       w8, #0x3f000000
+0x7bfaab0: strb      w20, [sp, #0x4b0]
+0x7bfaab4: strb      w20, [sp, #0x4b8]
+0x7bfaab8: str       w8, [sp, #0x594]
+0x7bfaabc: mov       w8, #0x64
+0x7bfaac0: str       w23, [sp, #0x4bc]
+0x7bfaac4: strb      w20, [sp, #0x4c0]
+0x7bfaac8: str       w8, [sp, #0x59c]
+0x7bfaacc: mov       w8, #0x4e20
+0x7bfaad0: str       x20, [sp, #0x4c8]
+0x7bfaad4: strb      w20, [sp, #0x4d0]
+0x7bfaad8: strb      w20, [sp, #0x4d8]
+0x7bfaadc: str       w27, [sp, #0x4dc]
+0x7bfaae0: strb      w20, [sp, #0x4e0]
+0x7bfaae4: str       w27, [sp, #0x4e4]
+0x7bfaae8: strb      w20, [sp, #0x4e8]
+0x7bfaaec: strh      w24, [sp, #0x4f0]
+0x7bfaaf0: strb      w20, [sp, #0x4f4]
+0x7bfaaf4: strb      w20, [sp, #0x4fc]
+0x7bfaaf8: str       w26, [sp, #0x500]
+0x7bfaafc: strb      w20, [sp, #0x504]
+0x7bfab00: str       w23, [sp, #0x508]
+0x7bfab04: strb      w20, [sp, #0x50c]
+0x7bfab08: str       w9, [sp, #0x510]
+0x7bfab0c: strb      w20, [sp, #0x514]
+0x7bfab10: str       w19, [sp, #0x518]
+0x7bfab14: strb      w20, [sp, #0x51c]
+0x7bfab18: str       w27, [sp, #0x520]
+0x7bfab1c: strb      w20, [sp, #0x524]
+0x7bfab20: str       wzr, [sp, #0x528]
+0x7bfab24: strb      w20, [sp, #0x52c]
+0x7bfab28: strb      w20, [sp, #0x534]
+0x7bfab2c: str       w26, [sp, #0x538]
+0x7bfab30: strb      w20, [sp, #0x53c]
+0x7bfab34: str       w25, [sp, #0x540]
+0x7bfab38: strb      w20, [sp, #0x544]
+0x7bfab3c: str       w27, [sp, #0x548]
+0x7bfab40: strb      w20, [sp, #0x54c]
+0x7bfab44: str       w27, [sp, #0x550]
+0x7bfab48: strb      w20, [sp, #0x554]
+0x7bfab4c: str       w26, [sp, #0x558]
+0x7bfab50: strb      w20, [sp, #0x55c]
+0x7bfab54: strb      w20, [sp, #0x564]
+0x7bfab58: str       w22, [sp, #0x568]
+0x7bfab5c: strb      w20, [sp, #0x570]
+0x7bfab60: strb      w20, [sp, #0x580]
+0x7bfab64: str       w22, [sp, #0x584]
+0x7bfab68: strb      w20, [sp, #0x590]
+0x7bfab6c: strh      w28, [sp, #0x58c]
+0x7bfab70: str       w28, [sp, #0x588]
+0x7bfab74: strb      w20, [sp, #0x598]
+0x7bfab78: strb      w20, [sp, #0x5a0]
+0x7bfab7c: str       w8, [sp, #0x5a4]
+0x7bfab80: stp       xzr, xzr, [x29, #-0x28]
+0x7bfab84: stur      xzr, [x29, #-0x30]
+0x7bfab88: bl        #0x7c05730
+0x7bfab8c: ldurb     w8, [x29, #-0x30]
+0x7bfab90: tbz       w8, #0, #0x7bfab9c
+0x7bfab94: ldur      x0, [x29, #-0x20]
+0x7bfab98: bl        #0x2efa56c
+0x7bfab9c: mov       w9, #0x7d0
+0x7bfaba0: mov       w8, #0x32
+0x7bfaba4: str       w22, [sp, #0x6bc]
+0x7bfaba8: mov       w10, #0xa
+0x7bfabac: str       w22, [sp, #0x6c4]
+0x7bfabb0: ldr       w22, [sp, #0x10]
+0x7bfabb4: str       w9, [sp, #0x5e4]
+0x7bfabb8: mov       w9, #0xee80
+0x7bfabbc: movk      w9, #0x36, lsl #16
+0x7bfabc0: str       w8, [sp, #0x5ec]
+0x7bfabc4: str       w8, [sp, #0x634]
+0x7bfabc8: cmp       w22, #0
+0x7bfabcc: str       w8, [sp, #0x64c]
+0x7bfabd0: str       w9, [sp, #0x5fc]
+0x7bfabd4: mov       w9, #0x20
+0x7bfabd8: str       w8, [sp, #0x664]
+0x7bfabdc: str       w8, [sp, #0x6fc]
+0x7bfabe0: mov       w8, #0x6666
+0x7bfabe4: movk      w8, #0x3f66, lsl #16
+0x7bfabe8: str       x9, [sp, #0x610]
+0x7bfabec: mov       w9, #2
+0x7bfabf0: str       x10, [sp, #0x658]
+0x7bfabf4: mov       w10, #0x14
+0x7bfabf8: strb      w28, [sp, #0x720]
+0x7bfabfc: str       w8, [sp, #0x718]
+0x7bfac00: mov       w8, #0x400
+0x7bfac04: str       x9, [sp, #0x640]
+0x7bfac08: str       x9, [sp, #0x680]
+0x7bfac0c: str       x9, [sp, #0x690]
+0x7bfac10: str       x9, [sp, #0x6b0]
+0x7bfac14: mov       w9, #0x27c0
+0x7bfac18: movk      w9, #9, lsl #16
+0x7bfac1c: str       x8, [sp, #0x760]
+0x7bfac20: str       x8, [sp, #0x770]
+0x7bfac24: mov       w8, #0x100
+0x7bfac28: str       x10, [sp, #0x670]
+0x7bfac2c: mov       w10, #5
+0x7bfac30: str       w9, [sp, #0x6ec]
+0x7bfac34: cset      w9, eq
+0x7bfac38: str       x8, [sp, #0x788]
+0x7bfac3c: mov       w8, #0x1f4
+0x7bfac40: csel      w8, w8, wzr, eq
+0x7bfac44: str       w28, [sp, #0x71c]
+0x7bfac48: strb      w9, [sp, #0x791]
+0x7bfac4c: mov       x9, #0x1f4
+0x7bfac50: movk      x9, #0x101, lsl #32
+0x7bfac54: str       w28, [sp, #0x7b4]
+0x7bfac58: str       w8, [sp, #0x798]
+0x7bfac5c: add       x8, sp, #0x400
+0x7bfac60: add       x8, x8, #0x3ac
+0x7bfac64: movk      x9, #1, lsl #48
+0x7bfac68: str       w28, [sp, #0x7dc]
+0x7bfac6c: mov       x28, x21
+0x7bfac70: ldr       w21, [sp, #0x14]
+0x7bfac74: strb      w20, [sp, #0x5c8]
+0x7bfac78: str       x9, [x8]
+0x7bfac7c: sub       w8, w22, #2
+0x7bfac80: cmp       w8, #2
+0x7bfac84: str       w19, [sp, #0x5cc]
+0x7bfac88: strb      w20, [sp, #0x5d0]
+0x7bfac8c: str       w27, [sp, #0x5d4]
+0x7bfac90: strb      w20, [sp, #0x5d8]
+0x7bfac94: str       w23, [sp, #0x5dc]
+0x7bfac98: strb      w20, [sp, #0x5e0]
+0x7bfac9c: strb      w20, [sp, #0x5e8]
+0x7bfaca0: strb      w20, [sp, #0x5f0]
+0x7bfaca4: str       w23, [sp, #0x5f4]
+0x7bfaca8: strb      w20, [sp, #0x5f8]
+0x7bfacac: strh      w20, [sp, #0x600]
+0x7bfacb0: strb      w20, [sp, #0x608]
+0x7bfacb4: strh      w24, [sp, #0x618]
+0x7bfacb8: strb      w20, [sp, #0x620]
+0x7bfacbc: str       x25, [sp, #0x628]
+0x7bfacc0: strb      w20, [sp, #0x630]
+0x7bfacc4: strb      w20, [sp, #0x638]
+0x7bfacc8: strb      w20, [sp, #0x648]
+0x7bfaccc: strb      w20, [sp, #0x650]
+0x7bfacd0: strb      w20, [sp, #0x660]
+0x7bfacd4: strb      w20, [sp, #0x668]
+0x7bfacd8: strb      w20, [sp, #0x678]
+0x7bfacdc: strb      w20, [sp, #0x688]
+0x7bface0: strb      w20, [sp, #0x698]
+0x7bface4: str       x10, [sp, #0x6a0]
+0x7bface8: strb      w20, [sp, #0x6a8]
+0x7bfacec: strb      w20, [sp, #0x6b8]
+0x7bfacf0: strb      w20, [sp, #0x6c0]
+0x7bfacf4: strb      w20, [sp, #0x6c8]
+0x7bfacf8: str       x20, [sp, #0x6d0]
+0x7bfacfc: strb      w20, [sp, #0x6d8]
+0x7bfad00: str       w26, [sp, #0x6dc]
+0x7bfad04: strb      w20, [sp, #0x6e0]
+0x7bfad08: str       w19, [sp, #0x6e4]
+0x7bfad0c: strb      w20, [sp, #0x6e8]
+0x7bfad10: strb      w20, [sp, #0x6f0]
+0x7bfad14: str       w20, [sp, #0x6f4]
+0x7bfad18: strb      w20, [sp, #0x6f8]
+0x7bfad1c: strh      w20, [sp, #0x700]
+0x7bfad20: strb      w20, [sp, #0x704]
+0x7bfad24: str       w27, [sp, #0x708]
+0x7bfad28: strb      w20, [sp, #0x70c]
+0x7bfad2c: str       w20, [sp, #0x710]
+0x7bfad30: strb      w20, [sp, #0x714]
+0x7bfad34: str       x19, [sp, #0x728]
+0x7bfad38: strb      w20, [sp, #0x730]
+0x7bfad3c: str       w26, [sp, #0x734]
+0x7bfad40: strb      w20, [sp, #0x738]
+0x7bfad44: str       x26, [sp, #0x740]
+0x7bfad48: strb      w20, [sp, #0x748]
+0x7bfad4c: str       w26, [sp, #0x74c]
+0x7bfad50: strh      w24, [sp, #0x750]
+0x7bfad54: strb      w20, [sp, #0x758]
+0x7bfad58: strb      w20, [sp, #0x768]
+0x7bfad5c: strh      w24, [sp, #0x778]
+0x7bfad60: strb      w20, [sp, #0x780]
+0x7bfad64: strb      w20, [sp, #0x790]
+0x7bfad68: strb      w20, [sp, #0x794]
+0x7bfad6c: strh      w20, [sp, #0x79c]
+0x7bfad70: strb      w20, [sp, #0x7a0]
+0x7bfad74: str       w25, [sp, #0x7a4]
+0x7bfad78: strb      w20, [sp, #0x7a8]
+0x7bfad7c: strh      w24, [sp, #0x7d8]
+0x7bfad80: strb      w20, [sp, #0x7da]
+0x7bfad84: strb      wzr, [sp, #0x7db]
+0x7bfad88: strb      w20, [sp, #0x428]
+0x7bfad8c: str       w23, [sp, #0x42c]
+0x7bfad90: b.lo      #0x7bfadbc
+0x7bfad94: cmp       w22, #1
+0x7bfad98: b.eq      #0x7bfae3c
+0x7bfad9c: mov       w20, wzr
+0x7bfada0: cbnz      w22, #0x7bfae68
+0x7bfada4: mov       w8, #0x101
+0x7bfada8: mov       w9, #0x101
+0x7bfadac: movk      w8, #0xc301, lsl #16
+0x7bfadb0: strh      w9, [sp, #0x408]
+0x7bfadb4: str       w8, [sp, #0x404]
+0x7bfadb8: strh      w9, [sp, #0x79c]
+0x7bfadbc: cmp       w21, #2
+0x7bfadc0: b.lo      #0x7bfae58
+0x7bfadc4: b.ne      #0x7bfaf68
+0x7bfadc8: mov       w8, #1
+0x7bfadcc: mov       w9, #0xbb8
+0x7bfadd0: strb      w8, [sp, #0x40c]
+0x7bfadd4: str       w9, [sp, #0x410]
+0x7bfadd8: b         #0x7bfae58
+0x7bfaddc: mov       x19, xzr
+0x7bfade0: mov       x22, xzr
+0x7bfade4: mov       x25, xzr
+0x7bfade8: mov       w8, #1
+0x7bfadec: ldr       x0, [sp, #0x448]
+0x7bfadf0: strb      w8, [sp, #0x440]
+0x7bfadf4: cbnz      x0, #0x7bfa68c
+0x7bfadf8: b         #0x7bfa690
+0x7bfadfc: mov       x19, xzr
+0x7bfae00: mov       x22, xzr
+0x7bfae04: mov       x25, xzr
+0x7bfae08: mov       w8, #1
+0x7bfae0c: ldr       x0, [sp, #0x468]
+0x7bfae10: strb      w8, [sp, #0x460]
+0x7bfae14: cbnz      x0, #0x7bfa858
+0x7bfae18: b         #0x7bfa85c
+0x7bfae1c: mov       x19, xzr
+0x7bfae20: mov       x22, xzr
+0x7bfae24: mov       x25, xzr
+0x7bfae28: mov       w8, #1
+0x7bfae2c: ldr       x0, [sp, #0x7c0]
+0x7bfae30: strb      w8, [sp, #0x7b8]
+0x7bfae34: cbnz      x0, #0x7bfa9f8
+0x7bfae38: b         #0x7bfa9fc
+0x7bfae3c: mov       w9, #0x68c0
+0x7bfae40: mov       w8, #1
+0x7bfae44: movk      w9, #0x478, lsl #16
+0x7bfae48: strb      w8, [sp, #0x498]
+0x7bfae4c: str       x9, [sp, #0x4a0]
+0x7bfae50: cmp       w21, #2
+0x7bfae54: b.hs      #0x7bfadc4
+0x7bfae58: add       x0, sp, #0x20
+0x7bfae5c: add       x1, sp, #0x400
+0x7bfae60: bl        #0x7be6c3c
+0x7bfae64: mov       w20, #1
+0x7bfae68: ldr       x0, [sp, #0x7c0]
+0x7bfae6c: cbz       x0, #0x7bfae78
+0x7bfae70: str       x0, [sp, #0x7c8]
+0x7bfae74: bl        #0x2efa56c
+0x7bfae78: ldrb      w8, [sp, #0x5b0]
+0x7bfae7c: tbz       w8, #0, #0x7bfae88
+0x7bfae80: ldr       x0, [sp, #0x5c0]
+0x7bfae84: bl        #0x2efa56c
+0x7bfae88: ldr       x0, [sp, #0x468]
+0x7bfae8c: cbz       x0, #0x7bfae98
+0x7bfae90: str       x0, [sp, #0x470]
+0x7bfae94: bl        #0x2efa56c
+0x7bfae98: ldr       x0, [sp, #0x448]
+0x7bfae9c: cbz       x0, #0x7bfaea8
+0x7bfaea0: str       x0, [sp, #0x450]
+0x7bfaea4: bl        #0x2efa56c
+0x7bfaea8: add       x0, sp, #0x400
+0x7bfaeac: add       x1, sp, #0x20
+0x7bfaeb0: bl        #0x7bfb458
+0x7bfaeb4: bl        #0x7d2bf4c
+0x7bfaeb8: cbz       x0, #0x7bfb050
+0x7bfaebc: sub       x8, x29, #0x30
+0x7bfaec0: ldr       x19, [x0, #0x18]
+0x7bfaec4: add       x23, x8, #8
+0x7bfaec8: mov       w1, wzr
+0x7bfaecc: mov       x0, x23
+0x7bfaed0: sturb     wzr, [x29, #-0x30]
+0x7bfaed4: bl        #0x2f912cc
+0x7bfaed8: sub       x8, x29, #0x50
+0x7bfaedc: mov       w1, wzr
+0x7bfaee0: add       x24, x8, #8
+0x7bfaee4: sturb     wzr, [x29, #-0x50]
+0x7bfaee8: mov       x0, x24
+0x7bfaeec: bl        #0x2f912cc
+0x7bfaef0: cmp       w22, #2
+0x7bfaef4: b.eq      #0x7bfafdc
+0x7bfaef8: cmp       w22, #1
+0x7bfaefc: b.eq      #0x7bfaf78
+0x7bfaf00: cbnz      w22, #0x7bfb040
+0x7bfaf04: add       x26, x19, #8
+0x7bfaf08: mov       x0, x26
+0x7bfaf0c: bl        #0x2efc42c
+0x7bfaf10: add       x25, x19, #0x70
+0x7bfaf14: adrp      x2, #0xbc9000
+0x7bfaf18: add       x2, x2, #0xa2b
+0x7bfaf1c: mov       x0, x25
+0x7bfaf20: mov       x1, x23
+0x7bfaf24: bl        #0x7d2ad08
+0x7bfaf28: add       x22, x19, #0x10
+0x7bfaf2c: mov       w27, w0
+0x7bfaf30: mov       x0, x22
+0x7bfaf34: bl        #0x8b38640
+0x7bfaf38: and       w8, w27, #1
+0x7bfaf3c: cmp       w21, #2
+0x7bfaf40: sturb     w8, [x29, #-0x30]
+0x7bfaf44: b.eq      #0x7bfb0ac
+0x7bfaf48: cmp       w21, #1
+0x7bfaf4c: b.eq      #0x7bfb05c
+0x7bfaf50: cbnz      w21, #0x7bfb040
+0x7bfaf54: mov       x0, x26
+0x7bfaf58: bl        #0x2efc42c
+0x7bfaf5c: adrp      x2, #0xbb6000 ; STR='CS_HIGH_LEVEL'
+0x7bfaf60: add       x2, x2, #0x4a4
+0x7bfaf64: b         #0x7bfb0d0
+0x7bfaf68: mov       w20, wzr
+0x7bfaf6c: ldr       x0, [sp, #0x7c0]
+0x7bfaf70: cbnz      x0, #0x7bfae70
+0x7bfaf74: b         #0x7bfae78
+0x7bfaf78: add       x26, x19, #8
+0x7bfaf7c: mov       x0, x26
+0x7bfaf80: bl        #0x2efc42c
+0x7bfaf84: add       x25, x19, #0x70
+0x7bfaf88: adrp      x2, #0xa25000 ; STR='P2P'
+0x7bfaf8c: add       x2, x2, #0xd8d
+0x7bfaf90: mov       x0, x25
+0x7bfaf94: mov       x1, x23
+0x7bfaf98: bl        #0x7d2ad08
+0x7bfaf9c: add       x22, x19, #0x10
+0x7bfafa0: mov       w27, w0
+0x7bfafa4: mov       x0, x22
+0x7bfafa8: bl        #0x8b38640
+0x7bfafac: and       w8, w27, #1
+0x7bfafb0: cmp       w21, #2
+0x7bfafb4: sturb     w8, [x29, #-0x30]
+0x7bfafb8: b.eq      #0x7bfb070
+0x7bfafbc: cmp       w21, #1
+0x7bfafc0: b.eq      #0x7bfb084
+0x7bfafc4: cbnz      w21, #0x7bfb040
+0x7bfafc8: mov       x0, x26
+0x7bfafcc: bl        #0x2efc42c
+0x7bfafd0: adrp      x2, #0xb68000 ; STR='P2P_HIGH_LEVEL'
+0x7bfafd4: add       x2, x2, #0xe29
+0x7bfafd8: b         #0x7bfb0d0
+0x7bfafdc: add       x26, x19, #8
+0x7bfafe0: mov       x0, x26
+0x7bfafe4: bl        #0x2efc42c
+0x7bfafe8: add       x25, x19, #0x70
+0x7bfafec: adrp      x2, #0xa84000 ; STR='P2P_ADHOC'
+0x7bfaff0: add       x2, x2, #0xe75
+0x7bfaff4: mov       x0, x25
+0x7bfaff8: mov       x1, x23
+0x7bfaffc: bl        #0x7d2ad08
+0x7bfb000: add       x22, x19, #0x10
+0x7bfb004: mov       w27, w0
+0x7bfb008: mov       x0, x22
+0x7bfb00c: bl        #0x8b38640
+0x7bfb010: and       w8, w27, #1
+0x7bfb014: cmp       w21, #2
+0x7bfb018: sturb     w8, [x29, #-0x30]
+0x7bfb01c: b.eq      #0x7bfb0c0
+0x7bfb020: cmp       w21, #1
+0x7bfb024: b.eq      #0x7bfb098
+0x7bfb028: cbnz      w21, #0x7bfb040
+0x7bfb02c: mov       x0, x26
+0x7bfb030: bl        #0x2efc42c
+0x7bfb034: adrp      x2, #0xa13000 ; STR='P2P_ADHOC_UNKNOWN_HIGH_LEVEL'
+0x7bfb038: add       x2, x2, #0x2d9
+0x7bfb03c: b         #0x7bfb0d0
+0x7bfb040: mov       x0, x24
+0x7bfb044: bl        #0x2f91730
+0x7bfb048: mov       x0, x23
+0x7bfb04c: bl        #0x2f91730
+0x7bfb050: cbz       w20, #0x7bfb1a0
+0x7bfb054: add       x1, sp, #0x400
+0x7bfb058: b         #0x7bfb148
+0x7bfb05c: mov       x0, x26
+0x7bfb060: bl        #0x2efc42c
+0x7bfb064: adrp      x2, #0xbef000 ; STR='CS_LOW_LEVEL'
+0x7bfb068: add       x2, x2, #0x1c7
+0x7bfb06c: b         #0x7bfb0d0
+0x7bfb070: mov       x0, x26
+0x7bfb074: bl        #0x2efc42c
+0x7bfb078: adrp      x2, #0xbc9000 ; STR='P2P_GIVE_UP_QUICKLY_LEVEL'
+0x7bfb07c: add       x2, x2, #0xa2e
+0x7bfb080: b         #0x7bfb0d0
+0x7bfb084: mov       x0, x26
+0x7bfb088: bl        #0x2efc42c
+0x7bfb08c: adrp      x2, #0xad1000 ; STR='P2P_LOW_LEVEL'
+0x7bfb090: add       x2, x2, #0x238
+0x7bfb094: b         #0x7bfb0d0
+0x7bfb098: mov       x0, x26
+0x7bfb09c: bl        #0x2efc42c
+0x7bfb0a0: adrp      x2, #0xc02000 ; STR='P2P_ADHOC_UNKNOWN_LOW_LEVEL'
+0x7bfb0a4: add       x2, x2, #0x3f1
+0x7bfb0a8: b         #0x7bfb0d0
+0x7bfb0ac: mov       x0, x26
+0x7bfb0b0: bl        #0x2efc42c
+0x7bfb0b4: adrp      x2, #0xa72000 ; STR='CS_GIVE_UP_QUICKLY_LEVEL'
+0x7bfb0b8: add       x2, x2, #0x10b
+0x7bfb0bc: b         #0x7bfb0d0
+0x7bfb0c0: mov       x0, x26
+0x7bfb0c4: bl        #0x2efc42c
+0x7bfb0c8: adrp      x2, #0xa72000 ; STR='P2P_ADHOC_UNKNOWN_GIVE_UP_QUICKLY_LEVEL'
+0x7bfb0cc: add       x2, x2, #0x124
+0x7bfb0d0: mov       x0, x25
+0x7bfb0d4: mov       x1, x24
+0x7bfb0d8: bl        #0x7d2ad08
+0x7bfb0dc: mov       w21, w0
+0x7bfb0e0: mov       x0, x22
+0x7bfb0e4: bl        #0x8b38640
+0x7bfb0e8: and       w8, w21, #1
+0x7bfb0ec: ldurb     w9, [x29, #-0x30]
+0x7bfb0f0: sturb     w8, [x29, #-0x50]
+0x7bfb0f4: cbz       w9, #0x7bfb258
+0x7bfb0f8: add       x0, sp, #0x20
+0x7bfb0fc: mov       x1, x23
+0x7bfb100: bl        #0x7c05844
+0x7bfb104: mov       w21, w0
+0x7bfb108: ldurb     w8, [x29, #-0x50]
+0x7bfb10c: cbz       w8, #0x7bfb120
+0x7bfb110: add       x0, sp, #0x20
+0x7bfb114: mov       x1, x24
+0x7bfb118: bl        #0x7c05844
+0x7bfb11c: orr       w21, w21, w0
+0x7bfb120: mov       x0, x24
+0x7bfb124: bl        #0x2f91730
+0x7bfb128: mov       x0, x23
+0x7bfb12c: bl        #0x2f91730
+0x7bfb130: tst       w21, #1
+0x7bfb134: add       x9, sp, #0x400
+0x7bfb138: add       x10, sp, #0x20
+0x7bfb13c: orr       w8, w21, w20
+0x7bfb140: csel      x1, x10, x9, ne
+0x7bfb144: tbz       w8, #0, #0x7bfb1a0
+0x7bfb148: ldr       x0, [sp, #0x18]
+0x7bfb14c: bl        #0x7be6c3c
+0x7bfb150: ldr       w8, [sp, #0xc]
+0x7bfb154: tbz       w8, #0, #0x7bfb410
+0x7bfb158: mov       w0, #0x1a3
+0x7bfb15c: mov       w1, wzr
+
+=== PARENT x22 PROFILE FIELD ACCESSES 0x7c0dca0-0x7c0e330 ===
+0x7c0dcb0: stp       x22, x21, [sp, #0x40]
+0x7c0dccc: mov       x22, x1
+0x7c0dd58: str       xzr, [x23, #0x220]
+0x7c0dd68: str       xzr, [x23, #0x228]
+0x7c0dedc: ldr       w2, [x22, #0x28]
+0x7c0dee4: ldrb      w3, [x22, #0x100]
+0x7c0e0e4: str       xzr, [sp, #0x220]
+0x7c0e0e8: strh      wzr, [sp, #0x228]
+0x7c0e230: ldr       w2, [x22, #0x20]
+0x7c0e238: ldr       w3, [x22, #0x28]
+0x7c0e240: ldrb      w4, [x22, #0x100]
+0x7c0e28c: mov       x22, x0
+0x7c0e2a4: mov       x22, x0
+0x7c0e2c8: mov       x22, x0
+0x7c0e2e4: mov       x22, x0
+0x7c0e2f0: str       x22, [x27]
+
+=== PROFILE LOADER x19 OBJECT WRITES 0x7bfc91c-0x7bfdbf4 ===
+0x7bfc930: stp       x20, x19, [sp, #0x50]
+0x7bfc95c: add       x19, sp, #0x260
+0x7bfc994: stur      q0, [x19, #0xe9]
+0x7bfc998: stp       q0, q0, [x19, #0x10]
+0x7bfc99c: stp       q0, q0, [x19, #0x30]
+0x7bfc9a0: stp       q0, q0, [x19, #0x50]
+0x7bfc9a4: stp       q0, q0, [x19, #0x70]
+0x7bfc9a8: stp       q0, q0, [x19, #0x90]
+0x7bfc9ac: stp       q0, q0, [x19, #0xb0]
+0x7bfc9b0: stp       q0, q0, [x19, #0xd0]
+0x7bfc9b4: str       q0, [x19]
+0x7bfc9b8: stp       q0, q0, [x19, #0x100]
+0x7bfc9bc: str       q0, [x19, #0x120]
+0x7bfce54: add       x23, x19, #0x100
+0x7bfd4d4: add       x20, x19, #0x11c
+0x7bfd5e4: add       x21, x19, #0x120
+0x7bfd5ec: add       x19, x19, #0x128
+0x7bfd624: add       x19, sp, #0x118
+0x7bfd750: ldr       x11, [x19]
+0x7bfd820: sub       x19, x8, #1
+0x7bfd910: add       x19, x21, #0xff
+0x7bfd958: mov       x19, xzr
+0x7bfd9bc: add       x19, x22, x23
+0x7bfd9e0: str       x19, [sp, #0x240]
+0x7bfdb6c: ldr       x19, [sp, #0x108]
+0x7bfdb74: str       x20, [x19]
+0x7bfdb94: str       x8, [x19, #8]
+0x7bfdbbc: ldp       x20, x19, [sp, #0x50]
+
+=== CRYPTO/P2P STRING CATALOG ===
+0x113dd7 criAtomDspSpectra_Destroy
+0x113df1 criAtomDspSpectra_Create
+0x113e36 criAtomDspSpectra_Process
+0x113e50 criAtomDspSpectra_Reset
+0x113e76 criAtomDspSpectra_GetLevels
+0x114889 criFsLoader_SetInplaceDecryptionCbFunc
+0x115147 criAtomDecrypter_CalculateWorkSize
+0x11516a criAtomDecrypter_Create
+0x115182 criAtomDecrypter_Destroy
+0x117b41 criAtomExAcb_Decrypt
+0x11acd6 criManaDecrypter_CalculateWorkSize
+0x11acf9 criManaDecrypter_Create
+0x11ad11 criManaDecrypter_Destroy
+0x12216c _ZN5physx9immediate18PxGenerateContactsEPKPKNS_10PxGeometryES5_PKNS_11PxTransformES8_PNS_7PxCacheEjRNS0_17PxContactRecorderEfffRNS_16PxCacheAllocatorE
+0x124744 criAtomDspSpectra_CalculateWorkSize
+0x14a15e _Z37getPxScene_DynamicTreeRebuildRateHintPKN5physx7PxSceneE
+0x14a60d _Z37setPxScene_DynamicTreeRebuildRateHintPN5physx7PxSceneEj
+0x14b60f _Z40getPxRigidDynamic_ContactReportThresholdPKN5physx14PxRigidDynamicE
+0x14b69d _Z40getPxSceneDescDynamicTreeRebuildRateHintPKN5physx11PxSceneDescE
+0x14b6e1 _Z40getPxScene_ContactReportStreamBufferSizePKN5physx7PxSceneE
+0x14ba07 _Z40setPxRigidDynamic_ContactReportThresholdPN5physx14PxRigidDynamicEf
+0x14ba95 _Z40setPxSceneDescDynamicTreeRebuildRateHintPN5physx11PxSceneDescEj
+0x14c224 _Z43getPxSceneDescContactReportStreamBufferSizePKN5physx11PxSceneDescE
+0x14c2be _Z43setPxSceneDescContactReportStreamBufferSizePN5physx11PxSceneDescEj
+0x15eb1e _ZN5physx14NpRigidDynamic25setContactReportThresholdEf
+0x15ff4a _ZNK5physx14NpRigidDynamic25getContactReportThresholdEv
+0x164ce9 _ZN5physx2Sq17SceneQueryManager23forceDynamicTreeRebuildEbb
+0x164d79 _ZN5physx2Sq17SceneQueryManager29setDynamicTreeRebuildRateHintEj
+0x1662d5 _ZN5physx7NpScene23forceDynamicTreeRebuildEbb
+0x166662 _ZN5physx7NpScene29setDynamicTreeRebuildRateHintEj
+0x1674bf _ZNK5physx2Sc5Scene39getDefaultContactReportStreamBufferSizeEv
+0x167dc4 _ZNK5physx7NpScene29getDynamicTreeRebuildRateHintEv
+0x167e97 _ZNK5physx7NpScene32getContactReportStreamBufferSizeEv
+0x168816 _ZN5physx2Gu17intersectRayAABB2ERKNS_6PxVec3ES3_S3_S3_fRfS4_
+0x1838c7 _ZN5physx19PxsMaterialCombiner18combineRestitutionERKNS_15PxsMaterialDataES3_
+0x183915 _ZN5physx19PxsMaterialCombiner24combineIsotropicFrictionERKNS_15PxsMaterialDataES3_
+0x18f2a1 _ZNK5physx5cloth9SwFactory20extractRestPositionsERKNS0_5ClothENS0_5RangeINS_6PxVec4EEE
+0x18f72e _ZThn8_NK5physx5cloth9SwFactory20extractRestPositionsERKNS0_5ClothENS0_5RangeINS_6PxVec4EEE
+0x19268b _ZN5physx2Dy14preprocessRowsEPPNS_14Px1DConstraintES2_PNS_6PxVec4ES5_jRKNS_16PxSolverBodyDataES8_RKNS_24PxConstraintInvMassScaleEbb
+0x193aca _ZN5physx2Dy16ContactReductionILj6EE14reduceContactsEv
+0x1950cb _ZN5physx2Dy11writeBack1DERKNS_22PxSolverConstraintDescERNS0_13SolverContextERNS_16PxSolverBodyDataES7_
+0x19536f _ZN5physx2Dy16writeBackContactERKNS_22PxSolverConstraintDescERNS0_13SolverContextERNS_16PxSolverBodyDataES7_
+0x195af1 _ZN5physx2Dy12writeBack1D4EPKNS_22PxSolverConstraintDescERNS0_13SolverContextEPPKNS_16PxSolverBodyDataES9_
+0x195d10 _ZN5physx2Dy23writeBackContact4_BlockEPKNS_22PxSolverConstraintDescERNS0_13SolverContextEPPKNS_16PxSolverBodyDataES9_
+0x1970e2 _ZN5physx2Dy23writeBackContactCoulombERKNS_22PxSolverConstraintDescERNS0_13SolverContextERNS_16PxSolverBodyDataES7_
+0x1973a0 _ZN5physx2Dy24writeBackContactCoulomb4EPKNS_22PxSolverConstraintDescERNS0_13SolverContextEPPKNS_16PxSolverBodyDataES9_
+0x1a68a5 _ZN5physx2Sc10NPhaseCore27resizeContactReportPairDataEjjRNS0_20ContactStreamManagerE
+0x1a68fa _ZN5physx2Sc10NPhaseCore28clearContactReportActorPairsEb
+0x1a6992 _ZN5physx2Sc10NPhaseCore28reserveContactReportPairDataEjjRj
+0x1a6af1 _ZN5physx2Sc10NPhaseCore32createActorPairContactReportDataEv
+0x1a6bdf _ZN5physx2Sc10NPhaseCore33releaseActorPairContactReportDataEPNS0_26ActorPairContactReportDataE
+0x1a7175 _ZN5physx2Sc16ShapeInteraction34setContactReportPostSolverVelocityERNS0_20ContactStreamManagerE
+0x1a78ca _ZN5physx6shdfnd4sortIPvNS0_4LessIS2_EENS0_19ReflectionAllocatorINS_2Sc26ActorPairContactReportDataEEEEEvPT_jRKT0_RKT1_j
+0x1a7fb3 _ZN5physx6shdfnd5ArrayIPvNS0_15InlineAllocatorILj512ENS0_19ReflectionAllocatorINS_2Sc26ActorPairContactReportDataEEEEEE15growAndPushBackERKS2_
+0x1a83d6 _ZN5physx6shdfnd5ArrayIPvNS0_19ReflectionAllocatorINS_2Sc26ActorPairContactReportDataEEEE15growAndPushBackERKS2_
+0x1a879f _ZN5physx6shdfnd8PoolBaseINS_2Sc26ActorPairContactReportDataENS0_19ReflectionAllocatorIS3_EEE15disposeElementsEv
+0x1a8b32 _ZN5physx6shdfnd8internal5StackINS0_19ReflectionAllocatorINS_2Sc26ActorPairContactReportDataEEEE4growEv
+0x1a95c6 _ZNK5physx2Sc10NPhaseCore39getDefaultContactReportStreamBufferSizeEv
+0x1ada0f _ZN5physx2Sc5Scene23setCreateContactReportsEb
+0x1bd1b3 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_15PxParticleFluidEEEEclILj189ENS_14PxParticleBaseERKNS_12PxFilterDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x1be9bb _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_16PxParticleSystemEEEEclILj189ENS_14PxParticleBaseERKNS_12PxFilterDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x1c3486 _ZN5physx2Sn21RepXVisitorReaderBaseINS_15PxParticleFluidEE14simplePropertyIKNS_22PxRepXPropertyAccessorILj189ENS_14PxParticleBaseERKNS_12PxFilterDataES7_EEEEvjRT_
+0x1c37a6 _ZN5physx2Sn21RepXVisitorReaderBaseINS_16PxParticleSystemEE14simplePropertyIKNS_22PxRepXPropertyAccessorILj189ENS_14PxParticleBaseERKNS_12PxFilterDataES7_EEEEvjRT_
+0x1e1e67 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_7PxClothEEEEclILj174ES3_RKNS_12PxFilterDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x1e24f7 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_7PxShapeEEEEclILj127ES3_RKNS_12PxFilterDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x1e258b _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_7PxShapeEEEEclILj128ES3_RKNS_12PxFilterDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x1ed31e _ZN5physx2Sn21RepXVisitorReaderBaseINS_7PxClothEE14simplePropertyIKNS_22PxRepXPropertyAccessorILj174ES2_RKNS_12PxFilterDataES6_EEEEvjRT_
+0x1f8aa6 _ZN5physx2Sn12PointerRemap12setObjectRefEmj
+0x1f9092 _ZNK5physx2Sn12PointerRemap12getObjectRefEmRj
+0x1fbd7c _ZN5physx2Gu10computeMTDERNS0_13PolygonalDataES2_PNS0_12SupportLocalES4_R13__Float32x2_tR13__Float32x4_t
+0x1fd707 _ZN5physx2Gu18intersectRaySphereERKNS_6PxVec3ES3_fS3_fRfPS1_
+0x1fd7fb _ZN5physx2Gu27intersectRayCapsuleInternalERKNS_6PxVec3ES3_S3_S3_fPf
+0x202c01 _ZN5physx2Gu16intersectRayAABBERKNS_6PxVec3ES3_S3_S3_RfS4_
+0x205525 _ZN5physx2Gu16intersectRayAABBERKNS_6PxVec3ES3_S3_S3_S3_RfS4_
+0x20559d _ZN5physx2Gu17intersectRayAABB2ERK13__Float32x4_tS3_S3_S3_RK13__Float32x2_tRS4_S7_
+0x2055f0 _ZN5physx2Gu23intersectRaySphereBasicERKNS_6PxVec3ES3_fS3_fRfPS1_
+0x206c94 _ZN5physx2Gu5RTree18refitAllStaticTreeERNS1_13CallbackRefitEPNS_9PxBounds3E
+0x2086ed _ZN5physx2Gu27generateFullContactManifoldERNS0_13PolygonalDataES2_PNS0_12SupportLocalES4_PNS0_17PersistentContactERjRK13__Float32x2_tRK13__Float32x4_tSD_SD_ffbPNS_2Cm12RenderOutputEf
+0x20a8ef _ZN5physx2Gu17generatedContactsERNS0_13PolygonalDataES2_RKNS0_15HullPolygonDataES5_PNS0_12SupportLocalES7_RKNS_6shdfnd3aos15PsMatTransformVEPNS0_17PersistentContactERjRK13__Float32x2_tPNS_2Cm12RenderOutputE
+0x21233d _ZN5physx6pvdsdk15RemoveObjectRef9serializeERNS0_18PvdEventSerializerE
+0x212384 _ZN5physx6pvdsdk15RemoveObjectRefD0Ev
+0x212c09 _ZN5physx6pvdsdk17PushBackObjectRef9serializeERNS0_18PvdEventSerializerE
+0x212c52 _ZN5physx6pvdsdk17PushBackObjectRefD0Ev
+0x2134e6 _ZTVN5physx6pvdsdk15RemoveObjectRefE
+0x2135cf _ZTVN5physx6pvdsdk17PushBackObjectRefE
+0x213ae7 _ZN5physx6pvdsdk15ObjectRegistrarD0Ev
+0x213b0d _ZN5physx6pvdsdk15ObjectRegistrarD2Ev
+0x213f19 _ZN5physx6pvdsdk15ObjectRegistrar5clearEv
+0x213f43 _ZN5physx6pvdsdk15ObjectRegistrar7addItemEPKv
+0x213f71 _ZN5physx6pvdsdk15ObjectRegistrar7decItemEPKv
+0x21472e _ZTVN5physx6pvdsdk15ObjectRegistrarE
+0x214990 _ZN5physx6pvdsdk12PvdMemClient18setObjectRegistrarEPNS0_15ObjectRegistrarE
+0x21612f _ZN5physx6pvdsdk20PvdProfileZoneClient18setObjectRegistrarEPNS0_15ObjectRegistrarE
+0x217c38 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_16PxVehicleDrive4WEEEEclILj672ENS_15PxVehicleWheelsENS_22PxVehicleWheelsSimDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x217cf0 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_16PxVehicleDrive4WEEEEclILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x217da8 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_16PxVehicleDrive4WEEEEclILj707ENS_14PxVehicleDriveENS_21PxVehicleDriveDynDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x217f05 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_16PxVehicleDriveNWEEEEclILj672ENS_15PxVehicleWheelsENS_22PxVehicleWheelsSimDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x217fbd _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_16PxVehicleDriveNWEEEEclILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x218075 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_16PxVehicleDriveNWEEEEclILj707ENS_14PxVehicleDriveENS_21PxVehicleDriveDynDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x2181d2 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_16PxVehicleNoDriveEEEEclILj672ENS_15PxVehicleWheelsENS_22PxVehicleWheelsSimDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21828a _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_16PxVehicleNoDriveEEEEclILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x2185f4 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_18PxVehicleDriveTankEEEEclILj672ENS_15PxVehicleWheelsENS_22PxVehicleWheelsSimDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x2186ae _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_18PxVehicleDriveTankEEEEclILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x218768 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_18PxVehicleDriveTankEEEEclILj707ENS_14PxVehicleDriveENS_21PxVehicleDriveDynDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x2188d6 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_18PxVehicleDriveTankEEEEclILj716ES3_NS_21PxVehicleDriveSimDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x219f17 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_21PxVehicleDriveSimDataEEEEclILj696ES3_RKNS_19PxVehicleEngineDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x219fc1 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_21PxVehicleDriveSimDataEEEEclILj697ES3_RKNS_18PxVehicleGearsDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21a06a _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_21PxVehicleDriveSimDataEEEEclILj698ES3_RKNS_19PxVehicleClutchDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21a114 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_21PxVehicleDriveSimDataEEEEclILj699ES3_RKNS_20PxVehicleAutoBoxDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21a1bf _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_22PxVehicleWheelsSimDataEEEEclILj655ES3_RKNS_27PxVehicleTireLoadFilterDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21a4b2 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_23PxVehicleDriveSimData4WEEEEclILj696ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleEngineDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21a576 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_23PxVehicleDriveSimData4WEEEEclILj697ENS_21PxVehicleDriveSimDataERKNS_18PxVehicleGearsDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21a639 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_23PxVehicleDriveSimData4WEEEEclILj698ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleClutchDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21a6fd _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_23PxVehicleDriveSimData4WEEEEclILj699ENS_21PxVehicleDriveSimDataERKNS_20PxVehicleAutoBoxDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21a7c2 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_23PxVehicleDriveSimData4WEEEEclILj702ES3_RKNS_27PxVehicleDifferential4WDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21a876 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_23PxVehicleDriveSimData4WEEEEclILj703ES3_RKNS_30PxVehicleAckermannGeometryDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21a92d _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_23PxVehicleDriveSimDataNWEEEEclILj696ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleEngineDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21a9f1 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_23PxVehicleDriveSimDataNWEEEEclILj697ENS_21PxVehicleDriveSimDataERKNS_18PxVehicleGearsDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21aab4 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_23PxVehicleDriveSimDataNWEEEEclILj698ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleClutchDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21ab78 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_23PxVehicleDriveSimDataNWEEEEclILj699ENS_21PxVehicleDriveSimDataERKNS_20PxVehicleAutoBoxDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21ac3d _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorReaderINS_23PxVehicleDriveSimDataNWEEEEclILj719ES3_RKNS_27PxVehicleDifferentialNWDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x21cd36 _ZN5physx2Sn21RepXVisitorReaderBaseINS_16PxVehicleDrive4WEE15complexPropertyINS_22PxRepXPropertyAccessorILj672ENS_15PxVehicleWheelsENS_22PxVehicleWheelsSimDataES7_EEKNS_35PxVehicleWheelsSimDataGeneratedInfoEEEvPjRKT_RT0_
+0x21ce13 _ZN5physx2Sn21RepXVisitorReaderBaseINS_16PxVehicleDrive4WEE15complexPropertyINS_22PxRepXPropertyAccessorILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataES7_EEKNS_35PxVehicleWheelsDynDataGeneratedInfoEEEvPjRKT_RT0_
+0x21cef0 _ZN5physx2Sn21RepXVisitorReaderBaseINS_16PxVehicleDrive4WEE15complexPropertyINS_22PxRepXPropertyAccessorILj707ENS_14PxVehicleDriveENS_21PxVehicleDriveDynDataES7_EEKNS_34PxVehicleDriveDynDataGeneratedInfoEEEvPjRKT_RT0_
+0x21d097 _ZN5physx2Sn21RepXVisitorReaderBaseINS_16PxVehicleDriveNWEE15complexPropertyINS_22PxRepXPropertyAccessorILj672ENS_15PxVehicleWheelsENS_22PxVehicleWheelsSimDataES7_EEKNS_35PxVehicleWheelsSimDataGeneratedInfoEEEvPjRKT_RT0_
+0x21d174 _ZN5physx2Sn21RepXVisitorReaderBaseINS_16PxVehicleDriveNWEE15complexPropertyINS_22PxRepXPropertyAccessorILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataES7_EEKNS_35PxVehicleWheelsDynDataGeneratedInfoEEEvPjRKT_RT0_
+0x21d251 _ZN5physx2Sn21RepXVisitorReaderBaseINS_16PxVehicleDriveNWEE15complexPropertyINS_22PxRepXPropertyAccessorILj707ENS_14PxVehicleDriveENS_21PxVehicleDriveDynDataES7_EEKNS_34PxVehicleDriveDynDataGeneratedInfoEEEvPjRKT_RT0_
+0x21d446 _ZN5physx2Sn21RepXVisitorReaderBaseINS_16PxVehicleNoDriveEE15complexPropertyINS_22PxRepXPropertyAccessorILj672ENS_15PxVehicleWheelsENS_22PxVehicleWheelsSimDataES7_EEKNS_35PxVehicleWheelsSimDataGeneratedInfoEEEvPjRKT_RT0_
+0x21d523 _ZN5physx2Sn21RepXVisitorReaderBaseINS_16PxVehicleNoDriveEE15complexPropertyINS_22PxRepXPropertyAccessorILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataES7_EEKNS_35PxVehicleWheelsDynDataGeneratedInfoEEEvPjRKT_RT0_
+0x21d934 _ZN5physx2Sn21RepXVisitorReaderBaseINS_18PxVehicleDriveTankEE15complexPropertyINS_22PxRepXPropertyAccessorILj672ENS_15PxVehicleWheelsENS_22PxVehicleWheelsSimDataES7_EEKNS_35PxVehicleWheelsSimDataGeneratedInfoEEEvPjRKT_RT0_
+0x21da13 _ZN5physx2Sn21RepXVisitorReaderBaseINS_18PxVehicleDriveTankEE15complexPropertyINS_22PxRepXPropertyAccessorILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataES7_EEKNS_35PxVehicleWheelsDynDataGeneratedInfoEEEvPjRKT_RT0_
+0x21daf2 _ZN5physx2Sn21RepXVisitorReaderBaseINS_18PxVehicleDriveTankEE15complexPropertyINS_22PxRepXPropertyAccessorILj707ENS_14PxVehicleDriveENS_21PxVehicleDriveDynDataES7_EEKNS_34PxVehicleDriveDynDataGeneratedInfoEEEvPjRKT_RT0_
+0x21dbce _ZN5physx2Sn21RepXVisitorReaderBaseINS_18PxVehicleDriveTankEE15complexPropertyINS_22PxRepXPropertyAccessorILj716ES2_NS_21PxVehicleDriveSimDataES6_EEKNS_34PxVehicleDriveSimDataGeneratedInfoEEEvPjRKT_RT0_
+0x21e07d _ZN5physx2Sn21RepXVisitorReaderBaseINS_21PxVehicleDriveSimDataEE15complexPropertyINS_22PxRepXPropertyAccessorILj696ES2_RKNS_19PxVehicleEngineDataES6_EEKNS_32PxVehicleEngineDataGeneratedInfoEEEvPjRKT_RT0_
+0x21e149 _ZN5physx2Sn21RepXVisitorReaderBaseINS_21PxVehicleDriveSimDataEE15complexPropertyINS_22PxRepXPropertyAccessorILj697ES2_RKNS_18PxVehicleGearsDataES6_EEKNS_31PxVehicleGearsDataGeneratedInfoEEEvPjRKT_RT0_
+0x21e213 _ZN5physx2Sn21RepXVisitorReaderBaseINS_21PxVehicleDriveSimDataEE15complexPropertyINS_22PxRepXPropertyAccessorILj698ES2_RKNS_19PxVehicleClutchDataES6_EEKNS_32PxVehicleClutchDataGeneratedInfoEEEvPjRKT_RT0_
+0x21e2df _ZN5physx2Sn21RepXVisitorReaderBaseINS_21PxVehicleDriveSimDataEE15complexPropertyINS_22PxRepXPropertyAccessorILj699ES2_RKNS_20PxVehicleAutoBoxDataES6_EEKNS_33PxVehicleAutoBoxDataGeneratedInfoEEEvPjRKT_RT0_
+0x21e5d3 _ZN5physx2Sn21RepXVisitorReaderBaseINS_22PxVehicleWheelsSimDataEE15complexPropertyINS_22PxRepXPropertyAccessorILj655ES2_RKNS_27PxVehicleTireLoadFilterDataES6_EEKNS_40PxVehicleTireLoadFilterDataGeneratedInfoEEEvPjRKT_RT0_
+0x21efac _ZN5physx2Sn21RepXVisitorReaderBaseINS_23PxVehicleDriveSimData4WEE15complexPropertyINS_22PxRepXPropertyAccessorILj696ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleEngineDataES7_EEKNS_32PxVehicleEngineDataGeneratedInfoEEEvPjRKT_RT0_
+0x21f092 _ZN5physx2Sn21RepXVisitorReaderBaseINS_23PxVehicleDriveSimData4WEE15complexPropertyINS_22PxRepXPropertyAccessorILj697ENS_21PxVehicleDriveSimDataERKNS_18PxVehicleGearsDataES7_EEKNS_31PxVehicleGearsDataGeneratedInfoEEEvPjRKT_RT0_
+0x21f176 _ZN5physx2Sn21RepXVisitorReaderBaseINS_23PxVehicleDriveSimData4WEE15complexPropertyINS_22PxRepXPropertyAccessorILj698ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleClutchDataES7_EEKNS_32PxVehicleClutchDataGeneratedInfoEEEvPjRKT_RT0_
+0x21f25c _ZN5physx2Sn21RepXVisitorReaderBaseINS_23PxVehicleDriveSimData4WEE15complexPropertyINS_22PxRepXPropertyAccessorILj699ENS_21PxVehicleDriveSimDataERKNS_20PxVehicleAutoBoxDataES7_EEKNS_33PxVehicleAutoBoxDataGeneratedInfoEEEvPjRKT_RT0_
+0x21f344 _ZN5physx2Sn21RepXVisitorReaderBaseINS_23PxVehicleDriveSimData4WEE15complexPropertyINS_22PxRepXPropertyAccessorILj702ES2_RKNS_27PxVehicleDifferential4WDataES6_EEKNS_40PxVehicleDifferential4WDataGeneratedInfoEEEvPjRKT_RT0_
+0x21f422 _ZN5physx2Sn21RepXVisitorReaderBaseINS_23PxVehicleDriveSimData4WEE15complexPropertyINS_22PxRepXPropertyAccessorILj703ES2_RKNS_30PxVehicleAckermannGeometryDataES6_EEKNS_43PxVehicleAckermannGeometryDataGeneratedInfoEEEvPjRKT_RT0_
+0x21f506 _ZN5physx2Sn21RepXVisitorReaderBaseINS_23PxVehicleDriveSimDataNWEE15complexPropertyINS_22PxRepXPropertyAccessorILj696ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleEngineDataES7_EEKNS_32PxVehicleEngineDataGeneratedInfoEEEvPjRKT_RT0_
+0x21f5ec _ZN5physx2Sn21RepXVisitorReaderBaseINS_23PxVehicleDriveSimDataNWEE15complexPropertyINS_22PxRepXPropertyAccessorILj697ENS_21PxVehicleDriveSimDataERKNS_18PxVehicleGearsDataES7_EEKNS_31PxVehicleGearsDataGeneratedInfoEEEvPjRKT_RT0_
+0x21f6d0 _ZN5physx2Sn21RepXVisitorReaderBaseINS_23PxVehicleDriveSimDataNWEE15complexPropertyINS_22PxRepXPropertyAccessorILj698ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleClutchDataES7_EEKNS_32PxVehicleClutchDataGeneratedInfoEEEvPjRKT_RT0_
+0x21f7b6 _ZN5physx2Sn21RepXVisitorReaderBaseINS_23PxVehicleDriveSimDataNWEE15complexPropertyINS_22PxRepXPropertyAccessorILj699ENS_21PxVehicleDriveSimDataERKNS_20PxVehicleAutoBoxDataES7_EEKNS_33PxVehicleAutoBoxDataGeneratedInfoEEEvPjRKT_RT0_
+0x21f89e _ZN5physx2Sn21RepXVisitorReaderBaseINS_23PxVehicleDriveSimDataNWEE15complexPropertyINS_22PxRepXPropertyAccessorILj719ES2_RKNS_27PxVehicleDifferentialNWDataES6_EEKNS_40PxVehicleDifferentialNWDataGeneratedInfoEEEvPjRKT_RT0_
+0x222f1e _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_18PxVehicleDriveTankEEEEclILj716ES3_NS_21PxVehicleDriveSimDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x224208 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_21PxVehicleDriveSimDataEEEEclILj696ES3_RKNS_19PxVehicleEngineDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x2242b2 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_21PxVehicleDriveSimDataEEEEclILj697ES3_RKNS_18PxVehicleGearsDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x22435b _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_21PxVehicleDriveSimDataEEEEclILj698ES3_RKNS_19PxVehicleClutchDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x224405 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_21PxVehicleDriveSimDataEEEEclILj699ES3_RKNS_20PxVehicleAutoBoxDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x2244b0 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_22PxVehicleWheelsSimDataEEEEclILj655ES3_RKNS_27PxVehicleTireLoadFilterDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x2247a3 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_23PxVehicleDriveSimData4WEEEEclILj696ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleEngineDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x224867 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_23PxVehicleDriveSimData4WEEEEclILj697ENS_21PxVehicleDriveSimDataERKNS_18PxVehicleGearsDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x22492a _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_23PxVehicleDriveSimData4WEEEEclILj698ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleClutchDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x2249ee _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_23PxVehicleDriveSimData4WEEEEclILj699ENS_21PxVehicleDriveSimDataERKNS_20PxVehicleAutoBoxDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x224ab3 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_23PxVehicleDriveSimData4WEEEEclILj702ES3_RKNS_27PxVehicleDifferential4WDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x224b67 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_23PxVehicleDriveSimData4WEEEEclILj703ES3_RKNS_30PxVehicleAckermannGeometryDataES7_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x224c1e _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_23PxVehicleDriveSimDataNWEEEEclILj696ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleEngineDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x224ce2 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_23PxVehicleDriveSimDataNWEEEEclILj697ENS_21PxVehicleDriveSimDataERKNS_18PxVehicleGearsDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x224da5 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_23PxVehicleDriveSimDataNWEEEEclILj698ENS_21PxVehicleDriveSimDataERKNS_19PxVehicleClutchDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x224e69 _ZN5physx18RepXPropertyFilterINS_2Sn17RepXVisitorWriterINS_23PxVehicleDriveSimDataNWEEEEclILj699ENS_21PxVehicleDriveSimDataERKNS_20PxVehicleAutoBoxDataES8_EEvRKNS_14PxPropertyInfoIXT_ET0_T1_T2_EEj
+0x2273f8 _ZN5physx2Vd17PvdPropertyFilterINS_2Sn17RepXVisitorWriterINS_16PxVehicleDrive4WEEEE14handleAccessorILj673ENS_22PxRepXPropertyAccessorILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataESA_EEEEvRKT0_
+0x2274c3 _ZN5physx2Vd17PvdPropertyFilterINS_2Sn17RepXVisitorWriterINS_16PxVehicleDriveNWEEEE14handleAccessorILj673ENS_22PxRepXPropertyAccessorILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataESA_EEEEvRKT0_
+0x22758e _ZN5physx2Vd17PvdPropertyFilterINS_2Sn17RepXVisitorWriterINS_16PxVehicleNoDriveEEEE14handleAccessorILj673ENS_22PxRepXPropertyAccessorILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataESA_EEEEvRKT0_
+0x227ca8 _ZN5physx2Vd17PvdPropertyFilterINS_2Sn17RepXVisitorWriterINS_18PxVehicleDriveTankEEEE14handleAccessorILj673ENS_22PxRepXPropertyAccessorILj673ENS_15PxVehicleWheelsENS_22PxVehicleWheelsDynDataESA_EEEEvRKT0_
+0x22d6b0 _ZN5physx17intersectRayPlaneERKNS_11PxTransformERKNS_6PxVec3ES5_fffRKNS_6PxVec4ERfRS3_
+0x2375a7 uprv_aestrncpy_64
+0x28fc84 _ZN6icu_6411MeasureUnit15getElectronvoltEv
+0x2905c5 _ZN6icu_6411MeasureUnit18createElectronvoltER10UErrorCode
+0x2b9655 silk_LTP_scale_ctrl_FIX
+0x2c1362 _ZN15CriMvEasyPlayer6CreateEP15_criheap_structRNS_6ConfigEP24CriMvFileReaderInterfaceP25CriMvSystemTimerInterfaceP19CriMvSoundInterfaceR8CriError
+0x2c168b _ZN5CriMv23SetDefaultDecryptionKeyEy
+0x2c24ac criMvPly_DecryptAudioChunk
+0x2c24c7 criMvPly_DecryptSubtitleChunk
+0x2c24e5 criMvPly_DecryptVideoChunk
+0x2c2795 criMvPly_IsSetDefaultDecryptionKey
+0x2c284f criMvPly_SetDefaultDecryptionKey
+0x2c2ed3 criMvPlyAmng_SetDecryptCallback
+0x2c33ad criVdec_SetDecryptCallback
+0x2c3692 criAlphaDec_SetDecryptCallback
+0x2c3a83 criVmpv_SetDecryptCallback
+0x2c3e8f criV264Android_SetDecryptCallback
+0x2c40a3 criAdec_SetDecryptCallback
+0x2c48e9 criAdxDecCore_SetEncryptionKey
+0x2c4a1a criMana_SetDefaultDecryptionKey
+0x2cb1d2 HCADecoder_GetSpectra
+0x2cb291 HCADecoder_SetDecryptionTable
+0x2cb5a9 HCACipher_CreateDecryptionTable
+0x2cbfa3 criAdxDecCore_GetEncryptionKey
+0x2cc83e criAuDecoder_SetDecryptionParams
+0x2cc898 criAdxCodec_SetCompatibleDecryptionKey
+0x2cc8bf criAdxCodec_SetDecryptionKey
+0x2cc9ad criadxcodec_SetDecryptionParams
+0x2ccbc5 criHcaCodec_GetDecryptionTable
+0x2ccbe4 criHcaCodec_SetDecryptionTable
+0x2d64cf criAtomDecrypter_Finalize
+0x2d64e9 criAtomDecrypter_Initialize
+0x2d7a8e criAtomDecrypter_CreateInternal
+0x2d7aae criAtomDecrypter_GenerateAdxDecryptionKey
+0x2d7ad8 criAtomDecrypter_GetNumCreatedDecrypters
+0x2d7b01 criNcvHcaMx_SetDecryptionTable
+0x2d7da5 criDspSpectra_CalculateWorkSize
+0x2d7dc5 criDspSpectra_Create
+0x2d7dda criDspSpectra_Destroy
+0x2d7df0 criDspSpectra_GetLevels
+0x2d7e08 criDspSpectra_Process
+0x2d7e1e criDspSpectra_Reset
+0x2d9cfa criAtom3dPos_CalcTransceiverResult
+0x2db1c8 criAtomSequenceTrack_GetBeatSyncTransitionSettingInfo
+0x2df0c0 criDspAfltPara_CalcTransCoeff
+0x2e216c criAfxAfltPara_CalcTransCoeff
+0x2e4796 criFsLoaderCore_SetNoDecryptingFlag
+0x2e4954 criFsLoader_SetNoDecryptingFlag
+0x2e596e criAesDecryptor_Create
+0x2e5985 criAesDecryptor_Decrypt
+0x2e599d criAesDecryptor_Destroy
+0x2e59b5 criAesDecryptor_Finalize
+0x2e59ce criAesDecryptor_Initialize
+0x2e59e9 criAesDecryptor_Reset
+0x2e5a32 criAesSegmentsDecryptor_Create
+0x2e5a51 criAesSegmentsDecryptor_Decrypt
+0x2e5a71 criAesSegmentsDecryptor_Destroy
+0x2e5a91 criAesSegmentsDecryptor_GetKeyDataStatus
+0x2e5aba criAesSegmentsDecryptor_GetSegmentSizeStatus
+0x2e5ae7 criAesSegmentsDecryptor_RegisterSegmentKey
+0x2e5b12 criAesSegmentsDecryptor_RegisterSegmentKeyForApi
+0x2e5b43 criAesSegmentsDecryptor_RegisterSegmentSize
+0x2e5b6f criAesSegmentsDecryptor_Reset
+0x2e6c2f criHlsKey_GetAes128InitializationVector
+0x2e6c57 criHlsKey_GetAes128KeyData
+0x2e6cae criHlsKey_HasAes128InitializationVector
+0x2e6cd6 criHlsKey_HasAes128KeyData
+0x2e6cf1 criHlsKey_SetAes128KeyData
+0x2e6d2b criHlsMediaSegment_GetEncryptionKeyReferredSequenceNumber
+0x2e6d65 criHlsMediaSegment_GetEncryptionKeySignature
+0x2e6d92 criHlsMediaSegment_GetOwnEncryptionKey
+0x2e6db9 criHlsMediaSegment_GetOwnEncryptionKeyConst
+0x2e6e64 criHlsMediaSegment_HasEncryptionKeyReference
+0x2e6e91 criHlsMediaSegment_HasOwnEncryptionKey
+0x2e722e criHlsPlaylistParser_GetSegmentEncryptionKeyUri
+0x2e725e criHlsPlaylistParser_GetSegmentEncryptionKeyUriLength
+0x2e85c0 criVsd_GetNumDecryptData
+0x2e8eda criVsd_IsEncrypted
+0x2ea845 MovieDecoder_SetDecryptorApi
+0x2ebb3e criVip_SetDecryptApi
+0x2ebe7e M2TSD_SetDecryptFn
+0x2ebef6 criVodStm_AesDecryptUpdate
+0x2ec540 criVodStm_GetNumDecryptData
+0x9b8845 AudioSpectrum
+0x9bc811 EMenuLobbyMainSelectRoomSearchResult::MENU_LOBBY_MAIN_SELECT_RESULT_ERROR
+0x9bcec9 CreateOnlineSeasonTeamSelectReplacement
+0x9bd128 RehearsalSaveLoadError::Cancel
+0x9bd147 RehearsalSaveLoadError::Revision
+0x9becca DisconnectRemoteXRDevice
+0x9bf55f MaxAspectRatio
+0x9c1bb4 EAudioSpectrumType::Decibel
+0x9c1c0c StopSpectralAnalysis
+0x9c1c21 EAudioSpectrumBandPresetType::Voice
+0x9c6c0a P2P_ADHOC_BLE_LOW_LEVEL
+0x9c6fe6 P2PTURNIO_TURN_RTT_VARIANCE
+0x9c7a05 ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384
+0x9c803e unsupported cipher
+0x9c81b7 linebuffer_ctrl
+0x9c82c1 id-smime-aa-smimeEncryptCerts
+0x9c83a0 AES-256-OFB
+0x9c84cc camellia-256-gcm
+0x9c852c sm4-cbc
+0x9c87ef Key Encipherment
+0x9c88a9 TLS_DHE_DSS_WITH_AES_128_CBC_SHA
+0x9c88ca TLS_PSK_DHE_WITH_AES_256_CCM_8
+0x9c88e9 ECDHE-ECDSA-AES128-CCM8
+0x9c8901 ECDHE-RSA-AES256-SHA
+0x9c8916 TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+0x9c893c DHE-PSK-AES256-CBC-SHA
+0x9c896c TLS_RSA_PSK_WITH_ARIA_256_GCM_SHA384
+0x9c89c0 ssl_cache_cipherlist
+0x9c8abc old session cipher not returned
+0x9c8b85 ciphersuites
+0x9c8b9e SSLv3/TLS read change cipher spec
+0x9cbcdd [ERROR] criVsd_M2tsSplitCreate() failed. Could not allocate decrypt buffer.
+0x9cc540 ControlRigSequenceObjectReferences
+0x9ce925 SoftObjectReferenceToName
+0x9d07bc GetSelectRoomModeTitleStr
+0x9d27e1 MinAspectRatio
+0x9d3e63 OutRectRotation
+0x9d3ee5 Conv_SoftObjectReferenceToString
+0x9d4003 SetAffectReflection
+0x9d44cd ImpactReFireDelay
+0x9d4e78 SoundWaveSpectralTimeData
+0x9d9d26 DANLREUxDzANBgNVBAsMBjIgUHJvZDEQMA4GA1UEAwwHQ0Egcm9vdDCCAiIwDQYJ
+0x9da7a4 P2PTURNIO_TURN_RTT_MAX
+0x9db530  Frame decryption failed.
+0x9dba0c aes key setup failed
+0x9dbd28 aes-128-cfb
+0x9dbde9 aes-128-cfb1
+0x9dbdf6 aes-256-cfb1
+0x9dbf22 chacha20-poly1305
+0x9dc067 PKCS12_item_i2d_encrypt
+0x9dc1c9 by_file_ctrl
+0x9dc38a DHE-DSS-AES256-SHA256
+0x9dc3a0 DHE-RSA-AES256-SHA256
+0x9dc3b6 DHE-PSK-AES128-CCM
+0x9dc3c9 TLS_ECDHE_ECDSA_WITH_AES_256_CCM
+0x9dc3ea TLS_PSK_WITH_AES_256_CBC_SHA
+0x9dc407 TLS_DHE_PSK_WITH_AES_128_CBC_SHA256
+0x9dc42b TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256
+0x9dc451 ECDHE-ARIA128-GCM-SHA256
+0x9dc46a PSK-ARIA256-GCM-SHA384
+0x9dc4de SSL_ctrl
+0x9dc629 no cipher match
+0x9df287 [vodstrm] criAesSegmentsDecryptor_RegisterSegmentSize() on criVodStmNetStmBundle_NotifyReadend.
+0x9df2e8 [CriVodStm] Download EncryptionKey completed but aes key size < 16 byte.
+0x9df332 E2018122604:CriAesDecryptorAndroid has to be initialized.
+0x9df36c [CriAesSegmentsDecryptor] Over ProcessedSize (%lu) >= SegmentSize (%lu).
+0x9dfb0a ControlRigSequenceObjectReferenceMap
+0x9e13b7 %s call FATAL ERROR!!! m_fadeCtrl is Invalid
+0x9e21d9 m_achievementTaskListCtrl
+0x9e26be ECoinSelectResult::SuccessNormal
+0x9e5151 ColorSpectrum.Spectrum
+0x9e63bf MakePresetSpectralAnalysisBandSettings
+0x9e6676 GetSpectralData
+0x9e85b3 EAudioSpectrumType::PowerSpectrum
+0x9e861f EAudioSpectrumBandPresetType
+0x9ee4f5 Not enough plaintext buffer to hold encrypted ciphertext.
+0x9eecdd BIO_ctrl
+0x9eee24 rc2-40-cbc
+0x9eee32 cast5-cbc
+0x9ef0b0 camellia-128-gcm
+0x9ef176 SM4-CTR
+0x9ef184 sm3WithRSAEncryption
+0x9ef4f6 TLS_AES_128_GCM_SHA256
+0x9ef50d TLS_AES_128_CCM_8_SHA256
+0x9ef526 ADH-AES256-SHA
+0x9ef535 TLS_ECDH_anon_WITH_AES_256_CBC_SHA
+0x9ef558 RSA-PSK-AES128-CBC-SHA
+0x9ef56f TLS_RSA_PSK_WITH_AES_128_CBC_SHA
+0x9ef590 TLS_PSK_WITH_AES_256_GCM_SHA384
+0x9ef5b0 SRP-RSA-AES-256-CBC-SHA
+0x9ef5c8 TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384
+0x9ef5ed PSK-ARIA128-GCM-SHA256
+0x9ef643 ciphersuite_cb
+0x9efd71 KS_CTRLBLK
+0x9f277f [CriAesSegmentsDecryptor] Over ProcessedSize (%lu) > SegmentSize (%lu).
+0x9f6ca7 SetSlelectRecvListIdx
+0x9f70c5 RehearsalSaveLoadError::Size
+0x9f9a3d bInSpectralAnalysisEnabled
+0xa00806 ChangeoverToP2pFromBufferCriticalConditionTimeWaitMs
+0xa00c09 P2PTURNIO_P2P_CONNECTING_TIME
+0xa00c27 P2PTURNIO_RTT_VARIANCE_EVALUATION
+0xa02084 aes_t4_xts_init_key
+0xa020aa bad decrypt
+0xa0226d rc2-cbc
+0xa023a5 AES-192-CFB
+0xa02401 sha256WithRSAEncryption
+0xa024cd aes-128-ccm
+0xa024d9 id-aes256-wrap-pad
+0xa024ec aes-128-ctr
+0xa024f8 aes-256-ctr
+0xa02504 AES-128-CBC-HMAC-SHA1
+0xa0251a aes-192-cbc-hmac-sha1
+0xa02554 AES-256-CBC-HMAC-SHA256
+0xa0256c AES-128-OCB
+0xa02578 CAMELLIA-192-CTR
+0xa02600 aria-256-ctr
+0xa02665 id-tc26-cipher-gostr3412-2015-kuznyechik-ctracpkm-omac
+0xa027ed unable to decrypt certificate's signature
+0xa028ed DHE-DSS-AES256-SHA
+0xa02900 CHACHA20
+0xa0291f ssl3_ctrl
+0xa02936 ssl_create_cipher_list
+0xa0568e SAMPLE-AES
+0xa0587b [vodstm] criVodStm_ResetAesDecryptorForCurrentSegment() failed on onEndReadingHlsMediaSegment.
+0xa089d8 m_afterTypeCtrl
+0xa08dd8 ECoinSelectResult::SuccessAdvertisingReward
+0xa097e1 EMenuLobbyMainSelectRoomSearchResult
+0xa0d966 bAffectReflection
+0xa0e7d4 SoundSubmixSpectralAnalysisBandSettings
+0xa0e7fc CookedSpectralTimeData
+0xa111fb Could not use specified SSL cipher
+0xa11267 failed setting TLS 1.3 cipher suite: %s
+0xa12a4e DATA_PARAMETER_S_MAESTRO_SIGNAL
+0xa132d9 P2P_ADHOC_UNKNOWN_HIGH_LEVEL
+0xa1339d P2pBufferCriticalConditionTimeMs
+0xa13708 P2PTURNIO_P2P_RTT_Variance
+0xa1475e aes_t4_init_key
+0xa1476e evp_EncryptDecryptUpdate
+0xa1499f id-aes192-wrap
+0xa14a27 pbeWithSHA1And40BitRC2-CBC
+0xa14adb aes-192-cbc
+0xa14c5d ARIA-192-CTR
+0xa14d1c error setting cipher
+0xa14e04 unsupported encryption type
+0xa14e57 encipherOnly
+0xa14eb1 TLS_AES_256_GCM_SHA384
+0xa14ec8 TLS_DHE_PSK_WITH_AES_256_CCM
+0xa14ee5 TLS_ECDH_anon_WITH_AES_128_CBC_SHA
+0xa14f3b ECDHE-ECDSA-ARIA128-GCM-SHA256
+0xa1c043 EMenuSeasonTeamSelectReplacementState::WaitFirstAlert
+0xa1eb89 MediaSoundComponentSpectralData
+0xa1eba9 SetEnableSpectralAnalysis
+0xa1fc20 EqualEqual_SoftObjectReference
+0xa20b7d EAudioSpectrumType
+0xa21303 K2_ReplaceAreaInOctreeData
+0xa25580 DISCONN_P2P
+0xa260aa RP_P2P_HEADER
+0xa26dc2 ciphertext is not large enough to hold the result.
+0xa274be ctrl not implemented
+0xa27645 ARIA-128-CBC
+0xa2768d md2WithRSAEncryption
+0xa277e8 CAMELLIA-256-CBC
+0xa27824 SEED-CBC
+0xa27862 RSAES-OAEP
+0xa2787d AES-192-OCB
+0xa2789a CAMELLIA-256-CTR
+0xa278fc ARIA-128-GCM
+0xa279c7 ctrl error
+0xa27c1b TLS_RSA_WITH_AES_128_CBC_SHA
+0xa27c38 DHE-RSA-AES128-GCM-SHA256
+0xa27c52 TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384
+0xa27c78 TLS_SRP_SHA_RSA_WITH_AES_256_CBC_SHA
+0xa27d47 tls_process_encrypted_extensions
+0xa27d9a cipher code wrong length
+0xa28e3e ContactReportThreshold
+0xa2eb22 SetExecTrainingDialogInfo
+0xa2ed2e RehearsalSaveLoadError::Success
+0xa2ed4e RehearsalSaveLoadError::None
+0xa30476 execTransformConst
+0xa31761 SetSpectralAnalysisSettings
+0xa317c5 LevelSequenceLegacyObjectReference
+0xa317e8 bOverrideAspectRatioAxisConstraint
+0xa3243f AspectRatio_MajorAxisFOV
+0xa38772 KeyExchangeTimeoutUs
+0xa395f5 ciphertext is too small to hold a tag.
+0xa39b5b des_ede3_wrap_cipher
+0xa39b70 EVP_CIPHER_asn1_to_param
+0xa39d2a aes256
+0xa39d6a idea-cbc
+0xa39db2 sha1WithRSAEncryption
+0xa39e85 aes-192-ecb
+0xa39fad aes-128-cbc-hmac-sha256
+0xa39fc5 camellia-128-ctr
+0xa39ff5 id-tc26-cipher-constants
+0xa3a03e aria-128-cbc
+0xa3a079 ARIA-192-GCM
+0xa3a095 magma-ctr
+0xa3a45f TLS_DHE_RSA_WITH_AES_256_CCM_8
+0xa3a47e DHE-PSK-AES128-CCM8
+0xa3a492 TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA
+0xa3a4b5 TLS_SRP_SHA_WITH_AES_128_CBC_SHA
+0xa3b9fc ContactReportStreamBufferSize
+0xa3e377 spectra
+0xa41d6b EMenuSeasonTeamSelectReplacementState::Finished
+0xa41f96 RehearsalSaveLoadError::Failed
+0xa43186 execTrue
+0xa44c20 SetConstraintAspectRatio
+0xa455cf SelectRotator
+0xa4644b OnSubmixSpectralAnalysis__DelegateSignature
+0xa4690b GCMClientSenderID
+0xa4bddf Decryption error: %s
+0xa4c560 ciphertext is nullptr.
+0xa4cbd8 dh_cms_decrypt
+0xa4cc07 rc5_ctrl
+0xa4cd6e pbeWithMD5AndDES-CBC
+0xa4cd83 DES-CBC
+0xa4cd8b IDEA-CBC
+0xa4cee2 id-regCtrl-pkiPublicationInfo
+0xa4cf00 id-regCtrl-protocolEncrKey
+0xa4cf1b AES-128-CFB
+0xa4cf34 Secure Electronic Transactions
+0xa4d079 id-aes256-CCM
+0xa4d0b2 camellia-192-gcm
+0xa4d0c3 gost89-cbc
+0xa4d0ce grasshopper-ctr
+0xa4d145 sha512-256WithRSAEncryption
+0xa4d161 id-tc26-cipher-gostr3412-2015-magma
+0xa4d3dc TLS_DH_anon_WITH_AES_128_CBC_SHA256
+0xa4d400 TLS_RSA_WITH_AES_256_GCM_SHA384
+0xa4d420 TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
+0xa4d444 TLS_RSA_WITH_AES_256_CCM
+0xa4d45d TLS_DHE_RSA_WITH_AES_128_CCM_8
+0xa4d47c TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8
+0xa4d49f ECDHE-ECDSA-AES128-GCM-SHA256
+0xa4d4bd DHE-PSK-AES128-CBC-SHA
+0xa4d4e7 SRP-AES-256-CBC-SHA
+0xa4d510 TLS_PSK_WITH_ARIA_256_GCM_SHA384
+0xa4d531 TLS_RSA_PSK_WITH_ARIA_128_GCM_SHA256
+0xa4d55e check_suiteb_cipher_list
+0xa4d728 no ciphers specified
+0xa4d769 tlsv1 alert decryption failed
+0xa4d7c9 SSLv3/TLS write change cipher spec
+0xa50558 E2018122603:CriAesDecryptorAndroid:Can't do NewGlobalRef.
+0xa50592 E2018122608:CriAesDecryptorAndroid has to be initialized.
+0xa505cc criAesSegmentsDecryptor_DecryptSub failed. (pContext->nSegmentSize(%lu) < pContext->nProcessedSize(%lu))
+0xa54aed EMenuSeasonTeamSelectReplacementState::SelectTeam
+0xa55b94 EUiAspectRatio
+0xa56101 ObjectRedirector
+0xa572a9 bOverride_MaxAspectRatio
+0xa592e9 bIgnoreCtrl
+0xa5c69e failed setting cipher list: %s
+0xa5eab8 RP_P2P_SYNC
+0xa5ecbb P2PTURNIO_P2P_RTT_Max
+0xa5ecd1 P2PTURNIO_RTT_MAX_EVALUATION
+0xa601eb aes_wrap_cipher
+0xa60318 AES192
+0xa6031f aes256-wrap
+0xa60550 AES-256-CFB8
+0xa6055d sha512WithRSAEncryption
+0xa605f1 id-aes192-CCM
+0xa6060a CAMELLIA-128-CTR
+0xa60746 encrypt error
+0xa60754 decrypt error
+0xa609ac DHE-PSK-AES256-CCM
+0xa609bf TLS_PSK_DHE_WITH_AES_128_CCM_8
+0xa609fa TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+0xa60a1d TLS_PSK_WITH_AES_128_CBC_SHA
+0xa60a7e TLS_RSA_WITH_ARIA_128_GCM_SHA256
+0xa60a9f TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384
+0xa60ac8 TLS_DHE_PSK_WITH_ARIA_256_GCM_SHA384
+0xa60b14 dtls_construct_change_cipher_spec
+0xa60b36 ssl_cipher_list_to_bytes
+0xa63b7f [CriVodStm] Master playlist is discarded becuase an AES encryption key isn't correctly acquired. (err=%d)
+0xa63bf2 [CriAesSegmentsDecryptor] Failed to create bacause the `param` is NULL.
+0xa647d2 CreateDspSpectra
+0xa6647e correctRateForHeight
+0xa66bbc ToWorldSoftObjectReference
+0xa683c7 EMenuSeasonTeamSelectReplacementState::SetupConfirmAlert
+0xa69b81 ColorSpectrum.Selector
+0xa69e1c bCtrl
+0xa6bb04 AspectRatio_MaintainXFOV
+0xa6c09b Conv_ObjectToSoftObjectReference
+0xa6c8e7 DefaultAspectRatio
+0xa716e1 P2P_FAILED
+0xa72124 P2P_ADHOC_UNKNOWN_GIVE_UP_QUICKLY_LEVEL
+0xa7225c P2P_ADHOC_BTC
+0xa72a09 Encryption error: %s
+0xa731af max_ciphertext_and_tag_length is nullptr.
+0xa7326c ALTSRP_GCM_AES128_REKEY
+0xa73932 error setting cipher params
+0xa73a74 AES-192-CBC
+0xa73a80 AES-256-CBC
+0xa73a8c ARIA-256-CBC
+0xa73be7 aes-256-cbc
+0xa73cad AES-192-CFB1
+0xa73d38 aes-256-cbc-hmac-sha256
+0xa73e83 PEM_get_EVP_CIPHER_INFO
+0xa73ed6 PKCS12_item_decrypt_d2i
+0xa73eee pkcs12 algor cipherinit error
+0xa73f99 bad fixed header decrypt
+0xa741c1 dataEncipherment
+0xa742a8 TLS_DHE_DSS_WITH_AES_128_CBC_SHA256
+0xa742cc AES128-CCM8
+0xa742d8 TLS_PSK_WITH_AES_128_CCM_8
+0xa742f3 ECDHE-ECDSA-AES256-SHA384
+0xa7430d TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
+0xa74353 TLS_PSK_WITH_AES_128_GCM_SHA256
+0xa74373 SRP-DSS-AES-256-CBC-SHA
+0xa7438b DHE-PSK-ARIA128-GCM-SHA256
+0xa7445c tls_construct_encrypted_extensions
+0xa744a9 bad change cipher spec
+0xa744fd encrypted length too long
+0xa75134 G:\RenderPlat\Engine\Source\ThirdParty\PhysX3\PhysX_3.4\Source\compiler\cmake\android\..\..\..\SimulationController\src/ScContactReportBuffer.h
+0xa76d29 E2018122609:CriAesDecryptorAndroid failed to create JVM local frame.
+0xa76d6e [CriAesSegmentsDecryptor] Invalid calling sequence for RegisterSegmentKey.
+0xa79653 CallbackErrorAlertButtonForDetectRefund
+0xa7d6e9 ClearMaxAspectRatio
+0xa7e517 StructRedirect
+0xa7edce GetSoftObjectReferenceFromPrimaryAssetId
+0xa7fb9e EAudioSpectrumBandPresetType::KickDrum
+0xa7fbf0 SoundWaveSpectralDataEntry
+0xa82b23 Encrypted Extensions
+0xa845fa DISCONN_P2P_NTL
+0xa84e75 P2P_ADHOC
+0xa84f55 TurnModeP2pSendIntervalMs
+0xa8651b EVP_CIPHER_CTX_copy
+0xa8655e ctrl operation not implemented
+0xa8657d no cipher set
+0xa866d4 file_ctrl
+0xa86702 rsaEncryption
+0xa86974 camellia-192-cbc
+0xa869f9 id-aes256-GCM
+0xa86a28 CAMELLIA-256-GCM
+0xa86a5e Ctrl/provision WAP Access
+0xa86adc PKCS8_encrypt
+0xa86c50 decipherOnly
+0xa86cbd ADH-AES256-SHA256
+0xa86ccf DHE-RSA-AES256-CCM
+0xa86ce2 ECDHE-ECDSA-AES128-SHA256
+0xa86d19 TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA384
+0xa86d45 AESGCM
+0xa86e92 unknown cipher type
+0xa89d42 [vodstm] criVodStm_ResetAesDecryptorForCurrentSegment() failed on criVodStm_SetInitialMediaPlaylistIndex(%d).
+0xa89db1 E2018031621:[CriVodStm] A playlist is discarded becuase an encryption type of a segment is unknown.
+0xa89e65 E2018122607:CriAesDecryptorAndroid Instance in java layer(jobject) is null.
+0xa89eb1 [CriAesSegmentsDecryptor] Failed to malloc a handle.
+0xa89ee7 [CriAesSegmentsDecryptor] The get_url api returns invalid status(%d). Deal it as DO_DEFAULT.
+0xa90a58 AddSpectralAnalysisDelegate
+0xa92bc5 OnSubmixSpectralAnalysisBP
+0xa92bf1 SoundWaveSpectralData
+0xa97ebc KeyExchangeEncryptionKey
+0xa97ed5 SessionKeyEncryptionKeyLength
+0xa97f91 RP_RELIABILITY_ECHO
+0xa98b3d Invalid cipher list: %s.
+0xa9943d ecdh_cms_decrypt
+0xa9957c id-aes256-wrap
+0xa996e6 AES-192-ECB
+0xa996f2 aes-256-cfb
+0xa9976d setAttr-GenCryptgrm
+0xa997d7 CAMELLIA-128-CBC
+0xa99886 AES-128-CBC-HMAC-SHA256
+0xa9989e AES-192-CBC-HMAC-SHA256
+0xa998e5 sm4-ctr
+0xa999f2 pkey_rsa_ctrl
+0xa99bae TLS_DHE_DSS_WITH_AES_128_GCM_SHA256
+0xa99bd2 DHE-RSA-AES128-CCM8
+0xa99be6 TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+0xa99c1a AECDH-AES128-SHA
+0xa99c2b TLS_DHE_PSK_WITH_AES_256_CBC_SHA
+0xa99c4c TLS_RSA_PSK_WITH_AES_256_GCM_SHA384
+0xa99caa TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256
+0xa99cf5 bytes_to_cipher_list
+0xa99d14 ssl3_change_cipher_state
+0xa99d2d SSL_bytes_to_cipher_list
+0xa99d46 ssl_cipher_strength_sort
+0xa99ecd unknown cipher returned
+0xa99f0c Ciphersuites
+0xa9d1e3 The size of decryption key (%d) or initialization vector (%d) is not match to AES-128. Use path-through decoder.
+0xaa106b EMenuLobbyMainSelectRoomSearchResult::MENU_LOBBY_MAIN_SELECT_RESULT_NOTFOUND
+0xaa2cf7 Common/ColorSpectrum
+0xaab63a P2pModeTurnSendIntervalMs
+0xaacd2e EVP_EncryptUpdate
+0xaacff0 RC5-CBC
+0xaad002 pbeWithMD2AndRC2-CBC
+0xaad119 sha224WithRSAEncryption
+0xaad1ac aes-128-gcm
+0xaad1b8 aes-128-cbc-hmac-sha1
+0xaad22d aria-192-ctr
+0xaad23a aria-256-cbc
+0xaad303 PKCS7_decrypt
+0xaad654 TLS_DH_anon_WITH_AES_128_CBC_SHA
+0xaad675 ADH-AES256-GCM-SHA384
+0xaad68b TLS_DHE_PSK_WITH_AES_128_GCM_SHA256
+0xaad6c3 RSA-PSK-AES256-CBC-SHA384
+0xaad6dd ECDHE-PSK-AES128-CBC-SHA
+0xaad6f6 SRP-DSS-AES-128-CBC-SHA
+0xaad70e DHE-RSA-ARIA128-GCM-SHA256
+0xaad7ff tls1_change_cipher_state
+0xaad93b cannot change cipher
+0xab0b5f com/criware/vod/CriAesDecryptor
+0xab0bd3 E2018112900:[CriVodStm] Failed to Decrypt.
+0xab0c52 E2018122700:CriAesDecryptorAndroid failed to create.
+0xab0c87 [CriAesSegmentsDecryptor] The size of downloaded data is too big.(%zu Bytes) This is out of the specification. Please contact us.
+0xab4cd5 RehearsalSaveLoadError::Broken
+0xab96b0 EAudioSpectrumBandPresetType::Cymbals
+0xabc6fe Change cipher spec
+0xabe9f0 P2pModeTurnSendEnable
+0xabea90 P2P_ADHOC_BLE_HIGH_LEVEL
+0xabeaa9 P2P_ADHOC_LAN_HIGH_LEVEL
+0xabeac2 P2P_ADHOC_LAN_GIVE_UP_QUICKLY_LEVEL
+0xabfc4a EVP_PKEY_CTX_ctrl
+0xabfdac pkey_ec_ctrl
+0xabfdcc group2pkparameters failure
+0xabfdfa BIO_callback_ctrl
+0xac0080 AES-128-CTR
+0xac00ee grasshopper-cbc
+0xac00fe chacha20
+0xac0139 aria-128-ctr
+0xac0169 id-tc26-cipher-gostr3412-2015-kuznyechik
+0xac019e not encrypted
+0xac01f2 PKCS7_ctrl
+0xac0371 Data Encipherment
+0xac03f4 TLS_RSA_WITH_AES_256_CBC_SHA256
+0xac0414 AES256-GCM-SHA384
+0xac059a bad rsa encrypt
+0xac05aa ciphersuite digest has changed
+0xac0643 prioritize_chacha
+0xac2efb [CriVodStm] Failed to load an encryption key data.
+0xac60a8 m_normalTypeCtrl
+0xac7723 RehearsalSaveLoadError::FileNotFound
+0xac7748 RehearsalSaveLoadError::SystemFailed
+0xac9456 ConnectRemoteXRDevice
+0xac9e84 StartSpectrumAnalysis
+0xac9eb7 MakeMusicalSpectralAnalysisBandSettings
+0xaca154 LevelSequenceObjectReferenceMap
+0xacab06 ObjectReferencers
+0xacb336 SoftObjectReference
+0xad120e pes-custom-encrypt
+0xad1238 P2P_LOW_LEVEL
+0xad136b WebSocketClientConnectRetryIntervalMs
+0xad29bd aes_ocb_cipher
+0xad29cc EVP_CIPHER_param_to_asn1
+0xad2a1c unknown cipher
+0xad2b5a AES-128-CBC
+0xad2b66 ARIA-192-CBC
+0xad2b8a pbeWithMD2AndDES-CBC
+0xad2bbc dsaEncryption
+0xad2caf AES-128-CFB1
+
+=== HIGH-SIGNAL STRING XREFS ===
+'pes-custom-encrypt': adrp@0x7b0bfe0 add@0x7b0bfe4
+'pes-custom-encrypt': adrp@0x7b2313c add@0x7b23140
+'pes-custom-encrypt': adrp@0x7b2eb50 add@0x7b2eb54
+'pes-custom-encrypt': adrp@0x7b34cf0 add@0x7b34cf4
+'pes-custom-encrypt': adrp@0x7b35ccc add@0x7b35cd0
+'pes-custom-encrypt': adrp@0x7b36b80 add@0x7b36b84
+'pes-custom-encrypt': adrp@0x7b390f8 add@0x7b390fc
+'P2P_HIGH_LEVEL': adrp@0x7bf7168 add@0x7bf716c
+'P2P_LOW_LEVEL': adrp@0x7bf722c add@0x7bf7230
+'P2P_HIGH_LEVEL': adrp@0x7bf7c3c add@0x7bf7c40
+'P2P_LOW_LEVEL': adrp@0x7bf7c8c add@0x7bf7c90
+'P2P_HIGH_LEVEL': adrp@0x7bf7fa0 add@0x7bf7fa4
+'P2P_LOW_LEVEL': adrp@0x7bf7ff0 add@0x7bf7ff4
+'P2P_HIGH_LEVEL': adrp@0x7bf82b0 add@0x7bf82b4
+'P2P_LOW_LEVEL': adrp@0x7bf8300 add@0x7bf8304
+'P2P_HIGH_LEVEL': adrp@0x7bf8654 add@0x7bf8658
+'P2P_LOW_LEVEL': adrp@0x7bf86a4 add@0x7bf86a8
+'P2P_HIGH_LEVEL': adrp@0x7bf9c88 add@0x7bf9c8c
+'P2P_LOW_LEVEL': adrp@0x7bf9d44 add@0x7bf9d48
+'P2P_HIGH_LEVEL': adrp@0x7bfafd0 add@0x7bfafd4
+'P2P_LOW_LEVEL': adrp@0x7bfb08c add@0x7bfb090
+'P2P_HIGH_LEVEL': adrp@0x7bfbe94 add@0x7bfbe98
+'P2P_LOW_LEVEL': adrp@0x7bfc044 add@0x7bfc048
+'P2P_HIGH_LEVEL': adrp@0x7bfc688 add@0x7bfc68c
+'P2P_LOW_LEVEL': adrp@0x7bfc70c add@0x7bfc710
+'P2P_HIGH_LEVEL': adrp@0x7bfd254 add@0x7bfd258
+'P2P_LOW_LEVEL': adrp@0x7bfd404 add@0x7bfd408
+'P2P_HIGH_LEVEL': adrp@0x7bfe05c add@0x7bfe060
+'P2P_LOW_LEVEL': adrp@0x7bfe158 add@0x7bfe15c
+'P2P_HIGH_LEVEL': adrp@0x7bfe894 add@0x7bfe898
+'P2P_LOW_LEVEL': adrp@0x7bfe988 add@0x7bfe98c
+'P2P_HIGH_LEVEL': adrp@0x7bff318 add@0x7bff31c
+'P2P_LOW_LEVEL': adrp@0x7bff3dc add@0x7bff3e0
+'P2P_HIGH_LEVEL': adrp@0x7bffaa0 add@0x7bffaa4
+'P2P_LOW_LEVEL': adrp@0x7bffb5c add@0x7bffb60
+'ScrambleCode': adrp@0x7c059dc add@0x7c059e0
+'KeyExchangeEncryptionAlgorithm': adrp@0x7c08e3c add@0x7c08e40
+'KeyExchangeEncryptionKey': adrp@0x7c08e74 add@0x7c08e78
+'SessionKeyEncryptionAlgorithm': adrp@0x7c09610 add@0x7c09614
+'SessionKeyEncryptionKeyLength': adrp@0x7c09640 add@0x7c09644
+'RP_RELIABILITY': adrp@0x7cebcdc add@0x7cebce0
+'RP_RELIABILITY_ECHO': adrp@0x7cebd60 add@0x7cebd64
+'RP_RELIABILITY': adrp@0x7cf8b8c add@0x7cf8b90
+'RP_RELIABILITY_ECHO': adrp@0x7cf8cf4 add@0x7cf8cf8
+'pes-custom-encrypt': adrp@0x7dc0224 add@0x7dc0228
+'pes-custom-encrypt': adrp@0x7dcad3c add@0x7dcad40
+
+=== RECOVERED PARSER LOCAL FIELD FACTS ===
+KeyExchangeEncryptionAlgorithm: presence byte at parser local +0x150, value u32 at +0x154 (observed stores 0x7c08e60/0x7c08e64).
+KeyExchangeEncryptionKey: parsed immediately after algorithm via string/object helper starting at 0x7c08e74.
+SessionKeyEncryptionAlgorithm: parser xref begins at 0x7c09610.
+SessionKeyEncryptionKeyLength: parser xref begins at 0x7c09640.
+Profile loader copies parser result beginning at stack +0x260 into its outbound profile representation when parse succeeds.
+Parent passes profile fields [x22+0x20], [x22+0x28], and [x22+0x100] into P2P mode consumer 0x7bf9ecc at 0x7c0e244.
