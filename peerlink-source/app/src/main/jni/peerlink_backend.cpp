@@ -56,11 +56,12 @@ constexpr uint64_t kGameplayFlowCandidateWindowMs = 450ULL;
 constexpr int kGameplayFlowMinHitsToLock = 3;
 constexpr uint64_t kGameplayFlowSwitchIdleMs = 1200ULL;
 constexpr uint64_t kGameplayPortAliasTtlMs = 15000ULL;
-// eFootball terminal signature recovered from a real PeerLink/PCAPDroid match:
-// once gameplay application payload stops, the custom P2P flow drains as
-// transport-only packets (mostly 26 bytes).  We observe UDP APPLICATION
-// payload length here, not the outer IP/tunnel length.
-constexpr size_t kMatchTerminalMaxUdpPayload = 36U;
+// Captured eFootball matches expose two terminal transport families. Direct
+// custom-P2P drains to short reliability packets (mostly 26 bytes, occasionally
+// 27/32/34/36), while a DTLS 1.2 path drains to small application-data records.
+// Matching both size and family marker is safer than a raw size threshold alone.
+constexpr size_t kMatchTerminalCustomMaxUdpPayload = 36U;
+constexpr size_t kMatchTerminalDtlsMaxUdpPayload = 80U;
 constexpr uint64_t kMatchTerminalArmAfterMs = 30000ULL;
 constexpr uint64_t kMatchTerminalSustainMs = 500ULL;
 constexpr uint32_t kMatchTerminalMinPackets = 8U;
@@ -1460,6 +1461,7 @@ void observe_gameplay_flow(BackendState *state, int local_port, int remote_port,
 bool observe_match_terminal_outbound(BackendState *state,
                                      uint16_t local_port,
                                      uint16_t remote_port,
+                                     const uint8_t *udp_payload,
                                      size_t udp_payload_length,
                                      uint64_t now_ms) {
     if (state == nullptr || state->match_terminal_detected.load(std::memory_order_relaxed)) return false;
@@ -1471,7 +1473,16 @@ bool observe_match_terminal_outbound(BackendState *state,
     if (gameplay_start == 0 || now_ms < gameplay_start ||
         (now_ms - gameplay_start) < kMatchTerminalArmAfterMs) return false;
 
-    if (udp_payload_length > kMatchTerminalMaxUdpPayload) {
+    const bool custom_p2p_terminal =
+  udp_payload != nullptr && udp_payload_length >= 2U &&
+  udp_payload_length <= kMatchTerminalCustomMaxUdpPayload &&
+  udp_payload[0] == 0x00U && udp_payload[1] == 0x00U;
+    const bool dtls_terminal =
+  udp_payload != nullptr && udp_payload_length >= 13U &&
+  udp_payload_length <= kMatchTerminalDtlsMaxUdpPayload &&
+  udp_payload[0] == 0x17U && udp_payload[1] == 0xFEU && udp_payload[2] == 0xFDU;
+
+    if (!custom_p2p_terminal && !dtls_terminal) {
         state->match_terminal_candidate_start_ms = 0;
         state->match_terminal_candidate_packets = 0;
         state->match_terminal_rearm_ready = true;
@@ -1518,7 +1529,7 @@ void dispatch_match_terminal_event(JNIEnv *env, BackendState *state) {
     }
     // Rearm is still guarded by match_terminal_rearm_ready and the cooldown.
     // Clearing this transient latch here avoids any polling dependency and allows
-    // a later match in the same VPN session after normal (>36-byte) gameplay resumes.
+    // a later match in the same VPN session after normal non-terminal gameplay resumes.
     state->match_terminal_detected.store(false, std::memory_order_release);
 }
 
@@ -2469,7 +2480,13 @@ void handle_tun_ipv4(JNIEnv *env, BackendState *state, const uint8_t *packet, si
                 const int old_stable_port = load_stable_game_port(state);
                 const int old_remote_port = load_stable_remote_port(state);
                 observe_gameplay_flow(state, parsed.source_port, parsed.dest_port, now_ms);
-                if (observe_match_terminal_outbound(state, parsed.source_port, parsed.dest_port, parsed.udp_payload_length, now_ms)) {
+                if (observe_match_terminal_outbound(
+                        state,
+                        parsed.source_port,
+                        parsed.dest_port,
+                        packet + parsed.udp_payload_offset,
+                        parsed.udp_payload_length,
+                        now_ms)) {
                     dispatch_match_terminal_event(env, state);
                 }
                 const int new_stable_port = load_stable_game_port(state);
@@ -2582,7 +2599,13 @@ void handle_tun_ipv6(JNIEnv *env, BackendState *state, const uint8_t *packet, si
             const int old_remote_port = load_stable_remote_port(state);
             const uint64_t now_ms = monotonic_ms();
             observe_gameplay_flow(state, parsed.source_port, parsed.dest_port, now_ms);
-            if (observe_match_terminal_outbound(state, parsed.source_port, parsed.dest_port, parsed.udp_payload_length, now_ms)) {
+            if (observe_match_terminal_outbound(
+                        state,
+                        parsed.source_port,
+                        parsed.dest_port,
+                        packet + parsed.udp_payload_offset,
+                        parsed.udp_payload_length,
+                        now_ms)) {
                 dispatch_match_terminal_event(env, state);
             }
             const int new_stable_port = load_stable_game_port(state);

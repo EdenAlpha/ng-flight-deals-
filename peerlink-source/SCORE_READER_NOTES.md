@@ -37,3 +37,14 @@ Current detector requirements:
 The match-end signal no longer waits for the 1-second statistics poll; native code dispatches it immediately when the terminal rule becomes true. The screenshot burst occurs only after that terminal event, at roughly `t=0 ms`, `t=350 ms`, and `t=900 ms`, and stops immediately after a confident score is found. This protects against the transport entering its terminal state slightly before the final score UI settles while avoiding continuous screenshot polling during gameplay.
 
 Prime Mode currently supplies the screenshot via `screencap`. A MediaProjection fallback remains to be added for devices where Prime Mode is not active.
+
+
+## Capture validation update
+
+The terminal detector is transport-aware rather than assuming only the 26-byte custom-P2P floor.
+
+- `PCAPdroid_28_Jun_15_53_33.pcap`: custom-P2P (`00 00...`) outbound terminal run fires the 500 ms / 8-packet detector at about +152.666 s.
+- `PCAPdroid_03_Jul_11_46_34.pcap`: DTLS 1.2 application-data (`17 FE FD...`) outbound terminal drain is about 68-76 bytes and fires at about +347.296 s.
+- `PCAPdroid_03_Jul_11_46_30.pcap`: no sustained terminal drain occurs before capture termination, and the detector produces no terminal trigger.
+
+Both families still require the already-established gameplay flow, the 30-second arm delay, at least eight matching packets, and at least 500 ms of continuous terminal-family traffic. Score capture starts only after that one-shot transition.
