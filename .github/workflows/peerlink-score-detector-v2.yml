@@ -23,6 +23,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           cppp = Path('peerlink-source/app/src/main/jni/peerlink_backend.cpp')
           notesp = Path('peerlink-source/SCORE_READER_NOTES.md')
@@ -45,22 +46,21 @@ constexpr size_t kMatchTerminalDtlsMaxUdpPayload = 80U;
               raise SystemExit(f'constant block matches={s.count(old)}')
           s = s.replace(old, new, 1)
 
-          old = """bool observe_match_terminal_outbound(BackendState *state,
-                                     uint16_t local_port,
-                                     uint16_t remote_port,
-                                     size_t udp_payload_length,
-                                     uint64_t now_ms) {
-"""
-          new = """bool observe_match_terminal_outbound(BackendState *state,
-                                     uint16_t local_port,
-                                     uint16_t remote_port,
-                                     const uint8_t *udp_payload,
-                                     size_t udp_payload_length,
-                                     uint64_t now_ms) {
-"""
-          if s.count(old) != 1:
-              raise SystemExit(f'detector signature matches={s.count(old)}')
-          s = s.replace(old, new, 1)
+          pattern = re.compile(
+              r'(bool\s+observe_match_terminal_outbound\(BackendState \*state,\s*\n'
+              r'\s*uint16_t local_port,\s*\n'
+              r'\s*uint16_t remote_port,\s*\n)'
+              r'(\s*)size_t udp_payload_length,\s*\n'
+              r'(\s*)uint64_t now_ms\) \{'
+          )
+          replacement = (
+              r'\1\2const uint8_t *udp_payload,\n'
+              r'\2size_t udp_payload_length,\n'
+              r'\3uint64_t now_ms) {'
+          )
+          s, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+              raise SystemExit(f'detector signature regex matches={n}')
 
           old = """    if (udp_payload_length > kMatchTerminalMaxUdpPayload) {
         state->match_terminal_candidate_start_ms = 0;
@@ -89,43 +89,23 @@ constexpr size_t kMatchTerminalDtlsMaxUdpPayload = 80U;
               raise SystemExit(f'detector gate matches={s.count(old)}')
           s = s.replace(old, new, 1)
 
-          old4 = """                if (observe_match_terminal_outbound(state, parsed.source_port, parsed.dest_port, parsed.udp_payload_length, now_ms)) {
-                    dispatch_match_terminal_event(env, state);
-                }
-"""
-          new4 = """                if (observe_match_terminal_outbound(
-                        state,
-                        parsed.source_port,
-                        parsed.dest_port,
-                        packet + parsed.udp_payload_offset,
-                        parsed.udp_payload_length,
-                        now_ms)) {
-                    dispatch_match_terminal_event(env, state);
-                }
-"""
-          if s.count(old4) != 1:
-              raise SystemExit(f'IPv4 terminal call matches={s.count(old4)}')
-          s = s.replace(old4, new4, 1)
+          call_pattern = re.compile(
+              r'observe_match_terminal_outbound\(\s*state,\s*parsed\.source_port,\s*'
+              r'parsed\.dest_port,\s*parsed\.udp_payload_length,\s*now_ms\)'
+          )
+          call_replacement = (
+              'observe_match_terminal_outbound(\n'
+              '                        state,\n'
+              '                        parsed.source_port,\n'
+              '                        parsed.dest_port,\n'
+              '                        packet + parsed.udp_payload_offset,\n'
+              '                        parsed.udp_payload_length,\n'
+              '                        now_ms)'
+          )
+          s, n = call_pattern.subn(call_replacement, s)
+          if n != 2:
+              raise SystemExit(f'terminal callsite regex matches={n}, expected IPv4+IPv6')
 
-          old6 = """            if (observe_match_terminal_outbound(state, parsed.source_port, parsed.dest_port, parsed.udp_payload_length, now_ms)) {
-                dispatch_match_terminal_event(env, state);
-            }
-"""
-          new6 = """            if (observe_match_terminal_outbound(
-                    state,
-                    parsed.source_port,
-                    parsed.dest_port,
-                    packet + parsed.udp_payload_offset,
-                    parsed.udp_payload_length,
-                    now_ms)) {
-                dispatch_match_terminal_event(env, state);
-            }
-"""
-          if s.count(old6) != 1:
-              raise SystemExit(f'IPv6 terminal call matches={s.count(old6)}')
-          s = s.replace(old6, new6, 1)
-
-          # The latch comment used to describe the single <=36-byte family.
           s = s.replace(
               'a later match in the same VPN session after normal (>36-byte) gameplay resumes.',
               'a later match in the same VPN session after normal non-terminal gameplay resumes.',
@@ -141,8 +121,8 @@ constexpr size_t kMatchTerminalDtlsMaxUdpPayload = 80U;
 
 The terminal detector is transport-aware rather than assuming only the 26-byte custom-P2P floor.
 
-- `PCAPdroid_28_Jun_15_53_33.pcap`: custom-P2P (`00 00...`) terminal run starts at about +152.1 s; the 500 ms / 8-packet detector fires at about +152.666 s.
-- `PCAPdroid_03_Jul_11_46_34.pcap`: DTLS 1.2 application-data (`17 FE FD...`) terminal drain is about 68-76 bytes; the same sustained-run detector fires near capture termination.
+- `PCAPdroid_28_Jun_15_53_33.pcap`: custom-P2P (`00 00...`) outbound terminal run fires the 500 ms / 8-packet detector at about +152.666 s.
+- `PCAPdroid_03_Jul_11_46_34.pcap`: DTLS 1.2 application-data (`17 FE FD...`) outbound terminal drain is about 68-76 bytes and fires at about +347.296 s.
 - `PCAPdroid_03_Jul_11_46_30.pcap`: no sustained terminal drain occurs before capture termination, and the detector produces no terminal trigger.
 
 Both families still require the already-established gameplay flow, the 30-second arm delay, at least eight matching packets, and at least 500 ms of continuous terminal-family traffic. Score capture starts only after that one-shot transition.
