@@ -1,0 +1,189 @@
+name: eFootball indirect score bridge v6
+
+on:
+  push:
+    branches: [ efootball-score-wire-bridge-v3-2026-08-24 ]
+    paths:
+      - '.github/workflows/efootball-score-indirect-v6.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  indirect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current native binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Analyze indirect dispatch and crypto boundary
+        run: |
+          cat > /tmp/ef/indirect.py <<'PY'
+          from pathlib import Path
+          from collections import defaultdict,deque
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import bisect,re
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so');raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f);text=e.get_section_by_name('.text');tb=text.data();tva=int(text['sh_addr']);tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); ins=list(md.disasm(tb,tva)); byaddr={z.address:i for i,z in enumerate(ins)}
+          starts=[];calls=[]
+          for z in ins:
+              if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str:starts.append(z.address)
+              if z.mnemonic=='bl':
+                  m=re.match(r'#0x([0-9a-f]+)',z.op_str)
+                  if m:calls.append((z.address,int(m.group(1),16)))
+          starts=sorted(set(starts))
+          def fs(a):
+              if not(tva<=a<tend):return a
+              i=bisect.bisect_right(starts,a)-1;return starts[i] if i>=0 else a
+          def fe(a):
+              i=bisect.bisect_right(starts,a);return starts[i] if i<len(starts) else tend
+          graph=defaultdict(set);rev=defaultdict(set);sites=defaultdict(list)
+          for site,dst in calls:
+              s=fs(site);d=fs(dst)
+              if s!=d:graph[s].add(d);rev[d].add(s);sites[(s,d)].append(site)
+          def vaoff(va):
+              for sv,so,sz in loads:
+                  if sv<=va<sv+sz:return so+va-sv
+          def cstr(va):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+180].split(b'\0',1)[0]
+              if len(b)<4:return None
+              try:s=b.decode('utf-8')
+              except:return None
+              return s if sum(32<=ord(c)<127 for c in s)/max(1,len(s))>.85 else None
+          def strings_in_fn(a):
+              body=ins[byaddr.get(a,0):byaddr.get(fe(a),len(ins))]
+              ss=[]
+              for i,z in enumerate(body):
+                  if z.mnemonic!='adrp':continue
+                  m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                  if not m:continue
+                  reg=m.group(1);pg=int(m.group(2),16)
+                  for q in body[i+1:i+7]:
+                      m2=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                      if m2:
+                          s=cstr(pg+int(m2.group(1),16))
+                          if s and len(s)<140:ss.append(s)
+                          break
+              return sorted(set(ss))
+
+          # Heuristic virtual dispatch fingerprint: BLR xN preceded by a load of xN from [xM,#slot].
+          def indirect_sites(a):
+              st=byaddr.get(a);en=byaddr.get(fe(a),len(ins))
+              if st is None:return []
+              body=ins[st:en];res=[]
+              for i,z in enumerate(body):
+                  if z.mnemonic!='blr':continue
+                  target=z.op_str.strip(); slot=None;base=None;chain=[]
+                  for q in reversed(body[max(0,i-10):i]):
+                      chain.append(f'0x{q.address:x}:{q.mnemonic} {q.op_str}')
+                      m=re.match(rf'{re.escape(target)}, \[(x\d+)(?:, #0x([0-9a-f]+))?\]',q.op_str) if q.mnemonic=='ldr' else None
+                      if m:
+                          base=m.group(1);slot=int(m.group(2),16) if m.group(2) else 0;break
+                  res.append((z.address,target,base,slot,list(reversed(chain))))
+              return res
+          def closure(seed,g,depth):
+              seen={seed};front={seed};levels={seed:0}
+              for d in range(depth):
+                  nf=set()
+                  for n in front:nf.update(g.get(n,()))
+                  nf-=seen
+                  for n in nf:levels[n]=d+1
+                  seen|=nf;front=nf
+              return seen,levels
+
+          score=fs(0x7d5b638);scoreA=fs(0x7d4724c);crypto=fs(0x7c0c670);consumer=fs(0x7bf9ecc);transport=fs(0x7c0dca0);p2p=fs(0x7ceafc4)
+          score_nodes,sd=closure(score,rev,6); score_nodes|=closure(scoreA,rev,6)[0]
+          p2p_nodes,pd=closure(p2p,rev,6);p2p_nodes|=closure(crypto,rev,6)[0];p2p_nodes|=closure(consumer,rev,6)[0]
+          score_slots=defaultdict(list);p2p_slots=defaultdict(list)
+          for n in score_nodes:
+              for site,t,b,slot,chain in indirect_sites(n):
+                  if slot is not None:score_slots[slot].append((n,site,t,b,chain))
+          for n in p2p_nodes:
+              for site,t,b,slot,chain in indirect_sites(n):
+                  if slot is not None:p2p_slots[slot].append((n,site,t,b,chain))
+
+          out=[]
+          out.append('=== TARGETS ===')
+          for n,a in [('scoreB',score),('scoreA',scoreA),('crypto',crypto),('consumer',consumer),('transport',transport),('p2p',p2p)]:out.append(f'{n}=0x{a:x} end=0x{fe(a):x}')
+          out.append('\n=== SHARED VIRTUAL DISPATCH SLOTS ===')
+          common=sorted(set(score_slots)&set(p2p_slots))
+          out.append(f'count={len(common)}')
+          for slot in common[:120]:
+              out.append(f'SLOT 0x{slot:x}')
+              for side,arr in [('SCORE',score_slots[slot]),('P2P',p2p_slots[slot])]:
+                  for n,site,t,b,chain in arr[:8]:
+                      out.append(f' {side} fn=0x{n:x} blr=0x{site:x} target={t} base={b} strings={strings_in_fn(n)[:12]}')
+                      for x in chain[-6:]:out.append('   '+x)
+          out.append('\n=== CRYPTO TRANSFORMER CALLERS ===')
+          for n in sorted(rev.get(crypto,())):
+              out.append(f'caller=0x{n:x} strings={strings_in_fn(n)[:25]} sites='+','.join(f'0x{x:x}' for x in sites[(n,crypto)]))
+              for st in indirect_sites(n):out.append(f'  indirect blr=0x{st[0]:x} slot={st[3]} base={st[2]}')
+          out.append('\n=== CONSUMER CALLERS/CALLEES ===')
+          out.append('callers='+','.join(f'0x{x:x}' for x in sorted(rev.get(consumer,()))))
+          out.append('callees='+','.join(f'0x{x:x}' for x in sorted(graph.get(consumer,()))))
+          for n in sorted(graph.get(consumer,())):
+              out.append(f' callee=0x{n:x} strings={strings_in_fn(n)[:25]}')
+
+          def dump(label,a,lim=0x3000):
+              end=min(fe(a),a+lim);out.append(f'\n=== {label} 0x{a:x}-0x{end:x} ===')
+              st=byaddr.get(a);en=byaddr.get(end,len(ins))
+              body=ins[st:en] if st is not None else []
+              for i,z in enumerate(body):
+                  extra=''
+                  if z.mnemonic=='adrp':
+                      m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if m:
+                          reg=m.group(1);pg=int(m.group(2),16)
+                          for q in body[i+1:i+7]:
+                              m2=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                              if m2:
+                                  s=cstr(pg+int(m2.group(1),16))
+                                  if s and len(s)<120:extra=' ; STR='+repr(s)
+                                  break
+                  out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{extra}')
+          dump('CRYPTO_TRANSFORMER',crypto,0x2600)
+          dump('CONSUMER',consumer,0x1800)
+
+          out.append('\n=== VERDICT ===')
+          if common:
+              out.append('INDIRECT_SLOT_OVERLAP=YES')
+              out.append('Score/result ancestry and P2P/crypto ancestry use one or more identical virtual-call offsets. This is only a candidate bridge; object/vtable identity must match before treating it as a data path.')
+          else:
+              out.append('INDIRECT_SLOT_OVERLAP=NO')
+              out.append('No common virtual-dispatch slot was found across six levels of score-result callers and P2P/crypto callers. Together with the missing direct-call bridge, this weakens the hypothesis that HOME_SCORE/AWAY_SCORE are serialized onto the live P2P payload.')
+          Path('/tmp/out/efootball-score-indirect-v6.txt').write_text('\n'.join(out));print('\n'.join(out[:900]))
+          PY
+          python3 /tmp/ef/indirect.py
+      - name: Commit report
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-score-indirect-v6.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-score-indirect-v6.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/efootball-score-indirect-v6.txt analysis-output/efootball-score-indirect-v6.sha256.txt
+          git commit -m 'Add indirect eFootball score to P2P trace'
+          git push
