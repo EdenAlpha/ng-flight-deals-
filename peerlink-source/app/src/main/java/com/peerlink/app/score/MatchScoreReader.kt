@@ -147,14 +147,15 @@ object MatchScoreReader {
                 TimeUnit.SECONDS,
             )
 
-            // Strong path: OCR saw an explicit score separator on a single line.
-            val explicit = Regex("(?<!\\d)(\\d{1,2})\\s*[-–—:]\\s*(\\d{1,2})(?!\\d)")
+            // Strong path: require an actual dash separator. A colon is deliberately
+            // excluded because OCR commonly sees match clocks (09:00, 12:00, etc.)
+            // and those can otherwise masquerade as a plausible football score.
+            val explicit = Regex("(?<!\\d)(\\d{1,2})\\s*[-–—]\\s*(\\d{1,2})(?!\\d)")
             for (block in result.textBlocks) {
                 for (line in block.lines) {
                     val match = explicit.find(line.text) ?: continue
                     val left = match.groupValues[1].toIntOrNull() ?: continue
                     val right = match.groupValues[2].toIntOrNull() ?: continue
-                    // Reject match clocks such as 90:00 and implausible OCR noise.
                     if (left in 0..20 && right in 0..20) {
                         return MatchScore(left, right, result.text)
                     }
