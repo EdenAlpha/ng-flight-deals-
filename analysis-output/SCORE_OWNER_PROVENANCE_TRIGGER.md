@@ -1,1 +1,1 @@
-Trigger focused disassembly of the real labelled score-state owner, its caller, and the P2P-near offset candidate. Goal: resolve where x26 comes from and eliminate false offset collisions.
+Focused provenance result: x26 becomes x11, x11 is reloaded from stack slot 208, and that slot previously stored entry x21; entry x21 is the function's original x0. Therefore the real score-state record is the original x0 object. Now trigger virtual-dispatch/function-pointer provenance for the composite consumer 0x7d46058, which has no direct callsite.
