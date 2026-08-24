@@ -18,14 +18,11 @@ jobs:
           ref: peerlink-score-reader-2026-08-24
           fetch-depth: 0
 
-      - name: Apply staged score-reader patch
+      - name: Apply staged implementation patches
         run: |
           set -euo pipefail
-          if [ ! -f .github/workflows/peerlink-score-reader-build.yml ]; then
-            echo "Staging workflow already consumed; validating committed source only."
-            exit 0
-          fi
-          python3 - <<'PY'
+          if [ -f .github/workflows/peerlink-score-reader-build.yml ]; then
+            python3 - <<'PY'
           from pathlib import Path
           y = Path('.github/workflows/peerlink-score-reader-build.yml').read_text()
           marker = "python3 - <<'PY'\n"
@@ -33,6 +30,10 @@ jobs:
           code = '\n'.join(line[10:] if line.startswith('          ') else line for line in raw.splitlines())
           exec(compile(code, '<score-reader-stage>', 'exec'), {'__name__': '__main__'})
           PY
+          fi
+          if [ -f peerlink-source/tools/patch_direct_terminal_callback.py ]; then
+            python3 peerlink-source/tools/patch_direct_terminal_callback.py
+          fi
 
       - name: Build PeerLink debug APK
         run: |
@@ -49,16 +50,16 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Commit verified implementation when staged
+      - name: Commit verified implementation
         run: |
           set -euo pipefail
           rm -f .github/workflows/peerlink-score-reader-build.yml .github/workflows/peerlink-score-reader-pr.yml
-          if git diff --quiet && git diff --cached --quiet; then
-            echo "No staging changes to commit."
-            exit 0
-          fi
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A
-          git commit -m "Add event-driven eFootball final score reader"
+          if git diff --cached --quiet; then
+            echo "No source changes to commit."
+            exit 0
+          fi
+          git commit -m "Make eFootball match-end callback fully event-driven"
           git push origin HEAD:peerlink-score-reader-2026-08-24
