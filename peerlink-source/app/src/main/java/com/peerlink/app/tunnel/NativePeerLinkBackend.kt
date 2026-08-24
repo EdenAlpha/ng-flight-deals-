@@ -17,6 +17,7 @@ class NativePeerLinkBackend(
         fun fabricateStunResponse(packet: ByteArray, length: Int): ByteArray?
         fun onNativeLog(level: Int, message: String, fileOnly: Boolean) {}
         fun onStats(stats: NativeBackendStats) {}
+        fun onMatchTerminalDetected() {}
     }
 
     @Keep
@@ -34,6 +35,12 @@ class NativePeerLinkBackend(
         @Suppress("unused")
         fun onNativeLog(level: Int, message: String, fileOnly: Boolean) {
             callbacks.onNativeLog(level, message, fileOnly)
+        }
+
+        @Suppress("unused")
+        fun onMatchTerminalDetected() {
+            AppState.appendLog("[MATCH-END  ] Native eFootball terminal signature confirmed")
+            callbacks.onMatchTerminalDetected()
         }
     }
 
@@ -97,6 +104,12 @@ class NativePeerLinkBackend(
         val stats = NativeBackendStats.fromRaw(nativePollStats(handle))
         latestStats = stats
         return stats
+    }
+
+    fun pollMatchTerminalDetected(): Boolean {
+        val handle = nativeHandle
+        if (handle == 0L) return false
+        return nativePollMatchTerminal(handle)
     }
 
     fun dumpUdpTrace(): String {
@@ -178,6 +191,7 @@ class NativePeerLinkBackend(
 
     private external fun nativePollStats(handle: Long): LongArray
     private external fun nativeDumpUdpTrace(handle: Long): String
+    private external fun nativePollMatchTerminal(handle: Long): Boolean
     private external fun nativeRebindPeerSocket(handle: Long): Boolean
     private external fun nativeGetHotThreadTids(handle: Long): IntArray
     private external fun nativeVerifyPeerPath(handle: Long, timeoutMs: Int): Boolean
