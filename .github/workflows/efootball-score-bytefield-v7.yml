@@ -1,0 +1,194 @@
+name: eFootball score byte-field ownership v7
+
+on:
+  pull_request:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  score-bytefield:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-score-wire-bridge-v3-2026-08-24
+          fetch-depth: 0
+
+      - name: Install tools and current eFootball native binary
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+
+      - name: Find paired score-byte readers and writers
+        run: |
+          cat > /tmp/ef/scorebytes.py <<'PY'
+          from pathlib import Path
+          from collections import defaultdict, deque
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import bisect,re
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so');raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); ins=list(md.disasm(tb,tva)); byaddr={z.address:i for i,z in enumerate(ins)}
+          starts=[];calls=[]
+          for z in ins:
+              if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str: starts.append(z.address)
+              if z.mnemonic=='bl':
+                  m=re.match(r'#0x([0-9a-f]+)',z.op_str)
+                  if m:calls.append((z.address,int(m.group(1),16)))
+          starts=sorted(set(starts))
+          def fs(a):
+              if not(tva<=a<tend):return a
+              i=bisect.bisect_right(starts,a)-1; return starts[i] if i>=0 else a
+          def fe(a):
+              i=bisect.bisect_right(starts,a); return starts[i] if i<len(starts) else tend
+          graph=defaultdict(set);rev=defaultdict(set);sites=defaultdict(list)
+          for site,dst in calls:
+              s=fs(site);d=fs(dst)
+              if s!=d: graph[s].add(d);rev[d].add(s);sites[(s,d)].append(site)
+          def vaoff(va):
+              for sv,so,sz in loads:
+                  if sv<=va<sv+sz:return so+va-sv
+          def offva(o):
+              for sv,so,sz in loads:
+                  if so<=o<so+sz:return sv+o-so
+          def cstr(va):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+180].split(b'\0',1)[0]
+              try:s=b.decode('utf8')
+              except:return None
+              return s if len(s)>=3 and sum(32<=ord(c)<127 for c in s)/len(s)>.9 else None
+
+          # Materialized strings per function, especially score/result/server/P2P labels.
+          fnstr=defaultdict(set)
+          for i,z in enumerate(ins):
+              if z.mnemonic!='adrp':continue
+              m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+              if not m:continue
+              reg=m.group(1);pg=int(m.group(2),16)
+              for q in ins[i+1:i+7]:
+                  m2=re.match(rf'{reg}, {reg}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                  if m2:
+                      s=cstr(pg+int(m2.group(1),16))
+                      if s and len(s)<120:fnstr[fs(z.address)].add(s)
+                      break
+
+          # Gather every memory op using immediate offsets 0x48, 0x4b, 0x4c.
+          hits=defaultdict(lambda:defaultdict(list))
+          pat=re.compile(r'\[(x\d+|sp),\s*#0x(48|4b|4c)\]')
+          for z in ins:
+              m=pat.search(z.op_str)
+              if m:hits[fs(z.address)][int(m.group(2),16)].append(z)
+          paired={f:d for f,d in hits.items() if 0x4b in d and 0x4c in d}
+          tripled={f:d for f,d in hits.items() if all(x in d for x in (0x48,0x4b,0x4c))}
+
+          def path(srcs,dsts,maxd=18):
+              q=deque((s,[s]) for s in srcs);seen=set(srcs)
+              while q:
+                  n,p=q.popleft()
+                  if len(p)-1>=maxd:continue
+                  for x in graph.get(n,()):
+                      if x in p:continue
+                      np=p+[x]
+                      if x in dsts:return np
+                      if x not in seen:seen.add(x);q.append((x,np))
+              return None
+          def rpath(srcs,dsts,maxd=18):
+              q=deque((s,[s]) for s in srcs);seen=set(srcs)
+              while q:
+                  n,p=q.popleft()
+                  if len(p)-1>=maxd:continue
+                  for x in rev.get(n,()):
+                      if x in p:continue
+                      np=p+[x]
+                      if x in dsts:return np
+                      if x not in seen:seen.add(x);q.append((x,np))
+              return None
+          def fmt(p):return 'NONE' if not p else ' -> '.join(f'0x{x:x}' for x in p)
+          score_words={'HOME_SCORE','AWAY_SCORE','GAME_PHASE','END_REASON'}
+          server_words={'CMD_ADD_SCORE','CMD_GET_GAME_RESULT','CMD_SET_GAME_RESULT','CmdAddScore.php','CmdGetGameResult.php','CmdSetGameResult.php'}
+          p2p_words={'P2P_LOW_LEVEL','P2P_HIGH_LEVEL','RP_RELIABILITY','RP_DATA_CAST','RP_JSON_DATA','pes-custom-encrypt','SessionKeyEncryptionAlgorithm','KeyExchangeEncryptionAlgorithm'}
+          scoreowners={f for f,s in fnstr.items() if s&score_words}
+          server={f for f,s in fnstr.items() if s&server_words}
+          p2p={f for f,s in fnstr.items() if s&p2p_words}
+
+          out=[]
+          out.append('=== ACTUAL SCORE STRING OWNERS ===')
+          for f in sorted(scoreowners):out.append(f'0x{f:x} strings={sorted(fnstr[f]&score_words)} callers={[hex(x) for x in sorted(rev.get(f,()))]} callees={[hex(x) for x in sorted(graph.get(f,()))]}')
+          out.append('\n=== PAIRED +0x4B/+0x4C MEMORY USERS ===')
+          out.append(f'paired_count={len(paired)} tripled_count={len(tripled)}')
+          for f,d in sorted(paired.items()):
+              out.append(f'\nFUNC 0x{f:x}-0x{fe(f):x} strings={sorted(fnstr.get(f,set()))[:40]}')
+              for off in (0x48,0x4b,0x4c):
+                  for z in d.get(off,[]):out.append(f' HIT +0x{off:x} 0x{z.address:x}: {z.mnemonic} {z.op_str}')
+              out.append(' callers='+','.join(f'0x{x:x}' for x in sorted(rev.get(f,()))))
+              out.append(' callees='+','.join(f'0x{x:x}' for x in sorted(graph.get(f,()))))
+              # focused disassembly around each score-byte hit
+              addrs=sorted({z.address for zz in d.values() for z in zz})
+              for a in addrs:
+                  st=max(tva,a-96);en=min(tend,a+160)
+                  out.append(f' -- window @0x{a:x} --')
+                  for z in md.disasm(tb[st-tva:en-tva],st):out.append(f'  0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+              out.append(' direct_to_server='+fmt(path({f},server)))
+              out.append(' direct_to_p2p='+fmt(path({f},p2p)))
+              out.append(' reverse_to_server='+fmt(rpath({f},server)))
+              out.append(' reverse_to_p2p='+fmt(rpath({f},p2p)))
+
+          out.append('\n=== SCORE OWNER BRIDGES ===')
+          out.append('owner_to_server='+fmt(path(scoreowners,server)))
+          out.append('owner_to_p2p='+fmt(path(scoreowners,p2p)))
+          out.append('server_to_owner='+fmt(path(server,scoreowners)))
+          out.append('p2p_to_owner='+fmt(path(p2p,scoreowners)))
+
+          # Search for nearby paired byte accesses on same base register even if function-start heuristic splits oddly.
+          out.append('\n=== RAW NEARBY +4B/+4C PAIRS ===')
+          seq=[z for z in ins if pat.search(z.op_str)]
+          for i,a in enumerate(seq):
+              ma=pat.search(a.op_str)
+              if not ma or int(ma.group(2),16)!=0x4b:continue
+              for b in seq[i+1:i+10]:
+                  if b.address-a.address>320:break
+                  mb=pat.search(b.op_str)
+                  if mb and int(mb.group(2),16)==0x4c and ma.group(1)==mb.group(1):
+                      out.append(f'base={ma.group(1)} 0x{a.address:x}:{a.mnemonic} {a.op_str} | 0x{b.address:x}:{b.mnemonic} {b.op_str} fnA=0x{fs(a.address):x} fnB=0x{fs(b.address):x}')
+
+          out.append('\n=== VERDICT ===')
+          if tripled:
+              out.append('PAIRED_RESULT_BYTE_ACCESS=FOUND')
+              out.append('At least one function accesses GAME_PHASE(+0x48), HOME_SCORE(+0x4B), and AWAY_SCORE(+0x4C) in the same recovered function. This is the strongest static seed for following concrete score bytes rather than schema strings.')
+          elif paired:
+              out.append('PAIRED_SCORE_BYTE_ACCESS=FOUND')
+          else:
+              out.append('PAIRED_SCORE_BYTE_ACCESS=NOT_FOUND')
+          Path('/tmp/out/efootball-score-bytefield-v7.txt').write_text('\n'.join(out));print('\n'.join(out[:1000]))
+          PY
+          python3 /tmp/ef/scorebytes.py
+
+      - name: Commit report to analysis branch
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-score-bytefield-v7.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-score-bytefield-v7.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/efootball-score-bytefield-v7.txt analysis-output/efootball-score-bytefield-v7.sha256.txt
+          git commit -m 'Trace concrete eFootball score byte-field users'
+          git push origin HEAD:efootball-score-wire-bridge-v3-2026-08-24
