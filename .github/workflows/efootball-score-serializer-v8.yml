@@ -1,0 +1,159 @@
+name: eFootball score serializer dataflow v8
+
+on:
+  pull_request:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  serializer-dataflow:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: efootball-score-wire-bridge-v3-2026-08-24
+          fetch-depth: 0
+
+      - name: Install tools and current eFootball native binary
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+
+      - name: Trace exact score serializer and candidate packers
+        run: |
+          cat > /tmp/ef/v8.py <<'PY'
+          from pathlib import Path
+          from collections import defaultdict, deque
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import bisect,re
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); ins=list(md.disasm(tb,tva)); idx={z.address:i for i,z in enumerate(ins)}
+          starts=[]; direct=[]
+          for z in ins:
+              if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str: starts.append(z.address)
+              if z.mnemonic=='bl':
+                  m=re.match(r'#0x([0-9a-f]+)',z.op_str)
+                  if m: direct.append((z.address,int(m.group(1),16)))
+          starts=sorted(set(starts))
+          def fs(a):
+              i=bisect.bisect_right(starts,a)-1
+              return starts[i] if i>=0 and tva<=a<tend else a
+          def fe(a):
+              i=bisect.bisect_right(starts,a)
+              return starts[i] if i<len(starts) else tend
+          graph=defaultdict(set); rev=defaultdict(set); sites=defaultdict(list)
+          for site,dst in direct:
+              s=fs(site); d=fs(dst); graph[s].add(d); rev[d].add(s); sites[(s,d)].append(site)
+          def disasm_range(a,b):
+              a=max(a,tva); b=min(b,tend)
+              return [f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}' for z in md.disasm(tb[a-tva:b-tva],a)]
+          def window(a,pre=128,post=256): return disasm_range(a-pre,a+post)
+          def path(src,dsts,maxd=14):
+              q=deque([(src,[src])]); seen={src}
+              while q:
+                  n,pth=q.popleft()
+                  if len(pth)-1>=maxd: continue
+                  for x in graph.get(n,()):
+                      if x in dsts:return pth+[x]
+                      if x not in seen:seen.add(x);q.append((x,pth+[x]))
+          def fmt(p):return 'NONE' if not p else ' -> '.join(f'0x{x:x}' for x in p)
+
+          SCORE_FN=0x7d54c44; SER=0x7d5e71c
+          HOME=0x7d556e0; AWAY=0x7d556fc; PHASE=0x7d556a8
+          CAND=[0x7bbc4bc,0x7a536b8,0x7fa7374]
+          P2P_RANGES=[(0x7bf0000,0x7c10000),(0x7ce0000,0x7d10000)]
+          p2p={f for f in starts if any(lo<=f<hi for lo,hi in P2P_RANGES)}
+
+          out=[]
+          out.append('=== V8 EXACT SCORE SERIALIZER TRACE ===')
+          out.append(f'SCORE_FN=0x{SCORE_FN:x} SER=0x{SER:x} HOME=0x{HOME:x} AWAY=0x{AWAY:x} PHASE=0x{PHASE:x}')
+          out.append('\n=== EXACT SCORE CALLSITE WINDOWS ===')
+          for a,n in [(PHASE,'GAME_PHASE'),(HOME,'HOME_SCORE'),(AWAY,'AWAY_SCORE')]:
+              out.append(f'-- {n} @0x{a:x} --'); out.extend(window(a,96,160))
+
+          out.append('\n=== SERIALIZER FUNCTION FULL DISASSEMBLY ===')
+          sf=fs(SER); out.append(f'recovered_serializer_fn=0x{sf:x}-0x{fe(sf):x}')
+          out.extend(disasm_range(sf,fe(sf)))
+          out.append('serializer_callers='+','.join(f'0x{x:x}' for x in sorted(rev.get(sf,()))))
+          out.append('serializer_callees='+','.join(f'0x{x:x}' for x in sorted(graph.get(sf,()))))
+          for c in sorted(graph.get(sf,())):
+              out.append(f' serializer->0x{c:x} sites='+','.join(f'0x{x:x}' for x in sites.get((sf,c),[])))
+
+          out.append('\n=== SCORE FUNCTION FORWARD REGION AFTER AWAY INSERT ===')
+          out.extend(disasm_range(AWAY-256,min(fe(SCORE_FN),AWAY+0x2400)))
+
+          # Track concrete stack object address pattern sp+0x1270 and aliases in score function.
+          out.append('\n=== STACK SERIALIZATION OBJECT REFERENCES ===')
+          score_ins=[z for z in ins if SCORE_FN<=z.address<fe(SCORE_FN)]
+          for i,z in enumerate(score_ins):
+              s=z.op_str.replace(' ','')
+              if '#0x270' in z.op_str or '#1, lsl #12' in z.op_str or '[sp, #0x1270]' in z.op_str:
+                  out.append(f'0x{z.address:x}: {z.mnemonic} {z.op_str}')
+                  for q in score_ins[max(0,i-5):min(len(score_ins),i+9)]: out.append(f'  0x{q.address:x}: {q.mnemonic:9} {q.op_str}')
+
+          out.append('\n=== CALLS AFTER HOME/AWAY SERIALIZATION IN SCORE FUNCTION ===')
+          for site,dst in direct:
+              if AWAY<site<fe(SCORE_FN): out.append(f'0x{site:x} -> 0x{dst:x} recovered_dst_fn=0x{fs(dst):x}')
+
+          out.append('\n=== CANDIDATE SAME-OFFSET PACKERS ===')
+          for a in CAND:
+              f=fs(a); out.append(f'\nCAND seed=0x{a:x} fn=0x{f:x}-0x{fe(f):x}')
+              out.extend(disasm_range(f,min(fe(f),f+0x1800)))
+              out.append(' callers='+','.join(f'0x{x:x}' for x in sorted(rev.get(f,()))))
+              out.append(' callees='+','.join(f'0x{x:x}' for x in sorted(graph.get(f,()))))
+              out.append(' to_p2p='+fmt(path(f,p2p,18)))
+
+          out.append('\n=== SCORE/SERIALIZER CALL GRAPH TOWARD P2P RANGES ===')
+          out.append('score_to_p2p='+fmt(path(SCORE_FN,p2p,18)))
+          out.append('serializer_to_p2p='+fmt(path(sf,p2p,18)))
+          for f in sorted(rev.get(sf,())):
+              out.append(f'serializer_caller_0x{f:x}_to_p2p='+fmt(path(f,p2p,18)))
+
+          # Conservative automatic verdict: prove only serializer feed from exact loads, not P2P value flow.
+          exact_calls=[]
+          for a in (PHASE,HOME,AWAY):
+              ii=idx.get(a)
+              if ii is not None:
+                  for z in ins[ii:ii+12]:
+                      if z.mnemonic=='bl' and '#0x7d5e71c' in z.op_str: exact_calls.append((a,z.address))
+          out.append('\n=== VERDICT ===')
+          if len(exact_calls)==3:
+              out.append('SCORE_VALUE_TO_SERVER_SERIALIZER=PROVEN')
+              out.append('Exact byte loads at +0x48/+0x4B/+0x4C feed the same serializer call target 0x7d5e71c.')
+          else: out.append('SCORE_VALUE_TO_SERVER_SERIALIZER=INCOMPLETE')
+          out.append('SCORE_VALUE_TO_P2P_DATAFLOW=NOT_YET_PROVEN')
+          out.append('P2P call-graph reachability alone is not treated as score-byte dataflow proof.')
+          Path('/tmp/out/efootball-score-serializer-v8.txt').write_text('\n'.join(out))
+          print('\n'.join(out[-120:]))
+          PY
+          python3 /tmp/ef/v8.py
+
+      - name: Commit v8 report to analysis branch
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-score-serializer-v8.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-score-serializer-v8.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/efootball-score-serializer-v8.txt analysis-output/efootball-score-serializer-v8.sha256.txt
+          git commit -m 'Trace exact score serializer dataflow v8'
+          git push origin HEAD:efootball-score-wire-bridge-v3-2026-08-24
