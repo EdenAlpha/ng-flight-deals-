@@ -1,0 +1,1 @@
+Trigger focused disassembly of the real labelled score-state owner, its caller, and the P2P-near offset candidate. Goal: resolve where x26 comes from and eliminate false offset collisions.
