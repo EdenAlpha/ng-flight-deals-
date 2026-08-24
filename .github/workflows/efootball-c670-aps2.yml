@@ -97,7 +97,6 @@ jobs:
           best=None
           for extra in (0,1,2):
               cnt,bad,res,n=decode(extra,limit=50)
-              out.append=f''
               line=f'EXTRA_HDR={extra}: count={cnt} early_bad={bad} early_slots={[(hex(a),t) for a,t in res[:10]]}'
               print(line,file=sys.stderr)
               out.append(line)
