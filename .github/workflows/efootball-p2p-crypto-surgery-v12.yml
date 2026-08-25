@@ -1,0 +1,143 @@
+name: eFootball P2P crypto surgery v12
+
+on:
+  push:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Fetch exact binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          unzip -q /tmp/ef/bundle/config.arm64_v8a.apk -d /tmp/ef/native
+      - name: Resolve custom cipher implementation and enum dispatch
+        run: |
+          cat > /tmp/ef/v12.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import re,bisect,collections,hashlib,struct
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+            e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+            loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          ins=list(md.disasm(tb,tva)); starts=[]
+          for z in ins:
+            if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str: starts.append(z.address)
+          starts=sorted(set(starts))
+          def fs(a):
+            i=bisect.bisect_right(starts,a)-1; return starts[i] if i>=0 else tva
+          def fe(a):
+            i=bisect.bisect_right(starts,a); return starts[i] if i<len(starts) else tend
+          def vaoff(va):
+            for v,o,n in loads:
+              if v<=va<v+n:return o+(va-v)
+          def findva(s):
+            b=s.encode()+b'\0'; pos=0; r=[]
+            while True:
+              pos=raw.find(b,pos)
+              if pos<0:return r
+              for v,o,n in loads:
+                if o<=pos<o+n:r.append(v+pos-o);break
+              pos+=1
+          def dump(fn,span=0x900):
+            a=max(tva,fn); b=min(tend,fn+span); rr=[]
+            for z in md.disasm(tb[a-tva:b-tva],a): rr.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+            return rr
+          out=[f'SHA256={hashlib.sha256(raw).hexdigest()}']
+
+          # Build ADRP+ADD literal xrefs for specific crypto strings.
+          wanted=['AES256','SHA256','encrypt','decrypt','KeyExchangeEncryptionAlgorithm','SessionKeyEncryptionAlgorithm','SessionKeyEncryptionKeyLength','ScrambleCode']
+          wantedvas={s:set(findva(s)) for s in wanted}
+          # include known pes-custom-encrypt exact VA
+          wantedvas['pes-custom-encrypt']=set(findva('pes-custom-encrypt'))
+          refs=collections.defaultdict(list)
+          prev=collections.defaultdict(list)
+          for z in ins:
+            if z.mnemonic=='adrp':
+              m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+              if m: prev[m.group(1)].append((z.address,int(m.group(2),16)))
+            elif z.mnemonic=='add':
+              m=re.match(r'(x\d+), (x\d+), #0x([0-9a-f]+)',z.op_str)
+              if m and m.group(1)==m.group(2):
+                reg=m.group(1); vaadd=int(m.group(3),16)
+                for aa,page in prev.get(reg,[])[-10:]:
+                  if z.address-aa>64: continue
+                  va=page+vaadd
+                  for s,vset in wantedvas.items():
+                    if va in vset: refs[s].append((z.address,fs(z.address),va))
+          out.append('\n=== EXACT STRING XREFS ===')
+          funcs=set()
+          for s in wanted:
+            out.append(f'[{s}] literal_vas=' + ','.join(f'0x{x:x}' for x in wantedvas[s]))
+            for a,f0,v in refs[s]: out.append(f' xref=0x{a:x} fn=0x{f0:x} literal=0x{v:x}'); funcs.add(f0)
+
+          # Inspect the known pes-custom-encrypt initializer neighborhoods much farther than v11.
+          inits=[0x7b0bfcc,0x7b2312c,0x7b2eb40,0x7b34ce0,0x7b35cbc,0x7b36b70,0x7b390e8,0x7dc0214,0x7dcad2c]
+          out.append('\n=== CUSTOM MODULE NEIGHBORHOODS (next functions + calls) ===')
+          for base in inits:
+            out.append(f'\n##### BASE 0x{base:x} #####')
+            # enumerate function starts for 0x5000 following each module marker
+            nearby=[x for x in starts if base<=x<base+0x5000][:120]
+            for f0 in nearby:
+              arr=list(md.disasm(tb[f0-tva:min(fe(f0),f0+0x800)-tva],f0))
+              calls=[]; cmps=[]; mem=0
+              for z in arr:
+                if z.mnemonic in ('bl','blr','br'): calls.append((z.address,z.mnemonic,z.op_str))
+                if z.mnemonic in ('cmp','cbz','cbnz','tbz','tbnz'): cmps.append((z.address,z.mnemonic,z.op_str))
+                if '[' in z.op_str: mem+=1
+              # prioritize nontrivial functions and crypto-looking operations
+              score=len(calls)*5+len(cmps)*2+min(mem,30)
+              if score<8: continue
+              out.append(f'FN 0x{f0:x} end=0x{fe(f0):x} score={score} calls={len(calls)} branches={len(cmps)} mem={mem}')
+              for a,m,o in calls[:25]: out.append(f'  CALL 0x{a:x} {m} {o}')
+              for a,m,o in cmps[:15]: out.append(f'  BR   0x{a:x} {m} {o}')
+
+          # Dump all exact-string xref functions plus candidate functions near custom module with distinctive AES constants.
+          for f0 in sorted(funcs):
+            out.append(f'\n===== XREF FUNCTION 0x{f0:x} ====='); out.extend(dump(f0,min(0x1800,fe(f0)-f0)))
+
+          # Find AES table constants: look for repeated XOR/EOR + table loads / 16-byte loops in custom module ranges.
+          out.append('\n=== AES/BLOWFISH-LIKE HOT FUNCTIONS IN CUSTOM MODULE RANGES ===')
+          ranges=[(0x7b0bfcc,0x7b0bfcc+0x6000),(0x7b2312c,0x7b2312c+0x6000),(0x7b2eb40,0x7b2eb40+0x6000),(0x7b34ce0,0x7b34ce0+0x9000),(0x7b390e8,0x7b390e8+0x9000),(0x7dcad2c,0x7dcad2c+0x9000)]
+          for lo,hi in ranges:
+            for f0 in [x for x in starts if lo<=x<hi]:
+              arr=list(md.disasm(tb[f0-tva:min(fe(f0),f0+0x1800)-tva],f0))
+              eor=sum(z.mnemonic in ('eor','eon') for z in arr); shifts=sum(z.mnemonic in ('lsl','lsr','ror','extr') for z in arr); tbl=sum(z.mnemonic in ('tbl','tbx') for z in arr); loads=sum(z.mnemonic.startswith('ldr') for z in arr); stores=sum(z.mnemonic.startswith('str') for z in arr); loops=sum(z.mnemonic.startswith('b.') or z.mnemonic in ('cbnz','cbz','tbnz','tbz') for z in arr)
+              score=eor*6+shifts*3+tbl*8+min(loads,20)+min(stores,15)+min(loops,15)
+              if score>=65:
+                out.append(f'HOT fn=0x{f0:x} end=0x{fe(f0):x} score={score} eor={eor} shifts={shifts} tbl={tbl} loads={loads} stores={stores} branches={loops}')
+                for z in arr[:220]: out.append(f'  0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          # Focus P2P setup around helper calls to see what config subobjects are passed.
+          for f0 in [0x7bf9ecc,0x7be6c3c,0x7c05844,0x7c0dca0]:
+            out.append(f'\n===== P2P/CONFIG FOCUS 0x{f0:x} ====='); out.extend(dump(f0,min(0x5000,fe(f0)-f0)))
+          Path('/tmp/out/p2p_crypto_surgery_v12.txt').write_text('\n'.join(out))
+          print('report bytes',len('\n'.join(out)))
+          PY
+          python3 /tmp/ef/v12.py
+      - name: Compact key evidence
+        run: |
+          grep -E '^SHA256|^\[AES256\]|^\[SessionKey|^\[KeyExchange|^ xref=|^HOT fn=|^FN 0x' /tmp/out/p2p_crypto_surgery_v12.txt | head -n 600 || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-p2p-crypto-surgery-v12
+          path: /tmp/out/
+          retention-days: 7
