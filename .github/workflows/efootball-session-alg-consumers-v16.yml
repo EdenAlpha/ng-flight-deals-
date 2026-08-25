@@ -1,0 +1,121 @@
+name: eFootball session algorithm consumers v16
+
+on:
+  push:
+    branches: [ efootball-session-alg-consumers-2026-08-25 ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Fetch eFootball native
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/x /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/x
+          unzip -q /tmp/ef/x/config.arm64_v8a.apk -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Exact field consumer trace
+        run: |
+          cat > /tmp/ef/v16.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import struct,bisect,collections,hashlib,re
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so');raw=p.read_bytes()
+          with p.open('rb') as f:
+            e=ELFFile(f);t=e.get_section_by_name('.text');tb=t.data();tva=int(t['sh_addr']);tend=tva+len(tb)
+            loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM);md.detail=False
+          def sx(v,b):return v-(1<<b) if v&(1<<(b-1)) else v
+          # robust-ish function starts using capstone once only in local hit windows later; raw common frame prologue candidates here.
+          starts=[]
+          for i in range(0,len(tb)-4,4):
+            w=struct.unpack_from('<I',tb,i)[0]
+            # STP x29,x30,[sp,#imm]! encodings vary immediate; mask Rt/Rt2/Rn and mode
+            if (w & 0xffc07fff)==0xa9807bfd:starts.append(tva+i)
+          starts=sorted(set(starts))
+          def local_fs(a):
+            # Capstone backwards 0x1800 so uncommon prologue forms are also found.
+            lo=max(tva,(a-0x1800)&~3); cand=[]
+            for z in md.disasm(tb[lo-tva:a-tva+4],lo):
+              if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str and '!' in z.op_str:cand.append(z.address)
+            return cand[-1] if cand else (starts[bisect.bisect_right(starts,a)-1] if starts and bisect.bisect_right(starts,a)>0 else max(tva,a-0x400))
+          def next_fs(f0):
+            j=bisect.bisect_right(starts,f0);return starts[j] if j<len(starts) else tend
+          def decode_load(w):
+            # unsigned-immediate loads only. Return width/offset/base/dest.
+            top=w&0xffc00000; imm=(w>>10)&0xfff; rn=(w>>5)&31; rt=w&31
+            if top==0xb9400000:return ('W',imm*4,rn,rt)
+            if top==0xf9400000:return ('X',imm*8,rn,rt)
+            if top==0x39400000:return ('B',imm,rn,rt)
+            if top==0x79400000:return ('H',imm*2,rn,rt)
+          wanted={0x118:'session_alg_present',0x11c:'session_alg',0x120:'session_keylen_present',0x128:'session_keylen'}
+          hits=[]
+          for i in range(0,len(tb)-4,4):
+            w=struct.unpack_from('<I',tb,i)[0];d=decode_load(w)
+            if d and d[1] in wanted:hits.append((tva+i,*d,wanted[d[1]]))
+          grouped=collections.defaultdict(list)
+          for h in hits:grouped[local_fs(h[0])].append(h)
+          out=[f'SHA256={hashlib.sha256(raw).hexdigest()}',f'TEXT=0x{tva:x}-0x{tend:x}',f'FIELD_HITS={len(hits)} FUNCTIONS={len(grouped)}']
+          out.append('\n=== EXACT SESSION FIELD LOAD CONSUMERS ===')
+          for f0,hh in sorted(grouped.items(),key=lambda kv:(-len(kv[1]),kv[0])):
+            out.append(f'FN=0x{f0:x} count={len(hh)} hits='+','.join(f'0x{a:x}:{name}:{width}:x{rn}->r{rt}' for a,width,off,rn,rt,name in hh))
+          # direct BL callers of every candidate function, using raw branch decode.
+          cand=set(grouped)
+          callers=collections.defaultdict(list)
+          for i in range(0,len(tb)-4,4):
+            w=struct.unpack_from('<I',tb,i)[0]
+            if (w&0xfc000000)==0x94000000:
+              pc=tva+i;target=pc+(sx(w&0x03ffffff,26)<<2)
+              if target in cand:callers[target].append((pc,local_fs(pc)))
+          out.append('\n=== DIRECT CALLERS OF FIELD CONSUMERS ===')
+          for f0 in sorted(cand):
+            cc=callers.get(f0,[]);out.append(f'CONSUMER=0x{f0:x} callers={len(cc)} '+','.join(f'0x{s:x}(fn=0x{pf:x})' for s,pf in cc[:100]))
+          # literal pointers to candidate functions: vtables/callback tables.
+          out.append('\n=== LITERAL FUNCTION POINTERS TO FIELD CONSUMERS ===')
+          for f0 in sorted(cand):
+            nd=struct.pack('<Q',f0);pos=0;arr=[]
+            while True:
+              pos=raw.find(nd,pos)
+              if pos<0:break
+              va=None
+              for sv,so,n in loads:
+                if so<=pos<so+n:va=sv+(pos-so);break
+              arr.append((pos,va));pos+=1
+            if arr:out.append(f'TARGET=0x{f0:x} pointers='+','.join(f'file=0x{o:x}/va={hex(v) if v else "?"}' for o,v in arr[:100]))
+          # Dump each candidate function, emphasizing loads, comparisons, branches, calls, memory ops.
+          for f0,hh in sorted(grouped.items(),key=lambda kv:(-len(kv[1]),kv[0]))[:100]:
+            f1=min(next_fs(f0),f0+0x1600,tend)
+            out.append(f'\n===== CONSUMER FN 0x{f0:x}-0x{f1:x} =====')
+            for z in md.disasm(tb[f0-tva:f1-tva],f0):
+              if z.mnemonic.startswith(('ldr','ldur','str','stur')) or z.mnemonic in ('bl','blr','br','ret','mov','cmp','subs','cbz','cbnz','tbz','tbnz','eor','and','orr','add','sub'):
+                tag=''
+                for h in hh:
+                  if z.address==h[0]:tag=f' <FIELD:{h[-1]}>'
+                out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{tag}')
+          # Known parser/output/copy windows for incontrovertible layout evidence.
+          for a,b,n in [(0x7c097b0,0x7c09800,'PARSER_OUTPUT_SESSION_LAYOUT'),(0x7be6e20,0x7be6e80,'COPY_HELPER_SESSION_OFFSETS'),(0x7bf9ecc,0x7bfa300,'P2P_ENTRY_FIRST_WINDOW'),(0x7c0dca0,0x7c0e330,'TRANSPORT_PARENT')]:
+            out.append(f'\n===== {n} 0x{a:x}-0x{b:x} =====')
+            for z in md.disasm(tb[a-tva:b-tva],a):out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+          Path('/tmp/out/session_alg_consumers_v16.txt').write_text('\n'.join(out))
+          print('\n'.join([x for x in out if x.startswith(('SHA256=','FIELD_HITS=','FN=','CONSUMER=','TARGET='))][:1200]))
+          PY
+          python3 /tmp/ef/v16.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-session-alg-consumers-v16
+          path: /tmp/out/
+          retention-days: 7
