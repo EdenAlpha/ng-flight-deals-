@@ -1,0 +1,31 @@
+name: eFootball binary bridge v14
+
+on:
+  push:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  bridge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch exact native split
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          unzip -q /tmp/ef/bundle/config.arm64_v8a.apk -d /tmp/ef/native 'lib/arm64-v8a/libUE4.so'
+          cp /tmp/ef/native/lib/arm64-v8a/libUE4.so /tmp/out/libUE4.so
+          sha256sum /tmp/out/libUE4.so | tee /tmp/out/libUE4.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-libue4-11.0.1-v14
+          path: /tmp/out/
+          compression-level: 9
+          retention-days: 1
