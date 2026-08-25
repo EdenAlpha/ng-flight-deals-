@@ -1,0 +1,129 @@
+name: eFootball P2P sendpath v13
+
+on:
+  push:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  sendpath:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install analysis tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip binutils >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Fetch exact eFootball native binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          unzip -q /tmp/ef/bundle/config.arm64_v8a.apk -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Trace libc socket sinks upward
+        run: |
+          cat > /tmp/ef/sendpath.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import bisect,re,collections,hashlib
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+            e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+            dyn=e.get_section_by_name('.dynsym'); plt=e.get_section_by_name('.plt'); rela=e.get_section_by_name('.rela.plt') or e.get_section_by_name('.rela.dyn')
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          ins=list(md.disasm(tb,tva)); starts=[]
+          for z in ins:
+            if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str:starts.append(z.address)
+          starts=sorted(set(starts))
+          def fs(a):
+            i=bisect.bisect_right(starts,a)-1;return starts[i] if i>=0 else tva
+          def fe(a):
+            i=bisect.bisect_right(starts,a);return starts[i] if i<len(starts) else tend
+          out=[f'SHA256={hashlib.sha256(raw).hexdigest()}']
+          # Map PLT entries robustly from .rela.plt order on AArch64 (.plt header 32 bytes, entries 16).
+          symtargets={}
+          if dyn is not None and plt is not None:
+            relaplt=e.get_section_by_name('.rela.plt')
+            if relaplt is not None:
+              base=int(plt['sh_addr'])+32
+              for i,rel in enumerate(relaplt.iter_relocations()):
+                sym=dyn.get_symbol(rel['r_info_sym']); name=sym.name
+                if name in {'send','sendto','sendmsg','recv','recvfrom','recvmsg','write','read','connect','socket'}:
+                  symtargets[base+i*16]=name
+          out.append('\n=== SOCKET PLT TARGETS ===')
+          for a,n in sorted(symtargets.items()):out.append(f'0x{a:x} {n}')
+
+          # Direct BL sites to socket PLT.
+          direct=collections.defaultdict(list); calls_by_fn=collections.defaultdict(list)
+          for z in ins:
+            if z.mnemonic=='bl' and z.op_str.startswith('#0x'):
+              try:t=int(z.op_str[1:],16)
+              except:continue
+              f0=fs(z.address);calls_by_fn[f0].append((z.address,t))
+              if t in symtargets:direct[symtargets[t]].append((z.address,f0))
+          out.append('\n=== DIRECT SOCKET CALLERS ===')
+          sinkfns=set()
+          for n,hits in direct.items():
+            out.append(f'[{n}] count={len(hits)}')
+            for a,f0 in hits:out.append(f' site=0x{a:x} fn=0x{f0:x}');sinkfns.add(f0)
+
+          # Reverse direct call graph for 5 levels from socket callers.
+          rev=collections.defaultdict(set)
+          for f0,calls in calls_by_fn.items():
+            for _,t in calls:
+              if tva<=t<tend:rev[t].add(f0)
+          frontier=set(sinkfns); seen=set(frontier)
+          out.append('\n=== REVERSE ANCESTRY FROM SOCKET SINKS ===')
+          for depth in range(6):
+            out.append(f'-- depth {depth} functions={len(frontier)} --')
+            for f0 in sorted(frontier):
+              out.append(f' fn=0x{f0:x}')
+            nxt=set()
+            for f0 in frontier:nxt|=rev.get(f0,set())
+            nxt-=seen;seen|=nxt;frontier=nxt
+            if not frontier:break
+
+          # Flag ancestry near known eFootball P2P module and score candidate region.
+          out.append('\n=== P2P-REGION ANCESTORS ===')
+          for f0 in sorted(seen):
+            if 0x7b00000<=f0<=0x7dfffff:
+              out.append(f'0x{f0:x}')
+
+          # Dump direct socket caller functions and P2P-region parents with buffer argument setup.
+          dumpfns=set(sinkfns)
+          for f0 in seen:
+            if 0x7b00000<=f0<=0x7dfffff:dumpfns.add(f0)
+          for f0 in sorted(dumpfns):
+            if len(dumpfns)>180 and f0 not in sinkfns:continue
+            out.append(f'\n===== FN 0x{f0:x} end=0x{fe(f0):x} =====')
+            for z in md.disasm(tb[f0-tva:min(fe(f0),f0+0x1800)-tva],f0):
+              # full enough to recover x0-x5 preparation, calls, branches, memory copying
+              if z.mnemonic in ('bl','blr','br','ret','mov','add','sub','adrp','ldr','ldrb','ldrh','ldp','str','strb','strh','stp','cmp','cbz','cbnz','tbz','tbnz','eor','and','orr'):
+                out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+
+          # Search dynamic symbol names for custom network/crypto clues.
+          out.append('\n=== RELEVANT DYNSYM ===')
+          if dyn is not None:
+            for sym in dyn.iter_symbols():
+              n=sym.name
+              if re.search(r'(?i)(sendto|recvfrom|encrypt|decrypt|cipher|blowfish|aes|peer|p2p|socket)',n):out.append(n)
+          Path('/tmp/out/p2p_sendpath_v13.txt').write_text('\n'.join(out))
+          print('bytes',len('\n'.join(out)))
+          PY
+          python3 /tmp/ef/sendpath.py
+      - name: Show compact chain
+        run: |
+          grep -E '^SHA256|^0x.* (send|sendto|sendmsg|recv|recvfrom|recvmsg)$|^\[(send|sendto|sendmsg|recv|recvfrom|recvmsg)\]|^ site=|^-- depth|^ fn=0x7[b-d]' /tmp/out/p2p_sendpath_v13.txt | head -n 800 || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-p2p-sendpath-v13
+          path: /tmp/out/
+          retention-days: 7
