@@ -1,0 +1,180 @@
+name: eFootball P2P crypto surgery v10
+
+on:
+  push:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  surgery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install analysis tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl binutils python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download and unpack current eFootball
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+          echo '=== CONFIG/ASSET STRING HITS ===' > /tmp/out/config_hits.txt
+          find /tmp/ef/bundle -type f -maxdepth 2 -print0 | while IFS= read -r -d '' f; do
+            strings -a "$f" 2>/dev/null | grep -E -i 'SessionKeyEncryption|KeyExchangeEncryption|pes-custom-encrypt|ScrambleCode|P2P_(ADHOC|LOW_LEVEL|HIGH_LEVEL)' && echo "FILE=$f" || true
+          done >> /tmp/out/config_hits.txt
+      - name: Trace crypto object and P2P consumers
+        run: |
+          cat > /tmp/ef/surgery.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re,bisect,collections,math
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f)
+              text=e.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          TARGET=0x7c0c670
+          P2P=0x7bf9ecc
+          PARSER=0x7c088e4
+          PARENT=0x7c0dca0
+          EXPECT='2ac4ff17ac8ad713d9531c2601e38a3c8335e02ea882ba2dc4445c191c1298cd'
+          import hashlib
+          got=hashlib.sha256(raw).hexdigest()
+          out=[f'SHA256={got}', f'EXPECTED_11_0_1={EXPECT}', f'HASH_MATCH={got==EXPECT}']
+
+          starts=[]
+          for a,s,m,o in md.disasm_lite(tb,tva):
+              if m=='stp' and 'x29, x30' in o and '[sp' in o: starts.append(a)
+          starts=sorted(set(starts))
+          def fs(a):
+              i=bisect.bisect_right(starts,a)-1; return starts[i] if i>=0 else tva
+          def fe(a):
+              i=bisect.bisect_right(starts,a); return starts[i] if i<len(starts) else tend
+          def vaoff(va):
+              for v,o,n in loads:
+                  if v<=va<v+n:return o+va-v
+          def cstr(va,limit=160):
+              o=vaoff(va)
+              if o is None:return None
+              b=raw[o:o+limit].split(b'\0',1)[0]
+              if len(b)<4:return None
+              if sum(32<=x<127 for x in b)/len(b)<.90:return None
+              return b.decode('ascii','replace')
+          def dump(fn,limit=0x1400,only=False):
+              end=min(fe(fn),fn+limit)
+              arr=list(md.disasm(tb[fn-tva:end-tva],fn))
+              r=[]
+              for z in arr:
+                  if not only or z.mnemonic in ('bl','blr','br','ret','cmp','cbz','cbnz','tbz','tbnz') or '[x' in z.op_str:
+                      r.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+              return r
+
+          # Locate key strings and all ADRP+ADD xrefs in .text.
+          strings=['SessionKeyEncryptionAlgorithm','SessionKeyEncryptionKeyLength','KeyExchangeEncryptionAlgorithm','KeyExchangeEncryptionKey','pes-custom-encrypt','ScrambleCode','P2P_ADHOC','P2P_LOW_LEVEL','P2P_HIGH_LEVEL']
+          strvas={}
+          for s in strings:
+              needle=s.encode()+b'\0'; pos=raw.find(needle)
+              if pos<0: continue
+              va=None
+              for v,o,n in loads:
+                  if o<=pos<o+n: va=v+(pos-o); break
+              if va is not None:strvas[s]=va
+          out.append('\n=== STRING VAS ===')
+          for s,v in strvas.items(): out.append(f'{s}=0x{v:x}')
+
+          refs=collections.defaultdict(list)
+          pending=collections.defaultdict(list)
+          for a,size,m,o in md.disasm_lite(tb,tva):
+              if m=='adrp':
+                  mm=re.match(r'(x\d+), #0x([0-9a-f]+)',o)
+                  if mm: pending[mm.group(1)].append((a,int(mm.group(2),16)))
+              elif m=='add':
+                  mm=re.match(r'(x\d+), (x\d+), #0x([0-9a-f]+)',o)
+                  if mm and mm.group(1)==mm.group(2):
+                      reg=mm.group(1); off=int(mm.group(3),16)
+                      for aa,page in pending.get(reg,[])[-8:]:
+                          if a-aa>48: continue
+                          va=page+off
+                          for s,sv in strvas.items():
+                              if va==sv: refs[s].append((a,fs(a)))
+          out.append('\n=== STRING XREF FUNCTIONS ===')
+          seen=set()
+          for s,hits in refs.items():
+              out.append(f'[{s}]')
+              for a,f0 in hits:
+                  out.append(f' xref=0x{a:x} fn=0x{f0:x}')
+                  seen.add(f0)
+
+          # Direct BL callers of important nodes.
+          targets={TARGET:'TARGET_c670',P2P:'P2P_7bf9ecc',PARSER:'PARSER_7c088e4',PARENT:'PARENT_7c0dca0'}
+          callers=collections.defaultdict(list)
+          for a,size,m,o in md.disasm_lite(tb,tva):
+              if m!='bl' or not o.startswith('#0x'):continue
+              try:t=int(o[1:],16)
+              except:continue
+              if t in targets: callers[t].append((a,fs(a)))
+          out.append('\n=== DIRECT CALLERS ===')
+          for t,name in targets.items():
+              out.append(f'{name} count={len(callers[t])}')
+              for a,f0 in callers[t]:out.append(f' site=0x{a:x} fn=0x{f0:x}')
+
+          # Dump target and P2P function, preserving memory accesses and branches.
+          for fn,name,lim in [(TARGET,'TARGET_C670',0x3000),(P2P,'P2P_ENDPOINT',0x4000),(PARSER,'CRYPTO_PARSER',0x1600),(PARENT,'TRANSPORT_PARENT',0x2200)]:
+              out.append(f'\n===== {name} 0x{fn:x} =====')
+              out.extend(dump(fn,lim,only=True))
+
+          # Rank any function reading likely compact session fields +0xa0/+0xa8.
+          mem=re.compile(r'\[(x\d+), #0x([0-9a-f]+)\]')
+          cand=collections.defaultdict(lambda:{'reads':[],'calls':[],'cmp':0})
+          for a,size,m,o in md.disasm_lite(tb,tva):
+              f0=fs(a); mm=mem.search(o)
+              if mm and m.startswith('ldr'):
+                  off=int(mm.group(2),16)
+                  if off in (0x80,0x88,0xa0,0xa8,0x118,0x11c,0x120,0x128):cand[f0]['reads'].append((a,off,o))
+              if m in ('cmp','cbz','cbnz','tbz','tbnz'):cand[f0]['cmp']+=1
+              if m in ('bl','blr'):cand[f0]['calls'].append((a,o))
+          ranked=[]
+          for f0,c in cand.items():
+              offs={o for _,o,_ in c['reads']}
+              if 0xa0 not in offs and 0xa8 not in offs:continue
+              score=len(c['reads'])*10 + (30 if {0xa0,0xa8}<=offs else 0) + min(c['cmp'],20)
+              ranked.append((score,f0,c))
+          ranked.sort(reverse=True)
+          out.append(f'\n=== COMPACT SESSION FIELD CONSUMERS {len(ranked)} ===')
+          for score,f0,c in ranked[:50]:
+              out.append(f'CAND fn=0x{f0:x} score={score} reads='+';'.join(f'0x{a:x}:+0x{o:x}' for a,o,_ in c['reads'])+f' calls={len(c["calls"])}')
+          for score,f0,c in ranked[:12]:
+              out.append(f'\n--- CANDIDATE DUMP 0x{f0:x} score={score} ---')
+              out.extend(dump(f0,0x1800,only=True))
+
+          Path('/tmp/out/p2p_crypto_surgery_v10.txt').write_text('\n'.join(out))
+          print('\n'.join(out[:80]))
+          PY
+          python3 /tmp/ef/surgery.py
+      - name: Print surgical summary
+        run: |
+          grep -E 'HASH_MATCH|SessionKey|pes-custom|ScrambleCode|DIRECT CALLERS|TARGET_c670|P2P_7bf9ecc|CAND fn=' /tmp/out/p2p_crypto_surgery_v10.txt | head -n 300 || true
+          echo '--- config hits ---'
+          cat /tmp/out/config_hits.txt | head -n 200 || true
+      - name: Upload findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-p2p-crypto-surgery-v10
+          path: /tmp/out/
+          retention-days: 7
