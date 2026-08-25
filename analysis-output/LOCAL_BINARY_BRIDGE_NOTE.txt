@@ -1,0 +1,1 @@
+Temporary analysis bridge only. Do not merge libUE4 binary into repository; it is uploaded only as a short-lived GitHub Actions artifact for local reverse-engineering.
