@@ -1,0 +1,126 @@
+name: eFootball crypto xref fast v14
+
+on:
+  push:
+    branches: [ efootball-p2p-crypto-fast-2026-08-25 ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  xref:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Fetch native binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/x /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/x
+          unzip -q /tmp/ef/x/config.arm64_v8a.apk -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Fast ARM64 xrefs
+        run: |
+          cat > /tmp/ef/fast.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import struct,hashlib,re
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+            e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+            loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          def off2va(off):
+            for v,o,n in loads:
+              if o<=off<o+n:return v+off-o
+          def va2off(va):
+            for v,o,n in loads:
+              if v<=va<v+n:return o+va-v
+          def sx(v,b): return v-(1<<b) if v&(1<<(b-1)) else v
+          def adrp_target(pc,w):
+            immlo=(w>>29)&3; immhi=(w>>5)&0x7ffff; imm=sx((immhi<<2)|immlo,21)<<12
+            return (pc&~0xfff)+imm
+          def add_imm(w):
+            # ADD (immediate), 64-bit, no flags
+            if (w & 0xff000000)!=0x91000000:return None
+            rd=w&31; rn=(w>>5)&31; imm=(w>>10)&0xfff
+            if (w>>22)&1: imm <<= 12
+            return rd,rn,imm
+          def find_string_vas(s):
+            q=s.encode()+b'\0'; out=[]; pos=0
+            while True:
+              pos=raw.find(q,pos)
+              if pos<0:return out
+              v=off2va(pos)
+              if v is not None:out.append(v)
+              pos+=1
+          def xrefs_to_va(target):
+            pg=target&~0xfff; off=target&0xfff; out=[]
+            for i in range(0,len(tb)-4,4):
+              w=struct.unpack_from('<I',tb,i)[0]
+              if (w & 0x9f000000)!=0x90000000:continue
+              pc=tva+i
+              if adrp_target(pc,w)!=pg:continue
+              rd=w&31
+              for j in range(i+4,min(i+64,len(tb)-4),4):
+                q=struct.unpack_from('<I',tb,j)[0]; a=add_imm(q)
+                if a and a[0]==rd and a[1]==rd and a[2]==off:
+                  out.append((pc,tva+j,rd)); break
+            return out
+          def common_prologue(w):
+            # capstone-assisted fallback applied only local backwards window later
+            return False
+          def local_function_start(addr):
+            lo=max(tva,addr-0x1200); data=tb[lo-tva:addr-tva+4]; starts=[]
+            for z in md.disasm(data,lo):
+              if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str and '!' in z.op_str:starts.append(z.address)
+            return starts[-1] if starts else max(tva,addr-0x300)
+          def bl_callers(target):
+            out=[]
+            for i in range(0,len(tb)-4,4):
+              w=struct.unpack_from('<I',tb,i)[0]
+              if (w & 0xfc000000)!=0x94000000:continue
+              imm=sx(w&0x03ffffff,26)<<2; pc=tva+i
+              if pc+imm==target:out.append(pc)
+            return out
+          def dump(a,b):
+            a=max(tva,a&~3); b=min(tend,b&~3); return [f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}' for z in md.disasm(tb[a-tva:b-tva],a)]
+
+          strings=[
+            "AES encryption key isn't correctly acquired.",
+            'encryption failed.','decryption failed.','pes-custom-encrypt','AES256','blowfish','SHA256',
+            'SessionKeyEncryptionAlgorithm','SessionKeyEncryptionKeyLength','KeyExchangeEncryptionAlgorithm','KeyExchangeEncryptionKey','ScrambleCode'
+          ]
+          out=[f'SHA256={hashlib.sha256(raw).hexdigest()}',f'TEXT=0x{tva:x}-0x{tend:x}']
+          dumped=set()
+          for s in strings:
+            vas=find_string_vas(s); out.append(f'\nSTRING {s!r} VAS={[hex(v) for v in vas]}')
+            for v in vas:
+              xs=xrefs_to_va(v); out.append(f' VA=0x{v:x} XREFS={len(xs)}')
+              for ap,aa,reg in xs:
+                fn=local_function_start(ap); out.append(f'  ADRP=0x{ap:x} ADD=0x{aa:x} x{reg} APPROX_FN=0x{fn:x}')
+                if fn not in dumped:
+                  dumped.add(fn); out.append(f'  --- DUMP FN 0x{fn:x} around xref ---'); out += ['   '+x for x in dump(fn,min(tend,aa+0x500))]
+                cs=bl_callers(fn); out.append(f'  DIRECT_CALLERS_TO_FN={len(cs)} '+','.join(hex(x) for x in cs[:100]))
+                for c in cs[:40]:out.append(f'   caller_site=0x{c:x} approx_fn=0x{local_function_start(c):x}')
+          # Decode known custom crypto initializer literals explicitly.
+          out.append('\nKNOWN_CUSTOM_INIT 0x7b390e8-0x7b39228')
+          out += dump(0x7b390e8,0x7b39228)
+          Path('/tmp/out/crypto_xref_fast_v14.txt').write_text('\n'.join(out))
+          print('\n'.join([x for x in out if x.startswith('STRING ') or 'XREFS=' in x or 'ADRP=' in x or 'DIRECT_CALLERS' in x or x.startswith('SHA256=')][:600]))
+          PY
+          python3 /tmp/ef/fast.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-crypto-xref-fast-v14
+          path: /tmp/out/
+          retention-days: 7
