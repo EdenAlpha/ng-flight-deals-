@@ -1,0 +1,212 @@
+name: eFootball P2P crypto consumers v12
+
+on:
+  push:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download and extract eFootball
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/x /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/x
+          NATIVE=$(find /tmp/ef/x -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so > /tmp/out/libue4_sha256.txt
+      - name: Trace runtime crypto consumers
+        run: |
+          cat > /tmp/ef/v12.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re,bisect,collections,hashlib
+
+          P=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=P.read_bytes()
+          with P.open('rb') as f:
+              E=ELFFile(f); T=E.get_section_by_name('.text'); tb=T.data(); tva=int(T['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in E.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          ins=list(md.disasm(tb,tva))
+          lite=[(z.address,z.mnemonic,z.op_str) for z in ins]
+          starts=[]
+          for z in ins:
+              if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str: starts.append(z.address)
+          starts=sorted(set(starts))
+          def fs(a):
+              i=bisect.bisect_right(starts,a)-1; return starts[i] if i>=0 else tva
+          def fe(a):
+              s=fs(a); i=bisect.bisect_right(starts,s); return starts[i] if i<len(starts) else tend
+          def vaoff(v):
+              for sv,so,n in loads:
+                  if sv<=v<sv+n:return so+v-sv
+          def cstr(v,lim=180):
+              o=vaoff(v)
+              if o is None:return None
+              b=raw[o:o+lim].split(b'\0',1)[0]
+              if len(b)<4:return None
+              if sum(32<=x<127 for x in b)/len(b)<.90:return None
+              return b.decode('ascii','replace')
+          def annotate(a,b):
+              arr=list(md.disasm(tb[a-tva:b-tva],a)); pend={}; ret=[]
+              for z in arr:
+                  note=''
+                  if z.mnemonic=='adrp':
+                      m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if m: pend[m.group(1)]=(z.address,int(m.group(2),16))
+                  elif z.mnemonic=='add':
+                      m=re.match(r'(x\d+), (x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if m and m.group(1)==m.group(2) and m.group(1) in pend:
+                          aa,page=pend[m.group(1)]; v=page+int(m.group(3),16)
+                          if z.address-aa<=64:
+                              s=cstr(v)
+                              if s:note=f' ; STR@0x{v:x}={s!r}'
+                  if z.mnemonic in ('aese','aesd','aesmc','aesimc','sha1c','sha1h','sha1m','sha1p','sha256h','sha256h2','sha256su0','sha256su1'):
+                      note+=' <ARM_CRYPTO>'
+                  ret.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{note}')
+              return ret
+          out=[f'SHA256={hashlib.sha256(raw).hexdigest()}',f'TEXT=0x{tva:x}-0x{tend:x} starts={len(starts)}']
+
+          # Definitive exact windows.
+          for a,b,n in [
+            (0x7c088e4,0x7c0986c,'CRYPTO_PROFILE_PARSER'),
+            (0x7bfc91c,0x7bfd560,'PROFILE_LOADER_CALLER'),
+            (0x7c0c670,0x7c0c980,'C670_MAPPING'),
+            (0x7c0dca0,0x7c0e330,'TRANSPORT_PARENT'),
+            (0x7bf9ecc,0x7bfb458,'P2P_ENDPOINT_FULL')]:
+              out.append(f'\n===== {n} 0x{a:x}-0x{b:x} ====='); out += annotate(a,b)
+
+          # xrefs to highly diagnostic strings.
+          needles=[
+            'SessionKeyEncryptionAlgorithm','SessionKeyEncryptionKeyLength','KeyExchangeEncryptionAlgorithm','KeyExchangeEncryptionKey',
+            'ScrambleEnable','ScrambleCode','pes-custom-encrypt',"AES encryption key isn't correctly acquired.",'encryption failed.','decryption failed.'
+          ]
+          sva={}
+          for s in needles:
+              bs=s.encode()+b'\0'; pos=raw.find(bs)
+              if pos>=0:
+                  v=None
+                  for sv,so,n in loads:
+                      if so<=pos<so+n:v=sv+(pos-so);break
+                  sva[s]=v
+          out.append('\n===== DIAGNOSTIC STRING VAS =====')
+          for s,v in sva.items():out.append(f'{s!r} -> {hex(v) if v else "?"}')
+
+          # adrp+add refs; dump owning functions for diagnostic strings.
+          pages=collections.defaultdict(list)
+          for z in ins:
+              if z.mnemonic=='adrp':
+                  m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                  if m:pages[int(m.group(2),16)].append((z.address,m.group(1)))
+          dumped=set()
+          for s,v in sva.items():
+              if not v:continue
+              pg=v&~0xfff; off=v&0xfff
+              for aa,r in pages.get(pg,[]):
+                  # inspect next 12 instructions
+                  idx=bisect.bisect_left([x.address for x in ins],aa)
+                  for q in ins[idx+1:idx+13]:
+                      m=re.match(rf'{r}, {r}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                      if m and int(m.group(1),16)==off:
+                          f0=fs(aa); out.append(f'XREF {s!r} site=0x{q.address:x} fn=0x{f0:x}')
+                          if f0 not in dumped:
+                              dumped.add(f0); f1=min(fe(f0),f0+0x1000); out.append(f'--- XREF_FN 0x{f0:x}-0x{f1:x} ---'); out += annotate(f0,f1)
+                          break
+
+          # Global readers of likely parser/object offsets. These are candidates only; group by function.
+          offs={0x154:'keyex_alg_candidate',0x17c:'session_alg_candidate',0x188:'session_keylen_candidate',0x118:'session_alg_src_candidate',0x120:'session_keylen_src_candidate'}
+          hits=collections.defaultdict(list)
+          mr=re.compile(r'\[x\d+, #0x([0-9a-f]+)\]')
+          for z in ins:
+              if z.mnemonic.startswith('ldr') or z.mnemonic.startswith('ldur'):
+                  m=mr.search(z.op_str)
+                  if m:
+                      o=int(m.group(1),16)
+                      if o in offs:hits[fs(z.address)].append((z.address,o,z.mnemonic,z.op_str))
+          out.append('\n===== GLOBAL OFFSET-READER CANDIDATES =====')
+          ranked=sorted(hits.items(), key=lambda kv:(-len(kv[1]),kv[0]))
+          for f0,hh in ranked[:120]:
+              out.append(f'FN=0x{f0:x} hits='+', '.join(f'0x{a:x}:{offs[o]}:{m} {op}' for a,o,m,op in hh[:20]))
+
+          # Endpoint direct call inventory + shallow direct call graph to find crypto-like descendants.
+          def direct_calls(a,b):
+              r=[]
+              for z in md.disasm(tb[a-tva:b-tva],a):
+                  if z.mnemonic=='bl' and z.op_str.startswith('#0x'):
+                      try:r.append((z.address,int(z.op_str[1:],16)))
+                      except:pass
+              return r
+          ep=0x7bf9ecc
+          out.append('\n===== ENDPOINT DIRECT CALLS =====')
+          for site,t in direct_calls(ep,0x7bfb458):out.append(f'0x{site:x} -> 0x{t:x} target_fn=0x{fs(t):x}')
+          seen={ep}; frontier=[(ep,0)]
+          crypto_mn={'aese','aesd','aesmc','aesimc','sha1c','sha1h','sha1m','sha1p','sha256h','sha256h2','sha256su0','sha256su1'}
+          out.append('\n===== ENDPOINT CALLGRAPH CRYPTO CANDIDATES depth<=4 =====')
+          while frontier:
+              f0,d=frontier.pop(0)
+              if d>=4:continue
+              f1=min(fe(f0),f0+0x4000)
+              arr=list(md.disasm(tb[f0-tva:f1-tva],f0))
+              strs=[]; pend={}; crypt=[]
+              for z in arr:
+                  if z.mnemonic in crypto_mn:crypt.append(z.address)
+                  if z.mnemonic=='adrp':
+                      m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if m:pend[m.group(1)]=(z.address,int(m.group(2),16))
+                  elif z.mnemonic=='add':
+                      m=re.match(r'(x\d+), (x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if m and m.group(1)==m.group(2) and m.group(1) in pend:
+                          aa,page=pend[m.group(1)]; s=cstr(page+int(m.group(3),16))
+                          if s and z.address-aa<=64 and re.search(r'encrypt|decrypt|cipher|aes|chacha|scramble|key',s,re.I):strs.append((z.address,s))
+              if crypt or strs:out.append(f'DEPTH={d} FN=0x{f0:x} ARMCRYPTO={[hex(x) for x in crypt[:20]]} STRS={strs[:20]}')
+              for site,t in direct_calls(f0,f1):
+                  tf=fs(t)
+                  if tva<=tf<tend and tf not in seen:
+                      seen.add(tf);frontier.append((tf,d+1))
+
+          # Search every extracted file for exact config keys outside libUE4; include context.
+          out.append('\n===== CONFIG KEYS OUTSIDE LIBUE4 =====')
+          roots=[Path('/tmp/ef/x'),Path('/tmp/ef/native')]
+          seenfiles=set()
+          for root in roots:
+              for fp in root.rglob('*'):
+                  if not fp.is_file() or fp in seenfiles:continue
+                  seenfiles.add(fp)
+                  if fp.name=='libUE4.so':continue
+                  try:b=fp.read_bytes()
+                  except:continue
+                  for s in needles[:6]:
+                      q=s.encode(); pos=b.find(q)
+                      if pos>=0:
+                          ctx=b[max(0,pos-160):min(len(b),pos+len(q)+240)]
+                          safe=''.join(chr(x) if 32<=x<127 else '.' for x in ctx)
+                          out.append(f'FILE={fp} KEY={s!r} OFF=0x{pos:x} CTX={safe}')
+
+          Path('/tmp/out/p2p_crypto_consumers_v12.txt').write_text('\n'.join(out))
+          print('report_lines',len(out),'report_bytes',Path('/tmp/out/p2p_crypto_consumers_v12.txt').stat().st_size)
+          PY
+          python3 /tmp/ef/v12.py
+      - name: Focused stdout
+        run: |
+          grep -E 'SHA256|XREF |AES encryption|SessionKey|KeyExchange|Scramble|ENDPOINT DIRECT|CALLGRAPH CRYPTO|DEPTH=|CONFIG KEYS OUTSIDE|GLOBAL OFFSET|FN=0x' /tmp/out/p2p_crypto_consumers_v12.txt | head -n 1200 || true
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: efootball-p2p-crypto-consumers-v12
+          path: /tmp/out/
+          retention-days: 7
