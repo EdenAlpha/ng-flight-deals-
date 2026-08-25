@@ -1,0 +1,195 @@
+name: eFootball direct P2P crypto consumers v7
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ efootball-score-wire-bridge-v3-2026-08-24 ]
+    paths:
+      - '.github/workflows/efootball-direct-p2p-crypto-v7.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball native binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Trace crypto consumers
+        run: |
+          cat > /tmp/ef/trace.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import re
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f)
+              text=e.get_section_by_name('.text')
+              tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          allins=list(md.disasm(tb,tva))
+          byaddr={i.address:i for i in allins}
+
+          def off(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+              return None
+          def cstr(va,n=256):
+              o=off(va)
+              if o is None:return None
+              b=raw[o:o+n].split(b'\0',1)[0]
+              if len(b)<2:return None
+              try:s=b.decode('ascii')
+              except:return None
+              if sum(32<=x<127 for x in b)/max(1,len(b))<.96:return None
+              return s
+          def ins(lo,hi):
+              if lo<tva:lo=tva
+              if hi>tend:hi=tend
+              return list(md.disasm(tb[lo-tva:hi-tva],lo))
+          def dump(out,title,lo,hi):
+              out.append(f'\n=== {title} 0x{lo:x}-0x{hi:x} ===')
+              body=ins(lo,hi)
+              for z in body:
+                  out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+          def find_ascii_exact(s):
+              needle=s.encode()+b'\0'
+              hits=[]
+              start=0
+              while True:
+                  k=raw.find(needle,start)
+                  if k<0:break
+                  for sv,so,fs in loads:
+                      if so<=k<so+fs:
+                          hits.append(sv+(k-so)); break
+                  start=k+1
+              return hits
+          def adrp_add_refs(target_va):
+              refs=[]; pending={}
+              for z in allins:
+                  if z.mnemonic=='adrp':
+                      m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if m:pending[m.group(1)]=(z.address,int(m.group(2),16))
+                  elif z.mnemonic=='add':
+                      m=re.match(r'(x\d+), \1, #0x([0-9a-f]+)',z.op_str)
+                      if m and m.group(1) in pending:
+                          a,page=pending[m.group(1)]
+                          if page+int(m.group(2),16)==target_va:refs.append((a,z.address))
+              return refs
+          def fn_start(addr,limit=0x1200):
+              lo=max(tva,addr-limit)
+              cand=addr
+              for z in ins(lo,addr+4):
+                  if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp, #-' in z.op_str and ']!' in z.op_str:
+                      cand=z.address
+              return cand
+          def next_fn(addr,limit=0x5000):
+              for z in ins(addr+4,min(tend,addr+limit)):
+                  if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp, #-' in z.op_str and ']!' in z.op_str:
+                      return z.address
+              return min(tend,addr+limit)
+          def direct_callers(target):
+              q=f'#0x{target:x}'
+              return [z.address for z in allins if z.mnemonic=='bl' and z.op_str==q]
+
+          out=[]
+          out.append('Goal: determine whether direct eFootball P2P transport applies payload crypto, not merely whether crypto strings exist.')
+          out.append('Known-current reference hash from prior run: 2ac4ff17ac8ad713d9531c2601e38a3c8335e02ea882ba2dc4445c191c1298cd')
+
+          # 1) Exact crypto/P2P string references and containing functions.
+          names=['pes-custom-encrypt','SessionKeyEncryptionAlgorithm','SessionKeyEncryptionKeyLength','KeyExchangeEncryptionAlgorithm','KeyExchangeEncryptionKey','ScrambleCode','P2P_HIGH_LEVEL','P2P_LOW_LEVEL']
+          for name in names:
+              out.append(f'\n=== EXACT STRING {name!r} ===')
+              vas=find_ascii_exact(name)
+              out.append('string_vas=' + ','.join(f'0x{x:x}' for x in vas))
+              for va in vas:
+                  refs=adrp_add_refs(va)
+                  for a,b in refs:
+                      fs=fn_start(a); fe=next_fn(fs)
+                      out.append(f'ref adrp=0x{a:x} add=0x{b:x} function~=0x{fs:x}-0x{fe:x}')
+                      dump(out,f'{name} XREF WINDOW @0x{a:x}',max(fs,a-0x180),min(fe,a+0x240))
+
+          # 2) Full parser tail: maps session-key fields into output object x19.
+          dump(out,'CRYPTO PROFILE PARSER FINAL OUTPUT COPY',0x7c09680,0x7c0986c)
+          out.append('\n=== PARSER OUTPUT STORES TO x19 ===')
+          for z in ins(0x7c09680,0x7c0986c):
+              if '[x19' in z.op_str and z.mnemonic.startswith('str'):
+                  out.append(f'0x{z.address:x}: {z.mnemonic} {z.op_str}')
+
+          # 3) Profile-loader copy path after parser succeeds.
+          dump(out,'PROFILE LOADER PARSER RESULT PROPAGATION',0x7bfd4b4,0x7bfd910)
+
+          # 4) P2P-specific parser around ScrambleCode and complete return copy.
+          dump(out,'P2P CONFIG PARSER AROUND SCRAMBLE',0x7c05844,0x7c05f80)
+          out.append('\n=== CALLERS OF P2P CONFIG PARSER 0x7c05844 ===')
+          for a in direct_callers(0x7c05844):
+              fs=fn_start(a); fe=next_fn(fs)
+              out.append(f'caller=0x{a:x} function~=0x{fs:x}-0x{fe:x}')
+              dump(out,f'P2P PARSER CALLER WINDOW @0x{a:x}',max(fs,a-0x100),min(fe,a+0x180))
+
+          # 5) Parent and constructors selected immediately after P2P mode consumer.
+          dump(out,'PARENT P2P MODE -> TRANSPORT CONSTRUCTOR SELECTION',0x7c0e220,0x7c0e310)
+          ctors=[0x7c54020,0x7c557e0,0x7c56740,0x7c2eca8]
+          for c in ctors:
+              dump(out,f'TRANSPORT CONSTRUCTOR 0x{c:x} HEAD',c,min(tend,c+0x900))
+              out.append(f'\n=== DIRECT CALLERS OF CTOR 0x{c:x} ===')
+              for a in direct_callers(c)[:80]:out.append(f'0x{a:x}')
+
+          # 6) Crypto-custom functions: find their direct callers to see whether constructors/send path reach them.
+          custom_funcs=[]
+          for va in find_ascii_exact('pes-custom-encrypt'):
+              for a,b in adrp_add_refs(va):
+                  fs=fn_start(a)
+                  if fs not in custom_funcs:custom_funcs.append(fs)
+          out.append('\n=== pes-custom-encrypt CONTAINING FUNCTIONS + DIRECT CALLERS ===')
+          for fs in custom_funcs:
+              fe=next_fn(fs)
+              out.append(f'function~=0x{fs:x}-0x{fe:x}')
+              for a in direct_callers(fs)[:120]:out.append(f'  direct_caller=0x{a:x} caller_fn~=0x{fn_start(a):x}')
+
+          # 7) Search nearby P2P/transport region for calls into custom-encrypt functions.
+          out.append('\n=== P2P REGION DIRECT CALLS INTO pes-custom-encrypt FUNCTIONS ===')
+          custom=set(custom_funcs)
+          for z in ins(0x7bf0000,0x7c70000):
+              if z.mnemonic=='bl':
+                  m=re.match(r'#0x([0-9a-f]+)',z.op_str)
+                  if m and int(m.group(1),16) in custom:
+                      out.append(f'0x{z.address:x} -> 0x{int(m.group(1),16):x} caller_fn~=0x{fn_start(z.address):x}')
+
+          Path('/tmp/out/efootball-direct-p2p-crypto-v7.txt').write_text('\n'.join(out))
+          print('\n'.join(out[:1800]))
+          PY
+          python3 /tmp/ef/trace.py
+      - name: Commit report
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-direct-p2p-crypto-v7.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-direct-p2p-crypto-v7.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/
+          git commit -m 'Report direct eFootball P2P crypto consumers v7' || exit 0
+          git push

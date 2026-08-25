@@ -1,0 +1,148 @@
+name: eFootball exact session cipher consumer v10
+
+on:
+  push:
+    branches: [ efootball-score-wire-bridge-v3-2026-08-24 ]
+    paths:
+      - '.github/workflows/efootball-session-crypto-consumer-v10.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Install
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Get binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so > /tmp/out/efootball-session-crypto-consumer-v10.sha256.txt
+      - name: Analyze
+        run: |
+          cat > /tmp/ef/x.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import re
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          with p.open('rb') as f:
+              e=ELFFile(f); t=e.get_section_by_name('.text'); b=t.data(); base=int(t['sh_addr']); end=base+len(b)
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          def dis(lo,hi): return list(md.disasm(b[max(lo,base)-base:min(hi,end)-base],max(lo,base)))
+          def pro(z): return z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp, #-' in z.op_str and ']!' in z.op_str
+          def fs(addr,span=0x3000):
+              r=max(base,addr-span)
+              for z in dis(max(base,addr-span),addr+4):
+                  if pro(z): r=z.address
+              return r
+          def fe(start,span=0x8000):
+              for z in dis(start+4,min(end,start+span)):
+                  if pro(z): return z.address
+              return min(end,start+span)
+          def dump(o,title,lo,hi):
+              o.append(f'\n=== {title} 0x{lo:x}-0x{hi:x} ===')
+              for z in dis(lo,hi):o.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+          def calls(start,finish):
+              r=[]
+              for z in dis(start,finish):
+                  if z.mnemonic=='bl':
+                      m=re.fullmatch(r'#0x([0-9a-f]+)',z.op_str)
+                      if m:r.append((z.address,int(m.group(1),16)))
+              return r
+          o=[]
+          o.append('V10 exact session-cipher consumer trace')
+          o.append('Established object layout after profile_loader: session algorithm presence/value at profile +0x130/+0x134; session key-length presence/value at +0x138/+0x140. Parent passes the profile pair at sp as x2 into relevant concrete transports.')
+
+          # The success path of the 0x7c56740 transport initializer calls 0x7c54ea0 with x0=x2 (profile pair).
+          dump(o,'P2P TRANSPORT SUCCESS PATH INTO PROFILE HELPER',0x7c56e3c,0x7c56eb0)
+          h=0x7c54ea0; hs=fs(h); he=fe(h)
+          dump(o,'PROFILE HELPER 0x7c54ea0 FULL FUNCTION',hs,he)
+          o.append('\n=== DIRECT CALLS FROM PROFILE HELPER ===')
+          for a,tg in calls(hs,he):o.append(f'0x{a:x}->0x{tg:x}')
+
+          # Strict typed signature scan. Require all four exact access shapes on same base register.
+          lo,hi=0x7b00000,0x7d50000
+          body=dis(lo,hi); starts=[z.address for z in body if pro(z)]+[hi]
+          # index body by address walk
+          idx=0; hits=[]
+          pats=[('ldrb',0x130),('ldr_w',0x134),('ldrb',0x138),('ldr_x',0x140)]
+          mem=re.compile(r'\[(x\d+), #0x([0-9a-f]+)\]')
+          for k in range(len(starts)-1):
+              s,e2=starts[k],starts[k+1]
+              if e2-s>0x12000:continue
+              while idx<len(body) and body[idx].address<s:idx+=1
+              j=idx; f=[]
+              while j<len(body) and body[j].address<e2:f.append(body[j]);j+=1
+              regs={}
+              for n,z in enumerate(f):
+                  m=mem.search(z.op_str)
+                  if not m:continue
+                  reg=m.group(1); off=int(m.group(2),16)
+                  typ=None
+                  if z.mnemonic=='ldrb':typ='ldrb'
+                  elif z.mnemonic=='ldr' and z.op_str.startswith('w'):typ='ldr_w'
+                  elif z.mnemonic=='ldr' and z.op_str.startswith('x'):typ='ldr_x'
+                  if typ:regs.setdefault(reg,set()).add((typ,off))
+              req=set(pats)
+              for reg,got in regs.items():
+                  if req<=got:hits.append((s,e2,reg,f))
+              idx=j
+          o.append('\n=== STRICT PROFILE SESSION-CIPHER SIGNATURE HITS ===')
+          o.append(f'hit_count={len(hits)}')
+          for s,e2,reg,f in hits:
+              o.append(f'\n-- fn 0x{s:x}-0x{e2:x} base={reg} --')
+              keep=set()
+              for n,z in enumerate(f):
+                  if any(z.mnemonic==mn and re.search(rf'\[{reg}, #0x{off:x}\]',z.op_str) and ((mn!='ldr') or True) for mn,off in [('ldrb',0x130),('ldr',0x134),('ldrb',0x138),('ldr',0x140)]):
+                      for q in range(max(0,n-14),min(len(f),n+22)):keep.add(q)
+                  if z.mnemonic in ('bl','blr'):keep.add(n)
+              last=-2
+              for q in sorted(keep):
+                  if q>last+1:o.append('  ...')
+                  z=f[q];o.append(f'  0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+                  last=q
+
+          # Also inspect functions reached from 0x7c54ea0 to depth 2; likely constructor/configuration sinks.
+          frontier=[h];seen=set()
+          o.append('\n=== PROFILE HELPER CALLEE WINDOWS DEPTH<=2 ===')
+          for depth in range(3):
+              nxt=[]
+              for a in frontier:
+                  if a in seen or not (lo<=a<hi):continue
+                  seen.add(a);s=fs(a,0x500);e2=fe(s,0x3000)
+                  o.append(f'\n-- depth={depth} target=0x{a:x} fn=0x{s:x}-0x{e2:x} --')
+                  for z in dis(s,e2):
+                      interesting=('0x130' in z.op_str or '0x134' in z.op_str or '0x138' in z.op_str or '0x140' in z.op_str or z.mnemonic in ('bl','blr'))
+                      if interesting:o.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+                  nxt += [tg for _,tg in calls(s,e2) if lo<=tg<hi]
+              frontier=nxt
+
+          Path('/tmp/out/efootball-session-crypto-consumer-v10.txt').write_text('\n'.join(o))
+          print('\n'.join(o[:1800]))
+          PY
+          python3 /tmp/ef/x.py
+      - name: Commit
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-session-crypto-consumer-v10* analysis-output/
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git pull --rebase origin efootball-score-wire-bridge-v3-2026-08-24
+          git add analysis-output/
+          git commit -m 'Report exact eFootball session cipher consumer v10' || exit 0
+          git push

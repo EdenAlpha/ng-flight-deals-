@@ -1,0 +1,191 @@
+V10 exact session-cipher consumer trace
+Established object layout after profile_loader: session algorithm presence/value at profile +0x130/+0x134; session key-length presence/value at +0x138/+0x140. Parent passes the profile pair at sp as x2 into relevant concrete transports.
+
+=== P2P TRANSPORT SUCCESS PATH INTO PROFILE HELPER 0x7c56e3c-0x7c56eb0 ===
+0x7c56e3c: ldurb     w8, [x29, #-0x40]
+0x7c56e40: and       w8, w8, #1
+0x7c56e44: cbz       w8, #0x7c56e50
+0x7c56e48: ldur      x0, [x29, #-0x30]
+0x7c56e4c: bl        #0x2efa56c
+0x7c56e50: cbz       w23, #0x7c56e84
+0x7c56e54: mov       w20, wzr
+0x7c56e58: add       x1, x21, #8
+0x7c56e5c: mov       x0, #-1
+0x7c56e60: bl        #0x8b34ef0
+0x7c56e64: cbnz      x0, #0x7c56b8c
+0x7c56e68: ldr       x8, [x21]
+0x7c56e6c: mov       x0, x21
+0x7c56e70: ldr       x8, [x8, #0x10]
+0x7c56e74: blr       x8
+0x7c56e78: mov       x0, x21
+0x7c56e7c: bl        #0x8b388f0
+0x7c56e80: b         #0x7c56b8c
+0x7c56e84: add       x1, sp, #0x40
+0x7c56e88: mov       x0, x20
+0x7c56e8c: bl        #0x7c54ea0
+0x7c56e90: ldr       x21, [sp, #0x48]
+0x7c56e94: mov       w20, #1
+0x7c56e98: str       wzr, [x19, #0xbd0]
+0x7c56e9c: cbnz      x21, #0x7c56e58
+0x7c56ea0: b         #0x7c56b8c
+0x7c56ea4: bl        #0x8b382d0
+0x7c56ea8: bl        #0x8b382d0
+0x7c56eac: bl        #0x8b382d0
+
+=== PROFILE HELPER 0x7c54ea0 FULL FUNCTION 0x7c54ea0-0x7c54fec ===
+0x7c54ea0: stp       x29, x30, [sp, #-0x30]!
+0x7c54ea4: stp       x22, x21, [sp, #0x10]
+0x7c54ea8: stp       x20, x19, [sp, #0x20]
+0x7c54eac: mov       x29, sp
+0x7c54eb0: ldp       x22, x21, [x1]
+0x7c54eb4: mov       x19, x0
+0x7c54eb8: cbz       x21, #0x7c54ec8
+0x7c54ebc: add       x1, x21, #8
+0x7c54ec0: mov       w0, #1
+0x7c54ec4: bl        #0x8b34e90
+0x7c54ec8: ldr       x20, [x19, #8]
+0x7c54ecc: stp       x22, x21, [x19]
+0x7c54ed0: cbz       x20, #0x7c54ee4
+0x7c54ed4: add       x1, x20, #8
+0x7c54ed8: mov       x0, #-1
+0x7c54edc: bl        #0x8b34ef0
+0x7c54ee0: cbz       x0, #0x7c54ef8
+0x7c54ee4: mov       x0, x19
+0x7c54ee8: ldp       x20, x19, [sp, #0x20]
+0x7c54eec: ldp       x22, x21, [sp, #0x10]
+0x7c54ef0: ldp       x29, x30, [sp], #0x30
+0x7c54ef4: ret       
+0x7c54ef8: ldr       x8, [x20]
+0x7c54efc: mov       x0, x20
+0x7c54f00: ldr       x8, [x8, #0x10]
+0x7c54f04: blr       x8
+0x7c54f08: mov       x0, x20
+0x7c54f0c: bl        #0x8b388f0
+0x7c54f10: mov       x0, x19
+0x7c54f14: ldp       x20, x19, [sp, #0x20]
+0x7c54f18: ldp       x22, x21, [sp, #0x10]
+0x7c54f1c: ldp       x29, x30, [sp], #0x30
+0x7c54f20: ret       
+0x7c54f24: ldrb      w8, [x0, #0xbc8]
+0x7c54f28: cbz       w8, #0x7c54f34
+0x7c54f2c: mov       w0, #6
+0x7c54f30: ret       
+0x7c54f34: ldr       x8, [x1]
+0x7c54f38: adrp      x9, #0x7b40000
+0x7c54f3c: add       x9, x9, #0x1c
+0x7c54f40: cmp       x8, #0
+0x7c54f44: ldr       w8, [x0, #0xbcc]
+0x7c54f48: csel      x9, xzr, x9, eq
+0x7c54f4c: cmp       x9, #0
+0x7c54f50: ccmp      w8, #0, #0, ne
+0x7c54f54: b.eq      #0x7c54f5c
+0x7c54f58: b         #0x7c2af74
+0x7c54f5c: mov       w0, #1
+0x7c54f60: ret       
+0x7c54f64: ldrb      w8, [x0, #0xbc8]
+0x7c54f68: cbz       w8, #0x7c54f74
+0x7c54f6c: mov       w0, #6
+0x7c54f70: ret       
+0x7c54f74: ldr       x8, [x1]
+0x7c54f78: adrp      x9, #0x7b40000
+0x7c54f7c: add       x9, x9, #0x1c
+0x7c54f80: cmp       x8, #0
+0x7c54f84: ldr       w8, [x0, #0xbcc]
+0x7c54f88: csel      x9, xzr, x9, eq
+0x7c54f8c: cmp       x9, #0
+0x7c54f90: ccmp      w8, #0, #0, ne
+0x7c54f94: b.eq      #0x7c54f9c
+0x7c54f98: b         #0x7c2b018
+0x7c54f9c: mov       w0, #1
+0x7c54fa0: ret       
+0x7c54fa4: ldrb      w8, [x0, #0xbc8]
+0x7c54fa8: cbz       w8, #0x7c54fb4
+0x7c54fac: mov       w0, wzr
+0x7c54fb0: ret       
+0x7c54fb4: ldr       x8, [x1]
+0x7c54fb8: adrp      x9, #0x7b40000
+0x7c54fbc: add       x9, x9, #0x1c
+0x7c54fc0: cmp       x8, #0
+0x7c54fc4: ldr       w8, [x0, #0xbcc]
+0x7c54fc8: csel      x9, xzr, x9, eq
+0x7c54fcc: cmp       x9, #0
+0x7c54fd0: ccmp      w8, #0, #0, ne
+0x7c54fd4: b.eq      #0x7c54fdc
+0x7c54fd8: b         #0x7c2a870
+0x7c54fdc: mov       w8, #1
+0x7c54fe0: strb      w8, [x0, #0xbc8]
+0x7c54fe4: mov       w0, w8
+0x7c54fe8: ret       
+
+=== DIRECT CALLS FROM PROFILE HELPER ===
+0x7c54ec4->0x8b34e90
+0x7c54edc->0x8b34ef0
+0x7c54f0c->0x8b388f0
+
+=== STRICT PROFILE SESSION-CIPHER SIGNATURE HITS ===
+hit_count=1
+
+-- fn 0x7b6ca9c-0x7b6d0f0 base=x1 --
+  ...
+  0x7b6cacc: bl        #0x2efb614
+  ...
+  0x7b6cb8c: bl        #0x7b6cba0
+  ...
+  0x7b6cc94: bl        #0x7b6cf3c
+  ...
+  0x7b6ccfc: bl        #0x2f0caa0
+  ...
+  0x7b6cdd8: bl        #0x7b61578
+  ...
+  0x7b6cdfc: bl        #0x7b61578
+  ...
+  0x7b6ce28: bl        #0x2efa4dc
+  ...
+  0x7b6ce40: bl        #0x8b35300
+  ...
+  0x7b6cea8: bl        #0x2f0caa0
+  ...
+  0x7b6cf38: bl        #0x8b35290
+  ...
+  0x7b6d068: strb      w10, [x8, #0xd8]
+  0x7b6d06c: ldr       d0, [x1, #0xd8]
+  0x7b6d070: strb      w11, [x8, #0x80]
+  0x7b6d074: ldr       w11, [x1, #0x104]
+  0x7b6d078: strb      w9, [x8, #0xf8]
+  0x7b6d07c: ldrb      w9, [x1, #0x108]
+  0x7b6d080: ldrb      w10, [x1, #0x128]
+  0x7b6d084: str       d0, [x8, #0xd0]
+  0x7b6d088: ldr       d0, [x1, #0xe8]
+  0x7b6d08c: str       w11, [x8, #0xfc]
+  0x7b6d090: strb      w9, [x8, #0x100]
+  0x7b6d094: ldr       w11, [x1, #0x12c]
+  0x7b6d098: strb      w10, [x8, #0x120]
+  0x7b6d09c: ldrb      w9, [x1, #0x118]
+  0x7b6d0a0: ldrb      w10, [x1, #0x130]
+  0x7b6d0a4: str       d0, [x8, #0xe0]
+  0x7b6d0a8: ldr       d0, [x1, #0x110]
+  0x7b6d0ac: str       w11, [x8, #0x124]
+  0x7b6d0b0: strb      w9, [x8, #0x110]
+  0x7b6d0b4: ldrb      w9, [x1, #0x138]
+  0x7b6d0b8: strb      w10, [x8, #0x128]
+  0x7b6d0bc: ldr       x10, [x1, #0x140]
+  0x7b6d0c0: str       d0, [x8, #0x108]
+  0x7b6d0c4: ldr       w11, [x1, #0x134]
+  0x7b6d0c8: strb      w9, [x8, #0x130]
+  0x7b6d0cc: ldr       d0, [x1, #0x120]
+  0x7b6d0d0: str       x10, [x8, #0x138]
+  0x7b6d0d4: ldrb      w9, [x1, #0x148]
+  0x7b6d0d8: ldr       x10, [x1, #0x150]
+  0x7b6d0dc: str       w11, [x8, #0x12c]
+  0x7b6d0e0: str       d0, [x8, #0x118]
+  0x7b6d0e4: strb      w9, [x8, #0x140]
+  0x7b6d0e8: str       x10, [x8, #0x148]
+  0x7b6d0ec: ret       
+
+=== PROFILE HELPER CALLEE WINDOWS DEPTH<=2 ===
+
+-- depth=0 target=0x7c54ea0 fn=0x7c54ea0-0x7c54fec --
+0x7c54ec4: bl        #0x8b34e90
+0x7c54edc: bl        #0x8b34ef0
+0x7c54f04: blr       x8
+0x7c54f0c: bl        #0x8b388f0

@@ -1,0 +1,165 @@
+name: eFootball session crypto field taint v9
+
+on:
+  push:
+    branches: [ efootball-score-wire-bridge-v3-2026-08-24 ]
+    paths:
+      - '.github/workflows/efootball-session-crypto-field-taint-v9.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Trace session crypto fields
+        run: |
+          cat > /tmp/ef/taint.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import re
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          def dis(lo,hi):
+              lo=max(tva,lo); hi=min(tend,hi); return list(md.disasm(tb[lo-tva:hi-tva],lo))
+          def dump(out,title,lo,hi,flt=None):
+              out.append(f'\n=== {title} 0x{lo:x}-0x{hi:x} ===')
+              for z in dis(lo,hi):
+                  if flt and not flt(z): continue
+                  out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+          def ispro(z):
+              return z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp, #-' in z.op_str and ']!' in z.op_str
+          def fnstart(addr,lo=0x7a00000):
+              best=max(lo,addr-0x3000)
+              for z in dis(max(lo,addr-0x3000),addr+4):
+                  if ispro(z):best=z.address
+              return best
+          def fnend(fs,hi=0x7d50000):
+              for z in dis(fs+4,min(hi,fs+0x7000)):
+                  if ispro(z):return z.address
+              return min(hi,fs+0x7000)
+
+          out=[]
+          out.append('SESSION-CRYPTO FIELD TAINT V9')
+          out.append('Parser output semantic fields established by v8: session algorithm presence/value @ +0x118/+0x11c; session key-length presence/value @ +0x120/+0x128.')
+          out.append('Goal: find copies/consumers of this exact four-offset signature in networking code and connect it to P2P constructors.')
+
+          # Confirm parser output object register and exact writes.
+          dump(out,'CRYPTO PARSER ENTRY (confirm output pointer)',0x7c088e4,0x7c08980)
+          dump(out,'CRYPTO PARSER SESSION FINAL WRITES',0x7c097a0,0x7c097f0)
+
+          # Profile loader: parser call, propagation, and heap/result construction tail.
+          dump(out,'PROFILE LOADER PARSER CALL AND COPY',0x7bfd430,0x7bfd780)
+          dump(out,'PROFILE LOADER RESULT CONSTRUCTION TAIL',0x7bfd700,0x7bfdbf4)
+          out.append('\n=== PROFILE LOADER REFERENCES TO EXPECTED PARSER-OUTPUT STACK OFFSETS ===')
+          # output pointer passed as sp+0x260 => session fields are expected at sp+0x378,0x37c,0x380,0x388
+          wanted=['#0x378','#0x37c','#0x380','#0x388','#0x360','#0x368']
+          for z in dis(0x7bfc91c,0x7bfdbf4):
+              if any(x in z.op_str for x in wanted):out.append(f'0x{z.address:x}: {z.mnemonic} {z.op_str}')
+
+          # Parent: show all uses of returned crypto-profile pointer x21 after loader plus construction callsite.
+          out.append('\n=== TRANSPORT PARENT x21 / PROFILE-RESULT USES ===')
+          for z in dis(0x7c0dca0,0x7c0e450):
+              if re.search(r'\bx21\b',z.op_str) or z.address in (0x7c0deec,0x7c0e244,0x7c0e290,0x7c0e2a8,0x7c0e2cc,0x7c0e2e8):
+                  out.append(f'0x{z.address:x}: {z.mnemonic} {z.op_str}')
+
+          # Search the networking region for the exact profile-shaped four-offset signature.
+          # This catches copies and true consumers without depending on stripped symbols.
+          region_lo,region_hi=0x7a00000,0x7d50000
+          body=dis(region_lo,region_hi)
+          pro=[z.address for z in body if ispro(z)]
+          pro.append(region_hi)
+          sig={0x118,0x11c,0x120,0x128}
+          memrx=re.compile(r'\[(x\d+), #0x([0-9a-f]+)\]')
+          hits=[]
+          pi=0
+          for k in range(len(pro)-1):
+              fs,fe=pro[k],pro[k+1]
+              # avoid pathological false function boundaries
+              if fe-fs>0x18000: continue
+              vals={}
+              while pi<len(body) and body[pi].address<fs:pi+=1
+              j=pi
+              fin=[]
+              while j<len(body) and body[j].address<fe:
+                  z=body[j]; fin.append(z)
+                  for m in memrx.finditer(z.op_str):
+                      off=int(m.group(2),16)
+                      if off in sig: vals.setdefault(m.group(1),set()).add(off)
+                  j+=1
+              for reg,offs in vals.items():
+                  if len(offs)>=3:
+                      hits.append((fs,fe,reg,offs,fin))
+              pi=j
+          out.append('\n=== EXACT SESSION-FIELD SIGNATURE FUNCTIONS (>=3/4 offsets on same base register) ===')
+          out.append(f'hit_count={len(hits)}')
+          for fs,fe,reg,offs,fin in hits:
+              out.append(f'\n-- fn 0x{fs:x}-0x{fe:x} base={reg} offsets={[hex(x) for x in sorted(offs)]} --')
+              # print signature accesses and a 12-insn neighborhood around each, plus all direct calls
+              keep=set()
+              for i,z in enumerate(fin):
+                  if any(re.search(rf'\[{reg}, #0x{x:x}\]',z.op_str) for x in sig):
+                      for q in range(max(0,i-8),min(len(fin),i+13)):keep.add(q)
+                  if z.mnemonic in ('bl','blr'):keep.add(i)
+              last=-2
+              for q in sorted(keep):
+                  if q>last+1:out.append('  ...')
+                  z=fin[q]; out.append(f'  0x{z.address:x}: {z.mnemonic:9} {z.op_str}')
+                  last=q
+
+          # P2P constructor parameter-shape accesses. Constructors receive consolidated local config.
+          ctors=[0x7c54020,0x7c557e0,0x7c56740,0x7c2eca8]
+          out.append('\n=== P2P CONSTRUCTOR CONFIG-PARAM ACCESSES NEAR SESSION OFFSETS ===')
+          for c in ctors:
+              out.append(f'\n-- ctor 0x{c:x} --')
+              for z in dis(c,c+0x1800):
+                  # Include accesses to offsets 0x100..0x150 on any x-reg, and aliases from x1.
+                  m=memrx.search(z.op_str)
+                  if (m and 0x100<=int(m.group(2),16)<=0x150) or re.search(r'\bmov\s+x\d+, x1\b',z.mnemonic+' '+z.op_str):
+                      out.append(f'0x{z.address:x}: {z.mnemonic} {z.op_str}')
+
+          # Extra: exact known P2P scramble field parser and its post-parse output stores.
+          dump(out,'P2P SCRAMBLE PARSE',0x7c059a0,0x7c05a20)
+          dump(out,'P2P PARSER RESULT FINALIZATION',0x7c06700,0x7c06f54)
+
+          Path('/tmp/out/efootball-session-crypto-field-taint-v9.txt').write_text('\n'.join(out))
+          print('\n'.join(out[:2200]))
+          PY
+          python3 /tmp/ef/taint.py
+      - name: Commit report
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-session-crypto-field-taint-v9.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-session-crypto-field-taint-v9.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git pull --rebase origin efootball-score-wire-bridge-v3-2026-08-24
+          git add analysis-output/
+          git commit -m 'Report eFootball session crypto field taint v9' || exit 0
+          git push

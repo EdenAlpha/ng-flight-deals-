@@ -1,0 +1,1291 @@
+=== CONCRETE LABELLED SCORE LOADS ===
+('HOME_SCORE', 131421920, 131419204, 'w2, [x26, #0x4b]')
+('AWAY_SCORE', 131421948, 131419204, 'w2, [x26, #0x4c]')
+
+owner=0x7d54c44 range=0x7d54c44-0x7d5a078
+
+=== SCORE SERIALIZATION REGION ===
+0x7d55410: add       x0, x0, #0x270
+0x7d55414: csel      x2, x19, x9, eq
+0x7d55418: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d5541c: ldrb      w8, [x25, #0x130]
+0x7d55420: tbz       w8, #0, #0x7d5542c
+0x7d55424: ldr       x0, [sp, #0x1290]
+0x7d55428: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d5542c: ldr       x0, [sp, #0x1150]
+0x7d55430: ldr       x8, [x0]
+0x7d55434: ldr       x9, [x8, #0x30]
+0x7d55438: add       x8, sp, #1, lsl #12
+0x7d5543c: add       x8, x8, #0x280
+0x7d55440: blr       x9
+0x7d55444: ldrb      w8, [x25, #0x130]
+0x7d55448: add       x0, sp, #1, lsl #12
+0x7d5544c: ldr       x9, [sp, #0x1290]
+0x7d55450: adrp      x1, #0xae3000
+0x7d55454: add       x1, x1, #0xf6d ; STRING=SOC
+0x7d55458: add       x0, x0, #0x270
+0x7d5545c: tst       w8, #1
+0x7d55460: csel      x2, x19, x9, eq
+0x7d55464: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55468: ldrb      w8, [x25, #0x130]
+0x7d5546c: tbz       w8, #0, #0x7d55478
+0x7d55470: ldr       x0, [sp, #0x1290]
+0x7d55474: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d55478: ldr       x0, [sp, #0x1150]
+0x7d5547c: add       x19, sp, #1, lsl #12
+0x7d55480: add       x19, x19, #0x280
+0x7d55484: ldr       x8, [x0]
+0x7d55488: ldr       x9, [x8, #0x38]
+0x7d5548c: add       x8, sp, #1, lsl #12
+0x7d55490: add       x8, x8, #0x280
+0x7d55494: blr       x9
+0x7d55498: ldrb      w8, [x25, #0x130]
+0x7d5549c: orr       x10, x19, #1
+0x7d554a0: ldr       x9, [sp, #0x1290]
+0x7d554a4: add       x0, sp, #1, lsl #12
+0x7d554a8: adrp      x1, #0xbc9000
+0x7d554ac: add       x1, x1, #0xdee ; STRING=SOC_MANUFACTURER
+0x7d554b0: tst       w8, #1
+0x7d554b4: add       x0, x0, #0x270
+0x7d554b8: csel      x2, x10, x9, eq
+0x7d554bc: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d554c0: ldrb      w8, [x25, #0x130]
+0x7d554c4: tbz       w8, #0, #0x7d554d0
+0x7d554c8: ldr       x0, [sp, #0x1290]
+0x7d554cc: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d554d0: bl        #0x813fe80 ; CALL fn=0x813fdd8 raw=0x813fe80
+0x7d554d4: cbz       x0, #0x7d555d0
+0x7d554d8: bl        #0x813fe80 ; CALL fn=0x813fdd8 raw=0x813fe80
+0x7d554dc: ldrb      w9, [x0, #0x38]
+0x7d554e0: add       x8, x0, #0x39
+0x7d554e4: ldr       x10, [x0, #0x48]
+0x7d554e8: adrp      x1, #0xa85000
+0x7d554ec: add       x1, x1, #0x339 ; STRING=REVISION
+0x7d554f0: tst       w9, #1
+0x7d554f4: csel      x2, x8, x10, eq
+0x7d554f8: b         #0x7d555e0
+0x7d554fc: adrp      x19, #0xa77000
+0x7d55500: add       x19, x19, #0x25e
+0x7d55504: add       x0, sp, #1, lsl #12
+0x7d55508: adrp      x1, #0x9c7000
+0x7d5550c: add       x1, x1, #0x97 ; STRING=MODELNAME
+0x7d55510: add       x0, x0, #0x270
+0x7d55514: mov       x2, x19
+0x7d55518: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d5551c: add       x0, sp, #1, lsl #12
+0x7d55520: adrp      x1, #0xb8f000
+0x7d55524: add       x1, x1, #0x742 ; STRING=MANUFACTURERE
+0x7d55528: add       x0, x0, #0x270
+0x7d5552c: mov       x2, x19
+0x7d55530: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55534: add       x0, sp, #1, lsl #12
+0x7d55538: adrp      x1, #0xa98000
+0x7d5553c: add       x1, x1, #0x23e ; STRING=OSVERSION
+0x7d55540: add       x0, x0, #0x270
+0x7d55544: mov       x2, x19
+0x7d55548: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d5554c: add       x0, sp, #1, lsl #12
+0x7d55550: adrp      x1, #0xb69000
+0x7d55554: add       x1, x1, #0x2b0 ; STRING=PROCESSNUM
+0x7d55558: add       x0, x0, #0x270
+0x7d5555c: mov       w2, wzr
+0x7d55560: mov       w3, wzr
+0x7d55564: bl        #0x7d5e948 ; CALL fn=0x7d5e838 raw=0x7d5e948
+0x7d55568: add       x0, sp, #1, lsl #12
+0x7d5556c: adrp      x1, #0xb1d000
+0x7d55570: add       x1, x1, #0x91c ; STRING=GPU
+0x7d55574: add       x0, x0, #0x270
+0x7d55578: mov       x2, x19
+0x7d5557c: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55580: add       x0, sp, #1, lsl #12
+0x7d55584: adrp      x1, #0xabe000
+0x7d55588: add       x1, x1, #0xdf9 ; STRING=GPU_MANUFACTURER
+0x7d5558c: add       x0, x0, #0x270
+0x7d55590: mov       x2, x19
+0x7d55594: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55598: add       x0, sp, #1, lsl #12
+0x7d5559c: adrp      x1, #0xae3000
+0x7d555a0: add       x1, x1, #0xf6d ; STRING=SOC
+0x7d555a4: add       x0, x0, #0x270
+0x7d555a8: mov       x2, x19
+0x7d555ac: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d555b0: add       x0, sp, #1, lsl #12
+0x7d555b4: adrp      x1, #0xbc9000
+0x7d555b8: add       x1, x1, #0xdee ; STRING=SOC_MANUFACTURER
+0x7d555bc: add       x0, x0, #0x270
+0x7d555c0: mov       x2, x19
+0x7d555c4: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d555c8: bl        #0x813fe80 ; CALL fn=0x813fdd8 raw=0x813fe80
+0x7d555cc: cbnz      x0, #0x7d554d8
+0x7d555d0: adrp      x1, #0xa85000
+0x7d555d4: add       x1, x1, #0x339 ; STRING=REVISION
+0x7d555d8: adrp      x2, #0xa77000
+0x7d555dc: add       x2, x2, #0x25e
+0x7d555e0: add       x0, sp, #1, lsl #12
+0x7d555e4: add       x0, x0, #0x270
+0x7d555e8: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d555ec: add       x8, sp, #1, lsl #12
+0x7d555f0: add       x19, sp, #1, lsl #12
+0x7d555f4: add       x8, x8, #0x280
+0x7d555f8: add       x19, x19, #0x280
+0x7d555fc: bl        #0x7dc3cf0 ; CALL fn=0x7dc3bd8 raw=0x7dc3cf0
+0x7d55600: ldrb      w8, [x25, #0x130]
+0x7d55604: orr       x10, x19, #1
+0x7d55608: ldr       x9, [sp, #0x1290]
+0x7d5560c: add       x0, sp, #1, lsl #12
+0x7d55610: adrp      x1, #0xabe000
+0x7d55614: add       x1, x1, #0xe0a ; STRING=NETWORKINFO
+0x7d55618: tst       w8, #1
+0x7d5561c: add       x0, x0, #0x270
+0x7d55620: csel      x2, x10, x9, eq
+0x7d55624: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55628: ldrb      w8, [x25, #0x130]
+0x7d5562c: tbz       w8, #0, #0x7d55638
+0x7d55630: ldr       x0, [sp, #0x1290]
+0x7d55634: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d55638: bl        #0x7dd1b74 ; CALL fn=0x7dd1a3c raw=0x7dd1b74
+0x7d5563c: mov       w2, w0
+0x7d55640: add       x0, sp, #1, lsl #12
+0x7d55644: adrp      x1, #0xb7c000
+0x7d55648: add       x1, x1, #0x29f ; STRING=PLATFORM
+0x7d5564c: add       x0, x0, #0x270
+0x7d55650: mov       w3, wzr
+0x7d55654: bl        #0x7d5e71c ; CALL fn=0x7d5e6e0 raw=0x7d5e71c
+0x7d55658: ldr       x19, [sp, #0x1158]
+0x7d5565c: cbz       x19, #0x7d55688
+0x7d55660: add       x1, x19, #8
+0x7d55664: mov       x0, #-1
+0x7d55668: bl        #0x8b34ef0 ; CALL fn=0x89f3d40 raw=0x8b34ef0
+0x7d5566c: cbnz      x0, #0x7d55688
+0x7d55670: ldr       x8, [x19]
+0x7d55674: mov       x0, x19
+0x7d55678: ldr       x8, [x8, #0x10]
+0x7d5567c: blr       x8
+0x7d55680: mov       x0, x19
+0x7d55684: bl        #0x8b388f0 ; CALL fn=0x89f3d40 raw=0x8b388f0
+0x7d55688: add       x0, sp, #1, lsl #12
+0x7d5568c: ldrb      w2, [x26, #0x5c]
+0x7d55690: adrp      x1, #0xa4b000
+0x7d55694: add       x1, x1, #0x77b ; STRING=GAME_MODE
+0x7d55698: add       x0, x0, #0x270
+0x7d5569c: mov       w3, wzr
+0x7d556a0: bl        #0x7d5e71c ; CALL fn=0x7d5e6e0 raw=0x7d5e71c
+0x7d556a4: add       x0, sp, #1, lsl #12
+0x7d556a8: ldrb      w2, [x26, #0x48]
+0x7d556ac: adrp      x1, #0xb0a000
+0x7d556b0: add       x1, x1, #0xd08 ; STRING=GAME_PHASE
+0x7d556b4: add       x0, x0, #0x270
+0x7d556b8: mov       w3, wzr
+0x7d556bc: bl        #0x7d5e71c ; CALL fn=0x7d5e6e0 raw=0x7d5e71c
+0x7d556c0: add       x0, sp, #1, lsl #12
+0x7d556c4: ldrb      w2, [x26, #0x5d]
+0x7d556c8: adrp      x1, #0xaf7000
+0x7d556cc: add       x1, x1, #0x611 ; STRING=MATCH_CATEGORY
+0x7d556d0: add       x0, x0, #0x270
+0x7d556d4: mov       w3, wzr
+0x7d556d8: bl        #0x7d5e71c ; CALL fn=0x7d5e6e0 raw=0x7d5e71c
+0x7d556dc: add       x0, sp, #1, lsl #12
+0x7d556e0: ldrb      w2, [x26, #0x4b]
+0x7d556e4: adrp      x1, #0xa38000
+0x7d556e8: add       x1, x1, #0xb01 ; STRING=HOME_SCORE
+0x7d556ec: add       x0, x0, #0x270
+0x7d556f0: mov       w3, wzr
+0x7d556f4: bl        #0x7d5e71c ; CALL fn=0x7d5e6e0 raw=0x7d5e71c
+0x7d556f8: add       x0, sp, #1, lsl #12
+0x7d556fc: ldrb      w2, [x26, #0x4c]
+0x7d55700: adrp      x1, #0xa13000
+0x7d55704: add       x1, x1, #0x757 ; STRING=AWAY_SCORE
+0x7d55708: add       x0, x0, #0x270
+0x7d5570c: mov       w3, wzr
+0x7d55710: bl        #0x7d5e71c ; CALL fn=0x7d5e6e0 raw=0x7d5e71c
+0x7d55714: ldr       w8, [x26, #0x58]
+0x7d55718: cmp       w8, #2
+0x7d5571c: b.ne      #0x7d55728
+0x7d55720: mov       w2, #0xff
+0x7d55724: b         #0x7d55760
+0x7d55728: cmp       w8, #1
+0x7d5572c: add       x10, x26, #0x4b
+0x7d55730: cset      w9, ne
+0x7d55734: cmp       w8, #0
+0x7d55738: ubfiz     x9, x9, #1, #0x20
+0x7d5573c: ldrb      w8, [x10, x8]
+0x7d55740: csinc     x9, x9, xzr, ne
+0x7d55744: ldrb      w9, [x10, x9]
+0x7d55748: cmp       w8, w9
+0x7d5574c: b.ls      #0x7d55758
+0x7d55750: mov       w2, wzr
+0x7d55754: b         #0x7d55760
+0x7d55758: mov       w8, #1
+0x7d5575c: cinc      w2, w8, hs
+0x7d55760: add       x0, sp, #1, lsl #12
+0x7d55764: adrp      x1, #0xa00000
+0x7d55768: add       x1, x1, #0xc66 ; STRING=SCORE_SITUATION
+0x7d5576c: add       x0, x0, #0x270
+0x7d55770: mov       w3, wzr
+0x7d55774: bl        #0x7d5e71c ; CALL fn=0x7d5e6e0 raw=0x7d5e71c
+0x7d55778: add       x0, sp, #1, lsl #12
+0x7d5577c: ldr       w2, [x26, #0x60]
+0x7d55780: adrp      x1, #0xc15000
+0x7d55784: add       x1, x1, #0xc62 ; STRING=OPERATION_TYPE
+0x7d55788: add       x0, x0, #0x270
+0x7d5578c: mov       w3, wzr
+0x7d55790: bl        #0x7d5e834 ; CALL fn=0x7d5e720 raw=0x7d5e834
+0x7d55794: ldrb      w8, [x26, #0x64]
+0x7d55798: add       x0, sp, #1, lsl #12
+0x7d5579c: adrp      x1, #0xba3000
+0x7d557a0: add       x1, x1, #0x187 ; STRING=CURRENT_DIVISION
+0x7d557a4: add       x0, x0, #0x270
+0x7d557a8: mov       w3, wzr
+0x7d557ac: cmp       w8, #0
+0x7d557b0: csinv     w2, w8, wzr, ne
+0x7d557b4: bl        #0x7d5e71c ; CALL fn=0x7d5e6e0 raw=0x7d5e71c
+0x7d557b8: bl        #0x28294b8 ; CALL fn=0x2829420 raw=0x28294b8
+0x7d557bc: cbz       x0, #0x7d557e8
+0x7d557c0: ldr       x8, [x0]
+0x7d557c4: ldr       x8, [x8, #0x158]
+0x7d557c8: blr       x8
+0x7d557cc: cmp       w0, #3
+0x7d557d0: b.hi      #0x7d557e8
+0x7d557d4: adrp      x8, #0xc90000
+0x7d557d8: add       x8, x8, #0x174
+0x7d557dc: ldrsw     x9, [x8, w0, sxtw #2]
+0x7d557e0: add       x2, x8, x9
+0x7d557e4: b         #0x7d557f0
+0x7d557e8: adrp      x2, #0xa07000
+0x7d557ec: add       x2, x2, #0x544 ; STRING=UNKNOWN
+0x7d557f0: add       x0, sp, #1, lsl #12
+0x7d557f4: adrp      x1, #0xb8f000
+0x7d557f8: add       x1, x1, #0x75c ; STRING=QUALITY_SETTING_FOR_PLAYER
+0x7d557fc: add       x0, x0, #0x270
+0x7d55800: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55804: bl        #0x28294b8 ; CALL fn=0x2829420 raw=0x28294b8
+0x7d55808: cbz       x0, #0x7d55834
+0x7d5580c: ldr       x8, [x0]
+0x7d55810: ldr       x8, [x8, #0x168]
+0x7d55814: blr       x8
+0x7d55818: cmp       w0, #2
+0x7d5581c: b.hi      #0x7d55834
+0x7d55820: adrp      x8, #0xc90000
+0x7d55824: add       x8, x8, #0x184
+0x7d55828: ldrsw     x9, [x8, w0, sxtw #2]
+0x7d5582c: add       x2, x8, x9
+0x7d55830: b         #0x7d5583c
+0x7d55834: adrp      x2, #0xa07000
+0x7d55838: add       x2, x2, #0x544 ; STRING=UNKNOWN
+0x7d5583c: add       x0, sp, #1, lsl #12
+0x7d55840: adrp      x1, #0xae3000
+0x7d55844: add       x1, x1, #0xf71 ; STRING=QUALITY_SETTING_FOR_STADIUM
+0x7d55848: add       x0, x0, #0x270
+0x7d5584c: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55850: bl        #0x2f11b24 ; CALL fn=0x2f11ab4 raw=0x2f11b24
+0x7d55854: cmp       w0, #0xe
+0x7d55858: adrp      x1, #0x9c7000
+0x7d5585c: add       x1, x1, #0xa1 ; STRING=FPS_SETTING
+0x7d55860: csinv     w2, w0, wzr, lo
+0x7d55864: add       x0, sp, #1, lsl #12
+0x7d55868: mov       w3, wzr
+0x7d5586c: add       x0, x0, #0x270
+0x7d55870: bl        #0x7d5e71c ; CALL fn=0x7d5e6e0 raw=0x7d5e71c
+0x7d55874: bl        #0x2f11b34 ; CALL fn=0x2f11ab4 raw=0x2f11b34
+0x7d55878: mov       w2, w0
+0x7d5587c: add       x0, sp, #1, lsl #12
+0x7d55880: adrp      x1, #0xaf7000
+0x7d55884: add       x1, x1, #0x620 ; STRING=VSYNC_INTERVAL
+0x7d55888: add       x0, x0, #0x270
+0x7d5588c: mov       w3, wzr
+0x7d55890: bl        #0x7d5e834 ; CALL fn=0x7d5e720 raw=0x7d5e834
+0x7d55894: bl        #0x7cda454 ; CALL fn=0x7cda3b8 raw=0x7cda454
+0x7d55898: str       x0, [sp, #0xb8]
+0x7d5589c: cbz       x0, #0x7d55914
+0x7d558a0: mov       x19, x0
+0x7d558a4: bl        #0x7cda460 ; CALL fn=0x7cda460 raw=0x7cda460
+0x7d558a8: tbz       w0, #0, #0x7d55914
+0x7d558ac: add       x8, sp, #1, lsl #12
+0x7d558b0: mov       w1, wzr
+0x7d558b4: add       x8, x8, #0x280
+0x7d558b8: mov       w2, #0x20c
+0x7d558bc: add       x0, x8, #8
+0x7d558c0: adrp      x8, #0x97cf000
+0x7d558c4: add       x8, x8, #0x20
+0x7d558c8: str       x8, [sp, #0x1280]
+0x7d558cc: bl        #0x8b35360 ; CALL fn=0x89f3d40 raw=0x8b35360
+0x7d558d0: add       x1, sp, #1, lsl #12
+0x7d558d4: mov       x0, x19
+0x7d558d8: add       x1, x1, #0x280
+0x7d558dc: bl        #0x7cdaf90 ; CALL fn=0x7cdaf90 raw=0x7cdaf90
+0x7d558e0: add       x1, sp, #1, lsl #12
+0x7d558e4: mov       x0, x22
+0x7d558e8: add       x1, x1, #0x280
+0x7d558ec: bl        #0x7d5a1ec ; CALL fn=0x7d5a078 raw=0x7d5a1ec
+0x7d558f0: mov       x0, x19
+0x7d558f4: bl        #0x7cdb14c ; CALL fn=0x7cdb14c raw=0x7cdb14c
+0x7d558f8: ldrb      w8, [x0]
+0x7d558fc: adrp      x1, #0x9ed000
+0x7d55900: add       x1, x1, #0xa8f ; STRING=SOCKET_ERRORS
+0x7d55904: ldr       x9, [x0, #0x10]
+0x7d55908: tst       w8, #1
+0x7d5590c: csinc     x2, x9, x0, ne
+0x7d55910: b         #0x7d55930
+0x7d55914: mov       x0, x22
+0x7d55918: mov       x1, xzr
+0x7d5591c: bl        #0x7d5a1ec ; CALL fn=0x7d5a078 raw=0x7d5a1ec
+0x7d55920: adrp      x1, #0x9ed000
+0x7d55924: add       x1, x1, #0xa8f ; STRING=SOCKET_ERRORS
+0x7d55928: adrp      x2, #0xa77000
+0x7d5592c: add       x2, x2, #0x25e
+0x7d55930: add       x0, sp, #1, lsl #12
+0x7d55934: add       x0, x0, #0x270
+0x7d55938: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d5593c: bl        #0x7dd69c0 ; CALL fn=0x7dd69c0 raw=0x7dd69c0
+0x7d55940: ldrb      w8, [x0]
+0x7d55944: adrp      x1, #0xb1d000
+0x7d55948: add       x1, x1, #0x920 ; STRING=BACKGROUND_MS_LIST
+0x7d5594c: ldr       x9, [x0, #0x10]
+0x7d55950: tst       w8, #1
+0x7d55954: csinc     x2, x9, x0, ne
+0x7d55958: add       x0, sp, #1, lsl #12
+0x7d5595c: add       x0, x0, #0x270
+0x7d55960: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55964: ldrb      w8, [x26, #0xb0]
+0x7d55968: add       x10, x26, #0xb1
+0x7d5596c: ldr       x9, [x26, #0xc0]
+0x7d55970: add       x0, sp, #1, lsl #12
+0x7d55974: adrp      x1, #0xc02000
+0x7d55978: add       x1, x1, #0x823 ; STRING=CS_SERVER_LABEL
+0x7d5597c: tst       w8, #1
+0x7d55980: add       x0, x0, #0x270
+0x7d55984: csel      x2, x10, x9, eq
+0x7d55988: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d5598c: ldrb      w8, [x26, #0xc8]
+0x7d55990: add       x10, x26, #0xc9
+0x7d55994: ldr       x9, [x26, #0xd8]
+0x7d55998: add       x0, sp, #1, lsl #12
+0x7d5599c: adrp      x1, #0xaf7000
+0x7d559a0: add       x1, x1, #0x62f ; STRING=CS_SERVER_REGION
+0x7d559a4: tst       w8, #1
+0x7d559a8: add       x0, x0, #0x270
+0x7d559ac: csel      x2, x10, x9, eq
+0x7d559b0: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d559b4: add       x0, sp, #1, lsl #12
+0x7d559b8: ldrh      w2, [x26, #0xf8]
+0x7d559bc: adrp      x1, #0xb1d000
+0x7d559c0: add       x1, x1, #0x933 ; STRING=CS_SERVER_REGION_PRIORITY
+0x7d559c4: add       x0, x0, #0x270
+0x7d559c8: mov       w3, wzr
+0x7d559cc: bl        #0x7d5ea60 ; CALL fn=0x7d5e94c raw=0x7d5ea60
+0x7d559d0: ldrb      w8, [x26, #0xe0]
+0x7d559d4: add       x10, x26, #0xe1
+0x7d559d8: ldr       x9, [x26, #0xf0]
+0x7d559dc: add       x0, sp, #1, lsl #12
+0x7d559e0: adrp      x1, #0xbef000
+0x7d559e4: add       x1, x1, #0x921 ; STRING=CS_SERVER_ADDRESS
+0x7d559e8: tst       w8, #1
+0x7d559ec: add       x0, x0, #0x270
+0x7d559f0: csel      x2, x10, x9, eq
+0x7d559f4: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d559f8: add       x0, sp, #1, lsl #12
+0x7d559fc: ldrh      w2, [x26, #0xfa]
+0x7d55a00: adrp      x1, #0xc15000
+0x7d55a04: add       x1, x1, #0xc71 ; STRING=CS_SERVER_NAME
+0x7d55a08: add       x0, x0, #0x270
+0x7d55a0c: mov       w3, wzr
+0x7d55a10: bl        #0x7d5ea60 ; CALL fn=0x7d5e94c raw=0x7d5ea60
+0x7d55a14: add       x0, sp, #1, lsl #12
+0x7d55a18: add       x19, sp, #1, lsl #12
+0x7d55a1c: add       x0, x0, #0x280
+0x7d55a20: str       xzr, [sp, #0x1288]
+0x7d55a24: str       xzr, [sp, #0x1280]
+0x7d55a28: add       x19, x19, #0x280
+0x7d55a2c: str       xzr, [sp, #0x1290]
+0x7d55a30: bl        #0x7d65794 ; CALL fn=0x7d65700 raw=0x7d65794
+0x7d55a34: ldrb      w8, [x25, #0x130]
+0x7d55a38: orr       x10, x19, #1
+0x7d55a3c: ldr       x9, [sp, #0x1290]
+0x7d55a40: add       x0, sp, #1, lsl #12
+0x7d55a44: adrp      x1, #0xb1d000
+0x7d55a48: add       x1, x1, #0x94d ; STRING=GAME_SERVER_NAME
+0x7d55a4c: tst       w8, #1
+0x7d55a50: add       x0, x0, #0x270
+0x7d55a54: csel      x2, x10, x9, eq
+0x7d55a58: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55a5c: ldrb      w8, [x25, #0x130]
+0x7d55a60: tbz       w8, #0, #0x7d55a6c
+0x7d55a64: ldr       x0, [sp, #0x1290]
+0x7d55a68: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d55a6c: mov       w8, #0x3f800000
+0x7d55a70: movi      v0.2d, #0000000000000000
+0x7d55a74: str       w8, [sp, #0x1050]
+0x7d55a78: adrp      x8, #0xa4af000
+0x7d55a7c: add       x8, x8, #0xf68
+0x7d55a80: str       q0, [sp, #0x1040]
+0x7d55a84: str       q0, [sp, #0x1030]
+0x7d55a88: ldarb     w8, [x8]
+0x7d55a8c: tbz       w8, #0, #0x7d5a028
+0x7d55a90: add       x8, sp, #0xe00
+0x7d55a94: add       x19, sp, #1, lsl #12
+0x7d55a98: add       x19, x19, #0x280
+0x7d55a9c: bl        #0x7b31ea0 ; CALL fn=0x7b31ea0 raw=0x7b31ea0
+0x7d55aa0: ldr       x0, [sp, #0xe00]
+0x7d55aa4: cbz       x0, #0x7d55d58
+0x7d55aa8: add       x1, sp, #1, lsl #12
+0x7d55aac: add       x1, x1, #0x30
+0x7d55ab0: bl        #0x7b327d0 ; CALL fn=0x7b3244c raw=0x7b327d0
+0x7d55ab4: tbz       w0, #0, #0x7d55d58
+0x7d55ab8: ldr       x24, [sp, #0x1040]
+0x7d55abc: cbz       x24, #0x7d55d58
+0x7d55ac0: add       x8, sp, #1, lsl #12
+0x7d55ac4: add       x9, sp, #1, lsl #12
+0x7d55ac8: add       x8, x8, #0x150
+0x7d55acc: add       x9, x9, #0x280
+0x7d55ad0: mov       w23, wzr
+0x7d55ad4: add       x25, x8, #0x30
+0x7d55ad8: add       x26, x8, #0x48
+0x7d55adc: add       x27, x9, #0x30
+0x7d55ae0: add       x28, x9, #0x48
+0x7d55ae4: orr       x22, x9, #1
+0x7d55ae8: str       wzr, [sp, #0xf8]
+0x7d55aec: b         #0x7d55b0c
+0x7d55af0: mov       w23, #1
+0x7d55af4: ldr       x0, [sp, #0x1150]
+0x7d55af8: cbz       x0, #0x7d55b04
+0x7d55afc: str       x0, [sp, #0x1158]
+0x7d55b00: bl        #0x8b352c0 ; CALL fn=0x89f3d40 raw=0x8b352c0
+0x7d55b04: ldr       x24, [x24]
+0x7d55b08: cbz       x24, #0x7d5883c
+0x7d55b0c: add       x8, sp, #1, lsl #12
+0x7d55b10: stp       xzr, xzr, [x25]
+0x7d55b14: add       x8, x8, #0x30
+0x7d55b18: strb      wzr, [x25, #0x10]
+0x7d55b1c: movi      v0.2d, #0000000000000000
+0x7d55b20: stp       xzr, xzr, [x26]
+0x7d55b24: strb      wzr, [x26, #0x10]
+0x7d55b28: add       x20, x24, #0x11
+0x7d55b2c: strb      wzr, [x8, #0x180]
+0x7d55b30: add       x8, sp, #1, lsl #12
+0x7d55b34: add       x8, x8, #0x150
+0x7d55b38: str       xzr, [sp, #0x11b8]
+0x7d55b3c: str       q0, [sp, #0x1160]
+0x7d55b40: add       x3, sp, #1, lsl #12
+0x7d55b44: stp       xzr, xzr, [x27]
+0x7d55b48: add       x3, x3, #0x280
+0x7d55b4c: stur      q0, [x8, #0x19]
+0x7d55b50: adrp      x0, #0xa4b0000
+0x7d55b54: add       x0, x0, #0x60
+0x7d55b58: strb      wzr, [x27, #0x10]
+0x7d55b5c: stp       xzr, xzr, [x28]
+0x7d55b60: mov       w4, wzr
+0x7d55b64: strb      wzr, [x28, #0x10]
+0x7d55b68: add       x21, sp, #1, lsl #12
+0x7d55b6c: strb      wzr, [x8, #0x190]
+0x7d55b70: add       x21, x21, #0x150
+0x7d55b74: str       xzr, [sp, #0x12e8]
+0x7d55b78: str       q0, [sp, #0x1290]
+0x7d55b7c: stur      q0, [x19, #0x19]
+0x7d55b80: ldp       x10, x9, [x24, #0x18]
+0x7d55b84: str       q0, [sp, #0x1150]
+0x7d55b88: ldrb      w8, [x24, #0x10]
+0x7d55b8c: str       q0, [sp, #0x1280]
+0x7d55b90: tst       w8, #1
+0x7d55b94: lsr       x8, x8, #1
+0x7d55b98: csel      x1, x20, x9, eq
+0x7d55b9c: csel      x8, x8, x10, eq
+0x7d55ba0: add       x2, x1, x8
+0x7d55ba4: bl        #0x2f4bfc0 ; CALL fn=0x2f4bfc0 raw=0x2f4bfc0
+0x7d55ba8: ldp       x10, x9, [x24, #0x18]
+0x7d55bac: mov       w19, w0
+0x7d55bb0: add       x0, sp, #1, lsl #12
+0x7d55bb4: ldrb      w8, [x24, #0x10]
+0x7d55bb8: add       x3, sp, #1, lsl #12
+0x7d55bbc: add       x0, x0, #0x150
+0x7d55bc0: add       x3, x3, #0x280
+0x7d55bc4: mov       w4, wzr
+0x7d55bc8: tst       w8, #1
+0x7d55bcc: lsr       x8, x8, #1
+0x7d55bd0: csel      x1, x20, x9, eq
+0x7d55bd4: csel      x8, x8, x10, eq
+0x7d55bd8: add       x2, x1, x8
+0x7d55bdc: bl        #0x792fee8 ; CALL fn=0x792fee8 raw=0x792fee8
+0x7d55be0: ldr       x0, [sp, #0x1280]
+0x7d55be4: cbz       x0, #0x7d55bf0
+0x7d55be8: str       x0, [sp, #0x1288]
+0x7d55bec: bl        #0x8b352c0 ; CALL fn=0x89f3d40 raw=0x8b352c0
+0x7d55bf0: tbz       w19, #0, #0x7d55ca8
+0x7d55bf4: ldrb      w8, [x21, #0x60]
+0x7d55bf8: cbz       w8, #0x7d55d44
+0x7d55bfc: ldrb      w8, [x24, #0x10]
+0x7d55c00: add       x0, sp, #1, lsl #12
+0x7d55c04: ldr       x9, [x24, #0x20]
+0x7d55c08: add       x0, x0, #0x270
+0x7d55c0c: adrp      x1, #0xc15000
+0x7d55c10: add       x1, x1, #0xc80 ; STRING=GAME_SERVER_STATS_URL
+0x7d55c14: tst       w8, #1
+0x7d55c18: csel      x2, x20, x9, eq
+0x7d55c1c: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55c20: adrp      x8, #0xa5e000
+0x7d55c24: add       x8, x8, #0xd01 ; STRING=GAME_SERVER_STATS_
+0x7d55c28: add       x19, sp, #1, lsl #12
+0x7d55c2c: add       x0, sp, #1, lsl #12
+0x7d55c30: add       x19, x19, #0x280
+0x7d55c34: add       x1, sp, #1, lsl #12
+0x7d55c38: ldr       q0, [x8]
+0x7d55c3c: mov       w8, #0x24
+0x7d55c40: add       x3, x24, #0x28
+0x7d55c44: add       x0, x0, #0x270
+0x7d55c48: add       x1, x1, #0x280
+0x7d55c4c: add       x2, sp, #0xf18
+0x7d55c50: strb      w8, [x19]
+0x7d55c54: mov       w8, #0x5f53
+0x7d55c58: str       xzr, [sp, #0x1290]
+0x7d55c5c: str       q0, [x22]
+0x7d55c60: strh      w8, [x22, #0x10]
+0x7d55c64: str       xzr, [sp, #0xf20]
+0x7d55c68: str       xzr, [sp, #0xf18]
+0x7d55c6c: str       xzr, [sp, #0xf28]
+0x7d55c70: bl        #0x7d51e88 ; CALL fn=0x7d51138 raw=0x7d51e88
+0x7d55c74: ldrb      w8, [sp, #0xf18]
+0x7d55c78: tbz       w8, #0, #0x7d55c84
+0x7d55c7c: ldr       x0, [sp, #0xf28]
+0x7d55c80: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d55c84: ldrb      w8, [x19]
+0x7d55c88: tbz       w8, #0, #0x7d55c94
+0x7d55c8c: ldr       x0, [sp, #0x1290]
+0x7d55c90: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d55c94: mov       w8, #1
+0x7d55c98: str       w8, [sp, #0xf8]
+0x7d55c9c: ldr       x0, [sp, #0x1150]
+0x7d55ca0: cbnz      x0, #0x7d55afc
+0x7d55ca4: b         #0x7d55b04
+0x7d55ca8: ldrb      w8, [x24, #0x10]
+0x7d55cac: add       x0, sp, #1, lsl #12
+0x7d55cb0: ldr       x9, [x24, #0x20]
+0x7d55cb4: add       x0, x0, #0x270
+0x7d55cb8: adrp      x1, #0xae3000
+0x7d55cbc: add       x1, x1, #0xf8d ; STRING=DOWNLOAD_SERVER_STATS_URL
+0x7d55cc0: tst       w8, #1
+0x7d55cc4: csel      x2, x20, x9, eq
+0x7d55cc8: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55ccc: add       x19, sp, #1, lsl #12
+0x7d55cd0: adrp      x9, #0xb8f000
+0x7d55cd4: add       x9, x9, #0x777 ; STRING=DOWNLOAD_SERVER_STATS_
+0x7d55cd8: add       x19, x19, #0x280
+0x7d55cdc: mov       w8, #0x2c
+0x7d55ce0: add       x0, sp, #1, lsl #12
+0x7d55ce4: add       x1, sp, #1, lsl #12
+0x7d55ce8: add       x3, x24, #0x28
+0x7d55cec: ldr       q0, [x9]
+0x7d55cf0: add       x0, x0, #0x270
+0x7d55cf4: strb      w8, [x19]
+0x7d55cf8: ldur      x8, [x9, #0xe]
+0x7d55cfc: add       x1, x1, #0x280
+0x7d55d00: add       x2, sp, #0xf18
+0x7d55d04: strb      wzr, [x19, #0x17]
+0x7d55d08: str       q0, [x22]
+0x7d55d0c: stur      x8, [x22, #0xe]
+0x7d55d10: str       xzr, [sp, #0xf20]
+0x7d55d14: str       xzr, [sp, #0xf18]
+0x7d55d18: str       xzr, [sp, #0xf28]
+0x7d55d1c: bl        #0x7d51e88 ; CALL fn=0x7d51138 raw=0x7d51e88
+0x7d55d20: ldrb      w8, [sp, #0xf18]
+0x7d55d24: tbz       w8, #0, #0x7d55d30
+0x7d55d28: ldr       x0, [sp, #0xf28]
+0x7d55d2c: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d55d30: ldrb      w8, [x19]
+0x7d55d34: tbz       w8, #0, #0x7d55af0
+0x7d55d38: ldr       x0, [sp, #0x1290]
+0x7d55d3c: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d55d40: b         #0x7d55af0
+0x7d55d44: add       x19, sp, #1, lsl #12
+0x7d55d48: add       x19, x19, #0x280
+0x7d55d4c: ldr       x0, [sp, #0x1150]
+0x7d55d50: cbnz      x0, #0x7d55afc
+0x7d55d54: b         #0x7d55b04
+0x7d55d58: mov       w19, wzr
+0x7d55d5c: add       x8, sp, #1, lsl #12
+0x7d55d60: add       x0, sp, #1, lsl #12
+0x7d55d64: add       x8, x8, #0x280
+0x7d55d68: adrp      x1, #0xc15000
+0x7d55d6c: add       x1, x1, #0xc80 ; STRING=GAME_SERVER_STATS_URL
+0x7d55d70: adrp      x2, #0xa77000
+0x7d55d74: add       x2, x2, #0x25e
+0x7d55d78: add       x0, x0, #0x270
+0x7d55d7c: strb      wzr, [x8]
+0x7d55d80: str       wzr, [sp, #0x1284]
+0x7d55d84: strb      wzr, [x8, #8]
+0x7d55d88: strb      wzr, [x8, #0xc]
+0x7d55d8c: strh      wzr, [sp, #0x128e]
+0x7d55d90: strb      wzr, [x8, #0x10]
+0x7d55d94: strb      wzr, [x8, #0x12]
+0x7d55d98: strh      wzr, [sp, #0x1294]
+0x7d55d9c: strb      wzr, [x8, #0x16]
+0x7d55da0: strb      wzr, [x8, #0x18]
+0x7d55da4: strh      wzr, [sp, #0x129a]
+0x7d55da8: strb      wzr, [x8, #0x1c]
+0x7d55dac: strb      wzr, [x8, #0x1e]
+0x7d55db0: strh      wzr, [sp, #0x12a0]
+0x7d55db4: strb      wzr, [x8, #0x22]
+0x7d55db8: strb      wzr, [x8, #0x24]
+0x7d55dbc: strh      wzr, [sp, #0x12a6]
+0x7d55dc0: strb      wzr, [x8, #0x28]
+0x7d55dc4: strb      wzr, [x8, #0x2c]
+0x7d55dc8: strb      wzr, [x8, #0x34]
+0x7d55dcc: strb      wzr, [x8, #0x38]
+0x7d55dd0: str       wzr, [sp, #0x12b0]
+0x7d55dd4: str       wzr, [sp, #0x12bc]
+0x7d55dd8: strb      wzr, [x8, #0x40]
+0x7d55ddc: strb      wzr, [x8, #0x44]
+0x7d55de0: str       wzr, [sp, #0x12c8]
+0x7d55de4: strb      wzr, [x8, #0x4c]
+0x7d55de8: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55dec: adrp      x10, #0xa5e000
+0x7d55df0: add       x10, x10, #0xd01 ; STRING=GAME_SERVER_STATS_
+0x7d55df4: add       x0, sp, #1, lsl #12
+0x7d55df8: add       x1, sp, #1, lsl #12
+0x7d55dfc: add       x3, sp, #1, lsl #12
+0x7d55e00: mov       w8, #0x24
+0x7d55e04: mov       w9, #0x5f53
+0x7d55e08: ldr       q0, [x10]
+0x7d55e0c: add       x0, x0, #0x270
+0x7d55e10: add       x1, x1, #0x150
+0x7d55e14: add       x2, sp, #0xf18
+0x7d55e18: add       x3, x3, #0x280
+0x7d55e1c: str       xzr, [sp, #0x1160]
+0x7d55e20: strb      w8, [x25]
+0x7d55e24: sturh     w9, [x25, #0x11]
+0x7d55e28: stur      q0, [x25, #1]
+0x7d55e2c: str       xzr, [sp, #0xf20]
+0x7d55e30: str       xzr, [sp, #0xf18]
+0x7d55e34: str       xzr, [sp, #0xf28]
+0x7d55e38: bl        #0x7d51e88 ; CALL fn=0x7d51138 raw=0x7d51e88
+0x7d55e3c: ldrb      w8, [sp, #0xf18]
+0x7d55e40: tbnz      w8, #0, #0x7d55e54
+0x7d55e44: ldrb      w8, [x25]
+0x7d55e48: tbnz      w8, #0, #0x7d55e64
+0x7d55e4c: tbz       w19, #0, #0x7d55e70
+0x7d55e50: b         #0x7d55f70
+0x7d55e54: ldr       x0, [sp, #0xf28]
+0x7d55e58: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d55e5c: ldrb      w8, [x25]
+0x7d55e60: tbz       w8, #0, #0x7d55e4c
+0x7d55e64: ldr       x0, [sp, #0x1160]
+0x7d55e68: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d55e6c: tbnz      w19, #0, #0x7d55f70
+0x7d55e70: add       x8, sp, #1, lsl #12
+0x7d55e74: add       x0, sp, #1, lsl #12
+0x7d55e78: add       x8, x8, #0x280
+0x7d55e7c: adrp      x1, #0xae3000
+0x7d55e80: add       x1, x1, #0xf8d ; STRING=DOWNLOAD_SERVER_STATS_URL
+0x7d55e84: adrp      x2, #0xa77000
+0x7d55e88: add       x2, x2, #0x25e
+0x7d55e8c: add       x0, x0, #0x270
+0x7d55e90: strb      wzr, [x8]
+0x7d55e94: str       wzr, [sp, #0x1284]
+0x7d55e98: strb      wzr, [x8, #8]
+0x7d55e9c: strb      wzr, [x8, #0xc]
+0x7d55ea0: strh      wzr, [sp, #0x128e]
+0x7d55ea4: strb      wzr, [x8, #0x10]
+0x7d55ea8: strb      wzr, [x8, #0x12]
+0x7d55eac: strh      wzr, [sp, #0x1294]
+0x7d55eb0: strb      wzr, [x8, #0x16]
+0x7d55eb4: strb      wzr, [x8, #0x18]
+0x7d55eb8: strh      wzr, [sp, #0x129a]
+0x7d55ebc: strb      wzr, [x8, #0x1c]
+0x7d55ec0: strb      wzr, [x8, #0x1e]
+0x7d55ec4: strh      wzr, [sp, #0x12a0]
+0x7d55ec8: strb      wzr, [x8, #0x22]
+0x7d55ecc: strb      wzr, [x8, #0x24]
+0x7d55ed0: strh      wzr, [sp, #0x12a6]
+0x7d55ed4: strb      wzr, [x8, #0x28]
+0x7d55ed8: strb      wzr, [x8, #0x2c]
+0x7d55edc: strb      wzr, [x8, #0x34]
+0x7d55ee0: strb      wzr, [x8, #0x38]
+0x7d55ee4: str       wzr, [sp, #0x12b0]
+0x7d55ee8: str       wzr, [sp, #0x12bc]
+0x7d55eec: strb      wzr, [x8, #0x40]
+0x7d55ef0: strb      wzr, [x8, #0x44]
+0x7d55ef4: str       wzr, [sp, #0x12c8]
+0x7d55ef8: strb      wzr, [x8, #0x4c]
+0x7d55efc: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d55f00: adrp      x9, #0xb8f000
+0x7d55f04: add       x9, x9, #0x777 ; STRING=DOWNLOAD_SERVER_STATS_
+0x7d55f08: add       x0, sp, #1, lsl #12
+0x7d55f0c: add       x1, sp, #1, lsl #12
+0x7d55f10: add       x3, sp, #1, lsl #12
+0x7d55f14: mov       w8, #0x2c
+0x7d55f18: ldr       q0, [x9]
+0x7d55f1c: add       x0, x0, #0x270
+0x7d55f20: ldur      x9, [x9, #0xe]
+0x7d55f24: add       x1, x1, #0x150
+0x7d55f28: add       x2, sp, #0xf18
+0x7d55f2c: add       x3, x3, #0x280
+0x7d55f30: strb      w8, [x25]
+0x7d55f34: stur      q0, [x25, #1]
+0x7d55f38: stur      x9, [x25, #0xf]
+0x7d55f3c: strb      wzr, [x25, #0x17]
+0x7d55f40: str       xzr, [sp, #0xf20]
+0x7d55f44: str       xzr, [sp, #0xf18]
+0x7d55f48: str       xzr, [sp, #0xf28]
+0x7d55f4c: bl        #0x7d51e88 ; CALL fn=0x7d51138 raw=0x7d51e88
+0x7d55f50: ldrb      w8, [sp, #0xf18]
+0x7d55f54: tbz       w8, #0, #0x7d55f60
+0x7d55f58: ldr       x0, [sp, #0xf28]
+0x7d55f5c: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d55f60: ldrb      w8, [x25]
+0x7d55f64: tbz       w8, #0, #0x7d55f70
+0x7d55f68: ldr       x0, [sp, #0x1160]
+0x7d55f6c: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d55f70: ldr       x0, [sp, #0xe00]
+0x7d55f74: cbz       x0, #0x7d56228
+0x7d55f78: add       x1, sp, #1, lsl #12
+0x7d55f7c: add       x1, x1, #0x30
+0x7d55f80: bl        #0x7b32ab4 ; CALL fn=0x7b327d4 raw=0x7b32ab4
+0x7d55f84: tbz       w0, #0, #0x7d56228
+0x7d55f88: add       x19, sp, #1, lsl #12
+0x7d55f8c: ldr       x21, [sp, #0x1040]
+0x7d55f90: add       x19, x19, #0x280
+0x7d55f94: cbz       x21, #0x7d56228
+0x7d55f98: add       x8, sp, #1, lsl #12
+0x7d55f9c: mov       w23, wzr
+0x7d55fa0: add       x8, x8, #0x150
+0x7d55fa4: adrp      x20, #0xa4b0000
+0x7d55fa8: add       x20, x20, #0x60
+0x7d55fac: add       x26, x8, #0x30
+0x7d55fb0: add       x27, x8, #0x48
+0x7d55fb4: add       x8, sp, #1, lsl #12
+0x7d55fb8: add       x8, x8, #0x280
+0x7d55fbc: str       wzr, [sp, #0xf8]
+0x7d55fc0: add       x28, x8, #0x30
+0x7d55fc4: add       x22, x8, #0x48
+0x7d55fc8: b         #0x7d55fe8
+0x7d55fcc: mov       w23, #1
+0x7d55fd0: ldr       x0, [sp, #0x1150]
+0x7d55fd4: cbz       x0, #0x7d55fe0
+0x7d55fd8: str       x0, [sp, #0x1158]
+0x7d55fdc: bl        #0x8b352c0 ; CALL fn=0x89f3d40 raw=0x8b352c0
+0x7d55fe0: ldr       x21, [x21]
+0x7d55fe4: cbz       x21, #0x7d58858
+0x7d55fe8: add       x8, sp, #1, lsl #12
+0x7d55fec: stp       xzr, xzr, [x26]
+0x7d55ff0: movi      v0.2d, #0000000000000000
+0x7d55ff4: add       x8, x8, #0x150
+0x7d55ff8: strb      wzr, [x26, #0x10]
+0x7d55ffc: add       x25, x21, #0x11
+0x7d56000: stp       xzr, xzr, [x27]
+0x7d56004: add       x3, sp, #1, lsl #12
+0x7d56008: strb      wzr, [x27, #0x10]
+0x7d5600c: add       x3, x3, #0x280
+0x7d56010: strb      wzr, [x8, #0x60]
+0x7d56014: mov       x0, x20
+0x7d56018: str       xzr, [sp, #0x11b8]
+0x7d5601c: mov       w4, wzr
+0x7d56020: str       q0, [sp, #0x1160]
+0x7d56024: add       x24, sp, #1, lsl #12
+0x7d56028: stur      q0, [x8, #0x19]
+0x7d5602c: add       x24, x24, #0x150
+0x7d56030: stp       xzr, xzr, [x28]
+0x7d56034: strb      wzr, [x28, #0x10]
+0x7d56038: stp       xzr, xzr, [x22]
+0x7d5603c: strb      wzr, [x22, #0x10]
+0x7d56040: strb      wzr, [x19, #0x60]
+0x7d56044: str       xzr, [sp, #0x12e8]
+0x7d56048: str       q0, [sp, #0x1290]
+0x7d5604c: stur      q0, [x19, #0x19]
+0x7d56050: ldp       x10, x9, [x21, #0x18]
+0x7d56054: str       q0, [sp, #0x1150]
+0x7d56058: ldrb      w8, [x21, #0x10]
+0x7d5605c: str       q0, [sp, #0x1280]
+0x7d56060: tst       w8, #1
+0x7d56064: lsr       x8, x8, #1
+0x7d56068: csel      x1, x25, x9, eq
+0x7d5606c: csel      x8, x8, x10, eq
+0x7d56070: add       x2, x1, x8
+0x7d56074: bl        #0x2f4bfc0 ; CALL fn=0x2f4bfc0 raw=0x2f4bfc0
+0x7d56078: ldp       x10, x9, [x21, #0x18]
+0x7d5607c: mov       w19, w0
+0x7d56080: add       x0, sp, #1, lsl #12
+0x7d56084: ldrb      w8, [x21, #0x10]
+0x7d56088: add       x3, sp, #1, lsl #12
+0x7d5608c: add       x0, x0, #0x150
+0x7d56090: add       x3, x3, #0x280
+0x7d56094: mov       w4, wzr
+0x7d56098: tst       w8, #1
+0x7d5609c: lsr       x8, x8, #1
+0x7d560a0: csel      x1, x25, x9, eq
+0x7d560a4: csel      x8, x8, x10, eq
+0x7d560a8: add       x2, x1, x8
+0x7d560ac: bl        #0x792fee8 ; CALL fn=0x792fee8 raw=0x792fee8
+0x7d560b0: ldr       x0, [sp, #0x1280]
+0x7d560b4: cbz       x0, #0x7d560c0
+0x7d560b8: str       x0, [sp, #0x1288]
+0x7d560bc: bl        #0x8b352c0 ; CALL fn=0x89f3d40 raw=0x8b352c0
+0x7d560c0: tbz       w19, #0, #0x7d56178
+0x7d560c4: ldrb      w8, [x24, #0x60]
+0x7d560c8: cbz       w8, #0x7d56214
+0x7d560cc: ldrb      w8, [x21, #0x10]
+0x7d560d0: add       x0, sp, #1, lsl #12
+0x7d560d4: ldr       x9, [x21, #0x20]
+0x7d560d8: add       x0, x0, #0x270
+0x7d560dc: adrp      x1, #0xbdc000
+0x7d560e0: add       x1, x1, #0x9d4 ; STRING=GAME_SERVER_STATS_SEND_URL
+0x7d560e4: tst       w8, #1
+0x7d560e8: csel      x2, x25, x9, eq
+0x7d560ec: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d560f0: add       x0, sp, #1, lsl #12
+0x7d560f4: adrp      x1, #0x9c7000
+0x7d560f8: add       x1, x1, #0xad ; STRING=GAME_SERVER_STATS_SEND_
+0x7d560fc: add       x0, x0, #0x280
+0x7d56100: mov       w2, #0x17
+0x7d56104: str       xzr, [sp, #0x1288]
+0x7d56108: str       xzr, [sp, #0x1280]
+0x7d5610c: str       xzr, [sp, #0x1290]
+0x7d56110: bl        #0x2efb614 ; CALL fn=0x2efb614 raw=0x2efb614
+0x7d56114: add       x0, sp, #1, lsl #12
+0x7d56118: add       x1, sp, #1, lsl #12
+0x7d5611c: add       x3, x21, #0x28
+0x7d56120: add       x0, x0, #0x270
+0x7d56124: add       x1, x1, #0x280
+0x7d56128: add       x2, sp, #0xf18
+0x7d5612c: str       xzr, [sp, #0xf20]
+0x7d56130: str       xzr, [sp, #0xf18]
+0x7d56134: str       xzr, [sp, #0xf28]
+0x7d56138: bl        #0x7d51e88 ; CALL fn=0x7d51138 raw=0x7d51e88
+0x7d5613c: add       x19, sp, #1, lsl #12
+0x7d56140: ldrb      w8, [sp, #0xf18]
+0x7d56144: add       x19, x19, #0x280
+0x7d56148: tbz       w8, #0, #0x7d56154
+0x7d5614c: ldr       x0, [sp, #0xf28]
+0x7d56150: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d56154: ldrb      w8, [x19]
+0x7d56158: tbz       w8, #0, #0x7d56164
+0x7d5615c: ldr       x0, [sp, #0x1290]
+0x7d56160: bl        #0x2efa56c ; CALL fn=0x2efa52c raw=0x2efa56c
+0x7d56164: mov       w8, #1
+0x7d56168: str       w8, [sp, #0xf8]
+0x7d5616c: ldr       x0, [sp, #0x1150]
+0x7d56170: cbnz      x0, #0x7d55fd8
+0x7d56174: b         #0x7d55fe0
+0x7d56178: ldrb      w8, [x21, #0x10]
+0x7d5617c: add       x0, sp, #1, lsl #12
+0x7d56180: ldr       x9, [x21, #0x20]
+0x7d56184: add       x0, x0, #0x270
+0x7d56188: adrp      x1, #0xb1d000
+0x7d5618c: add       x1, x1, #0x95e ; STRING=DOWNLOAD_SERVER_STATS_SEND_URL
+0x7d56190: tst       w8, #1
+0x7d56194: csel      x2, x25, x9, eq
+0x7d56198: bl        #0x7d501c4 ; CALL fn=0x7d50030 raw=0x7d501c4
+0x7d5619c: add       x0, sp, #1, lsl #12
+0x7d561a0: adrp      x1, #0xa13000
+0x7d561a4: add       x1, x1, #0x762 ; STRING=DOWNLOAD_SERVER_STATS_SEND_
+0x7d561a8: add       x0, x0, #0x280
+0x7d561ac: mov       w2, #0x1b
+0x7d561b0: str       xzr, [sp, #0x1288]
+0x7d561b4: str       xzr, [sp, #0x1280]
+0x7d561b8: str       xzr, [sp, #0x1290]
+0x7d561bc: bl        #0x2efb614 ; CALL fn=0x2efb614 raw=0x2efb614
+0x7d561c0: add       x0, sp, #1, lsl #12
+0x7d561c4: add       x1, sp, #1, lsl #12
+0x7d561c8: add       x3, x21, #0x28
+0x7d561cc: add       x0, x0, #0x270
+0x7d561d0: add       x1, x1, #0x280
+0x7d561d4: add       x2, sp, #0xf18
+0x7d561d8: str       xzr, [sp, #0xf20]
+0x7d561dc: str       xzr, [sp, #0xf18]
+0x7d561e0: str       xzr, [sp, #0xf28]
+0x7d561e4: bl        #0x7d51e88 ; CALL fn=0x7d51138 raw=0x7d51e88
+0x7d561e8: ldrb      w8, [sp, #0xf18]
+
+=== SCORE VALUE HELPERS ===
+('HOME_SCORE', 131421940, 131458784, 131458844)
+('AWAY_SCORE', 131421968, 131458784, 131458844)
+
+HELPER HOME_SCORE fn=0x7d5e6e0 raw=0x7d5e71c callers=70
+  0x7d5e6e0: stp       x29, x30, [sp, #-0x20]!
+  0x7d5e6e4: stp       x20, x19, [sp, #0x10]
+  0x7d5e6e8: mov       x29, sp
+  0x7d5e6ec: mov       x19, x1
+  0x7d5e6f0: ldr       x1, [x1]
+  0x7d5e6f4: mov       x20, x0
+  0x7d5e6f8: bl        #0x7d5e6dc
+  0x7d5e6fc: ldr       x1, [x19, #8]
+  0x7d5e700: mov       x0, x20
+  0x7d5e704: bl        #0x7d5e6dc
+  0x7d5e708: mov       x0, x19
+  0x7d5e70c: ldp       x20, x19, [sp, #0x10]
+  0x7d5e710: ldp       x29, x30, [sp], #0x20
+  0x7d5e714: b         #0x2efa56c
+  0x7d5e718: ret       
+  0x7d5e71c: sub       sp, sp, #0x80
+
+HELPER AWAY_SCORE fn=0x7d5e6e0 raw=0x7d5e71c callers=70
+  0x7d5e6e0: stp       x29, x30, [sp, #-0x20]!
+  0x7d5e6e4: stp       x20, x19, [sp, #0x10]
+  0x7d5e6e8: mov       x29, sp
+  0x7d5e6ec: mov       x19, x1
+  0x7d5e6f0: ldr       x1, [x1]
+  0x7d5e6f4: mov       x20, x0
+  0x7d5e6f8: bl        #0x7d5e6dc
+  0x7d5e6fc: ldr       x1, [x19, #8]
+  0x7d5e700: mov       x0, x20
+  0x7d5e704: bl        #0x7d5e6dc
+  0x7d5e708: mov       x0, x19
+  0x7d5e70c: ldp       x20, x19, [sp, #0x10]
+  0x7d5e710: ldp       x29, x30, [sp], #0x20
+  0x7d5e714: b         #0x2efa56c
+  0x7d5e718: ret       
+  0x7d5e71c: sub       sp, sp, #0x80
+
+=== REAL SCORE OWNER TO P2P ===
+direct_call_path=NONE
+reverse_call_path=NONE
+
+=== RESULT-STRUCT REGISTER x26 PROVENANCE ===
+0x7d54fe0: ldrb      w8, [x26, #0x18]
+0x7d54fe4: add       x10, x26, #0x19
+0x7d54fe8: ldr       x9, [x26, #0x28]
+0x7d55180: ldr       w2, [x26, #8]
+0x7d551c0: ldr       w2, [x26, #0xc]
+0x7d551dc: ldr       w2, [x26, #0x10]
+0x7d551f8: ldrb      w2, [x26, #0x34]
+0x7d55214: ldr       w2, [x26, #0x38]
+0x7d55230: ldrb      w2, [x26, #0x3d]
+0x7d5568c: ldrb      w2, [x26, #0x5c]
+0x7d556a8: ldrb      w2, [x26, #0x48]
+0x7d556c4: ldrb      w2, [x26, #0x5d]
+
+=== STACK RESULT BUILDER / DOWNSTREAM CALLS ===
+0x7d55504: add       x0, sp, #1, lsl #12
+0x7d55510: add       x0, x0, #0x270
+0x7d55518: bl        #0x7d501c4 fn=0x7d50030
+0x7d5551c: add       x0, sp, #1, lsl #12
+0x7d55528: add       x0, x0, #0x270
+0x7d55530: bl        #0x7d501c4 fn=0x7d50030
+0x7d55534: add       x0, sp, #1, lsl #12
+0x7d55540: add       x0, x0, #0x270
+0x7d55548: bl        #0x7d501c4 fn=0x7d50030
+0x7d5554c: add       x0, sp, #1, lsl #12
+0x7d55558: add       x0, x0, #0x270
+0x7d55564: bl        #0x7d5e948 fn=0x7d5e838
+0x7d55568: add       x0, sp, #1, lsl #12
+0x7d55574: add       x0, x0, #0x270
+0x7d5557c: bl        #0x7d501c4 fn=0x7d50030
+0x7d55580: add       x0, sp, #1, lsl #12
+0x7d5558c: add       x0, x0, #0x270
+0x7d55594: bl        #0x7d501c4 fn=0x7d50030
+0x7d55598: add       x0, sp, #1, lsl #12
+0x7d555a4: add       x0, x0, #0x270
+0x7d555ac: bl        #0x7d501c4 fn=0x7d50030
+0x7d555b0: add       x0, sp, #1, lsl #12
+0x7d555bc: add       x0, x0, #0x270
+0x7d555c4: bl        #0x7d501c4 fn=0x7d50030
+0x7d555c8: bl        #0x813fe80 fn=0x813fdd8
+0x7d555e0: add       x0, sp, #1, lsl #12
+0x7d555e4: add       x0, x0, #0x270
+0x7d555e8: bl        #0x7d501c4 fn=0x7d50030
+0x7d555ec: add       x8, sp, #1, lsl #12
+0x7d555f0: add       x19, sp, #1, lsl #12
+0x7d555fc: bl        #0x7dc3cf0 fn=0x7dc3bd8
+0x7d5560c: add       x0, sp, #1, lsl #12
+0x7d5561c: add       x0, x0, #0x270
+0x7d55624: bl        #0x7d501c4 fn=0x7d50030
+0x7d55634: bl        #0x2efa56c fn=0x2efa52c
+0x7d55638: bl        #0x7dd1b74 fn=0x7dd1a3c
+0x7d55640: add       x0, sp, #1, lsl #12
+0x7d5564c: add       x0, x0, #0x270
+0x7d55654: bl        #0x7d5e71c fn=0x7d5e6e0
+0x7d55668: bl        #0x8b34ef0 fn=0x89f3d40
+0x7d5567c: blr       x8
+0x7d55684: bl        #0x8b388f0 fn=0x89f3d40
+0x7d55688: add       x0, sp, #1, lsl #12
+0x7d55698: add       x0, x0, #0x270
+0x7d556a0: bl        #0x7d5e71c fn=0x7d5e6e0
+0x7d556a4: add       x0, sp, #1, lsl #12
+0x7d556b4: add       x0, x0, #0x270
+0x7d556bc: bl        #0x7d5e71c fn=0x7d5e6e0
+0x7d556c0: add       x0, sp, #1, lsl #12
+0x7d556d0: add       x0, x0, #0x270
+0x7d556d8: bl        #0x7d5e71c fn=0x7d5e6e0
+0x7d556dc: add       x0, sp, #1, lsl #12
+0x7d556ec: add       x0, x0, #0x270
+0x7d556f4: bl        #0x7d5e71c fn=0x7d5e6e0
+0x7d556f8: add       x0, sp, #1, lsl #12
+0x7d55708: add       x0, x0, #0x270
+0x7d55710: bl        #0x7d5e71c fn=0x7d5e6e0
+0x7d55760: add       x0, sp, #1, lsl #12
+0x7d5576c: add       x0, x0, #0x270
+0x7d55774: bl        #0x7d5e71c fn=0x7d5e6e0
+0x7d55778: add       x0, sp, #1, lsl #12
+0x7d55788: add       x0, x0, #0x270
+0x7d55790: bl        #0x7d5e834 fn=0x7d5e720
+0x7d55798: add       x0, sp, #1, lsl #12
+0x7d557a4: add       x0, x0, #0x270
+0x7d557b4: bl        #0x7d5e71c fn=0x7d5e6e0
+0x7d557b8: bl        #0x28294b8 fn=0x2829420
+0x7d557c8: blr       x8
+0x7d557f0: add       x0, sp, #1, lsl #12
+0x7d557fc: add       x0, x0, #0x270
+0x7d55800: bl        #0x7d501c4 fn=0x7d50030
+0x7d55804: bl        #0x28294b8 fn=0x2829420
+0x7d55814: blr       x8
+0x7d5583c: add       x0, sp, #1, lsl #12
+0x7d55848: add       x0, x0, #0x270
+0x7d5584c: bl        #0x7d501c4 fn=0x7d50030
+0x7d55850: bl        #0x2f11b24 fn=0x2f11ab4
+0x7d55864: add       x0, sp, #1, lsl #12
+0x7d5586c: add       x0, x0, #0x270
+0x7d55870: bl        #0x7d5e71c fn=0x7d5e6e0
+0x7d55874: bl        #0x2f11b34 fn=0x2f11ab4
+0x7d5587c: add       x0, sp, #1, lsl #12
+0x7d55888: add       x0, x0, #0x270
+0x7d55890: bl        #0x7d5e834 fn=0x7d5e720
+0x7d55894: bl        #0x7cda454 fn=0x7cda3b8
+0x7d558a4: bl        #0x7cda460 fn=0x7cda460
+0x7d558ac: add       x8, sp, #1, lsl #12
+0x7d558cc: bl        #0x8b35360 fn=0x89f3d40
+0x7d558d0: add       x1, sp, #1, lsl #12
+0x7d558dc: bl        #0x7cdaf90 fn=0x7cdaf90
+0x7d558e0: add       x1, sp, #1, lsl #12
+0x7d558ec: bl        #0x7d5a1ec fn=0x7d5a078
+0x7d558f4: bl        #0x7cdb14c fn=0x7cdb14c
+0x7d5591c: bl        #0x7d5a1ec fn=0x7d5a078
+0x7d55930: add       x0, sp, #1, lsl #12
+0x7d55934: add       x0, x0, #0x270
+0x7d55938: bl        #0x7d501c4 fn=0x7d50030
+0x7d5593c: bl        #0x7dd69c0 fn=0x7dd69c0
+0x7d55958: add       x0, sp, #1, lsl #12
+0x7d5595c: add       x0, x0, #0x270
+0x7d55960: bl        #0x7d501c4 fn=0x7d50030
+0x7d55970: add       x0, sp, #1, lsl #12
+0x7d55980: add       x0, x0, #0x270
+0x7d55988: bl        #0x7d501c4 fn=0x7d50030
+0x7d55998: add       x0, sp, #1, lsl #12
+0x7d559a8: add       x0, x0, #0x270
+0x7d559b0: bl        #0x7d501c4 fn=0x7d50030
+0x7d559b4: add       x0, sp, #1, lsl #12
+0x7d559c4: add       x0, x0, #0x270
+0x7d559cc: bl        #0x7d5ea60 fn=0x7d5e94c
+0x7d559dc: add       x0, sp, #1, lsl #12
+0x7d559ec: add       x0, x0, #0x270
+0x7d559f4: bl        #0x7d501c4 fn=0x7d50030
+0x7d559f8: add       x0, sp, #1, lsl #12
+0x7d55a08: add       x0, x0, #0x270
+0x7d55a10: bl        #0x7d5ea60 fn=0x7d5e94c
+0x7d55a14: add       x0, sp, #1, lsl #12
+0x7d55a18: add       x19, sp, #1, lsl #12
+0x7d55a30: bl        #0x7d65794 fn=0x7d65700
+0x7d55a40: add       x0, sp, #1, lsl #12
+0x7d55a50: add       x0, x0, #0x270
+0x7d55a58: bl        #0x7d501c4 fn=0x7d50030
+0x7d55a68: bl        #0x2efa56c fn=0x2efa52c
+0x7d55a94: add       x19, sp, #1, lsl #12
+0x7d55a9c: bl        #0x7b31ea0 fn=0x7b31ea0
+0x7d55aa8: add       x1, sp, #1, lsl #12
+0x7d55ab0: bl        #0x7b327d0 fn=0x7b3244c
+0x7d55ac0: add       x8, sp, #1, lsl #12
+0x7d55ac4: add       x9, sp, #1, lsl #12
+0x7d55b00: bl        #0x8b352c0 fn=0x89f3d40
+0x7d55b0c: add       x8, sp, #1, lsl #12
+0x7d55b30: add       x8, sp, #1, lsl #12
+0x7d55b40: add       x3, sp, #1, lsl #12
+0x7d55b68: add       x21, sp, #1, lsl #12
+0x7d55ba4: bl        #0x2f4bfc0 fn=0x2f4bfc0
+0x7d55bb0: add       x0, sp, #1, lsl #12
+0x7d55bb8: add       x3, sp, #1, lsl #12
+0x7d55bdc: bl        #0x792fee8 fn=0x792fee8
+0x7d55bec: bl        #0x8b352c0 fn=0x89f3d40
+0x7d55c00: add       x0, sp, #1, lsl #12
+0x7d55c08: add       x0, x0, #0x270
+0x7d55c1c: bl        #0x7d501c4 fn=0x7d50030
+0x7d55c28: add       x19, sp, #1, lsl #12
+0x7d55c2c: add       x0, sp, #1, lsl #12
+0x7d55c34: add       x1, sp, #1, lsl #12
+0x7d55c44: add       x0, x0, #0x270
+0x7d55c70: bl        #0x7d51e88 fn=0x7d51138
+0x7d55c80: bl        #0x2efa56c fn=0x2efa52c
+0x7d55c90: bl        #0x2efa56c fn=0x2efa52c
+0x7d55cac: add       x0, sp, #1, lsl #12
+0x7d55cb4: add       x0, x0, #0x270
+0x7d55cc8: bl        #0x7d501c4 fn=0x7d50030
+0x7d55ccc: add       x19, sp, #1, lsl #12
+0x7d55ce0: add       x0, sp, #1, lsl #12
+0x7d55ce4: add       x1, sp, #1, lsl #12
+0x7d55cf0: add       x0, x0, #0x270
+0x7d55d1c: bl        #0x7d51e88 fn=0x7d51138
+0x7d55d2c: bl        #0x2efa56c fn=0x2efa52c
+0x7d55d3c: bl        #0x2efa56c fn=0x2efa52c
+0x7d55d44: add       x19, sp, #1, lsl #12
+0x7d55d5c: add       x8, sp, #1, lsl #12
+0x7d55d60: add       x0, sp, #1, lsl #12
+0x7d55d78: add       x0, x0, #0x270
+0x7d55de8: bl        #0x7d501c4 fn=0x7d50030
+0x7d55df4: add       x0, sp, #1, lsl #12
+0x7d55df8: add       x1, sp, #1, lsl #12
+0x7d55dfc: add       x3, sp, #1, lsl #12
+0x7d55e0c: add       x0, x0, #0x270
+0x7d55e38: bl        #0x7d51e88 fn=0x7d51138
+0x7d55e58: bl        #0x2efa56c fn=0x2efa52c
+0x7d55e68: bl        #0x2efa56c fn=0x2efa52c
+0x7d55e70: add       x8, sp, #1, lsl #12
+0x7d55e74: add       x0, sp, #1, lsl #12
+0x7d55e8c: add       x0, x0, #0x270
+0x7d55efc: bl        #0x7d501c4 fn=0x7d50030
+0x7d55f08: add       x0, sp, #1, lsl #12
+0x7d55f0c: add       x1, sp, #1, lsl #12
+0x7d55f10: add       x3, sp, #1, lsl #12
+0x7d55f1c: add       x0, x0, #0x270
+0x7d55f4c: bl        #0x7d51e88 fn=0x7d51138
+0x7d55f5c: bl        #0x2efa56c fn=0x2efa52c
+0x7d55f6c: bl        #0x2efa56c fn=0x2efa52c
+0x7d55f78: add       x1, sp, #1, lsl #12
+0x7d55f80: bl        #0x7b32ab4 fn=0x7b327d4
+0x7d55f88: add       x19, sp, #1, lsl #12
+0x7d55f98: add       x8, sp, #1, lsl #12
+0x7d55fb4: add       x8, sp, #1, lsl #12
+0x7d55fdc: bl        #0x8b352c0 fn=0x89f3d40
+0x7d55fe8: add       x8, sp, #1, lsl #12
+0x7d56004: add       x3, sp, #1, lsl #12
+0x7d56024: add       x24, sp, #1, lsl #12
+0x7d56074: bl        #0x2f4bfc0 fn=0x2f4bfc0
+0x7d56080: add       x0, sp, #1, lsl #12
+0x7d56088: add       x3, sp, #1, lsl #12
+0x7d560ac: bl        #0x792fee8 fn=0x792fee8
+0x7d560bc: bl        #0x8b352c0 fn=0x89f3d40
+0x7d560d0: add       x0, sp, #1, lsl #12
+0x7d560d8: add       x0, x0, #0x270
+0x7d560ec: bl        #0x7d501c4 fn=0x7d50030
+0x7d560f0: add       x0, sp, #1, lsl #12
+0x7d56110: bl        #0x2efb614 fn=0x2efb614
+0x7d56114: add       x0, sp, #1, lsl #12
+0x7d56118: add       x1, sp, #1, lsl #12
+0x7d56120: add       x0, x0, #0x270
+0x7d56138: bl        #0x7d51e88 fn=0x7d51138
+0x7d5613c: add       x19, sp, #1, lsl #12
+0x7d56150: bl        #0x2efa56c fn=0x2efa52c
+0x7d56160: bl        #0x2efa56c fn=0x2efa52c
+0x7d5617c: add       x0, sp, #1, lsl #12
+0x7d56184: add       x0, x0, #0x270
+0x7d56198: bl        #0x7d501c4 fn=0x7d50030
+0x7d5619c: add       x0, sp, #1, lsl #12
+0x7d561bc: bl        #0x2efb614 fn=0x2efb614
+0x7d561c0: add       x0, sp, #1, lsl #12
+0x7d561c4: add       x1, sp, #1, lsl #12
+0x7d561cc: add       x0, x0, #0x270
+0x7d561e4: bl        #0x7d51e88 fn=0x7d51138
+0x7d561f4: bl        #0x2efa56c fn=0x2efa52c
+0x7d561f8: add       x19, sp, #1, lsl #12
+0x7d5620c: bl        #0x2efa56c fn=0x2efa52c
+0x7d56214: add       x19, sp, #1, lsl #12
+0x7d5622c: add       x8, sp, #1, lsl #12
+0x7d56230: add       x0, sp, #1, lsl #12
+0x7d56248: add       x0, x0, #0x270
+0x7d562b8: bl        #0x7d501c4 fn=0x7d50030
+0x7d562bc: add       x0, sp, #1, lsl #12
+0x7d562dc: bl        #0x2efb614 fn=0x2efb614
+0x7d562e0: add       x0, sp, #1, lsl #12
+0x7d562e4: add       x1, sp, #1, lsl #12
+0x7d562e8: add       x3, sp, #1, lsl #12
+0x7d562ec: add       x0, x0, #0x270
+0x7d56308: bl        #0x7d51e88 fn=0x7d51138
+0x7d56328: bl        #0x2efa56c fn=0x2efa52c
+0x7d56338: bl        #0x2efa56c fn=0x2efa52c
+0x7d56340: add       x8, sp, #1, lsl #12
+0x7d56344: add       x0, sp, #1, lsl #12
+0x7d5635c: add       x0, x0, #0x270
+0x7d563cc: bl        #0x7d501c4 fn=0x7d50030
+0x7d563d0: add       x0, sp, #1, lsl #12
+0x7d563f0: bl        #0x2efb614 fn=0x2efb614
+0x7d563f4: add       x0, sp, #1, lsl #12
+0x7d563f8: add       x1, sp, #1, lsl #12
+0x7d563fc: add       x3, sp, #1, lsl #12
+0x7d56400: add       x0, x0, #0x270
+0x7d5641c: bl        #0x7d51e88 fn=0x7d51138
+0x7d5642c: bl        #0x2efa56c fn=0x2efa52c
+0x7d5643c: bl        #0x2efa56c fn=0x2efa52c
+0x7d56448: add       x1, sp, #1, lsl #12
+0x7d56450: bl        #0x7b32d98 fn=0x7b32ab8
+0x7d56460: add       x8, sp, #1, lsl #12
+0x7d56464: add       x19, sp, #1, lsl #12
+0x7d56478: add       x8, sp, #1, lsl #12
+0x7d564ac: bl        #0x8b352c0 fn=0x89f3d40
+0x7d564b8: add       x8, sp, #1, lsl #12
+0x7d564d4: add       x3, sp, #1, lsl #12
+0x7d564f4: add       x24, sp, #1, lsl #12
+0x7d56544: bl        #0x2f4bfc0 fn=0x2f4bfc0
+0x7d56550: add       x0, sp, #1, lsl #12
+0x7d56558: add       x3, sp, #1, lsl #12
+0x7d5657c: bl        #0x792fee8 fn=0x792fee8
+0x7d5658c: bl        #0x8b352c0 fn=0x89f3d40
+0x7d565a0: add       x0, sp, #1, lsl #12
+0x7d565a8: add       x0, x0, #0x270
+0x7d565bc: bl        #0x7d501c4 fn=0x7d50030
+0x7d565c0: add       x0, sp, #1, lsl #12
+0x7d565e0: bl        #0x2efb614 fn=0x2efb614
+0x7d565e4: add       x0, sp, #1, lsl #12
+0x7d565e8: add       x1, sp, #1, lsl #12
+0x7d565f0: add       x0, x0, #0x270
+0x7d56608: bl        #0x7d51e88 fn=0x7d51138
+0x7d5660c: add       x19, sp, #1, lsl #12
+0x7d56620: bl        #0x2efa56c fn=0x2efa52c
+0x7d56630: bl        #0x2efa56c fn=0x2efa52c
+0x7d5664c: add       x0, sp, #1, lsl #12
+0x7d56654: add       x0, x0, #0x270
+0x7d56668: bl        #0x7d501c4 fn=0x7d50030
+0x7d5666c: add       x0, sp, #1, lsl #12
+0x7d5668c: bl        #0x2efb614 fn=0x2efb614
+0x7d56690: add       x0, sp, #1, lsl #12
+0x7d56694: add       x1, sp, #1, lsl #12
+0x7d5669c: add       x0, x0, #0x270
+0x7d566b4: bl        #0x7d51e88 fn=0x7d51138
+0x7d566c4: bl        #0x2efa56c fn=0x2efa52c
+0x7d566c8: add       x19, sp, #1, lsl #12
+0x7d566dc: bl        #0x2efa56c fn=0x2efa52c
+0x7d566e4: add       x19, sp, #1, lsl #12
+0x7d566fc: add       x8, sp, #1, lsl #12
+0x7d56700: add       x0, sp, #1, lsl #12
+0x7d56718: add       x0, x0, #0x270
+0x7d56788: bl        #0x7d501c4 fn=0x7d50030
+0x7d5678c: add       x0, sp, #1, lsl #12
+0x7d567ac: bl        #0x2efb614 fn=0x2efb614
+0x7d567b0: add       x0, sp, #1, lsl #12
+0x7d567b4: add       x1, sp, #1, lsl #12
+0x7d567b8: add       x3, sp, #1, lsl #12
+0x7d567bc: add       x0, x0, #0x270
+0x7d567d8: bl        #0x7d51e88 fn=0x7d51138
+0x7d567f8: bl        #0x2efa56c fn=0x2efa52c
+0x7d56808: bl        #0x2efa56c fn=0x2efa52c
+0x7d56810: add       x8, sp, #1, lsl #12
+0x7d56814: add       x0, sp, #1, lsl #12
+0x7d5682c: add       x0, x0, #0x270
+0x7d5689c: bl        #0x7d501c4 fn=0x7d50030
+0x7d568a0: add       x0, sp, #1, lsl #12
+0x7d568c0: bl        #0x2efb614 fn=0x2efb614
+0x7d568c4: add       x0, sp, #1, lsl #12
+0x7d568c8: add       x1, sp, #1, lsl #12
+0x7d568cc: add       x3, sp, #1, lsl #12
+0x7d568d0: add       x0, x0, #0x270
+0x7d568ec: bl        #0x7d51e88 fn=0x7d51138
+0x7d568fc: bl        #0x2efa56c fn=0x2efa52c
+0x7d5690c: bl        #0x2efa56c fn=0x2efa52c
+0x7d56924: add       x0, sp, #1, lsl #12
+0x7d56930: add       x0, x0, #0x270
+0x7d56938: bl        #0x7d5e834 fn=0x7d5e720
+0x7d5694c: bl        #0x8b34ef0 fn=0x89f3d40
+0x7d56960: blr       x8
+0x7d56968: bl        #0x8b388f0 fn=0x89f3d40
+0x7d56980: bl        #0x8b352c0 fn=0x89f3d40
+0x7d56988: add       x0, sp, #1, lsl #12
+0x7d56994: add       x0, x0, #0x270
+0x7d569a0: bl        #0x7d5e834 fn=0x7d5e720
+0x7d569cc: add       x19, sp, #1, lsl #12
+0x7d56a04: bl        #0x8b38590 fn=0x89f3d40
+0x7d56a2c: bl        #0x8b385a0 fn=0x89f3d40
+0x7d56a48: add       x9, sp, #1, lsl #12
+0x7d56a74: add       x8, sp, #1, lsl #12
+0x7d56a94: bl        #0x8b352c0 fn=0x89f3d40
+0x7d56ab0: bl        #0x2efa56c fn=0x2efa52c
+0x7d56ac8: bl        #0x2f2e26c fn=0x2f2e0c8
+0x7d56afc: bl        #0x2f2e26c fn=0x2f2e0c8
+0x7d56b0c: bl        #0x2f2e26c fn=0x2f2e0c8
+0x7d56b40: add       x0, sp, #1, lsl #12
+
+=== VERDICT ===
+LABELLED_HOME_AWAY_SCORE_LOADS=CONFIRMED
+This report traces only the score accesses proven by their HOME_SCORE/AWAY_SCORE labels; unrelated +0x4B/+0x4C structures are excluded.

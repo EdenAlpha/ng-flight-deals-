@@ -1,0 +1,3033 @@
+=== TARGETS ===
+owner=0x7d54c44-0x7d5a078
+helper=0x7d5e6e0-0x7d5e720
+p2p_seed_count=27 server_seed_count=8
+
+=== SCORE LOAD WINDOW ===
+0x7d55670: ldr       x8, [x19]
+0x7d55674: mov       x0, x19
+0x7d55678: ldr       x8, [x8, #0x10]
+0x7d5567c: blr       x8
+0x7d55680: mov       x0, x19
+0x7d55684: bl        #0x8b388f0
+0x7d55688: add       x0, sp, #1, lsl #12
+0x7d5568c: ldrb      w2, [x26, #0x5c]
+0x7d55690: adrp      x1, #0xa4b000
+0x7d55694: add       x1, x1, #0x77b
+0x7d55698: add       x0, x0, #0x270
+0x7d5569c: mov       w3, wzr
+0x7d556a0: bl        #0x7d5e71c
+0x7d556a4: add       x0, sp, #1, lsl #12
+0x7d556a8: ldrb      w2, [x26, #0x48]
+0x7d556ac: adrp      x1, #0xb0a000
+0x7d556b0: add       x1, x1, #0xd08
+0x7d556b4: add       x0, x0, #0x270
+0x7d556b8: mov       w3, wzr
+0x7d556bc: bl        #0x7d5e71c
+0x7d556c0: add       x0, sp, #1, lsl #12
+0x7d556c4: ldrb      w2, [x26, #0x5d]
+0x7d556c8: adrp      x1, #0xaf7000
+0x7d556cc: add       x1, x1, #0x611
+0x7d556d0: add       x0, x0, #0x270
+0x7d556d4: mov       w3, wzr
+0x7d556d8: bl        #0x7d5e71c
+0x7d556dc: add       x0, sp, #1, lsl #12
+0x7d556e0: ldrb      w2, [x26, #0x4b]
+0x7d556e4: adrp      x1, #0xa38000
+0x7d556e8: add       x1, x1, #0xb01
+0x7d556ec: add       x0, x0, #0x270
+0x7d556f0: mov       w3, wzr
+0x7d556f4: bl        #0x7d5e71c
+0x7d556f8: add       x0, sp, #1, lsl #12
+0x7d556fc: ldrb      w2, [x26, #0x4c]
+0x7d55700: adrp      x1, #0xa13000
+0x7d55704: add       x1, x1, #0x757
+0x7d55708: add       x0, x0, #0x270
+0x7d5570c: mov       w3, wzr
+0x7d55710: bl        #0x7d5e71c
+0x7d55714: ldr       w8, [x26, #0x58]
+0x7d55718: cmp       w8, #2
+0x7d5571c: b.ne      #0x7d55728
+0x7d55720: mov       w2, #0xff
+0x7d55724: b         #0x7d55760
+0x7d55728: cmp       w8, #1
+0x7d5572c: add       x10, x26, #0x4b
+0x7d55730: cset      w9, ne
+0x7d55734: cmp       w8, #0
+0x7d55738: ubfiz     x9, x9, #1, #0x20
+0x7d5573c: ldrb      w8, [x10, x8]
+0x7d55740: csinc     x9, x9, xzr, ne
+0x7d55744: ldrb      w9, [x10, x9]
+0x7d55748: cmp       w8, w9
+0x7d5574c: b.ls      #0x7d55758
+0x7d55750: mov       w2, wzr
+0x7d55754: b         #0x7d55760
+0x7d55758: mov       w8, #1
+0x7d5575c: cinc      w2, w8, hs
+0x7d55760: add       x0, sp, #1, lsl #12
+0x7d55764: adrp      x1, #0xa00000
+0x7d55768: add       x1, x1, #0xc66
+0x7d5576c: add       x0, x0, #0x270
+0x7d55770: mov       w3, wzr
+0x7d55774: bl        #0x7d5e71c
+0x7d55778: add       x0, sp, #1, lsl #12
+0x7d5577c: ldr       w2, [x26, #0x60]
+0x7d55780: adrp      x1, #0xc15000
+0x7d55784: add       x1, x1, #0xc62
+0x7d55788: add       x0, x0, #0x270
+0x7d5578c: mov       w3, wzr
+0x7d55790: bl        #0x7d5e834
+
+=== SERIALIZER HELPER FULL DISASSEMBLY ===
+helper_strings=[]
+helper_callers=0x7d4724c,0x7d502d8,0x7d54c44,0x7d5a774
+helper_callees=0x7d5e6a0
+0x7d5e6e0: stp       x29, x30, [sp, #-0x20]!
+0x7d5e6e4: stp       x20, x19, [sp, #0x10]
+0x7d5e6e8: mov       x29, sp
+0x7d5e6ec: mov       x19, x1
+0x7d5e6f0: ldr       x1, [x1]
+0x7d5e6f4: mov       x20, x0
+0x7d5e6f8: bl        #0x7d5e6dc
+0x7d5e6fc: ldr       x1, [x19, #8]
+0x7d5e700: mov       x0, x20
+0x7d5e704: bl        #0x7d5e6dc
+0x7d5e708: mov       x0, x19
+0x7d5e70c: ldp       x20, x19, [sp, #0x10]
+0x7d5e710: ldp       x29, x30, [sp], #0x20
+0x7d5e714: b         #0x2efa56c
+0x7d5e718: ret       
+0x7d5e71c: sub       sp, sp, #0x80
+helper_to_p2p=NONE
+helper_to_server=NONE
+
+=== OWNER CALLS FROM SCORE SERIALIZATION ONWARD ===
+0x7d55684 -> 0x8b388f0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d556a0 -> 0x7d5e71c args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d556bc -> 0x7d5e71c args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d556d8 -> 0x7d5e71c args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d556f4 -> 0x7d5e71c args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55710 -> 0x7d5e71c args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55774 -> 0x7d5e71c args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55790 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d557b4 -> 0x7d5e71c args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d557b8 -> 0x28294b8 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55800 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d55804 -> 0x28294b8 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5584c -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d55850 -> 0x2f11b24 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55870 -> 0x7d5e71c args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55874 -> 0x2f11b34 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55890 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d55894 -> 0x7cda454 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d558a4 -> 0x7cda460 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d558cc -> 0x8b35360 args={'x0': 'sp+0x289', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d558dc -> 0x7cdaf90 args={'x0': '?', 'x1': 'sp+0x281', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d558ec -> 0x7d5a1ec args={'x0': '?', 'x1': 'sp+0x281', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d558f4 -> 0x7cdb14c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5591c -> 0x7d5a1ec args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55938 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d5593c -> 0x7dd69c0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55960 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d55988 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d559b0 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d559cc -> 0x7d5ea60 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d559f4 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d55a10 -> 0x7d5ea60 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d55a30 -> 0x7d65794 args={'x0': 'sp+0x281', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55a58 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d55a68 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55a9c -> 0x7b31ea0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55ab0 -> 0x7b327d0 args={'x0': '?', 'x1': 'sp+0x31', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55b00 -> 0x8b352c0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55ba4 -> 0x2f4bfc0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d55bdc -> 0x792fee8 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d55bec -> 0x8b352c0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55c1c -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d55c70 -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x281', 'x2': 'sp+0xf18', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55c80 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55c90 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55cc8 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d55d1c -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x281', 'x2': 'sp+0xf18', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55d2c -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55d3c -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55de8 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d55e38 -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x151', 'x2': 'sp+0xf18', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d55e58 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55e68 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55efc -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d55f4c -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x151', 'x2': 'sp+0xf18', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d55f5c -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55f6c -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55f80 -> 0x7b32ab4 args={'x0': '?', 'x1': 'sp+0x31', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d55fdc -> 0x8b352c0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56074 -> 0x2f4bfc0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d560ac -> 0x792fee8 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d560bc -> 0x8b352c0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d560ec -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d56110 -> 0x2efb614 args={'x0': 'sp+0x281', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56138 -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x281', 'x2': 'sp+0xf18', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56150 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56160 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56198 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d561bc -> 0x2efb614 args={'x0': 'sp+0x281', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d561e4 -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x281', 'x2': 'sp+0xf18', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d561f4 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5620c -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d562b8 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d562dc -> 0x2efb614 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56308 -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x151', 'x2': 'sp+0xf18', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d56328 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56338 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d563cc -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d563f0 -> 0x2efb614 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5641c -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x151', 'x2': 'sp+0xf18', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d5642c -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5643c -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56450 -> 0x7b32d98 args={'x0': '?', 'x1': 'sp+0x31', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d564ac -> 0x8b352c0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56544 -> 0x2f4bfc0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d5657c -> 0x792fee8 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d5658c -> 0x8b352c0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d565bc -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d565e0 -> 0x2efb614 args={'x0': 'sp+0x281', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56608 -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x281', 'x2': 'sp+0xf18', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56620 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56630 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56668 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d5668c -> 0x2efb614 args={'x0': 'sp+0x281', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d566b4 -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x281', 'x2': 'sp+0xf18', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d566c4 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d566dc -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56788 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d567ac -> 0x2efb614 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d567d8 -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x151', 'x2': 'sp+0xf18', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d567f8 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56808 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5689c -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d568c0 -> 0x2efb614 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d568ec -> 0x7d51e88 args={'x0': 'sp+0x271', 'x1': 'sp+0x151', 'x2': 'sp+0xf18', 'x3': 'sp+0x281'} strings=[] p2p=NONE server=NONE
+0x7d568fc -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5690c -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56938 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d5694c -> 0x8b34ef0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56968 -> 0x8b388f0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56980 -> 0x8b352c0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d569a0 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d56a04 -> 0x8b38590 args={'x0': 'sp+0x301', 'x1': 'sp+0x299', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56a2c -> 0x8b385a0 args={'x0': 'sp+0x299', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56a94 -> 0x8b352c0 args={'x0': 'sp+0x281', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56ab0 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56ac8 -> 0x2f2e26c args={'x0': 'sp+0x291', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56afc -> 0x2f2e26c args={'x0': 'sp+0x291', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56b0c -> 0x2f2e26c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56b5c -> 0x8b38820 args={'x0': 'sp+0x31', 'x1': 'sp+0x291', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56bc0 -> 0x8b38830 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56bd4 -> 0x8b38840 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56bf4 -> 0x8b38850 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56c70 -> 0x8b35260 args={'x0': '?', 'x1': 'sp+0x181', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56ca0 -> 0x8b35360 args={'x0': '?', 'x1': '?', 'x2': 'sp+0x289', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56cdc -> 0x8b352c0 args={'x0': '?', 'x1': '?', 'x2': 'sp+0x289', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56d38 -> 0x8b38600 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56d48 -> 0x8b38860 args={'x0': 'sp+0x31', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56d58 -> 0x8b38820 args={'x0': 'sp+0x31', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56db4 -> 0x8b38830 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56dc8 -> 0x8b38840 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56de8 -> 0x8b38850 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56e68 -> 0x8b35260 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56e94 -> 0x8b35360 args={'x0': '?', 'x1': '?', 'x2': 'sp+0x289', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56ed0 -> 0x8b352c0 args={'x0': '?', 'x1': '?', 'x2': 'sp+0x289', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56f34 -> 0x8b38600 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56f40 -> 0x8b38860 args={'x0': 'sp+0x31', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56f4c -> 0x8b3ac10 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56f60 -> 0x8b38820 args={'x0': 'sp+0x31', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56fbc -> 0x8b38830 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56fd0 -> 0x8b38840 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d56ff0 -> 0x8b38850 args={'x0': 'sp+0x151', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d57070 -> 0x8b35260 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5709c -> 0x8b35360 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d570dc -> 0x8b352c0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d57130 -> 0x8b38860 args={'x0': 'sp+0x31', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d57158 -> 0x8b38600 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d57164 -> 0x8b38860 args={'x0': 'sp+0x31', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d571b0 -> 0x31b542c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d571e0 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d571f0 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d57230 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d57238 -> 0x8b385c0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5724c -> 0x8b385d0 args={'x0': 'sp+0x281', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d57254 -> 0x8b385e0 args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d57274 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d57290 -> 0x7d2bf4c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d572c4 -> 0x2efb614 args={'x0': 'sp+0x281', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d572f8 -> 0x7d501c4 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['0x%08x', 'DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d57308 -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5732c -> 0x7cdb51c args={'x0': '?', 'x1': 'sp+0x281', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d57610 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d57634 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d57658 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d57674 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d57698 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d576c0 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d5770c -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5771c -> 0x2efa56c args={'x0': '?', 'x1': '?', 'x2': '?', 'x3': '?'} strings=[] p2p=NONE server=NONE
+0x7d5774c -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d57774 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d577a0 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d577c8 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d577f8 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d57820 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d57840 -> 0x7d5e834 args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d578b4 -> 0x7d5eb7c args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d578d0 -> 0x7d5eb7c args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+0x7d578ec -> 0x7d5eb7c args={'x0': 'sp+0x271', 'x1': '?', 'x2': '?', 'x3': '?'} strings=['DATA_TYPE', 'FP', 'VALUE'] p2p=NONE server=NONE
+
+=== EXPLICIT SP+0x1270 MATERIALIZATIONS IN OWNER ===
+at 0x7d54db8
+  0x7d54db0: add       x10, x21, #0x99
+  0x7d54db4: ldr       x9, [x21, #0xa8]
+  0x7d54db8: add       x0, sp, #1, lsl #12
+  0x7d54dbc: adrp      x1, #0xb8f000
+  0x7d54dc0: add       x1, x1, #0x736
+  0x7d54dc4: tst       w8, #1
+  0x7d54dc8: add       x0, x0, #0x270
+  0x7d54dcc: csel      x2, x10, x9, eq
+  0x7d54dd0: bl        #0x7d501c4
+  0x7d54dd4: ldrb      w8, [x21, #0x68]
+at 0x7d54de0
+  0x7d54dd8: add       x10, x21, #0x69
+  0x7d54ddc: ldr       x9, [x21, #0x78]
+  0x7d54de0: add       x0, sp, #1, lsl #12
+  0x7d54de4: adrp      x1, #0x9f2000
+  0x7d54de8: add       x1, x1, #0xa3f
+  0x7d54dec: tst       w8, #1
+  0x7d54df0: add       x0, x0, #0x270
+  0x7d54df4: csel      x2, x10, x9, eq
+  0x7d54df8: str       x21, [sp, #0xd0]
+  0x7d54dfc: bl        #0x7d501c4
+at 0x7d55044
+  0x7d5503c: bl        #0x2f15088
+  0x7d55040: ldrb      w8, [sp, #0x1c8]
+  0x7d55044: add       x0, sp, #1, lsl #12
+  0x7d55048: ldr       x9, [sp, #0x1d8]
+  0x7d5504c: adrp      x1, #0xa85000
+  0x7d55050: add       x1, x1, #0x32a
+  0x7d55054: add       x0, x0, #0x270
+  0x7d55058: tst       w8, #1
+  0x7d5505c: csel      x2, x28, x9, eq
+  0x7d55060: bl        #0x7d501c4
+at 0x7d55068
+  0x7d55060: bl        #0x7d501c4
+  0x7d55064: ldrb      w8, [sp, #0x1e0]
+  0x7d55068: add       x0, sp, #1, lsl #12
+  0x7d5506c: ldr       x9, [sp, #0x1f0]
+  0x7d55070: adrp      x1, #0xbc9000
+  0x7d55074: add       x1, x1, #0xddd
+  0x7d55078: add       x0, x0, #0x270
+  0x7d5507c: tst       w8, #1
+  0x7d55080: csel      x2, x27, x9, eq
+  0x7d55084: bl        #0x7d501c4
+at 0x7d5508c
+  0x7d55084: bl        #0x7d501c4
+  0x7d55088: ldrb      w8, [sp, #0x1b0]
+  0x7d5508c: add       x0, sp, #1, lsl #12
+  0x7d55090: ldr       x9, [sp, #0x1c0]
+  0x7d55094: adrp      x1, #0xa4b000
+  0x7d55098: add       x1, x1, #0x7ef
+  0x7d5509c: add       x0, x0, #0x270
+  0x7d550a0: tst       w8, #1
+  0x7d550a4: csel      x2, x24, x9, eq
+  0x7d550a8: bl        #0x7d501c4
+at 0x7d550b0
+  0x7d550a8: bl        #0x7d501c4
+  0x7d550ac: ldrb      w8, [sp, #0x198]
+  0x7d550b0: add       x0, sp, #1, lsl #12
+  0x7d550b4: ldr       x9, [sp, #0x1a8]
+  0x7d550b8: adrp      x1, #0xb0a000
+  0x7d550bc: add       x1, x1, #0xcf2
+  0x7d550c0: add       x0, x0, #0x270
+  0x7d550c4: tst       w8, #1
+  0x7d550c8: csel      x2, x23, x9, eq
+  0x7d550cc: bl        #0x7d501c4
+at 0x7d550fc
+  0x7d550f4: add       x0, x0, #0x270
+  0x7d550f8: bl        #0x7d501c4
+  0x7d550fc: add       x0, sp, #1, lsl #12
+  0x7d55100: ldr       w2, [sp, #0x17c]
+  0x7d55104: adrp      x1, #0x9c7000
+  0x7d55108: add       x1, x1, #0x71
+  0x7d5510c: add       x0, x0, #0x270
+  0x7d55110: mov       w3, wzr
+  0x7d55114: bl        #0x7d5e948
+  0x7d55118: add       x0, sp, #1, lsl #12
+at 0x7d55118
+  0x7d55110: mov       w3, wzr
+  0x7d55114: bl        #0x7d5e948
+  0x7d55118: add       x0, sp, #1, lsl #12
+  0x7d5511c: ldr       w2, [sp, #0x178]
+  0x7d55120: adrp      x1, #0x9ed000
+  0x7d55124: add       x1, x1, #0xa73
+  0x7d55128: add       x0, x0, #0x270
+  0x7d5512c: mov       w3, wzr
+  0x7d55130: bl        #0x7d5e948
+  0x7d55134: ldrb      w8, [sp, #0x160]
+at 0x7d55138
+  0x7d55130: bl        #0x7d5e948
+  0x7d55134: ldrb      w8, [sp, #0x160]
+  0x7d55138: add       x0, sp, #1, lsl #12
+  0x7d5513c: ldr       x9, [sp, #0x170]
+  0x7d55140: adrp      x1, #0xa98000
+  0x7d55144: add       x1, x1, #0x206
+  0x7d55148: add       x0, x0, #0x270
+  0x7d5514c: tst       w8, #1
+  0x7d55150: csel      x2, x21, x9, eq
+  0x7d55154: bl        #0x7d501c4
+at 0x7d5515c
+  0x7d55154: bl        #0x7d501c4
+  0x7d55158: ldrb      w8, [sp, #0x130]
+  0x7d5515c: add       x0, sp, #1, lsl #12
+  0x7d55160: ldr       x9, [sp, #0x140]
+  0x7d55164: adrp      x1, #0xb1d000
+  0x7d55168: add       x1, x1, #0x909
+  0x7d5516c: add       x0, x0, #0x270
+  0x7d55170: tst       w8, #1
+  0x7d55174: csel      x2, x20, x9, eq
+  0x7d55178: bl        #0x7d501c4
+at 0x7d5517c
+  0x7d55174: csel      x2, x20, x9, eq
+  0x7d55178: bl        #0x7d501c4
+  0x7d5517c: add       x0, sp, #1, lsl #12
+  0x7d55180: ldr       w2, [x26, #8]
+  0x7d55184: adrp      x1, #0xc15000
+  0x7d55188: add       x1, x1, #0xc57
+  0x7d5518c: add       x0, x0, #0x270
+  0x7d55190: mov       w3, wzr
+  0x7d55194: bl        #0x7d5e71c
+  0x7d55198: ldrb      w8, [sp, #0x148]
+at 0x7d5519c
+  0x7d55194: bl        #0x7d5e71c
+  0x7d55198: ldrb      w8, [sp, #0x148]
+  0x7d5519c: add       x0, sp, #1, lsl #12
+  0x7d551a0: ldr       x9, [sp, #0x158]
+  0x7d551a4: adrp      x1, #0xbef000
+  0x7d551a8: add       x1, x1, #0x4d6
+  0x7d551ac: add       x0, x0, #0x270
+  0x7d551b0: tst       w8, #1
+  0x7d551b4: csel      x2, x25, x9, eq
+  0x7d551b8: bl        #0x7d501c4
+at 0x7d551bc
+  0x7d551b4: csel      x2, x25, x9, eq
+  0x7d551b8: bl        #0x7d501c4
+  0x7d551bc: add       x0, sp, #1, lsl #12
+  0x7d551c0: ldr       w2, [x26, #0xc]
+  0x7d551c4: adrp      x1, #0x9c7000
+  0x7d551c8: add       x1, x1, #0x84
+  0x7d551cc: add       x0, x0, #0x270
+  0x7d551d0: mov       w3, wzr
+  0x7d551d4: bl        #0x7d5e71c
+  0x7d551d8: add       x0, sp, #1, lsl #12
+at 0x7d551d8
+  0x7d551d0: mov       w3, wzr
+  0x7d551d4: bl        #0x7d5e71c
+  0x7d551d8: add       x0, sp, #1, lsl #12
+  0x7d551dc: ldr       w2, [x26, #0x10]
+  0x7d551e0: adrp      x1, #0xa98000
+  0x7d551e4: add       x1, x1, #0x21f
+  0x7d551e8: add       x0, x0, #0x270
+  0x7d551ec: mov       w3, wzr
+  0x7d551f0: bl        #0x7d5e71c
+  0x7d551f4: add       x0, sp, #1, lsl #12
+at 0x7d551f4
+  0x7d551ec: mov       w3, wzr
+  0x7d551f0: bl        #0x7d5e71c
+  0x7d551f4: add       x0, sp, #1, lsl #12
+  0x7d551f8: ldrb      w2, [x26, #0x34]
+  0x7d551fc: adrp      x1, #0xa26000
+  0x7d55200: add       x1, x1, #0x2c5
+  0x7d55204: add       x0, x0, #0x270
+  0x7d55208: mov       w3, wzr
+  0x7d5520c: bl        #0x7d5e71c
+  0x7d55210: add       x0, sp, #1, lsl #12
+at 0x7d55210
+  0x7d55208: mov       w3, wzr
+  0x7d5520c: bl        #0x7d5e71c
+  0x7d55210: add       x0, sp, #1, lsl #12
+  0x7d55214: ldr       w2, [x26, #0x38]
+  0x7d55218: adrp      x1, #0xa5e000
+  0x7d5521c: add       x1, x1, #0xcf5
+  0x7d55220: add       x0, x0, #0x270
+  0x7d55224: mov       w3, wzr
+  0x7d55228: bl        #0x7d5e71c
+  0x7d5522c: add       x0, sp, #1, lsl #12
+at 0x7d5522c
+  0x7d55224: mov       w3, wzr
+  0x7d55228: bl        #0x7d5e71c
+  0x7d5522c: add       x0, sp, #1, lsl #12
+  0x7d55230: ldrb      w2, [x26, #0x3d]
+  0x7d55234: adrp      x1, #0xbc9000
+  0x7d55238: add       x1, x1, #0xde6
+  0x7d5523c: add       x0, x0, #0x270
+  0x7d55240: mov       w3, wzr
+  0x7d55244: bl        #0x7d5e71c
+  0x7d55248: add       x8, sp, #1, lsl #12
+at 0x7d5528c
+  0x7d55284: orr       x19, x19, #1
+  0x7d55288: ldr       x9, [sp, #0x1290]
+  0x7d5528c: add       x0, sp, #1, lsl #12
+  0x7d55290: adrp      x1, #0x9c7000
+  0x7d55294: add       x1, x1, #0x97
+  0x7d55298: tst       w8, #1
+  0x7d5529c: add       x0, x0, #0x270
+  0x7d552a0: csel      x2, x19, x9, eq
+  0x7d552a4: bl        #0x7d501c4
+  0x7d552a8: ldrb      w8, [x25, #0x130]
+at 0x7d552d4
+  0x7d552cc: blr       x9
+  0x7d552d0: ldrb      w8, [x25, #0x130]
+  0x7d552d4: add       x0, sp, #1, lsl #12
+  0x7d552d8: ldr       x9, [sp, #0x1290]
+  0x7d552dc: adrp      x1, #0xa13000
+  0x7d552e0: add       x1, x1, #0x74a
+  0x7d552e4: add       x0, x0, #0x270
+  0x7d552e8: tst       w8, #1
+  0x7d552ec: csel      x2, x19, x9, eq
+  0x7d552f0: bl        #0x7d501c4
+at 0x7d55330
+  0x7d55328: orr       x19, x19, #1
+  0x7d5532c: ldr       x9, [sp, #0x1290]
+  0x7d55330: add       x0, sp, #1, lsl #12
+  0x7d55334: adrp      x1, #0xa98000
+  0x7d55338: add       x1, x1, #0x23e
+  0x7d5533c: tst       w8, #1
+  0x7d55340: add       x0, x0, #0x270
+  0x7d55344: csel      x2, x19, x9, eq
+  0x7d55348: bl        #0x7d501c4
+  0x7d5534c: ldrb      w8, [x25, #0x130]
+at 0x7d55370
+  0x7d55368: blr       x8
+  0x7d5536c: mov       w2, w0
+  0x7d55370: add       x0, sp, #1, lsl #12
+  0x7d55374: adrp      x1, #0xb69000
+  0x7d55378: add       x1, x1, #0x2b0
+  0x7d5537c: add       x0, x0, #0x270
+  0x7d55380: mov       w3, wzr
+  0x7d55384: bl        #0x7d5e834
+  0x7d55388: ldr       x0, [sp, #0x1150]
+  0x7d5538c: ldr       x8, [x0]
+at 0x7d553a4
+  0x7d5539c: blr       x9
+  0x7d553a0: ldrb      w8, [x25, #0x130]
+  0x7d553a4: add       x0, sp, #1, lsl #12
+  0x7d553a8: ldr       x9, [sp, #0x1290]
+  0x7d553ac: adrp      x1, #0xb1d000
+  0x7d553b0: add       x1, x1, #0x91c
+  0x7d553b4: add       x0, x0, #0x270
+  0x7d553b8: tst       w8, #1
+  0x7d553bc: csel      x2, x19, x9, eq
+  0x7d553c0: bl        #0x7d501c4
+at 0x7d55400
+  0x7d553f8: orr       x19, x19, #1
+  0x7d553fc: ldr       x9, [sp, #0x1290]
+  0x7d55400: add       x0, sp, #1, lsl #12
+  0x7d55404: adrp      x1, #0xabe000
+  0x7d55408: add       x1, x1, #0xdf9
+  0x7d5540c: tst       w8, #1
+  0x7d55410: add       x0, x0, #0x270
+  0x7d55414: csel      x2, x19, x9, eq
+  0x7d55418: bl        #0x7d501c4
+  0x7d5541c: ldrb      w8, [x25, #0x130]
+at 0x7d55448
+  0x7d55440: blr       x9
+  0x7d55444: ldrb      w8, [x25, #0x130]
+  0x7d55448: add       x0, sp, #1, lsl #12
+  0x7d5544c: ldr       x9, [sp, #0x1290]
+  0x7d55450: adrp      x1, #0xae3000
+  0x7d55454: add       x1, x1, #0xf6d
+  0x7d55458: add       x0, x0, #0x270
+  0x7d5545c: tst       w8, #1
+  0x7d55460: csel      x2, x19, x9, eq
+  0x7d55464: bl        #0x7d501c4
+at 0x7d554a4
+  0x7d5549c: orr       x10, x19, #1
+  0x7d554a0: ldr       x9, [sp, #0x1290]
+  0x7d554a4: add       x0, sp, #1, lsl #12
+  0x7d554a8: adrp      x1, #0xbc9000
+  0x7d554ac: add       x1, x1, #0xdee
+  0x7d554b0: tst       w8, #1
+  0x7d554b4: add       x0, x0, #0x270
+  0x7d554b8: csel      x2, x10, x9, eq
+  0x7d554bc: bl        #0x7d501c4
+  0x7d554c0: ldrb      w8, [x25, #0x130]
+at 0x7d55504
+  0x7d554fc: adrp      x19, #0xa77000
+  0x7d55500: add       x19, x19, #0x25e
+  0x7d55504: add       x0, sp, #1, lsl #12
+  0x7d55508: adrp      x1, #0x9c7000
+  0x7d5550c: add       x1, x1, #0x97
+  0x7d55510: add       x0, x0, #0x270
+  0x7d55514: mov       x2, x19
+  0x7d55518: bl        #0x7d501c4
+  0x7d5551c: add       x0, sp, #1, lsl #12
+  0x7d55520: adrp      x1, #0xb8f000
+at 0x7d5551c
+  0x7d55514: mov       x2, x19
+  0x7d55518: bl        #0x7d501c4
+  0x7d5551c: add       x0, sp, #1, lsl #12
+  0x7d55520: adrp      x1, #0xb8f000
+  0x7d55524: add       x1, x1, #0x742
+  0x7d55528: add       x0, x0, #0x270
+  0x7d5552c: mov       x2, x19
+  0x7d55530: bl        #0x7d501c4
+  0x7d55534: add       x0, sp, #1, lsl #12
+  0x7d55538: adrp      x1, #0xa98000
+at 0x7d55534
+  0x7d5552c: mov       x2, x19
+  0x7d55530: bl        #0x7d501c4
+  0x7d55534: add       x0, sp, #1, lsl #12
+  0x7d55538: adrp      x1, #0xa98000
+  0x7d5553c: add       x1, x1, #0x23e
+  0x7d55540: add       x0, x0, #0x270
+  0x7d55544: mov       x2, x19
+  0x7d55548: bl        #0x7d501c4
+  0x7d5554c: add       x0, sp, #1, lsl #12
+  0x7d55550: adrp      x1, #0xb69000
+at 0x7d5554c
+  0x7d55544: mov       x2, x19
+  0x7d55548: bl        #0x7d501c4
+  0x7d5554c: add       x0, sp, #1, lsl #12
+  0x7d55550: adrp      x1, #0xb69000
+  0x7d55554: add       x1, x1, #0x2b0
+  0x7d55558: add       x0, x0, #0x270
+  0x7d5555c: mov       w2, wzr
+  0x7d55560: mov       w3, wzr
+  0x7d55564: bl        #0x7d5e948
+  0x7d55568: add       x0, sp, #1, lsl #12
+at 0x7d55568
+  0x7d55560: mov       w3, wzr
+  0x7d55564: bl        #0x7d5e948
+  0x7d55568: add       x0, sp, #1, lsl #12
+  0x7d5556c: adrp      x1, #0xb1d000
+  0x7d55570: add       x1, x1, #0x91c
+  0x7d55574: add       x0, x0, #0x270
+  0x7d55578: mov       x2, x19
+  0x7d5557c: bl        #0x7d501c4
+  0x7d55580: add       x0, sp, #1, lsl #12
+  0x7d55584: adrp      x1, #0xabe000
+at 0x7d55580
+  0x7d55578: mov       x2, x19
+  0x7d5557c: bl        #0x7d501c4
+  0x7d55580: add       x0, sp, #1, lsl #12
+  0x7d55584: adrp      x1, #0xabe000
+  0x7d55588: add       x1, x1, #0xdf9
+  0x7d5558c: add       x0, x0, #0x270
+  0x7d55590: mov       x2, x19
+  0x7d55594: bl        #0x7d501c4
+  0x7d55598: add       x0, sp, #1, lsl #12
+  0x7d5559c: adrp      x1, #0xae3000
+at 0x7d55598
+  0x7d55590: mov       x2, x19
+  0x7d55594: bl        #0x7d501c4
+  0x7d55598: add       x0, sp, #1, lsl #12
+  0x7d5559c: adrp      x1, #0xae3000
+  0x7d555a0: add       x1, x1, #0xf6d
+  0x7d555a4: add       x0, x0, #0x270
+  0x7d555a8: mov       x2, x19
+  0x7d555ac: bl        #0x7d501c4
+  0x7d555b0: add       x0, sp, #1, lsl #12
+  0x7d555b4: adrp      x1, #0xbc9000
+at 0x7d555b0
+  0x7d555a8: mov       x2, x19
+  0x7d555ac: bl        #0x7d501c4
+  0x7d555b0: add       x0, sp, #1, lsl #12
+  0x7d555b4: adrp      x1, #0xbc9000
+  0x7d555b8: add       x1, x1, #0xdee
+  0x7d555bc: add       x0, x0, #0x270
+  0x7d555c0: mov       x2, x19
+  0x7d555c4: bl        #0x7d501c4
+  0x7d555c8: bl        #0x813fe80
+  0x7d555cc: cbnz      x0, #0x7d554d8
+at 0x7d555e0
+  0x7d555d8: adrp      x2, #0xa77000
+  0x7d555dc: add       x2, x2, #0x25e
+  0x7d555e0: add       x0, sp, #1, lsl #12
+  0x7d555e4: add       x0, x0, #0x270
+  0x7d555e8: bl        #0x7d501c4
+  0x7d555ec: add       x8, sp, #1, lsl #12
+  0x7d555f0: add       x19, sp, #1, lsl #12
+  0x7d555f4: add       x8, x8, #0x280
+  0x7d555f8: add       x19, x19, #0x280
+  0x7d555fc: bl        #0x7dc3cf0
+at 0x7d5560c
+  0x7d55604: orr       x10, x19, #1
+  0x7d55608: ldr       x9, [sp, #0x1290]
+  0x7d5560c: add       x0, sp, #1, lsl #12
+  0x7d55610: adrp      x1, #0xabe000
+  0x7d55614: add       x1, x1, #0xe0a
+  0x7d55618: tst       w8, #1
+  0x7d5561c: add       x0, x0, #0x270
+  0x7d55620: csel      x2, x10, x9, eq
+  0x7d55624: bl        #0x7d501c4
+  0x7d55628: ldrb      w8, [x25, #0x130]
+at 0x7d55640
+  0x7d55638: bl        #0x7dd1b74
+  0x7d5563c: mov       w2, w0
+  0x7d55640: add       x0, sp, #1, lsl #12
+  0x7d55644: adrp      x1, #0xb7c000
+  0x7d55648: add       x1, x1, #0x29f
+  0x7d5564c: add       x0, x0, #0x270
+  0x7d55650: mov       w3, wzr
+  0x7d55654: bl        #0x7d5e71c
+  0x7d55658: ldr       x19, [sp, #0x1158]
+  0x7d5565c: cbz       x19, #0x7d55688
+at 0x7d55688
+  0x7d55680: mov       x0, x19
+  0x7d55684: bl        #0x8b388f0
+  0x7d55688: add       x0, sp, #1, lsl #12
+  0x7d5568c: ldrb      w2, [x26, #0x5c]
+  0x7d55690: adrp      x1, #0xa4b000
+  0x7d55694: add       x1, x1, #0x77b
+  0x7d55698: add       x0, x0, #0x270
+  0x7d5569c: mov       w3, wzr
+  0x7d556a0: bl        #0x7d5e71c
+  0x7d556a4: add       x0, sp, #1, lsl #12
+at 0x7d556a4
+  0x7d5569c: mov       w3, wzr
+  0x7d556a0: bl        #0x7d5e71c
+  0x7d556a4: add       x0, sp, #1, lsl #12
+  0x7d556a8: ldrb      w2, [x26, #0x48]
+  0x7d556ac: adrp      x1, #0xb0a000
+  0x7d556b0: add       x1, x1, #0xd08
+  0x7d556b4: add       x0, x0, #0x270
+  0x7d556b8: mov       w3, wzr
+  0x7d556bc: bl        #0x7d5e71c
+  0x7d556c0: add       x0, sp, #1, lsl #12
+at 0x7d556c0
+  0x7d556b8: mov       w3, wzr
+  0x7d556bc: bl        #0x7d5e71c
+  0x7d556c0: add       x0, sp, #1, lsl #12
+  0x7d556c4: ldrb      w2, [x26, #0x5d]
+  0x7d556c8: adrp      x1, #0xaf7000
+  0x7d556cc: add       x1, x1, #0x611
+  0x7d556d0: add       x0, x0, #0x270
+  0x7d556d4: mov       w3, wzr
+  0x7d556d8: bl        #0x7d5e71c
+  0x7d556dc: add       x0, sp, #1, lsl #12
+at 0x7d556dc
+  0x7d556d4: mov       w3, wzr
+  0x7d556d8: bl        #0x7d5e71c
+  0x7d556dc: add       x0, sp, #1, lsl #12
+  0x7d556e0: ldrb      w2, [x26, #0x4b]
+  0x7d556e4: adrp      x1, #0xa38000
+  0x7d556e8: add       x1, x1, #0xb01
+  0x7d556ec: add       x0, x0, #0x270
+  0x7d556f0: mov       w3, wzr
+  0x7d556f4: bl        #0x7d5e71c
+  0x7d556f8: add       x0, sp, #1, lsl #12
+at 0x7d556f8
+  0x7d556f0: mov       w3, wzr
+  0x7d556f4: bl        #0x7d5e71c
+  0x7d556f8: add       x0, sp, #1, lsl #12
+  0x7d556fc: ldrb      w2, [x26, #0x4c]
+  0x7d55700: adrp      x1, #0xa13000
+  0x7d55704: add       x1, x1, #0x757
+  0x7d55708: add       x0, x0, #0x270
+  0x7d5570c: mov       w3, wzr
+  0x7d55710: bl        #0x7d5e71c
+  0x7d55714: ldr       w8, [x26, #0x58]
+at 0x7d55760
+  0x7d55758: mov       w8, #1
+  0x7d5575c: cinc      w2, w8, hs
+  0x7d55760: add       x0, sp, #1, lsl #12
+  0x7d55764: adrp      x1, #0xa00000
+  0x7d55768: add       x1, x1, #0xc66
+  0x7d5576c: add       x0, x0, #0x270
+  0x7d55770: mov       w3, wzr
+  0x7d55774: bl        #0x7d5e71c
+  0x7d55778: add       x0, sp, #1, lsl #12
+  0x7d5577c: ldr       w2, [x26, #0x60]
+at 0x7d55778
+  0x7d55770: mov       w3, wzr
+  0x7d55774: bl        #0x7d5e71c
+  0x7d55778: add       x0, sp, #1, lsl #12
+  0x7d5577c: ldr       w2, [x26, #0x60]
+  0x7d55780: adrp      x1, #0xc15000
+  0x7d55784: add       x1, x1, #0xc62
+  0x7d55788: add       x0, x0, #0x270
+  0x7d5578c: mov       w3, wzr
+  0x7d55790: bl        #0x7d5e834
+  0x7d55794: ldrb      w8, [x26, #0x64]
+at 0x7d55798
+  0x7d55790: bl        #0x7d5e834
+  0x7d55794: ldrb      w8, [x26, #0x64]
+  0x7d55798: add       x0, sp, #1, lsl #12
+  0x7d5579c: adrp      x1, #0xba3000
+  0x7d557a0: add       x1, x1, #0x187
+  0x7d557a4: add       x0, x0, #0x270
+  0x7d557a8: mov       w3, wzr
+  0x7d557ac: cmp       w8, #0
+  0x7d557b0: csinv     w2, w8, wzr, ne
+  0x7d557b4: bl        #0x7d5e71c
+at 0x7d557f0
+  0x7d557e8: adrp      x2, #0xa07000
+  0x7d557ec: add       x2, x2, #0x544
+  0x7d557f0: add       x0, sp, #1, lsl #12
+  0x7d557f4: adrp      x1, #0xb8f000
+  0x7d557f8: add       x1, x1, #0x75c
+  0x7d557fc: add       x0, x0, #0x270
+  0x7d55800: bl        #0x7d501c4
+  0x7d55804: bl        #0x28294b8
+  0x7d55808: cbz       x0, #0x7d55834
+  0x7d5580c: ldr       x8, [x0]
+at 0x7d5583c
+  0x7d55834: adrp      x2, #0xa07000
+  0x7d55838: add       x2, x2, #0x544
+  0x7d5583c: add       x0, sp, #1, lsl #12
+  0x7d55840: adrp      x1, #0xae3000
+  0x7d55844: add       x1, x1, #0xf71
+  0x7d55848: add       x0, x0, #0x270
+  0x7d5584c: bl        #0x7d501c4
+  0x7d55850: bl        #0x2f11b24
+  0x7d55854: cmp       w0, #0xe
+  0x7d55858: adrp      x1, #0x9c7000
+at 0x7d55864
+  0x7d5585c: add       x1, x1, #0xa1
+  0x7d55860: csinv     w2, w0, wzr, lo
+  0x7d55864: add       x0, sp, #1, lsl #12
+  0x7d55868: mov       w3, wzr
+  0x7d5586c: add       x0, x0, #0x270
+  0x7d55870: bl        #0x7d5e71c
+  0x7d55874: bl        #0x2f11b34
+  0x7d55878: mov       w2, w0
+  0x7d5587c: add       x0, sp, #1, lsl #12
+  0x7d55880: adrp      x1, #0xaf7000
+at 0x7d5587c
+  0x7d55874: bl        #0x2f11b34
+  0x7d55878: mov       w2, w0
+  0x7d5587c: add       x0, sp, #1, lsl #12
+  0x7d55880: adrp      x1, #0xaf7000
+  0x7d55884: add       x1, x1, #0x620
+  0x7d55888: add       x0, x0, #0x270
+  0x7d5588c: mov       w3, wzr
+  0x7d55890: bl        #0x7d5e834
+  0x7d55894: bl        #0x7cda454
+  0x7d55898: str       x0, [sp, #0xb8]
+at 0x7d55930
+  0x7d55928: adrp      x2, #0xa77000
+  0x7d5592c: add       x2, x2, #0x25e
+  0x7d55930: add       x0, sp, #1, lsl #12
+  0x7d55934: add       x0, x0, #0x270
+  0x7d55938: bl        #0x7d501c4
+  0x7d5593c: bl        #0x7dd69c0
+  0x7d55940: ldrb      w8, [x0]
+  0x7d55944: adrp      x1, #0xb1d000
+  0x7d55948: add       x1, x1, #0x920
+  0x7d5594c: ldr       x9, [x0, #0x10]
+at 0x7d55958
+  0x7d55950: tst       w8, #1
+  0x7d55954: csinc     x2, x9, x0, ne
+  0x7d55958: add       x0, sp, #1, lsl #12
+  0x7d5595c: add       x0, x0, #0x270
+  0x7d55960: bl        #0x7d501c4
+  0x7d55964: ldrb      w8, [x26, #0xb0]
+  0x7d55968: add       x10, x26, #0xb1
+  0x7d5596c: ldr       x9, [x26, #0xc0]
+  0x7d55970: add       x0, sp, #1, lsl #12
+  0x7d55974: adrp      x1, #0xc02000
+at 0x7d55970
+  0x7d55968: add       x10, x26, #0xb1
+  0x7d5596c: ldr       x9, [x26, #0xc0]
+  0x7d55970: add       x0, sp, #1, lsl #12
+  0x7d55974: adrp      x1, #0xc02000
+  0x7d55978: add       x1, x1, #0x823
+  0x7d5597c: tst       w8, #1
+  0x7d55980: add       x0, x0, #0x270
+  0x7d55984: csel      x2, x10, x9, eq
+  0x7d55988: bl        #0x7d501c4
+  0x7d5598c: ldrb      w8, [x26, #0xc8]
+at 0x7d55998
+  0x7d55990: add       x10, x26, #0xc9
+  0x7d55994: ldr       x9, [x26, #0xd8]
+  0x7d55998: add       x0, sp, #1, lsl #12
+  0x7d5599c: adrp      x1, #0xaf7000
+  0x7d559a0: add       x1, x1, #0x62f
+  0x7d559a4: tst       w8, #1
+  0x7d559a8: add       x0, x0, #0x270
+  0x7d559ac: csel      x2, x10, x9, eq
+  0x7d559b0: bl        #0x7d501c4
+  0x7d559b4: add       x0, sp, #1, lsl #12
+at 0x7d559b4
+  0x7d559ac: csel      x2, x10, x9, eq
+  0x7d559b0: bl        #0x7d501c4
+  0x7d559b4: add       x0, sp, #1, lsl #12
+  0x7d559b8: ldrh      w2, [x26, #0xf8]
+  0x7d559bc: adrp      x1, #0xb1d000
+  0x7d559c0: add       x1, x1, #0x933
+  0x7d559c4: add       x0, x0, #0x270
+  0x7d559c8: mov       w3, wzr
+  0x7d559cc: bl        #0x7d5ea60
+  0x7d559d0: ldrb      w8, [x26, #0xe0]
+at 0x7d559dc
+  0x7d559d4: add       x10, x26, #0xe1
+  0x7d559d8: ldr       x9, [x26, #0xf0]
+  0x7d559dc: add       x0, sp, #1, lsl #12
+  0x7d559e0: adrp      x1, #0xbef000
+  0x7d559e4: add       x1, x1, #0x921
+  0x7d559e8: tst       w8, #1
+  0x7d559ec: add       x0, x0, #0x270
+  0x7d559f0: csel      x2, x10, x9, eq
+  0x7d559f4: bl        #0x7d501c4
+  0x7d559f8: add       x0, sp, #1, lsl #12
+at 0x7d559f8
+  0x7d559f0: csel      x2, x10, x9, eq
+  0x7d559f4: bl        #0x7d501c4
+  0x7d559f8: add       x0, sp, #1, lsl #12
+  0x7d559fc: ldrh      w2, [x26, #0xfa]
+  0x7d55a00: adrp      x1, #0xc15000
+  0x7d55a04: add       x1, x1, #0xc71
+  0x7d55a08: add       x0, x0, #0x270
+  0x7d55a0c: mov       w3, wzr
+  0x7d55a10: bl        #0x7d5ea60
+  0x7d55a14: add       x0, sp, #1, lsl #12
+at 0x7d55a40
+  0x7d55a38: orr       x10, x19, #1
+  0x7d55a3c: ldr       x9, [sp, #0x1290]
+  0x7d55a40: add       x0, sp, #1, lsl #12
+  0x7d55a44: adrp      x1, #0xb1d000
+  0x7d55a48: add       x1, x1, #0x94d
+  0x7d55a4c: tst       w8, #1
+  0x7d55a50: add       x0, x0, #0x270
+  0x7d55a54: csel      x2, x10, x9, eq
+  0x7d55a58: bl        #0x7d501c4
+  0x7d55a5c: ldrb      w8, [x25, #0x130]
+at 0x7d55c00
+  0x7d55bf8: cbz       w8, #0x7d55d44
+  0x7d55bfc: ldrb      w8, [x24, #0x10]
+  0x7d55c00: add       x0, sp, #1, lsl #12
+  0x7d55c04: ldr       x9, [x24, #0x20]
+  0x7d55c08: add       x0, x0, #0x270
+  0x7d55c0c: adrp      x1, #0xc15000
+  0x7d55c10: add       x1, x1, #0xc80
+  0x7d55c14: tst       w8, #1
+  0x7d55c18: csel      x2, x20, x9, eq
+  0x7d55c1c: bl        #0x7d501c4
+at 0x7d55c34
+  0x7d55c2c: add       x0, sp, #1, lsl #12
+  0x7d55c30: add       x19, x19, #0x280
+  0x7d55c34: add       x1, sp, #1, lsl #12
+  0x7d55c38: ldr       q0, [x8]
+  0x7d55c3c: mov       w8, #0x24
+  0x7d55c40: add       x3, x24, #0x28
+  0x7d55c44: add       x0, x0, #0x270
+  0x7d55c48: add       x1, x1, #0x280
+  0x7d55c4c: add       x2, sp, #0xf18
+  0x7d55c50: strb      w8, [x19]
+at 0x7d55cac
+  0x7d55ca4: b         #0x7d55b04
+  0x7d55ca8: ldrb      w8, [x24, #0x10]
+  0x7d55cac: add       x0, sp, #1, lsl #12
+  0x7d55cb0: ldr       x9, [x24, #0x20]
+  0x7d55cb4: add       x0, x0, #0x270
+  0x7d55cb8: adrp      x1, #0xae3000
+  0x7d55cbc: add       x1, x1, #0xf8d
+  0x7d55cc0: tst       w8, #1
+  0x7d55cc4: csel      x2, x20, x9, eq
+  0x7d55cc8: bl        #0x7d501c4
+at 0x7d55ce0
+  0x7d55cd8: add       x19, x19, #0x280
+  0x7d55cdc: mov       w8, #0x2c
+  0x7d55ce0: add       x0, sp, #1, lsl #12
+  0x7d55ce4: add       x1, sp, #1, lsl #12
+  0x7d55ce8: add       x3, x24, #0x28
+  0x7d55cec: ldr       q0, [x9]
+  0x7d55cf0: add       x0, x0, #0x270
+  0x7d55cf4: strb      w8, [x19]
+  0x7d55cf8: ldur      x8, [x9, #0xe]
+  0x7d55cfc: add       x1, x1, #0x280
+at 0x7d55ce4
+  0x7d55cdc: mov       w8, #0x2c
+  0x7d55ce0: add       x0, sp, #1, lsl #12
+  0x7d55ce4: add       x1, sp, #1, lsl #12
+  0x7d55ce8: add       x3, x24, #0x28
+  0x7d55cec: ldr       q0, [x9]
+  0x7d55cf0: add       x0, x0, #0x270
+  0x7d55cf4: strb      w8, [x19]
+  0x7d55cf8: ldur      x8, [x9, #0xe]
+  0x7d55cfc: add       x1, x1, #0x280
+  0x7d55d00: add       x2, sp, #0xf18
+at 0x7d55dfc
+  0x7d55df4: add       x0, sp, #1, lsl #12
+  0x7d55df8: add       x1, sp, #1, lsl #12
+  0x7d55dfc: add       x3, sp, #1, lsl #12
+  0x7d55e00: mov       w8, #0x24
+  0x7d55e04: mov       w9, #0x5f53
+  0x7d55e08: ldr       q0, [x10]
+  0x7d55e0c: add       x0, x0, #0x270
+  0x7d55e10: add       x1, x1, #0x150
+  0x7d55e14: add       x2, sp, #0xf18
+  0x7d55e18: add       x3, x3, #0x280
+at 0x7d55f0c
+  0x7d55f04: add       x9, x9, #0x777
+  0x7d55f08: add       x0, sp, #1, lsl #12
+  0x7d55f0c: add       x1, sp, #1, lsl #12
+  0x7d55f10: add       x3, sp, #1, lsl #12
+  0x7d55f14: mov       w8, #0x2c
+  0x7d55f18: ldr       q0, [x9]
+  0x7d55f1c: add       x0, x0, #0x270
+  0x7d55f20: ldur      x9, [x9, #0xe]
+  0x7d55f24: add       x1, x1, #0x150
+  0x7d55f28: add       x2, sp, #0xf18
+at 0x7d55f10
+  0x7d55f08: add       x0, sp, #1, lsl #12
+  0x7d55f0c: add       x1, sp, #1, lsl #12
+  0x7d55f10: add       x3, sp, #1, lsl #12
+  0x7d55f14: mov       w8, #0x2c
+  0x7d55f18: ldr       q0, [x9]
+  0x7d55f1c: add       x0, x0, #0x270
+  0x7d55f20: ldur      x9, [x9, #0xe]
+  0x7d55f24: add       x1, x1, #0x150
+  0x7d55f28: add       x2, sp, #0xf18
+  0x7d55f2c: add       x3, x3, #0x280
+at 0x7d560d0
+  0x7d560c8: cbz       w8, #0x7d56214
+  0x7d560cc: ldrb      w8, [x21, #0x10]
+  0x7d560d0: add       x0, sp, #1, lsl #12
+  0x7d560d4: ldr       x9, [x21, #0x20]
+  0x7d560d8: add       x0, x0, #0x270
+  0x7d560dc: adrp      x1, #0xbdc000
+  0x7d560e0: add       x1, x1, #0x9d4
+  0x7d560e4: tst       w8, #1
+  0x7d560e8: csel      x2, x25, x9, eq
+  0x7d560ec: bl        #0x7d501c4
+at 0x7d56114
+  0x7d5610c: str       xzr, [sp, #0x1290]
+  0x7d56110: bl        #0x2efb614
+  0x7d56114: add       x0, sp, #1, lsl #12
+  0x7d56118: add       x1, sp, #1, lsl #12
+  0x7d5611c: add       x3, x21, #0x28
+  0x7d56120: add       x0, x0, #0x270
+  0x7d56124: add       x1, x1, #0x280
+  0x7d56128: add       x2, sp, #0xf18
+  0x7d5612c: str       xzr, [sp, #0xf20]
+  0x7d56130: str       xzr, [sp, #0xf18]
+at 0x7d56118
+  0x7d56110: bl        #0x2efb614
+  0x7d56114: add       x0, sp, #1, lsl #12
+  0x7d56118: add       x1, sp, #1, lsl #12
+  0x7d5611c: add       x3, x21, #0x28
+  0x7d56120: add       x0, x0, #0x270
+  0x7d56124: add       x1, x1, #0x280
+  0x7d56128: add       x2, sp, #0xf18
+  0x7d5612c: str       xzr, [sp, #0xf20]
+  0x7d56130: str       xzr, [sp, #0xf18]
+  0x7d56134: str       xzr, [sp, #0xf28]
+at 0x7d5617c
+  0x7d56174: b         #0x7d55fe0
+  0x7d56178: ldrb      w8, [x21, #0x10]
+  0x7d5617c: add       x0, sp, #1, lsl #12
+  0x7d56180: ldr       x9, [x21, #0x20]
+  0x7d56184: add       x0, x0, #0x270
+  0x7d56188: adrp      x1, #0xb1d000
+  0x7d5618c: add       x1, x1, #0x95e
+  0x7d56190: tst       w8, #1
+  0x7d56194: csel      x2, x25, x9, eq
+  0x7d56198: bl        #0x7d501c4
+at 0x7d561c0
+  0x7d561b8: str       xzr, [sp, #0x1290]
+  0x7d561bc: bl        #0x2efb614
+  0x7d561c0: add       x0, sp, #1, lsl #12
+  0x7d561c4: add       x1, sp, #1, lsl #12
+  0x7d561c8: add       x3, x21, #0x28
+  0x7d561cc: add       x0, x0, #0x270
+  0x7d561d0: add       x1, x1, #0x280
+  0x7d561d4: add       x2, sp, #0xf18
+  0x7d561d8: str       xzr, [sp, #0xf20]
+  0x7d561dc: str       xzr, [sp, #0xf18]
+at 0x7d561c4
+  0x7d561bc: bl        #0x2efb614
+  0x7d561c0: add       x0, sp, #1, lsl #12
+  0x7d561c4: add       x1, sp, #1, lsl #12
+  0x7d561c8: add       x3, x21, #0x28
+  0x7d561cc: add       x0, x0, #0x270
+  0x7d561d0: add       x1, x1, #0x280
+  0x7d561d4: add       x2, sp, #0xf18
+  0x7d561d8: str       xzr, [sp, #0xf20]
+  0x7d561dc: str       xzr, [sp, #0xf18]
+  0x7d561e0: str       xzr, [sp, #0xf28]
+at 0x7d562e0
+  0x7d562d8: str       xzr, [sp, #0x1160]
+  0x7d562dc: bl        #0x2efb614
+  0x7d562e0: add       x0, sp, #1, lsl #12
+  0x7d562e4: add       x1, sp, #1, lsl #12
+  0x7d562e8: add       x3, sp, #1, lsl #12
+  0x7d562ec: add       x0, x0, #0x270
+  0x7d562f0: add       x1, x1, #0x150
+  0x7d562f4: add       x2, sp, #0xf18
+  0x7d562f8: add       x3, x3, #0x280
+  0x7d562fc: str       xzr, [sp, #0xf20]
+at 0x7d562e4
+  0x7d562dc: bl        #0x2efb614
+  0x7d562e0: add       x0, sp, #1, lsl #12
+  0x7d562e4: add       x1, sp, #1, lsl #12
+  0x7d562e8: add       x3, sp, #1, lsl #12
+  0x7d562ec: add       x0, x0, #0x270
+  0x7d562f0: add       x1, x1, #0x150
+  0x7d562f4: add       x2, sp, #0xf18
+  0x7d562f8: add       x3, x3, #0x280
+  0x7d562fc: str       xzr, [sp, #0xf20]
+  0x7d56300: str       xzr, [sp, #0xf18]
+at 0x7d562e8
+  0x7d562e0: add       x0, sp, #1, lsl #12
+  0x7d562e4: add       x1, sp, #1, lsl #12
+  0x7d562e8: add       x3, sp, #1, lsl #12
+  0x7d562ec: add       x0, x0, #0x270
+  0x7d562f0: add       x1, x1, #0x150
+  0x7d562f4: add       x2, sp, #0xf18
+  0x7d562f8: add       x3, x3, #0x280
+  0x7d562fc: str       xzr, [sp, #0xf20]
+  0x7d56300: str       xzr, [sp, #0xf18]
+  0x7d56304: str       xzr, [sp, #0xf28]
+at 0x7d563f4
+  0x7d563ec: str       xzr, [sp, #0x1160]
+  0x7d563f0: bl        #0x2efb614
+  0x7d563f4: add       x0, sp, #1, lsl #12
+  0x7d563f8: add       x1, sp, #1, lsl #12
+  0x7d563fc: add       x3, sp, #1, lsl #12
+  0x7d56400: add       x0, x0, #0x270
+  0x7d56404: add       x1, x1, #0x150
+  0x7d56408: add       x2, sp, #0xf18
+  0x7d5640c: add       x3, x3, #0x280
+  0x7d56410: str       xzr, [sp, #0xf20]
+at 0x7d563f8
+  0x7d563f0: bl        #0x2efb614
+  0x7d563f4: add       x0, sp, #1, lsl #12
+  0x7d563f8: add       x1, sp, #1, lsl #12
+  0x7d563fc: add       x3, sp, #1, lsl #12
+  0x7d56400: add       x0, x0, #0x270
+  0x7d56404: add       x1, x1, #0x150
+  0x7d56408: add       x2, sp, #0xf18
+  0x7d5640c: add       x3, x3, #0x280
+  0x7d56410: str       xzr, [sp, #0xf20]
+  0x7d56414: str       xzr, [sp, #0xf18]
+at 0x7d563fc
+  0x7d563f4: add       x0, sp, #1, lsl #12
+  0x7d563f8: add       x1, sp, #1, lsl #12
+  0x7d563fc: add       x3, sp, #1, lsl #12
+  0x7d56400: add       x0, x0, #0x270
+  0x7d56404: add       x1, x1, #0x150
+  0x7d56408: add       x2, sp, #0xf18
+  0x7d5640c: add       x3, x3, #0x280
+  0x7d56410: str       xzr, [sp, #0xf20]
+  0x7d56414: str       xzr, [sp, #0xf18]
+  0x7d56418: str       xzr, [sp, #0xf28]
+at 0x7d565a0
+  0x7d56598: cbz       w8, #0x7d566e4
+  0x7d5659c: ldrb      w8, [x21, #0x10]
+  0x7d565a0: add       x0, sp, #1, lsl #12
+  0x7d565a4: ldr       x9, [x21, #0x20]
+  0x7d565a8: add       x0, x0, #0x270
+  0x7d565ac: adrp      x1, #0xb1d000
+  0x7d565b0: add       x1, x1, #0x97d
+  0x7d565b4: tst       w8, #1
+  0x7d565b8: csel      x2, x25, x9, eq
+  0x7d565bc: bl        #0x7d501c4
+at 0x7d565e4
+  0x7d565dc: str       xzr, [sp, #0x1290]
+  0x7d565e0: bl        #0x2efb614
+  0x7d565e4: add       x0, sp, #1, lsl #12
+  0x7d565e8: add       x1, sp, #1, lsl #12
+  0x7d565ec: add       x3, x21, #0x28
+  0x7d565f0: add       x0, x0, #0x270
+  0x7d565f4: add       x1, x1, #0x280
+  0x7d565f8: add       x2, sp, #0xf18
+  0x7d565fc: str       xzr, [sp, #0xf20]
+  0x7d56600: str       xzr, [sp, #0xf18]
+at 0x7d565e8
+  0x7d565e0: bl        #0x2efb614
+  0x7d565e4: add       x0, sp, #1, lsl #12
+  0x7d565e8: add       x1, sp, #1, lsl #12
+  0x7d565ec: add       x3, x21, #0x28
+  0x7d565f0: add       x0, x0, #0x270
+  0x7d565f4: add       x1, x1, #0x280
+  0x7d565f8: add       x2, sp, #0xf18
+  0x7d565fc: str       xzr, [sp, #0xf20]
+  0x7d56600: str       xzr, [sp, #0xf18]
+  0x7d56604: str       xzr, [sp, #0xf28]
+at 0x7d5664c
+  0x7d56644: b         #0x7d564b0
+  0x7d56648: ldrb      w8, [x21, #0x10]
+  0x7d5664c: add       x0, sp, #1, lsl #12
+  0x7d56650: ldr       x9, [x21, #0x20]
+  0x7d56654: add       x0, x0, #0x270
+  0x7d56658: adrp      x1, #0xbb6000
+  0x7d5665c: add       x1, x1, #0xb15
+  0x7d56660: tst       w8, #1
+  0x7d56664: csel      x2, x25, x9, eq
+  0x7d56668: bl        #0x7d501c4
+at 0x7d56690
+  0x7d56688: str       xzr, [sp, #0x1290]
+  0x7d5668c: bl        #0x2efb614
+  0x7d56690: add       x0, sp, #1, lsl #12
+  0x7d56694: add       x1, sp, #1, lsl #12
+  0x7d56698: add       x3, x21, #0x28
+  0x7d5669c: add       x0, x0, #0x270
+  0x7d566a0: add       x1, x1, #0x280
+  0x7d566a4: add       x2, sp, #0xf18
+  0x7d566a8: str       xzr, [sp, #0xf20]
+  0x7d566ac: str       xzr, [sp, #0xf18]
+at 0x7d56694
+  0x7d5668c: bl        #0x2efb614
+  0x7d56690: add       x0, sp, #1, lsl #12
+  0x7d56694: add       x1, sp, #1, lsl #12
+  0x7d56698: add       x3, x21, #0x28
+  0x7d5669c: add       x0, x0, #0x270
+  0x7d566a0: add       x1, x1, #0x280
+  0x7d566a4: add       x2, sp, #0xf18
+  0x7d566a8: str       xzr, [sp, #0xf20]
+  0x7d566ac: str       xzr, [sp, #0xf18]
+  0x7d566b0: str       xzr, [sp, #0xf28]
+at 0x7d567b0
+  0x7d567a8: str       xzr, [sp, #0x1160]
+  0x7d567ac: bl        #0x2efb614
+  0x7d567b0: add       x0, sp, #1, lsl #12
+  0x7d567b4: add       x1, sp, #1, lsl #12
+  0x7d567b8: add       x3, sp, #1, lsl #12
+  0x7d567bc: add       x0, x0, #0x270
+  0x7d567c0: add       x1, x1, #0x150
+  0x7d567c4: add       x2, sp, #0xf18
+  0x7d567c8: add       x3, x3, #0x280
+  0x7d567cc: str       xzr, [sp, #0xf20]
+at 0x7d567b4
+  0x7d567ac: bl        #0x2efb614
+  0x7d567b0: add       x0, sp, #1, lsl #12
+  0x7d567b4: add       x1, sp, #1, lsl #12
+  0x7d567b8: add       x3, sp, #1, lsl #12
+  0x7d567bc: add       x0, x0, #0x270
+  0x7d567c0: add       x1, x1, #0x150
+  0x7d567c4: add       x2, sp, #0xf18
+  0x7d567c8: add       x3, x3, #0x280
+  0x7d567cc: str       xzr, [sp, #0xf20]
+  0x7d567d0: str       xzr, [sp, #0xf18]
+at 0x7d567b8
+  0x7d567b0: add       x0, sp, #1, lsl #12
+  0x7d567b4: add       x1, sp, #1, lsl #12
+  0x7d567b8: add       x3, sp, #1, lsl #12
+  0x7d567bc: add       x0, x0, #0x270
+  0x7d567c0: add       x1, x1, #0x150
+  0x7d567c4: add       x2, sp, #0xf18
+  0x7d567c8: add       x3, x3, #0x280
+  0x7d567cc: str       xzr, [sp, #0xf20]
+  0x7d567d0: str       xzr, [sp, #0xf18]
+  0x7d567d4: str       xzr, [sp, #0xf28]
+at 0x7d568c4
+  0x7d568bc: str       xzr, [sp, #0x1160]
+  0x7d568c0: bl        #0x2efb614
+  0x7d568c4: add       x0, sp, #1, lsl #12
+  0x7d568c8: add       x1, sp, #1, lsl #12
+  0x7d568cc: add       x3, sp, #1, lsl #12
+  0x7d568d0: add       x0, x0, #0x270
+  0x7d568d4: add       x1, x1, #0x150
+  0x7d568d8: add       x2, sp, #0xf18
+  0x7d568dc: add       x3, x3, #0x280
+  0x7d568e0: str       xzr, [sp, #0xf20]
+at 0x7d568c8
+  0x7d568c0: bl        #0x2efb614
+  0x7d568c4: add       x0, sp, #1, lsl #12
+  0x7d568c8: add       x1, sp, #1, lsl #12
+  0x7d568cc: add       x3, sp, #1, lsl #12
+  0x7d568d0: add       x0, x0, #0x270
+  0x7d568d4: add       x1, x1, #0x150
+  0x7d568d8: add       x2, sp, #0xf18
+  0x7d568dc: add       x3, x3, #0x280
+  0x7d568e0: str       xzr, [sp, #0xf20]
+  0x7d568e4: str       xzr, [sp, #0xf18]
+at 0x7d568cc
+  0x7d568c4: add       x0, sp, #1, lsl #12
+  0x7d568c8: add       x1, sp, #1, lsl #12
+  0x7d568cc: add       x3, sp, #1, lsl #12
+  0x7d568d0: add       x0, x0, #0x270
+  0x7d568d4: add       x1, x1, #0x150
+  0x7d568d8: add       x2, sp, #0xf18
+  0x7d568dc: add       x3, x3, #0x280
+  0x7d568e0: str       xzr, [sp, #0xf20]
+  0x7d568e4: str       xzr, [sp, #0xf18]
+  0x7d568e8: str       xzr, [sp, #0xf28]
+at 0x7d56924
+  0x7d5691c: cbnz      w2, #0x7d56924
+  0x7d56920: mov       w2, #-1
+  0x7d56924: add       x0, sp, #1, lsl #12
+  0x7d56928: adrp      x1, #0xb30000
+  0x7d5692c: add       x1, x1, #0xa19
+  0x7d56930: add       x0, x0, #0x270
+  0x7d56934: mov       w3, wzr
+  0x7d56938: bl        #0x7d5e834
+  0x7d5693c: ldr       x19, [sp, #0xe08]
+  0x7d56940: cbz       x19, #0x7d5696c
+at 0x7d56988
+  0x7d56980: bl        #0x8b352c0
+  0x7d56984: add       x8, x26, #0xfc
+  0x7d56988: add       x0, sp, #1, lsl #12
+  0x7d5698c: adrp      x1, #0xc02000
+  0x7d56990: add       x1, x1, #0x833
+  0x7d56994: add       x0, x0, #0x270
+  0x7d56998: mov       w3, wzr
+  0x7d5699c: ldar      w2, [x8]
+  0x7d569a0: bl        #0x7d5e834
+  0x7d569a4: ldr       x8, [x26, #0x118]
+at 0x7d571c4
+  0x7d571bc: add       x20, x20, #0x150
+  0x7d571c0: orr       x10, x19, #1
+  0x7d571c4: add       x0, sp, #1, lsl #12
+  0x7d571c8: adrp      x1, #0xb69000
+  0x7d571cc: add       x1, x1, #0x2bb
+  0x7d571d0: add       x0, x0, #0x270
+  0x7d571d4: ldrb      w8, [x20]
+  0x7d571d8: tst       w8, #1
+  0x7d571dc: csel      x2, x10, x9, eq
+  0x7d571e0: bl        #0x7d501c4
+at 0x7d572d4
+  0x7d572cc: ldr       x9, [sp, #0x1290]
+  0x7d572d0: add       x8, x8, #0x280
+  0x7d572d4: add       x0, sp, #1, lsl #12
+  0x7d572d8: adrp      x1, #0xbb6000
+  0x7d572dc: add       x1, x1, #0xb34
+  0x7d572e0: add       x0, x0, #0x270
+  0x7d572e4: ldrb      w8, [x8]
+  0x7d572e8: tst       w8, #1
+  0x7d572ec: csel      x2, x19, x9, eq
+  0x7d572f0: add       x19, sp, #1, lsl #12
+at 0x7d575f8
+  0x7d575f0: sub       w8, w25, w22
+  0x7d575f4: cmp       x25, x22
+  0x7d575f8: add       x0, sp, #1, lsl #12
+  0x7d575fc: csel      w2, w8, wzr, hi
+  0x7d57600: adrp      x1, #0xa26000
+  0x7d57604: add       x1, x1, #0x2e5
+  0x7d57608: add       x0, x0, #0x270
+  0x7d5760c: mov       w3, wzr
+  0x7d57610: bl        #0x7d5e834
+  0x7d57614: sub       w8, w24, w25
+at 0x7d5761c
+  0x7d57614: sub       w8, w24, w25
+  0x7d57618: cmp       x24, x25
+  0x7d5761c: add       x0, sp, #1, lsl #12
+  0x7d57620: csel      w2, w8, wzr, hi
+  0x7d57624: adrp      x1, #0xa13000
+  0x7d57628: add       x1, x1, #0x77e
+  0x7d5762c: add       x0, x0, #0x270
+  0x7d57630: mov       w3, wzr
+  0x7d57634: bl        #0x7d5e834
+  0x7d57638: sub       w8, w23, w22
+at 0x7d57640
+  0x7d57638: sub       w8, w23, w22
+  0x7d5763c: cmp       x23, x22
+  0x7d57640: add       x0, sp, #1, lsl #12
+  0x7d57644: csel      w2, w8, wzr, hi
+  0x7d57648: adrp      x1, #0xa85000
+  0x7d5764c: add       x1, x1, #0x345
+  0x7d57650: add       x0, x0, #0x270
+  0x7d57654: mov       w3, wzr
+  0x7d57658: bl        #0x7d5e834
+  0x7d5765c: add       x0, sp, #1, lsl #12
+at 0x7d5765c
+  0x7d57654: mov       w3, wzr
+  0x7d57658: bl        #0x7d5e834
+  0x7d5765c: add       x0, sp, #1, lsl #12
+  0x7d57660: ldr       w2, [sp, #0x1298]
+  0x7d57664: adrp      x1, #0xa00000
+  0x7d57668: add       x1, x1, #0xc76
+  0x7d5766c: add       x0, x0, #0x270
+  0x7d57670: mov       w3, wzr
+  0x7d57674: bl        #0x7d5e834
+  0x7d57678: sub       w8, w21, w22
+at 0x7d57680
+  0x7d57678: sub       w8, w21, w22
+  0x7d5767c: cmp       x21, x22
+  0x7d57680: add       x0, sp, #1, lsl #12
+  0x7d57684: csel      w2, w8, wzr, hi
+  0x7d57688: adrp      x1, #0xbef000
+  0x7d5768c: add       x1, x1, #0x933
+  0x7d57690: add       x0, x0, #0x270
+  0x7d57694: mov       w3, wzr
+  0x7d57698: bl        #0x7d5e834
+  0x7d5769c: cmp       x19, x20
+at 0x7d576a8
+  0x7d576a0: sub       w8, w19, w20
+  0x7d576a4: ccmp      x20, #0, #4, hi
+  0x7d576a8: add       x0, sp, #1, lsl #12
+  0x7d576ac: adrp      x1, #0x9ed000
+  0x7d576b0: add       x1, x1, #0xaab
+  0x7d576b4: add       x0, x0, #0x270
+  0x7d576b8: mov       w3, wzr
+  0x7d576bc: csel      w2, w8, wzr, ne
+  0x7d576c0: bl        #0x7d5e834
+  0x7d576c4: add       x24, sp, #1, lsl #12
+at 0x7d57728
+  0x7d57720: mov       w8, #0x447a0000
+  0x7d57724: ldr       s0, [x25, #0x168]
+  0x7d57728: add       x0, sp, #1, lsl #12
+  0x7d5772c: adrp      x1, #0xa98000
+  0x7d57730: add       x1, x1, #0x248
+  0x7d57734: add       x0, x0, #0x270
+  0x7d57738: fmov      s8, w8
+  0x7d5773c: mov       w3, wzr
+  0x7d57740: fmul      s0, s0, s8
+  0x7d57744: fcvtzu    w19, s0
+at 0x7d57754
+  0x7d5774c: bl        #0x7d5e834
+  0x7d57750: ldr       s0, [x25, #0x16c]
+  0x7d57754: add       x0, sp, #1, lsl #12
+  0x7d57758: adrp      x1, #0xa26000
+  0x7d5775c: add       x1, x1, #0x2fe
+  0x7d57760: add       x0, x0, #0x270
+  0x7d57764: mov       w3, wzr
+  0x7d57768: fmul      s0, s0, s8
+  0x7d5776c: fcvtzu    w20, s0
+  0x7d57770: mov       w2, w20
+at 0x7d57780
+  0x7d57778: ldr       s0, [x25, #0x170]
+  0x7d5777c: add       w21, w20, w19
+  0x7d57780: add       x0, sp, #1, lsl #12
+  0x7d57784: adrp      x1, #0xbef000
+  0x7d57788: add       x1, x1, #0x95b
+  0x7d5778c: add       x0, x0, #0x270
+  0x7d57790: fmul      s0, s0, s8
+  0x7d57794: mov       w3, wzr
+  0x7d57798: fcvtzu    w19, s0
+  0x7d5779c: mov       w2, w19
+at 0x7d577a8
+  0x7d577a0: bl        #0x7d5e834
+  0x7d577a4: ldr       s0, [x25, #0x174]
+  0x7d577a8: add       x0, sp, #1, lsl #12
+  0x7d577ac: adrp      x1, #0xbdc000
+  0x7d577b0: add       x1, x1, #0x9ef
+  0x7d577b4: add       x0, x0, #0x270
+  0x7d577b8: mov       w3, wzr
+  0x7d577bc: fmul      s0, s0, s8
+  0x7d577c0: fcvtzu    w20, s0
+  0x7d577c4: mov       w2, w20
+at 0x7d577d4
+  0x7d577cc: ldr       s0, [x25, #0x17c]
+  0x7d577d0: add       w8, w19, w20
+  0x7d577d4: add       x0, sp, #1, lsl #12
+  0x7d577d8: adrp      x1, #0xaf7000
+  0x7d577dc: add       x1, x1, #0x640
+  0x7d577e0: add       x0, x0, #0x270
+  0x7d577e4: fmul      s0, s0, s8
+  0x7d577e8: mov       w3, wzr
+  0x7d577ec: add       w21, w21, w8
+  0x7d577f0: fcvtzu    w19, s0
+at 0x7d57800
+  0x7d577f8: bl        #0x7d5e834
+  0x7d577fc: ldr       s0, [x25, #0x180]
+  0x7d57800: add       x0, sp, #1, lsl #12
+  0x7d57804: adrp      x1, #0xb8f000
+  0x7d57808: add       x1, x1, #0x78e
+  0x7d5780c: add       x0, x0, #0x270
+  0x7d57810: mov       w3, wzr
+  0x7d57814: fmul      s0, s0, s8
+  0x7d57818: fcvtzu    w20, s0
+  0x7d5781c: mov       w2, w20
+at 0x7d57828
+  0x7d57820: bl        #0x7d5e834
+  0x7d57824: add       w8, w19, w20
+  0x7d57828: add       x0, sp, #1, lsl #12
+  0x7d5782c: add       w2, w21, w8
+  0x7d57830: adrp      x1, #0xb0a000
+  0x7d57834: add       x1, x1, #0xd13
+  0x7d57838: add       x0, x0, #0x270
+  0x7d5783c: mov       w3, wzr
+  0x7d57840: bl        #0x7d5e834
+  0x7d57844: ldp       x8, x9, [x25, #0x190]
+at 0x7d578b8
+  0x7d578b0: csel      x2, xzr, x8, ls
+  0x7d578b4: bl        #0x7d5eb7c
+  0x7d578b8: add       x0, sp, #1, lsl #12
+  0x7d578bc: adrp      x1, #0xb0a000
+  0x7d578c0: add       x1, x1, #0xd31
+  0x7d578c4: add       x0, x0, #0x270
+  0x7d578c8: mov       x2, x19
+  0x7d578cc: mov       w3, wzr
+  0x7d578d0: bl        #0x7d5eb7c
+  0x7d578d4: add       x0, sp, #1, lsl #12
+at 0x7d578d4
+  0x7d578cc: mov       w3, wzr
+  0x7d578d0: bl        #0x7d5eb7c
+  0x7d578d4: add       x0, sp, #1, lsl #12
+  0x7d578d8: ldr       x2, [x25, #0x238]
+  0x7d578dc: adrp      x1, #0xaf7000
+  0x7d578e0: add       x1, x1, #0x656
+  0x7d578e4: add       x0, x0, #0x270
+  0x7d578e8: mov       w3, wzr
+  0x7d578ec: bl        #0x7d5eb7c
+  0x7d578f0: ldp       x8, x9, [x25, #0x198]
+at 0x7d578f4
+  0x7d578ec: bl        #0x7d5eb7c
+  0x7d578f0: ldp       x8, x9, [x25, #0x198]
+  0x7d578f4: add       x0, sp, #1, lsl #12
+  0x7d578f8: adrp      x1, #0xbef000
+  0x7d578fc: add       x1, x1, #0x970
+  0x7d57900: add       x0, x0, #0x270
+  0x7d57904: mov       w3, wzr
+  0x7d57908: cmp       x8, #0
+  0x7d5790c: ccmp      x9, x8, #0, ne
+  0x7d57910: sub       x8, x9, x8
+at 0x7d5791c
+  0x7d57914: csel      x2, xzr, x8, ls
+  0x7d57918: bl        #0x7d5eb7c
+  0x7d5791c: add       x0, sp, #1, lsl #12
+  0x7d57920: adrp      x1, #0xbef000
+  0x7d57924: add       x1, x1, #0x999
+  0x7d57928: add       x0, x0, #0x270
+  0x7d5792c: mov       x2, x20
+  0x7d57930: mov       w3, wzr
+  0x7d57934: bl        #0x7d5eb7c
+  0x7d57938: add       x0, sp, #1, lsl #12
+at 0x7d57938
+  0x7d57930: mov       w3, wzr
+  0x7d57934: bl        #0x7d5eb7c
+  0x7d57938: add       x0, sp, #1, lsl #12
+  0x7d5793c: ldr       x2, [x25, #0x240]
+  0x7d57940: adrp      x1, #0xa26000
+  0x7d57944: add       x1, x1, #0x313
+  0x7d57948: add       x0, x0, #0x270
+  0x7d5794c: mov       w3, wzr
+  0x7d57950: bl        #0x7d5eb7c
+  0x7d57954: ldp       x8, x9, [x25, #0x1a8]
+at 0x7d57958
+  0x7d57950: bl        #0x7d5eb7c
+  0x7d57954: ldp       x8, x9, [x25, #0x1a8]
+  0x7d57958: add       x0, sp, #1, lsl #12
+  0x7d5795c: adrp      x1, #0xa38000
+  0x7d57960: add       x1, x1, #0xb0c
+  0x7d57964: add       x0, x0, #0x270
+  0x7d57968: mov       w3, wzr
+  0x7d5796c: cmp       x8, #0
+  0x7d57970: ccmp      x9, x8, #0, ne
+  0x7d57974: sub       x8, x9, x8
+at 0x7d57984
+  0x7d5797c: bl        #0x7d5eb7c
+  0x7d57980: ldp       x9, x8, [x25, #0x1b0]
+  0x7d57984: add       x0, sp, #1, lsl #12
+  0x7d57988: adrp      x1, #0xb55000
+  0x7d5798c: add       x1, x1, #0xda2
+  0x7d57990: ldr       x10, [x25, #0x1c0]
+  0x7d57994: add       x0, x0, #0x270
+  0x7d57998: mov       w3, wzr
+  0x7d5799c: sub       x11, x9, #1
+  0x7d579a0: subs      x9, x8, x9
+at 0x7d579bc
+  0x7d579b4: bl        #0x7d5eb7c
+  0x7d579b8: ldp       x9, x8, [x25, #0x1b0]
+  0x7d579bc: add       x0, sp, #1, lsl #12
+  0x7d579c0: adrp      x1, #0xb69000
+  0x7d579c4: add       x1, x1, #0x2c9
+  0x7d579c8: ldr       x10, [x25, #0x1c0]
+  0x7d579cc: add       x0, x0, #0x270
+  0x7d579d0: mov       w3, wzr
+  0x7d579d4: sub       x9, x9, #1
+  0x7d579d8: subs      x10, x10, x8
+at 0x7d57a08
+  0x7d57a00: bl        #0x7d5eb7c
+  0x7d57a04: ldp       x8, x9, [x25, #0x1c0]
+  0x7d57a08: add       x0, sp, #1, lsl #12
+  0x7d57a0c: adrp      x1, #0xa38000
+  0x7d57a10: add       x1, x1, #0xb3a
+  0x7d57a14: add       x0, x0, #0x270
+  0x7d57a18: mov       w3, wzr
+  0x7d57a1c: cmp       x8, #0
+  0x7d57a20: ccmp      x9, x8, #0, ne
+  0x7d57a24: sub       x8, x9, x8
+at 0x7d57a34
+  0x7d57a2c: bl        #0x7d5eb7c
+  0x7d57a30: ldp       x8, x9, [x25, #0x1c8]
+  0x7d57a34: add       x0, sp, #1, lsl #12
+  0x7d57a38: adrp      x1, #0xb0a000
+  0x7d57a3c: add       x1, x1, #0xd67
+  0x7d57a40: add       x0, x0, #0x270
+  0x7d57a44: mov       w3, wzr
+  0x7d57a48: cmp       x8, #0
+  0x7d57a4c: ccmp      x9, x8, #0, ne
+  0x7d57a50: sub       x8, x9, x8
+at 0x7d57a60
+  0x7d57a58: bl        #0x7d5eb7c
+  0x7d57a5c: ldp       x8, x9, [x25, #0x1d0]
+  0x7d57a60: add       x0, sp, #1, lsl #12
+  0x7d57a64: adrp      x1, #0x9c7000
+  0x7d57a68: add       x1, x1, #0xc5
+  0x7d57a6c: add       x0, x0, #0x270
+  0x7d57a70: mov       w3, wzr
+  0x7d57a74: cmp       x8, #0
+  0x7d57a78: ccmp      x9, x8, #0, ne
+  0x7d57a7c: sub       x8, x9, x8
+at 0x7d57a8c
+  0x7d57a84: bl        #0x7d5eb7c
+  0x7d57a88: ldp       x8, x9, [x25, #0x1d8]
+  0x7d57a8c: add       x0, sp, #1, lsl #12
+  0x7d57a90: adrp      x1, #0x9da000
+  0x7d57a94: add       x1, x1, #0x7e7
+  0x7d57a98: add       x0, x0, #0x270
+  0x7d57a9c: mov       w3, wzr
+  0x7d57aa0: cmp       x8, #0
+  0x7d57aa4: ccmp      x9, x8, #0, ne
+  0x7d57aa8: sub       x8, x9, x8
+at 0x7d57ab8
+  0x7d57ab0: bl        #0x7d5eb7c
+  0x7d57ab4: ldp       x8, x9, [x25, #0x1e0]
+  0x7d57ab8: add       x0, sp, #1, lsl #12
+  0x7d57abc: adrp      x1, #0xaab000
+  0x7d57ac0: add       x1, x1, #0xb4f
+  0x7d57ac4: add       x0, x0, #0x270
+  0x7d57ac8: mov       w3, wzr
+  0x7d57acc: cmp       x8, #0
+  0x7d57ad0: ccmp      x9, x8, #0, ne
+  0x7d57ad4: sub       x8, x9, x8
+at 0x7d57ae4
+  0x7d57adc: bl        #0x7d5eb7c
+  0x7d57ae0: ldp       x8, x9, [x25, #0x1e8]
+  0x7d57ae4: add       x0, sp, #1, lsl #12
+  0x7d57ae8: adrp      x1, #0xbc9000
+  0x7d57aec: add       x1, x1, #0xdff
+  0x7d57af0: add       x0, x0, #0x270
+  0x7d57af4: mov       w3, wzr
+  0x7d57af8: cmp       x8, #0
+  0x7d57afc: ccmp      x9, x8, #0, ne
+  0x7d57b00: sub       x8, x9, x8
+at 0x7d57b0c
+  0x7d57b04: csel      x2, xzr, x8, ls
+  0x7d57b08: bl        #0x7d5eb7c
+  0x7d57b0c: add       x0, sp, #1, lsl #12
+  0x7d57b10: adrp      x1, #0x9da000
+  0x7d57b14: add       x1, x1, #0x809
+  0x7d57b18: add       x0, x0, #0x270
+  0x7d57b1c: mov       x2, x20
+  0x7d57b20: mov       w3, wzr
+  0x7d57b24: bl        #0x7d5eb7c
+  0x7d57b28: add       x0, sp, #1, lsl #12
+at 0x7d57b28
+  0x7d57b20: mov       w3, wzr
+  0x7d57b24: bl        #0x7d5eb7c
+  0x7d57b28: add       x0, sp, #1, lsl #12
+  0x7d57b2c: ldr       x2, [x25, #0x248]
+  0x7d57b30: adrp      x1, #0xba3000
+  0x7d57b34: add       x1, x1, #0x19c
+  0x7d57b38: add       x0, x0, #0x270
+  0x7d57b3c: mov       w3, wzr
+  0x7d57b40: bl        #0x7d5eb7c
+  0x7d57b44: ldp       x8, x9, [x25, #0x1f8]
+at 0x7d57b48
+  0x7d57b40: bl        #0x7d5eb7c
+  0x7d57b44: ldp       x8, x9, [x25, #0x1f8]
+  0x7d57b48: add       x0, sp, #1, lsl #12
+  0x7d57b4c: adrp      x1, #0xb55000
+  0x7d57b50: add       x1, x1, #0xdc3
+  0x7d57b54: add       x0, x0, #0x270
+  0x7d57b58: mov       w3, wzr
+  0x7d57b5c: cmp       x8, #0
+  0x7d57b60: ccmp      x9, x8, #0, ne
+  0x7d57b64: sub       x8, x9, x8
+at 0x7d57b74
+  0x7d57b6c: bl        #0x7d5eb7c
+  0x7d57b70: ldr       x8, [x25, #0x200]
+  0x7d57b74: add       x0, sp, #1, lsl #12
+  0x7d57b78: ldr       x9, [x25, #0x208]
+  0x7d57b7c: adrp      x1, #0xa4b000
+  0x7d57b80: add       x1, x1, #0x809
+  0x7d57b84: add       x0, x0, #0x270
+  0x7d57b88: cmp       x8, #0
+  0x7d57b8c: mov       w3, wzr
+  0x7d57b90: ccmp      x9, x8, #0, ne
+at 0x7d57ba4
+  0x7d57b9c: bl        #0x7d5eb7c
+  0x7d57ba0: ldr       x8, [x25, #0x208]
+  0x7d57ba4: add       x0, sp, #1, lsl #12
+  0x7d57ba8: ldr       x9, [x25, #0x210]
+  0x7d57bac: adrp      x1, #0x9ed000
+  0x7d57bb0: add       x1, x1, #0xac9
+  0x7d57bb4: add       x0, x0, #0x270
+  0x7d57bb8: cmp       x8, #0
+  0x7d57bbc: mov       w3, wzr
+  0x7d57bc0: ccmp      x9, x8, #0, ne
+at 0x7d57bd4
+  0x7d57bcc: bl        #0x7d5eb7c
+  0x7d57bd0: ldr       x8, [x25, #0x218]
+  0x7d57bd4: add       x0, sp, #1, lsl #12
+  0x7d57bd8: ldr       x9, [x25, #0x220]
+  0x7d57bdc: adrp      x1, #0xa13000
+  0x7d57be0: add       x1, x1, #0x798
+  0x7d57be4: add       x0, x0, #0x270
+  0x7d57be8: cmp       x8, #0
+  0x7d57bec: mov       w3, wzr
+  0x7d57bf0: ccmp      x9, x8, #0, ne
+at 0x7d57c04
+  0x7d57bfc: bl        #0x7d5eb7c
+  0x7d57c00: ldr       x8, [x25, #0x220]
+  0x7d57c04: add       x0, sp, #1, lsl #12
+  0x7d57c08: ldr       x9, [x25, #0x228]
+  0x7d57c0c: adrp      x1, #0xc02000
+  0x7d57c10: add       x1, x1, #0x84d
+  0x7d57c14: add       x0, x0, #0x270
+  0x7d57c18: cmp       x8, #0
+  0x7d57c1c: mov       w3, wzr
+  0x7d57c20: ccmp      x9, x8, #0, ne
+at 0x7d57c34
+  0x7d57c2c: bl        #0x7d5eb7c
+  0x7d57c30: ldr       x8, [x25, #0x228]
+  0x7d57c34: add       x0, sp, #1, lsl #12
+  0x7d57c38: ldr       x9, [x25, #0x230]
+  0x7d57c3c: adrp      x1, #0xba3000
+  0x7d57c40: add       x1, x1, #0x1d8
+  0x7d57c44: add       x0, x0, #0x270
+  0x7d57c48: cmp       x8, #0
+  0x7d57c4c: mov       w3, wzr
+  0x7d57c50: ccmp      x9, x8, #0, ne
+at 0x7d57dac
+  0x7d57da4: ldr       x0, [sp, #0x1040]
+  0x7d57da8: bl        #0x2efa56c
+  0x7d57dac: add       x0, sp, #1, lsl #12
+  0x7d57db0: ldr       w2, [x25, #0x260]
+  0x7d57db4: adrp      x1, #0xae3000
+  0x7d57db8: add       x1, x1, #0xfa7
+  0x7d57dbc: add       x0, x0, #0x270
+  0x7d57dc0: mov       w3, wzr
+  0x7d57dc4: bl        #0x7d5e834
+  0x7d57dc8: add       x0, sp, #1, lsl #12
+at 0x7d57ddc
+  0x7d57dd4: bl        #0x2f11ab4
+  0x7d57dd8: tbz       w0, #0, #0x7d57e00
+  0x7d57ddc: add       x0, sp, #1, lsl #12
+  0x7d57de0: ldr       w2, [sp, #0x1280]
+  0x7d57de4: adrp      x1, #0xad1000
+  0x7d57de8: add       x1, x1, #0x6b5
+  0x7d57dec: add       x0, x0, #0x270
+  0x7d57df0: mov       w3, wzr
+  0x7d57df4: bl        #0x7d5e834
+  0x7d57df8: ldr       w19, [sp, #0x1284]
+at 0x7d57e00
+  0x7d57df8: ldr       w19, [sp, #0x1284]
+  0x7d57dfc: b         #0x7d57e20
+  0x7d57e00: add       x0, sp, #1, lsl #12
+  0x7d57e04: adrp      x1, #0xad1000
+  0x7d57e08: add       x1, x1, #0x6b5
+  0x7d57e0c: add       x0, x0, #0x270
+  0x7d57e10: mov       w2, #-1
+  0x7d57e14: mov       w3, wzr
+  0x7d57e18: mov       w19, #-1
+  0x7d57e1c: bl        #0x7d5e834
+at 0x7d57e20
+  0x7d57e18: mov       w19, #-1
+  0x7d57e1c: bl        #0x7d5e834
+  0x7d57e20: add       x0, sp, #1, lsl #12
+  0x7d57e24: mov       x20, #0x4854
+  0x7d57e28: adrp      x1, #0xbdc000
+  0x7d57e2c: add       x1, x1, #0xa04
+  0x7d57e30: add       x0, x0, #0x270
+  0x7d57e34: mov       w2, w19
+  0x7d57e38: mov       w3, wzr
+  0x7d57e3c: movk      x20, #0x5245, lsl #16
+at 0x7d57e50
+  0x7d57e48: bl        #0x7d5e834
+  0x7d57e4c: adrp      x8, #0xa4af000
+  0x7d57e50: add       x0, sp, #1, lsl #12
+  0x7d57e54: adrp      x1, #0xa26000
+  0x7d57e58: add       x1, x1, #0x345
+  0x7d57e5c: add       x0, x0, #0x270
+  0x7d57e60: mov       w3, wzr
+  0x7d57e64: ldr       w2, [x8, #0xf58]
+  0x7d57e68: bl        #0x7d5e834
+  0x7d57e6c: adrp      x8, #0xad1000
+at 0x7d57fd4
+  0x7d57fcc: ldr       x8, [x8]
+  0x7d57fd0: add       x0, sp, #1, lsl #12
+  0x7d57fd4: add       x1, sp, #1, lsl #12
+  0x7d57fd8: add       x3, sp, #1, lsl #12
+  0x7d57fdc: str       xzr, [sp, #0x1038]
+  0x7d57fe0: strb      wzr, [x9]
+  0x7d57fe4: add       x0, x0, #0x270
+  0x7d57fe8: strb      wzr, [x9, #8]
+  0x7d57fec: add       x1, x1, #0x30
+  0x7d57ff0: strb      wzr, [x9, #0xc]
+at 0x7d57fd8
+  0x7d57fd0: add       x0, sp, #1, lsl #12
+  0x7d57fd4: add       x1, sp, #1, lsl #12
+  0x7d57fd8: add       x3, sp, #1, lsl #12
+  0x7d57fdc: str       xzr, [sp, #0x1038]
+  0x7d57fe0: strb      wzr, [x9]
+  0x7d57fe4: add       x0, x0, #0x270
+  0x7d57fe8: strb      wzr, [x9, #8]
+  0x7d57fec: add       x1, x1, #0x30
+  0x7d57ff0: strb      wzr, [x9, #0xc]
+  0x7d57ff4: add       x2, sp, #0xf18
+at 0x7d580c4
+  0x7d580bc: add       x3, sp, #1, lsl #12
+  0x7d580c0: strb      w8, [x11, #0xfff]
+  0x7d580c4: add       x8, sp, #1, lsl #12
+  0x7d580c8: ldr       x9, [x19]
+  0x7d580cc: movk      w10, #0x5f45, lsl #16
+  0x7d580d0: add       x8, x8, #0x30
+  0x7d580d4: add       x0, x0, #0x270
+  0x7d580d8: add       x1, x1, #0x30
+  0x7d580dc: add       x2, sp, #0xf18
+  0x7d580e0: add       x3, x3, #0x280
+at 0x7d582e8
+  0x7d582e0: add       x3, sp, #1, lsl #12
+  0x7d582e4: strb      w8, [x11, #0xfff]
+  0x7d582e8: add       x8, sp, #1, lsl #12
+  0x7d582ec: ldr       x9, [x19]
+  0x7d582f0: movk      w10, #0x5f45, lsl #16
+  0x7d582f4: add       x8, x8, #0x30
+  0x7d582f8: add       x0, x0, #0x270
+  0x7d582fc: add       x1, x1, #0x30
+  0x7d58300: add       x2, sp, #0xf18
+  0x7d58304: add       x3, x3, #0x280
+at 0x7d58384
+  0x7d5837c: str       xzr, [sp, #0x1040]
+  0x7d58380: stur      x20, [x22, #1]
+  0x7d58384: add       x0, sp, #1, lsl #12
+  0x7d58388: add       x1, sp, #1, lsl #12
+  0x7d5838c: add       x3, sp, #1, lsl #12
+  0x7d58390: add       x9, sp, #0x31
+  0x7d58394: add       x0, x0, #0x270
+  0x7d58398: add       x1, x1, #0x30
+  0x7d5839c: add       x2, sp, #0xf18
+  0x7d583a0: add       x3, x3, #0x150
+at 0x7d58388
+  0x7d58380: stur      x20, [x22, #1]
+  0x7d58384: add       x0, sp, #1, lsl #12
+  0x7d58388: add       x1, sp, #1, lsl #12
+  0x7d5838c: add       x3, sp, #1, lsl #12
+  0x7d58390: add       x9, sp, #0x31
+  0x7d58394: add       x0, x0, #0x270
+  0x7d58398: add       x1, x1, #0x30
+  0x7d5839c: add       x2, sp, #0xf18
+  0x7d583a0: add       x3, x3, #0x150
+  0x7d583a4: strb      w8, [x9, #0xfff]
+at 0x7d5838c
+  0x7d58384: add       x0, sp, #1, lsl #12
+  0x7d58388: add       x1, sp, #1, lsl #12
+  0x7d5838c: add       x3, sp, #1, lsl #12
+  0x7d58390: add       x9, sp, #0x31
+  0x7d58394: add       x0, x0, #0x270
+  0x7d58398: add       x1, x1, #0x30
+  0x7d5839c: add       x2, sp, #0xf18
+  0x7d583a0: add       x3, x3, #0x150
+  0x7d583a4: strb      w8, [x9, #0xfff]
+  0x7d583a8: str       xzr, [sp, #0xf20]
+at 0x7d583dc
+  0x7d583d4: ldr       x0, [sp, #0x1040]
+  0x7d583d8: bl        #0x2efa56c
+  0x7d583dc: add       x0, sp, #1, lsl #12
+  0x7d583e0: ldrb      w2, [x25, #0x264]
+  0x7d583e4: adrp      x1, #0xa00000
+  0x7d583e8: add       x1, x1, #0xc91
+  0x7d583ec: add       x0, x0, #0x270
+  0x7d583f0: mov       w3, wzr
+  0x7d583f4: bl        #0x7d5e71c
+  0x7d583f8: movi      v0.2d, #0000000000000000
+at 0x7d58448
+  0x7d58440: add       x19, x19, #0x280
+  0x7d58444: bl        #0x7d3ca14
+  0x7d58448: add       x0, sp, #1, lsl #12
+  0x7d5844c: ldr       x2, [sp, #0x1298]
+  0x7d58450: adrp      x1, #0xbef000
+  0x7d58454: add       x1, x1, #0x9cb
+  0x7d58458: add       x0, x0, #0x270
+  0x7d5845c: mov       w3, wzr
+  0x7d58460: bl        #0x7d5eb7c
+  0x7d58464: add       x0, sp, #1, lsl #12
+at 0x7d58464
+  0x7d5845c: mov       w3, wzr
+  0x7d58460: bl        #0x7d5eb7c
+  0x7d58464: add       x0, sp, #1, lsl #12
+  0x7d58468: ldr       x2, [sp, #0x1288]
+  0x7d5846c: adrp      x1, #0xa00000
+  0x7d58470: add       x1, x1, #0xcb8
+  0x7d58474: add       x0, x0, #0x270
+  0x7d58478: mov       w3, wzr
+  0x7d5847c: bl        #0x7d5eb7c
+  0x7d58480: add       x0, sp, #1, lsl #12
+at 0x7d58480
+  0x7d58478: mov       w3, wzr
+  0x7d5847c: bl        #0x7d5eb7c
+  0x7d58480: add       x0, sp, #1, lsl #12
+  0x7d58484: ldr       x2, [sp, #0x1290]
+  0x7d58488: adrp      x1, #0xba3000
+  0x7d5848c: add       x1, x1, #0x1ff
+  0x7d58490: add       x0, x0, #0x270
+  0x7d58494: mov       w3, wzr
+  0x7d58498: bl        #0x7d5eb7c
+  0x7d5849c: add       x0, sp, #1, lsl #12
+at 0x7d5849c
+  0x7d58494: mov       w3, wzr
+  0x7d58498: bl        #0x7d5eb7c
+  0x7d5849c: add       x0, sp, #1, lsl #12
+  0x7d584a0: ldr       x2, [sp, #0x1280]
+  0x7d584a4: adrp      x1, #0xa85000
+  0x7d584a8: add       x1, x1, #0x362
+  0x7d584ac: add       x0, x0, #0x270
+  0x7d584b0: mov       w3, wzr
+  0x7d584b4: bl        #0x7d5eb7c
+  0x7d584b8: ldrb      w8, [x19, #0x20]
+at 0x7d584fc
+  0x7d584f4: add       x10, x19, #0x39
+  0x7d584f8: ldr       x9, [sp, #0x12c8]
+  0x7d584fc: add       x0, sp, #1, lsl #12
+  0x7d58500: adrp      x1, #0xa85000
+  0x7d58504: add       x1, x1, #0x378
+  0x7d58508: tst       w8, #1
+  0x7d5850c: add       x0, x0, #0x270
+  0x7d58510: csel      x2, x10, x9, eq
+  0x7d58514: bl        #0x7d501c4
+  0x7d58518: ldrb      w8, [x20, #0x50]
+at 0x7d58524
+  0x7d5851c: add       x10, x19, #0x51
+  0x7d58520: ldr       x9, [sp, #0x12e0]
+  0x7d58524: add       x0, sp, #1, lsl #12
+  0x7d58528: adrp      x1, #0xa5e000
+  0x7d5852c: add       x1, x1, #0xd14
+  0x7d58530: tst       w8, #1
+  0x7d58534: add       x0, x0, #0x270
+  0x7d58538: csel      x2, x10, x9, eq
+  0x7d5853c: add       x19, sp, #1, lsl #12
+  0x7d58540: add       x19, x19, #0x280
+at 0x7d58548
+  0x7d58540: add       x19, x19, #0x280
+  0x7d58544: bl        #0x7d501c4
+  0x7d58548: add       x0, sp, #1, lsl #12
+  0x7d5854c: ldr       w2, [sp, #0x12e8]
+  0x7d58550: adrp      x1, #0xa85000
+  0x7d58554: add       x1, x1, #0x38c
+  0x7d58558: add       x0, x0, #0x270
+  0x7d5855c: mov       w3, wzr
+  0x7d58560: bl        #0x7d5e834
+  0x7d58564: add       x0, sp, #1, lsl #12
+at 0x7d58564
+  0x7d5855c: mov       w3, wzr
+  0x7d58560: bl        #0x7d5e834
+  0x7d58564: add       x0, sp, #1, lsl #12
+  0x7d58568: ldr       w2, [sp, #0x12ec]
+  0x7d5856c: adrp      x1, #0x9c7000
+  0x7d58570: add       x1, x1, #0xe9
+  0x7d58574: add       x0, x0, #0x270
+  0x7d58578: mov       w3, wzr
+  0x7d5857c: bl        #0x7d5e834
+  0x7d58580: add       x0, sp, #1, lsl #12
+at 0x7d58580
+  0x7d58578: mov       w3, wzr
+  0x7d5857c: bl        #0x7d5e834
+  0x7d58580: add       x0, sp, #1, lsl #12
+  0x7d58584: ldr       w2, [sp, #0x12f0]
+  0x7d58588: adrp      x1, #0xa00000
+  0x7d5858c: add       x1, x1, #0xcd8
+  0x7d58590: add       x0, x0, #0x270
+  0x7d58594: mov       w3, wzr
+  0x7d58598: bl        #0x7d5e834
+  0x7d5859c: ldrb      w8, [x19, #0x50]
+at 0x7d585bc
+  0x7d585b4: ldr       x0, [sp, #0x12b0]
+  0x7d585b8: bl        #0x2efa56c
+  0x7d585bc: add       x0, sp, #1, lsl #12
+  0x7d585c0: ldrb      w2, [x25, #0x265]
+  0x7d585c4: adrp      x1, #0x9ed000
+  0x7d585c8: add       x1, x1, #0xaf3
+  0x7d585cc: add       x0, x0, #0x270
+  0x7d585d0: mov       w3, wzr
+  0x7d585d4: bl        #0x7d5e71c
+  0x7d585d8: add       x0, sp, #1, lsl #12
+at 0x7d585d8
+  0x7d585d0: mov       w3, wzr
+  0x7d585d4: bl        #0x7d5e71c
+  0x7d585d8: add       x0, sp, #1, lsl #12
+  0x7d585dc: ldr       w2, [x25, #0x268]
+  0x7d585e0: adrp      x1, #0xa13000
+  0x7d585e4: add       x1, x1, #0x7bd
+  0x7d585e8: add       x0, x0, #0x270
+  0x7d585ec: mov       w3, wzr
+  0x7d585f0: bl        #0x7d5e834
+  0x7d585f4: add       x0, sp, #1, lsl #12
+at 0x7d585f4
+  0x7d585ec: mov       w3, wzr
+  0x7d585f0: bl        #0x7d5e834
+  0x7d585f4: add       x0, sp, #1, lsl #12
+  0x7d585f8: ldr       w2, [x25, #0x26c]
+  0x7d585fc: adrp      x1, #0xabe000
+  0x7d58600: add       x1, x1, #0xe16
+  0x7d58604: add       x0, x0, #0x270
+  0x7d58608: mov       w3, wzr
+  0x7d5860c: bl        #0x7d5e834
+  0x7d58610: add       x0, sp, #1, lsl #12
+at 0x7d58610
+  0x7d58608: mov       w3, wzr
+  0x7d5860c: bl        #0x7d5e834
+  0x7d58610: add       x0, sp, #1, lsl #12
+  0x7d58614: ldr       w2, [x25, #0x288]
+  0x7d58618: adrp      x1, #0x9ed000
+  0x7d5861c: add       x1, x1, #0xb01
+  0x7d58620: add       x0, x0, #0x270
+  0x7d58624: mov       w3, wzr
+  0x7d58628: bl        #0x7d5e834
+  0x7d5862c: add       x0, sp, #1, lsl #12
+at 0x7d5862c
+  0x7d58624: mov       w3, wzr
+  0x7d58628: bl        #0x7d5e834
+  0x7d5862c: add       x0, sp, #1, lsl #12
+  0x7d58630: ldrb      w2, [x25, #0x65]
+  0x7d58634: adrp      x1, #0x9c7000
+  0x7d58638: add       x1, x1, #0xfc
+  0x7d5863c: add       x0, x0, #0x270
+  0x7d58640: mov       w3, wzr
+  0x7d58644: bl        #0x7d5e71c
+  0x7d58648: add       x0, sp, #1, lsl #12
+at 0x7d586f0
+  0x7d586e8: adrp      x19, #0xa77000
+  0x7d586ec: add       x19, x19, #0x25e
+  0x7d586f0: add       x0, sp, #1, lsl #12
+  0x7d586f4: adrp      x1, #0xbb6000
+  0x7d586f8: add       x1, x1, #0xb42
+  0x7d586fc: add       x0, x0, #0x270
+  0x7d58700: mov       x2, x19
+  0x7d58704: bl        #0x7d501c4
+  0x7d58708: add       x0, sp, #1, lsl #12
+  0x7d5870c: adrp      x1, #0xc02000
+at 0x7d58708
+  0x7d58700: mov       x2, x19
+  0x7d58704: bl        #0x7d501c4
+  0x7d58708: add       x0, sp, #1, lsl #12
+  0x7d5870c: adrp      x1, #0xc02000
+  0x7d58710: add       x1, x1, #0x872
+  0x7d58714: add       x0, x0, #0x270
+  0x7d58718: mov       x2, x19
+  0x7d5871c: bl        #0x7d501c4
+  0x7d58720: add       x0, sp, #1, lsl #12
+  0x7d58724: adrp      x1, #0xaab000
+at 0x7d58720
+  0x7d58718: mov       x2, x19
+  0x7d5871c: bl        #0x7d501c4
+  0x7d58720: add       x0, sp, #1, lsl #12
+  0x7d58724: adrp      x1, #0xaab000
+  0x7d58728: add       x1, x1, #0xb77
+  0x7d5872c: add       x0, x0, #0x270
+  0x7d58730: mov       x2, x19
+  0x7d58734: bl        #0x7d501c4
+  0x7d58738: add       x0, sp, #1, lsl #12
+  0x7d5873c: adrp      x1, #0xbef000
+at 0x7d58738
+  0x7d58730: mov       x2, x19
+  0x7d58734: bl        #0x7d501c4
+  0x7d58738: add       x0, sp, #1, lsl #12
+  0x7d5873c: adrp      x1, #0xbef000
+  0x7d58740: add       x1, x1, #0x9e8
+  0x7d58744: add       x0, x0, #0x270
+  0x7d58748: mov       x2, x19
+  0x7d5874c: bl        #0x7d501c4
+  0x7d58750: b         #0x7d58ce4
+  0x7d58754: ldr       w10, [x8, #0x10]
+at 0x7d588f4
+  0x7d588ec: orr       x10, x19, #1
+  0x7d588f0: ldr       x9, [sp, #0x1160]
+  0x7d588f4: add       x0, sp, #1, lsl #12
+  0x7d588f8: adrp      x1, #0xbb6000
+  0x7d588fc: add       x1, x1, #0xb42
+  0x7d58900: tst       w8, #1
+  0x7d58904: add       x0, x0, #0x270
+  0x7d58908: csel      x2, x10, x9, eq
+  0x7d5890c: bl        #0x7d501c4
+  0x7d58910: ldrb      w8, [x24]
+at 0x7d589fc
+  0x7d589f4: orr       x10, x19, #1
+  0x7d589f8: ldr       x9, [sp, #0x1160]
+  0x7d589fc: add       x0, sp, #1, lsl #12
+  0x7d58a00: adrp      x1, #0xc02000
+  0x7d58a04: add       x1, x1, #0x872
+  0x7d58a08: tst       w8, #1
+  0x7d58a0c: add       x0, x0, #0x270
+  0x7d58a10: csel      x2, x10, x9, eq
+  0x7d58a14: bl        #0x7d501c4
+  0x7d58a18: ldrb      w8, [x24]
+at 0x7d58bb0
+  0x7d58ba8: orr       x10, x19, #1
+  0x7d58bac: ldr       x9, [sp, #0x1160]
+  0x7d58bb0: add       x0, sp, #1, lsl #12
+  0x7d58bb4: adrp      x1, #0xaab000
+  0x7d58bb8: add       x1, x1, #0xb77
+  0x7d58bbc: tst       w8, #1
+  0x7d58bc0: add       x0, x0, #0x270
+  0x7d58bc4: csel      x2, x10, x9, eq
+  0x7d58bc8: bl        #0x7d501c4
+  0x7d58bcc: ldrb      w8, [x24]
+at 0x7d58cb8
+  0x7d58cb0: orr       x10, x19, #1
+  0x7d58cb4: ldr       x9, [sp, #0x1160]
+  0x7d58cb8: add       x0, sp, #1, lsl #12
+  0x7d58cbc: adrp      x1, #0xbef000
+  0x7d58cc0: add       x1, x1, #0x9e8
+  0x7d58cc4: tst       w8, #1
+  0x7d58cc8: add       x0, x0, #0x270
+  0x7d58ccc: csel      x2, x10, x9, eq
+  0x7d58cd0: bl        #0x7d501c4
+  0x7d58cd4: ldrb      w8, [x24]
+at 0x7d58d68
+  0x7d58d60: bl        #0x2efb614
+  0x7d58d64: ldr       x8, [x25, #0x270]
+  0x7d58d68: add       x0, sp, #1, lsl #12
+  0x7d58d6c: adrp      x1, #0xa5e000
+  0x7d58d70: add       x1, x1, #0xd28
+  0x7d58d74: add       x0, x0, #0x270
+  0x7d58d78: mov       w3, wzr
+  0x7d58d7c: ldr       w2, [x8]
+  0x7d58d80: bl        #0x7d5e834
+  0x7d58d84: ldrb      w8, [x24]
+at 0x7d58dec
+  0x7d58de4: bl        #0x2efa56c
+  0x7d58de8: b         #0x7d58da0
+  0x7d58dec: add       x0, sp, #1, lsl #12
+  0x7d58df0: adrp      x1, #0xa5e000
+  0x7d58df4: add       x1, x1, #0xd28
+  0x7d58df8: add       x0, x0, #0x270
+  0x7d58dfc: mov       w2, #-1
+  0x7d58e00: mov       w3, wzr
+  0x7d58e04: bl        #0x7d5e834
+  0x7d58e08: adrp      x1, #0xa85000
+at 0x7d58e18
+  0x7d58e10: adrp      x2, #0xa77000
+  0x7d58e14: add       x2, x2, #0x25e
+  0x7d58e18: add       x0, sp, #1, lsl #12
+  0x7d58e1c: add       x0, x0, #0x270
+  0x7d58e20: bl        #0x7d501c4
+  0x7d58e24: ldr       x9, [x25, #0x278]
+  0x7d58e28: ldr       x8, [x25, #0x270]
+  0x7d58e2c: sub       x9, x9, x8
+  0x7d58e30: cmp       x9, #9
+  0x7d58e34: b.lo      #0x7d58eb4
+at 0x7d58e7c
+  0x7d58e74: bl        #0x2efb614
+  0x7d58e78: ldr       x8, [x25, #0x270]
+  0x7d58e7c: add       x0, sp, #1, lsl #12
+  0x7d58e80: adrp      x1, #0xaf7000
+  0x7d58e84: add       x1, x1, #0x68c
+  0x7d58e88: add       x0, x0, #0x270
+  0x7d58e8c: mov       w3, wzr
+  0x7d58e90: ldr       w2, [x8, #8]
+  0x7d58e94: bl        #0x7d5e834
+  0x7d58e98: ldrb      w8, [x24]
+at 0x7d58eb4
+  0x7d58eac: csel      x2, x19, x9, eq
+  0x7d58eb0: b         #0x7d58ee0
+  0x7d58eb4: add       x0, sp, #1, lsl #12
+  0x7d58eb8: adrp      x1, #0xaf7000
+  0x7d58ebc: add       x1, x1, #0x68c
+  0x7d58ec0: add       x0, x0, #0x270
+  0x7d58ec4: mov       w2, #-1
+  0x7d58ec8: mov       w3, wzr
+  0x7d58ecc: bl        #0x7d5e834
+  0x7d58ed0: adrp      x1, #0xb69000
+at 0x7d58ee0
+  0x7d58ed8: adrp      x2, #0xa77000
+  0x7d58edc: add       x2, x2, #0x25e
+  0x7d58ee0: add       x0, sp, #1, lsl #12
+  0x7d58ee4: add       x0, x0, #0x270
+  0x7d58ee8: bl        #0x7d501c4
+  0x7d58eec: ldr       x9, [x25, #0x278]
+  0x7d58ef0: ldr       x8, [x25, #0x270]
+  0x7d58ef4: sub       x9, x9, x8
+  0x7d58ef8: cmp       x9, #0x11
+  0x7d58efc: b.lo      #0x7d58f90
+at 0x7d58f44
+  0x7d58f3c: bl        #0x2efb614
+  0x7d58f40: ldr       x8, [x25, #0x270]
+  0x7d58f44: add       x0, sp, #1, lsl #12
+  0x7d58f48: adrp      x1, #0x9c7000
+  0x7d58f4c: add       x1, x1, #0x105
+  0x7d58f50: add       x0, x0, #0x270
+  0x7d58f54: mov       w3, wzr
+  0x7d58f58: ldr       w2, [x8, #0x10]
+  0x7d58f5c: bl        #0x7d5e834
+  0x7d58f60: ldrb      w8, [x24]
+at 0x7d58f78
+  0x7d58f70: tst       w8, #1
+  0x7d58f74: csel      x2, x19, x9, eq
+  0x7d58f78: add       x0, sp, #1, lsl #12
+  0x7d58f7c: add       x0, x0, #0x270
+  0x7d58f80: bl        #0x7d501c4
+  0x7d58f84: ldrb      w8, [x24]
+  0x7d58f88: tbnz      w8, #0, #0x7d58fd0
+  0x7d58f8c: b         #0x7d58fd8
+  0x7d58f90: add       x0, sp, #1, lsl #12
+  0x7d58f94: adrp      x1, #0x9c7000
+at 0x7d58f90
+  0x7d58f88: tbnz      w8, #0, #0x7d58fd0
+  0x7d58f8c: b         #0x7d58fd8
+  0x7d58f90: add       x0, sp, #1, lsl #12
+  0x7d58f94: adrp      x1, #0x9c7000
+  0x7d58f98: add       x1, x1, #0x105
+  0x7d58f9c: add       x0, x0, #0x270
+  0x7d58fa0: mov       w2, #-1
+  0x7d58fa4: mov       w3, wzr
+  0x7d58fa8: bl        #0x7d5e834
+  0x7d58fac: adrp      x1, #0xb8f000
+at 0x7d58fbc
+  0x7d58fb4: adrp      x2, #0xa77000
+  0x7d58fb8: add       x2, x2, #0x25e
+  0x7d58fbc: add       x0, sp, #1, lsl #12
+  0x7d58fc0: add       x0, x0, #0x270
+  0x7d58fc4: bl        #0x7d501c4
+  0x7d58fc8: ldrb      w8, [x24]
+  0x7d58fcc: tbz       w8, #0, #0x7d58fd8
+  0x7d58fd0: ldr       x0, [sp, #0x1160]
+  0x7d58fd4: bl        #0x2efa56c
+  0x7d58fd8: cbz       x26, #0x7d59dcc
+at 0x7d59020
+  0x7d59018: add       x22, x22, #0x280
+  0x7d5901c: orr       x21, x20, #1
+  0x7d59020: add       x0, sp, #1, lsl #12
+  0x7d59024: adrp      x1, #0xa38000
+  0x7d59028: add       x1, x1, #0xb5e
+  0x7d5902c: add       x0, x0, #0x270
+  0x7d59030: ldrb      w8, [x22]
+  0x7d59034: tst       w8, #1
+  0x7d59038: csel      x2, x21, x9, eq
+  0x7d5903c: bl        #0x7d501c4
+at 0x7d5904c
+  0x7d59044: bl        #0x7d64114
+  0x7d59048: mov       x2, x0
+  0x7d5904c: add       x0, sp, #1, lsl #12
+  0x7d59050: adrp      x1, #0xb43000
+  0x7d59054: add       x1, x1, #0xd1f
+  0x7d59058: add       x0, x0, #0x270
+  0x7d5905c: mov       w3, wzr
+  0x7d59060: bl        #0x7d5eb7c
+  0x7d59064: add       x20, x19, #0x60
+  0x7d59068: mov       x0, x20
+at 0x7d59088
+  0x7d59080: bl        #0x7dd23d0
+  0x7d59084: ldrb      w8, [x22]
+  0x7d59088: add       x0, sp, #1, lsl #12
+  0x7d5908c: ldr       x9, [sp, #0x1290]
+  0x7d59090: adrp      x1, #0xc02000
+  0x7d59094: add       x1, x1, #0x886
+  0x7d59098: add       x0, x0, #0x270
+  0x7d5909c: tst       w8, #1
+  0x7d590a0: csel      x2, x21, x9, eq
+  0x7d590a4: bl        #0x7d501c4
+at 0x7d590b4
+  0x7d590ac: bl        #0x7d64114
+  0x7d590b0: mov       x2, x0
+  0x7d590b4: add       x0, sp, #1, lsl #12
+  0x7d590b8: adrp      x1, #0xa26000
+  0x7d590bc: add       x1, x1, #0x35e
+  0x7d590c0: add       x0, x0, #0x270
+  0x7d590c4: mov       w3, wzr
+  0x7d590c8: bl        #0x7d5eb7c
+  0x7d590cc: add       x0, sp, #1, lsl #12
+  0x7d590d0: ldrb      w2, [x19, #0xc0]
+at 0x7d590cc
+  0x7d590c4: mov       w3, wzr
+  0x7d590c8: bl        #0x7d5eb7c
+  0x7d590cc: add       x0, sp, #1, lsl #12
+  0x7d590d0: ldrb      w2, [x19, #0xc0]
+  0x7d590d4: adrp      x1, #0xc02000
+  0x7d590d8: add       x1, x1, #0x89d
+  0x7d590dc: add       x0, x0, #0x270
+  0x7d590e0: mov       w3, wzr
+  0x7d590e4: add       x19, sp, #1, lsl #12
+  0x7d590e8: add       x19, x19, #0x280
+at 0x7d59918
+  0x7d59910: orr       x10, x19, #1
+  0x7d59914: ldr       x9, [sp, #0x110]
+  0x7d59918: add       x0, sp, #1, lsl #12
+  0x7d5991c: add       x0, x0, #0x270
+  0x7d59920: tst       w8, #1
+  0x7d59924: csel      x1, x10, x9, eq
+  0x7d59928: bl        #0x7d5b304
+  0x7d5992c: ldrb      w8, [sp, #0x100]
+  0x7d59930: tbz       w8, #0, #0x7d5993c
+  0x7d59934: ldr       x0, [sp, #0x110]
+at 0x7d59dd4
+  0x7d59dcc: adrp      x19, #0xa77000
+  0x7d59dd0: add       x19, x19, #0x25e
+  0x7d59dd4: add       x0, sp, #1, lsl #12
+  0x7d59dd8: adrp      x1, #0xa38000
+  0x7d59ddc: add       x1, x1, #0xb5e
+  0x7d59de0: add       x0, x0, #0x270
+  0x7d59de4: mov       x2, x19
+  0x7d59de8: bl        #0x7d501c4
+  0x7d59dec: add       x0, sp, #1, lsl #12
+  0x7d59df0: adrp      x1, #0xb43000
+at 0x7d59dec
+  0x7d59de4: mov       x2, x19
+  0x7d59de8: bl        #0x7d501c4
+  0x7d59dec: add       x0, sp, #1, lsl #12
+  0x7d59df0: adrp      x1, #0xb43000
+  0x7d59df4: add       x1, x1, #0xd1f
+  0x7d59df8: add       x0, x0, #0x270
+  0x7d59dfc: mov       w2, #-1
+  0x7d59e00: mov       w3, wzr
+  0x7d59e04: bl        #0x7d5e834
+  0x7d59e08: add       x0, sp, #1, lsl #12
+at 0x7d59e08
+  0x7d59e00: mov       w3, wzr
+  0x7d59e04: bl        #0x7d5e834
+  0x7d59e08: add       x0, sp, #1, lsl #12
+  0x7d59e0c: adrp      x1, #0xc02000
+  0x7d59e10: add       x1, x1, #0x886
+  0x7d59e14: add       x0, x0, #0x270
+  0x7d59e18: mov       x2, x19
+  0x7d59e1c: bl        #0x7d501c4
+  0x7d59e20: add       x0, sp, #1, lsl #12
+  0x7d59e24: adrp      x1, #0xa26000
+at 0x7d59e20
+  0x7d59e18: mov       x2, x19
+  0x7d59e1c: bl        #0x7d501c4
+  0x7d59e20: add       x0, sp, #1, lsl #12
+  0x7d59e24: adrp      x1, #0xa26000
+  0x7d59e28: add       x1, x1, #0x35e
+  0x7d59e2c: add       x0, x0, #0x270
+  0x7d59e30: mov       w2, #-1
+  0x7d59e34: mov       w3, wzr
+  0x7d59e38: bl        #0x7d5e834
+  0x7d59e3c: add       x0, sp, #1, lsl #12
+at 0x7d59e3c
+  0x7d59e34: mov       w3, wzr
+  0x7d59e38: bl        #0x7d5e834
+  0x7d59e3c: add       x0, sp, #1, lsl #12
+  0x7d59e40: adrp      x1, #0xc02000
+  0x7d59e44: add       x1, x1, #0x89d
+  0x7d59e48: add       x0, x0, #0x270
+  0x7d59e4c: mov       w2, #0xff
+  0x7d59e50: mov       w3, wzr
+  0x7d59e54: bl        #0x7d5e71c
+  0x7d59e58: add       x0, sp, #0x118
+at 0x7d59e6c
+  0x7d59e64: bl        #0x7d3ab6c
+  0x7d59e68: tbnz      w0, #0, #0x7d59114
+  0x7d59e6c: add       x0, sp, #1, lsl #12
+  0x7d59e70: adrp      x1, #0xa77000
+  0x7d59e74: add       x1, x1, #0x25e
+  0x7d59e78: add       x0, x0, #0x270
+  0x7d59e7c: bl        #0x7d5b304
+  0x7d59e80: ldr       x0, [sp, #0x118]
+  0x7d59e84: cbz       x0, #0x7d59e90
+  0x7d59e88: str       x0, [sp, #0x120]
+at 0x7d59ecc
+  0x7d59ec4: add       x20, x20, #0x280
+  0x7d59ec8: orr       x10, x19, #1
+  0x7d59ecc: add       x0, sp, #1, lsl #12
+  0x7d59ed0: adrp      x1, #0xa26000
+  0x7d59ed4: add       x1, x1, #0x383
+  0x7d59ed8: add       x0, x0, #0x270
+  0x7d59edc: ldrb      w8, [x20]
+  0x7d59ee0: tst       w8, #1
+  0x7d59ee4: csel      x2, x10, x9, eq
+  0x7d59ee8: bl        #0x7d501c4
+
+=== SERIALIZER HELPER CALLSITE SAMPLE ===
+helper_callsite_count=70
+CALL 0x7d497e0 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d497c4: bl        #0x8b385e0
+  0x7d497c8: ldr       w8, [sp, #0xb8]
+  0x7d497cc: adrp      x1, #0xa26000
+  0x7d497d0: add       x1, x1, #0x1fc
+  0x7d497d4: add       x0, sp, #0x1c0
+  0x7d497d8: mov       w3, wzr
+  0x7d497dc: and       w2, w8, #1
+  0x7d497e0: bl        #0x7d5e71c
+  0x7d497e4: ldrb      w8, [x19, #0x1a6]
+CALL 0x7d49810 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d497f4: ldrb      w10, [x19, #0x1a5]
+  0x7d497f8: add       x0, sp, #0x1c0
+  0x7d497fc: cmp       w8, #0
+  0x7d49800: ldrb      w22, [x20]
+  0x7d49804: ccmp      w9, #0, #4, eq
+  0x7d49808: mov       w3, wzr
+  0x7d4980c: csel      w2, w10, w22, ne
+  0x7d49810: bl        #0x7d5e71c
+  0x7d49814: ldrb      w8, [x19, #0x1a9]
+CALL 0x7d4983c in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49820: ldrb      w9, [x19, #0x1a7]
+  0x7d49824: add       x0, sp, #0x1c0
+  0x7d49828: mov       w3, wzr
+  0x7d4982c: cmp       w8, #0
+  0x7d49830: ldrb      w8, [x19, #0x1a8]
+  0x7d49834: ccmp      w9, #0, #4, eq
+  0x7d49838: csel      w2, w8, w22, ne
+  0x7d4983c: bl        #0x7d5e71c
+  0x7d49840: ldrb      w8, [x19, #0x1ac]
+CALL 0x7d49868 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4984c: ldrb      w9, [x19, #0x1aa]
+  0x7d49850: add       x0, sp, #0x1c0
+  0x7d49854: mov       w3, wzr
+  0x7d49858: cmp       w8, #0
+  0x7d4985c: ldrb      w8, [x19, #0x1ab]
+  0x7d49860: ccmp      w9, #0, #4, eq
+  0x7d49864: csel      w2, w8, w22, ne
+  0x7d49868: bl        #0x7d5e71c
+  0x7d4986c: ldrb      w8, [x19, #0x1af]
+CALL 0x7d49894 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49878: ldrb      w9, [x19, #0x1ad]
+  0x7d4987c: add       x0, sp, #0x1c0
+  0x7d49880: mov       w3, wzr
+  0x7d49884: cmp       w8, #0
+  0x7d49888: ldrb      w8, [x19, #0x1ae]
+  0x7d4988c: ccmp      w9, #0, #4, eq
+  0x7d49890: csel      w2, w8, w22, ne
+  0x7d49894: bl        #0x7d5e71c
+  0x7d49898: ldrb      w8, [x19, #0x1b2]
+CALL 0x7d498c0 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d498a4: ldrb      w9, [x19, #0x1b0]
+  0x7d498a8: add       x0, sp, #0x1c0
+  0x7d498ac: mov       w3, wzr
+  0x7d498b0: cmp       w8, #0
+  0x7d498b4: ldrb      w8, [x19, #0x1b1]
+  0x7d498b8: ccmp      w9, #0, #4, eq
+  0x7d498bc: csel      w2, w8, w22, ne
+  0x7d498c0: bl        #0x7d5e71c
+  0x7d498c4: ldrb      w8, [x19, #0x1b5]
+CALL 0x7d498ec in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d498d0: ldrb      w9, [x19, #0x1b3]
+  0x7d498d4: add       x0, sp, #0x1c0
+  0x7d498d8: mov       w3, wzr
+  0x7d498dc: cmp       w8, #0
+  0x7d498e0: ldrb      w8, [x19, #0x1b4]
+  0x7d498e4: ccmp      w9, #0, #4, eq
+  0x7d498e8: csel      w2, w8, w22, ne
+  0x7d498ec: bl        #0x7d5e71c
+  0x7d498f0: ldrb      w8, [x19, #0x1b8]
+CALL 0x7d49918 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d498fc: ldrb      w9, [x19, #0x1b6]
+  0x7d49900: add       x0, sp, #0x1c0
+  0x7d49904: mov       w3, wzr
+  0x7d49908: cmp       w8, #0
+  0x7d4990c: ldrb      w8, [x19, #0x1b7]
+  0x7d49910: ccmp      w9, #0, #4, eq
+  0x7d49914: csel      w2, w8, w22, ne
+  0x7d49918: bl        #0x7d5e71c
+  0x7d4991c: ldrb      w8, [x19, #0x1bb]
+CALL 0x7d49944 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49928: ldrb      w9, [x19, #0x1b9]
+  0x7d4992c: add       x0, sp, #0x1c0
+  0x7d49930: mov       w3, wzr
+  0x7d49934: cmp       w8, #0
+  0x7d49938: ldrb      w8, [x19, #0x1ba]
+  0x7d4993c: ccmp      w9, #0, #4, eq
+  0x7d49940: csel      w2, w8, w22, ne
+  0x7d49944: bl        #0x7d5e71c
+  0x7d49948: ldrb      w8, [x19, #0x1be]
+CALL 0x7d49970 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49954: ldrb      w9, [x19, #0x1bc]
+  0x7d49958: add       x0, sp, #0x1c0
+  0x7d4995c: mov       w3, wzr
+  0x7d49960: cmp       w8, #0
+  0x7d49964: ldrb      w8, [x19, #0x1bd]
+  0x7d49968: ccmp      w9, #0, #4, eq
+  0x7d4996c: csel      w2, w8, w22, ne
+  0x7d49970: bl        #0x7d5e71c
+  0x7d49974: mov       w8, #0x20
+CALL 0x7d49ad4 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49ab8: b.ne      #0x7d49a48
+  0x7d49abc: mov       x8, x10
+  0x7d49ac0: ldrb      w2, [x8]
+  0x7d49ac4: adrp      x1, #0xabe000
+  0x7d49ac8: add       x1, x1, #0xcaa
+  0x7d49acc: add       x0, sp, #0x1c0
+  0x7d49ad0: mov       w3, wzr
+  0x7d49ad4: bl        #0x7d5e71c
+  0x7d49ad8: adrp      x8, #0x98de000
+CALL 0x7d49c28 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49c0c: add       x0, sp, #0x1c0
+  0x7d49c10: mov       w3, wzr
+  0x7d49c14: cmp       w8, #0
+  0x7d49c18: ldrb      w8, [x19, #0x4b9]
+  0x7d49c1c: ccmp      w9, #0, #4, eq
+  0x7d49c20: add       x25, x19, #0x51c
+  0x7d49c24: csel      w2, w8, w22, ne
+  0x7d49c28: bl        #0x7d5e71c
+  0x7d49c2c: ldrb      w8, [x19, #0x4bd]
+CALL 0x7d49c54 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49c38: ldrb      w9, [x19, #0x4bb]
+  0x7d49c3c: add       x0, sp, #0x1c0
+  0x7d49c40: mov       w3, wzr
+  0x7d49c44: cmp       w8, #0
+  0x7d49c48: ldrb      w8, [x19, #0x4bc]
+  0x7d49c4c: ccmp      w9, #0, #4, eq
+  0x7d49c50: csel      w2, w8, w22, ne
+  0x7d49c54: bl        #0x7d5e71c
+  0x7d49c58: ldrb      w8, [x19, #0x4c0]
+CALL 0x7d49c80 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49c64: ldrb      w9, [x19, #0x4be]
+  0x7d49c68: add       x0, sp, #0x1c0
+  0x7d49c6c: mov       w3, wzr
+  0x7d49c70: cmp       w8, #0
+  0x7d49c74: ldrb      w8, [x19, #0x4bf]
+  0x7d49c78: ccmp      w9, #0, #4, eq
+  0x7d49c7c: csel      w2, w8, w22, ne
+  0x7d49c80: bl        #0x7d5e71c
+  0x7d49c84: mov       w10, #0x5352
+CALL 0x7d49d10 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49cf4: add       x0, sp, #0x1c0
+  0x7d49cf8: mov       w3, wzr
+  0x7d49cfc: cmp       w8, #0
+  0x7d49d00: ldrb      w8, [x19, #0x505]
+  0x7d49d04: ccmp      w9, #0, #4, eq
+  0x7d49d08: add       x24, x19, #0x56c
+  0x7d49d0c: csel      w2, w8, w22, ne
+  0x7d49d10: bl        #0x7d5e71c
+  0x7d49d14: ldrb      w8, [x19, #0x509]
+CALL 0x7d49d3c in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49d20: ldrb      w9, [x19, #0x507]
+  0x7d49d24: add       x0, sp, #0x1c0
+  0x7d49d28: mov       w3, wzr
+  0x7d49d2c: cmp       w8, #0
+  0x7d49d30: ldrb      w8, [x19, #0x508]
+  0x7d49d34: ccmp      w9, #0, #4, eq
+  0x7d49d38: csel      w2, w8, w22, ne
+  0x7d49d3c: bl        #0x7d5e71c
+  0x7d49d40: ldrb      w8, [x19, #0x50c]
+CALL 0x7d49d68 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49d4c: ldrb      w9, [x19, #0x50a]
+  0x7d49d50: add       x0, sp, #0x1c0
+  0x7d49d54: mov       w3, wzr
+  0x7d49d58: cmp       w8, #0
+  0x7d49d5c: ldrb      w8, [x19, #0x50b]
+  0x7d49d60: ccmp      w9, #0, #4, eq
+  0x7d49d64: csel      w2, w8, w22, ne
+  0x7d49d68: bl        #0x7d5e71c
+  0x7d49d6c: ldrb      w8, [x19, #0x50f]
+CALL 0x7d49d94 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49d78: ldrb      w9, [x19, #0x50d]
+  0x7d49d7c: add       x0, sp, #0x1c0
+  0x7d49d80: mov       w3, wzr
+  0x7d49d84: cmp       w8, #0
+  0x7d49d88: ldrb      w8, [x19, #0x50e]
+  0x7d49d8c: ccmp      w9, #0, #4, eq
+  0x7d49d90: csel      w2, w8, w22, ne
+  0x7d49d94: bl        #0x7d5e71c
+  0x7d49d98: ldrb      w8, [x19, #0x512]
+CALL 0x7d49dc0 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49da4: ldrb      w9, [x19, #0x510]
+  0x7d49da8: add       x0, sp, #0x1c0
+  0x7d49dac: mov       w3, wzr
+  0x7d49db0: cmp       w8, #0
+  0x7d49db4: ldrb      w8, [x19, #0x511]
+  0x7d49db8: ccmp      w9, #0, #4, eq
+  0x7d49dbc: csel      w2, w8, w22, ne
+  0x7d49dc0: bl        #0x7d5e71c
+  0x7d49dc4: ldrb      w8, [x19, #0x515]
+CALL 0x7d49dec in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49dd0: ldrb      w9, [x19, #0x513]
+  0x7d49dd4: add       x0, sp, #0x1c0
+  0x7d49dd8: mov       w3, wzr
+  0x7d49ddc: cmp       w8, #0
+  0x7d49de0: ldrb      w8, [x19, #0x514]
+  0x7d49de4: ccmp      w9, #0, #4, eq
+  0x7d49de8: csel      w2, w8, w22, ne
+  0x7d49dec: bl        #0x7d5e71c
+  0x7d49df0: ldrb      w8, [x19, #0x518]
+CALL 0x7d49e18 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d49dfc: ldrb      w9, [x19, #0x516]
+  0x7d49e00: add       x0, sp, #0x1c0
+  0x7d49e04: mov       w3, wzr
+  0x7d49e08: cmp       w8, #0
+  0x7d49e0c: ldrb      w8, [x19, #0x517]
+  0x7d49e10: ccmp      w9, #0, #4, eq
+  0x7d49e14: csel      w2, w8, w22, ne
+  0x7d49e18: bl        #0x7d5e71c
+  0x7d49e1c: adrp      x1, #0xb8f000
+CALL 0x7d4d6b4 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4d698: ldrb      w9, [x10, #0x18]
+  0x7d4d69c: movk      w20, #0x5f4f, lsl #16
+  0x7d4d6a0: cmp       w8, #0
+  0x7d4d6a4: ldrb      w8, [x10, #0x19]
+  0x7d4d6a8: ccmp      w9, #0, #4, eq
+  0x7d4d6ac: ldr       w9, [sp, #0x1c]
+  0x7d4d6b0: csel      w2, w8, w9, ne
+  0x7d4d6b4: bl        #0x7d5e71c
+  0x7d4d6b8: ldrb      w8, [x19, #0xa88]
+CALL 0x7d4df8c in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4df70: mov       w3, wzr
+  0x7d4df74: bl        #0x7d5e834
+  0x7d4df78: ldr       w2, [x28, #0x58]
+  0x7d4df7c: adrp      x1, #0xb69000
+  0x7d4df80: add       x1, x1, #0x20d
+  0x7d4df84: add       x0, sp, #0x1c0
+  0x7d4df88: mov       w3, wzr
+  0x7d4df8c: bl        #0x7d5e71c
+  0x7d4df90: ldrb      w8, [x22, #0x40]
+CALL 0x7d4eafc in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4eae0: ldrb      w10, [x20, #0x25]
+  0x7d4eae4: add       x0, sp, #0x1c0
+  0x7d4eae8: cmp       w8, #0
+  0x7d4eaec: ldrb      w24, [x21]
+  0x7d4eaf0: ccmp      w9, #0, #4, eq
+  0x7d4eaf4: mov       w3, wzr
+  0x7d4eaf8: csel      w2, w10, w24, ne
+  0x7d4eafc: bl        #0x7d5e71c
+  0x7d4eb00: ldrb      w8, [x20, #0x3c]
+CALL 0x7d4eb28 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4eb0c: ldrb      w9, [x20, #0x3a]
+  0x7d4eb10: add       x0, sp, #0x1c0
+  0x7d4eb14: mov       w3, wzr
+  0x7d4eb18: cmp       w8, #0
+  0x7d4eb1c: ldrb      w8, [x20, #0x3b]
+  0x7d4eb20: ccmp      w9, #0, #4, eq
+  0x7d4eb24: csel      w2, w8, w24, ne
+  0x7d4eb28: bl        #0x7d5e71c
+  0x7d4eb2c: ldrb      w8, [x20, #0x3f]
+CALL 0x7d4eb54 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4eb38: ldrb      w9, [x20, #0x3d]
+  0x7d4eb3c: add       x0, sp, #0x1c0
+  0x7d4eb40: mov       w3, wzr
+  0x7d4eb44: cmp       w8, #0
+  0x7d4eb48: ldrb      w8, [x20, #0x3e]
+  0x7d4eb4c: ccmp      w9, #0, #4, eq
+  0x7d4eb50: csel      w2, w8, w24, ne
+  0x7d4eb54: bl        #0x7d5e71c
+  0x7d4eb58: ldrb      w8, [x20, #0x29]
+CALL 0x7d4eb80 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4eb64: ldrb      w9, [x20, #0x27]
+  0x7d4eb68: add       x0, sp, #0x1c0
+  0x7d4eb6c: mov       w3, wzr
+  0x7d4eb70: cmp       w8, #0
+  0x7d4eb74: ldrb      w8, [x20, #0x28]
+  0x7d4eb78: ccmp      w9, #0, #4, eq
+  0x7d4eb7c: csel      w2, w8, w24, ne
+  0x7d4eb80: bl        #0x7d5e71c
+  0x7d4eb84: ldrb      w8, [x20, #0x2c]
+CALL 0x7d4ebac in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4eb90: ldrb      w9, [x20, #0x2a]
+  0x7d4eb94: add       x0, sp, #0x1c0
+  0x7d4eb98: mov       w3, wzr
+  0x7d4eb9c: cmp       w8, #0
+  0x7d4eba0: ldrb      w8, [x20, #0x2b]
+  0x7d4eba4: ccmp      w9, #0, #4, eq
+  0x7d4eba8: csel      w2, w8, w24, ne
+  0x7d4ebac: bl        #0x7d5e71c
+  0x7d4ebb0: ldrb      w8, [x20, #0x2f]
+CALL 0x7d4ebd8 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4ebbc: ldrb      w9, [x20, #0x2d]
+  0x7d4ebc0: add       x0, sp, #0x1c0
+  0x7d4ebc4: mov       w3, wzr
+  0x7d4ebc8: cmp       w8, #0
+  0x7d4ebcc: ldrb      w8, [x20, #0x2e]
+  0x7d4ebd0: ccmp      w9, #0, #4, eq
+  0x7d4ebd4: csel      w2, w8, w24, ne
+  0x7d4ebd8: bl        #0x7d5e71c
+  0x7d4ebdc: ldrb      w8, [x20, #0x32]
+CALL 0x7d4ec04 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4ebe8: ldrb      w9, [x20, #0x30]
+  0x7d4ebec: add       x0, sp, #0x1c0
+  0x7d4ebf0: mov       w3, wzr
+  0x7d4ebf4: cmp       w8, #0
+  0x7d4ebf8: ldrb      w8, [x20, #0x31]
+  0x7d4ebfc: ccmp      w9, #0, #4, eq
+  0x7d4ec00: csel      w2, w8, w24, ne
+  0x7d4ec04: bl        #0x7d5e71c
+  0x7d4ec08: ldrb      w8, [x20, #0x38]
+CALL 0x7d4ec78 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4ec5c: ccmp      w9, #0, #0, eq
+  0x7d4ec60: ldrb      w8, [x21, #0xa9]
+  0x7d4ec64: orr       w9, w10, w11
+  0x7d4ec68: ldrb      w10, [x21, #0xac]
+  0x7d4ec6c: ccmp      w9, #0, #4, eq
+  0x7d4ec70: add       w8, w10, w8
+  0x7d4ec74: csel      w2, w8, w24, ne
+  0x7d4ec78: bl        #0x7d5e71c
+  0x7d4ec7c: ldrb      w8, [x21, #0xaa]
+CALL 0x7d4eca4 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4ec88: ldrb      w9, [x21, #0xa8]
+  0x7d4ec8c: add       x0, sp, #0x1c0
+  0x7d4ec90: mov       w3, wzr
+  0x7d4ec94: cmp       w8, #0
+  0x7d4ec98: ldrb      w8, [x21, #0xa9]
+  0x7d4ec9c: ccmp      w9, #0, #4, eq
+  0x7d4eca0: csel      w2, w8, w24, ne
+  0x7d4eca4: bl        #0x7d5e71c
+  0x7d4eca8: ldrb      w8, [x21, #0xad]
+CALL 0x7d4ecd0 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4ecb4: ldrb      w9, [x21, #0xab]
+  0x7d4ecb8: add       x0, sp, #0x1c0
+  0x7d4ecbc: mov       w3, wzr
+  0x7d4ecc0: cmp       w8, #0
+  0x7d4ecc4: ldrb      w8, [x21, #0xac]
+  0x7d4ecc8: ccmp      w9, #0, #4, eq
+  0x7d4eccc: csel      w2, w8, w24, ne
+  0x7d4ecd0: bl        #0x7d5e71c
+  0x7d4ecd4: ldrb      w8, [x20, #0x42]
+CALL 0x7d4ecfc in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4ece0: ldrb      w9, [x20, #0x40]
+  0x7d4ece4: add       x0, sp, #0x1c0
+  0x7d4ece8: mov       w3, wzr
+  0x7d4ecec: cmp       w8, #0
+  0x7d4ecf0: ldrb      w8, [x20, #0x41]
+  0x7d4ecf4: ccmp      w9, #0, #4, eq
+  0x7d4ecf8: csel      w2, w8, w24, ne
+  0x7d4ecfc: bl        #0x7d5e71c
+  0x7d4ed00: ldrb      w8, [x20, #0x4c]
+CALL 0x7d4f040 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4f024: ldrb      w9, [x21, #0x18]
+  0x7d4f028: add       x0, sp, #0x1c0
+  0x7d4f02c: mov       w3, wzr
+  0x7d4f030: cmp       w8, #0
+  0x7d4f034: ldrb      w8, [x21, #0x19]
+  0x7d4f038: ccmp      w9, #0, #4, eq
+  0x7d4f03c: csel      w2, w8, w24, ne
+  0x7d4f040: bl        #0x7d5e71c
+  0x7d4f044: ldrb      w8, [x21, #0x24]
+CALL 0x7d4f478 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4f45c: ldrb      w9, [x27, #0x24]
+  0x7d4f460: add       x0, sp, #0x1c0
+  0x7d4f464: mov       w3, wzr
+  0x7d4f468: cmp       w8, #0
+  0x7d4f46c: ldrb      w8, [x27, #0x25]
+  0x7d4f470: ccmp      w9, #0, #4, eq
+  0x7d4f474: csel      w2, w8, w24, ne
+  0x7d4f478: bl        #0x7d5e71c
+  0x7d4f47c: ldrb      w8, [x27, #0x29]
+CALL 0x7d4f4a4 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4f488: ldrb      w9, [x27, #0x27]
+  0x7d4f48c: add       x0, sp, #0x1c0
+  0x7d4f490: mov       w3, wzr
+  0x7d4f494: cmp       w8, #0
+  0x7d4f498: ldrb      w8, [x27, #0x28]
+  0x7d4f49c: ccmp      w9, #0, #4, eq
+  0x7d4f4a0: csel      w2, w8, w24, ne
+  0x7d4f4a4: bl        #0x7d5e71c
+  0x7d4f4a8: ldrb      w8, [x27, #0x2c]
+CALL 0x7d4f4d0 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4f4b4: ldrb      w9, [x27, #0x2a]
+  0x7d4f4b8: add       x0, sp, #0x1c0
+  0x7d4f4bc: mov       w3, wzr
+  0x7d4f4c0: cmp       w8, #0
+  0x7d4f4c4: ldrb      w8, [x27, #0x2b]
+  0x7d4f4c8: ccmp      w9, #0, #4, eq
+  0x7d4f4cc: csel      w2, w8, w24, ne
+  0x7d4f4d0: bl        #0x7d5e71c
+  0x7d4f4d4: ldrb      w8, [x27, #0x2f]
+CALL 0x7d4f4fc in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4f4e0: ldrb      w9, [x27, #0x2d]
+  0x7d4f4e4: add       x0, sp, #0x1c0
+  0x7d4f4e8: mov       w3, wzr
+  0x7d4f4ec: cmp       w8, #0
+  0x7d4f4f0: ldrb      w8, [x27, #0x2e]
+  0x7d4f4f4: ccmp      w9, #0, #4, eq
+  0x7d4f4f8: csel      w2, w8, w24, ne
+  0x7d4f4fc: bl        #0x7d5e71c
+  0x7d4f500: ldrb      w8, [x27, #0x32]
+CALL 0x7d4f528 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4f50c: ldrb      w9, [x27, #0x30]
+  0x7d4f510: add       x0, sp, #0x1c0
+  0x7d4f514: mov       w3, wzr
+  0x7d4f518: cmp       w8, #0
+  0x7d4f51c: ldrb      w8, [x27, #0x31]
+  0x7d4f520: ccmp      w9, #0, #4, eq
+  0x7d4f524: csel      w2, w8, w24, ne
+  0x7d4f528: bl        #0x7d5e71c
+  0x7d4f52c: ldrb      w8, [x27, #0x44]
+CALL 0x7d4fac4 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4faa8: csel      w2, w8, w23, ne
+  0x7d4faac: bl        #0x7d5e834
+  0x7d4fab0: ldrb      w2, [x28, #0x54]
+  0x7d4fab4: adrp      x1, #0xaab000
+  0x7d4fab8: add       x1, x1, #0xb28
+  0x7d4fabc: add       x0, sp, #0x1c0
+  0x7d4fac0: mov       w3, wzr
+  0x7d4fac4: bl        #0x7d5e71c
+  0x7d4fac8: ldr       w2, [x28, #0x50]
+CALL 0x7d4faf4 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4fad8: mov       w3, wzr
+  0x7d4fadc: bl        #0x7d5e834
+  0x7d4fae0: ldrb      w2, [x28, #0x55]
+  0x7d4fae4: adrp      x1, #0xc15000
+  0x7d4fae8: add       x1, x1, #0xc44
+  0x7d4faec: add       x0, sp, #0x1c0
+  0x7d4faf0: mov       w3, wzr
+  0x7d4faf4: bl        #0x7d5e71c
+  0x7d4faf8: ldrb      w2, [x28, #0x66]
+CALL 0x7d4fb0c in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4faf0: mov       w3, wzr
+  0x7d4faf4: bl        #0x7d5e71c
+  0x7d4faf8: ldrb      w2, [x28, #0x66]
+  0x7d4fafc: adrp      x1, #0x9ed000
+  0x7d4fb00: add       x1, x1, #0xa5d
+  0x7d4fb04: add       x0, sp, #0x1c0
+  0x7d4fb08: mov       w3, wzr
+  0x7d4fb0c: bl        #0x7d5e71c
+  0x7d4fb10: ldrb      w2, [x28, #0x67]
+CALL 0x7d4fb24 in 0x7d4724c strings=['ABNORMAL_END_FLAG', 'ACCESS_LINE_TEST_COUNT', 'ACTUAL_MATCH_HZ_', 'AT_DEFENCE_BACKGROUND_COUNTS', 'AT_OFFENCE_BACKGROUND_COUNTS', 'AWAY_TEAM_ID_ID', 'AWAY_TEAM_ID_NO', 'BACKGROUND_COUNTS', 'BEST_ADDRESS_FAMILY', 'BUFFER_KEEPER_DURATION_TIME_MS_MAX', 'CMD_FAILED_COUNT_GRPC', 'CMD_FAILED_COUNT_HTTP', 'CMD_FINISHED_COUNT_GRPC', 'CMD_FINISHED_COUNT_HTTP', 'COMMUNICATION_MODE', 'COMMUNICATION_TIME', 'CONGESTION_CONTROL_BPS_', 'CONGESTION_CONTROL_PPS_', 'CONGESTION_CONTROL_WINDOW_SIZE_', 'CONGESTION_CONTROL_WINDOW_SIZE_LIMIT_']
+  0x7d4fb08: mov       w3, wzr
+  0x7d4fb0c: bl        #0x7d5e71c
+  0x7d4fb10: ldrb      w2, [x28, #0x67]
+  0x7d4fb14: adrp      x1, #0xa26000
+  0x7d4fb18: add       x1, x1, #0x2ad
+  0x7d4fb1c: add       x0, sp, #0x1c0
+  0x7d4fb20: mov       w3, wzr
+  0x7d4fb24: bl        #0x7d5e71c
+  0x7d4fb28: ldr       x9, [sp, #0xc8]
+CALL 0x7d50528 in 0x7d502d8 strings=[]
+  0x7d5050c: ldr       x8, [x8, #0xc98]
+  0x7d50510: str       x11, [sp, #0x10]
+  0x7d50514: ldrb      w9, [x20, #0xd]
+  0x7d50518: ccmp      w10, #0, #4, eq
+  0x7d5051c: ldr       x0, [sp, #0x18]
+  0x7d50520: ldrb      w19, [x8]
+  0x7d50524: csel      w2, w9, w19, ne
+  0x7d50528: bl        #0x7d5e71c
+  0x7d5052c: ldp       x10, x9, [x22, #8]
+CALL 0x7d506ec in 0x7d502d8 strings=[]
+  0x7d506d0: ldrb      w11, [x20, #0xf]
+  0x7d506d4: ldp       x8, x0, [sp, #0x10]
+  0x7d506d8: csel      x1, x8, x9, eq
+  0x7d506dc: cmp       w10, #0
+  0x7d506e0: ldrb      w8, [x20, #0x10]
+  0x7d506e4: ccmp      w11, #0, #4, eq
+  0x7d506e8: csel      w2, w8, w19, ne
+  0x7d506ec: bl        #0x7d5e71c
+  0x7d506f0: ldp       x10, x9, [x22, #8]
+CALL 0x7d508a8 in 0x7d502d8 strings=[]
+  0x7d5088c: ldrb      w11, [x20, #0x12]
+  0x7d50890: ldp       x8, x0, [sp, #0x10]
+  0x7d50894: csel      x1, x8, x9, eq
+  0x7d50898: cmp       w10, #0
+  0x7d5089c: ldrb      w8, [x20, #0x13]
+  0x7d508a0: ccmp      w11, #0, #4, eq
+  0x7d508a4: csel      w2, w8, w19, ne
+  0x7d508a8: bl        #0x7d5e71c
+  0x7d508ac: ldp       x10, x9, [x22, #8]
+CALL 0x7d50a64 in 0x7d502d8 strings=[]
+  0x7d50a48: ldrb      w11, [x20, #0x15]
+  0x7d50a4c: ldp       x8, x0, [sp, #0x10]
+  0x7d50a50: csel      x1, x8, x9, eq
+  0x7d50a54: cmp       w10, #0
+  0x7d50a58: ldrb      w8, [x20, #0x16]
+  0x7d50a5c: ccmp      w11, #0, #4, eq
+  0x7d50a60: csel      w2, w8, w19, ne
+  0x7d50a64: bl        #0x7d5e71c
+  0x7d50a68: ldp       x10, x9, [x22, #8]
+CALL 0x7d55194 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d55178: bl        #0x7d501c4
+  0x7d5517c: add       x0, sp, #1, lsl #12
+  0x7d55180: ldr       w2, [x26, #8]
+  0x7d55184: adrp      x1, #0xc15000
+  0x7d55188: add       x1, x1, #0xc57
+  0x7d5518c: add       x0, x0, #0x270
+  0x7d55190: mov       w3, wzr
+  0x7d55194: bl        #0x7d5e71c
+  0x7d55198: ldrb      w8, [sp, #0x148]
+CALL 0x7d551d4 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d551b8: bl        #0x7d501c4
+  0x7d551bc: add       x0, sp, #1, lsl #12
+  0x7d551c0: ldr       w2, [x26, #0xc]
+  0x7d551c4: adrp      x1, #0x9c7000
+  0x7d551c8: add       x1, x1, #0x84
+  0x7d551cc: add       x0, x0, #0x270
+  0x7d551d0: mov       w3, wzr
+  0x7d551d4: bl        #0x7d5e71c
+  0x7d551d8: add       x0, sp, #1, lsl #12
+CALL 0x7d551f0 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d551d4: bl        #0x7d5e71c
+  0x7d551d8: add       x0, sp, #1, lsl #12
+  0x7d551dc: ldr       w2, [x26, #0x10]
+  0x7d551e0: adrp      x1, #0xa98000
+  0x7d551e4: add       x1, x1, #0x21f
+  0x7d551e8: add       x0, x0, #0x270
+  0x7d551ec: mov       w3, wzr
+  0x7d551f0: bl        #0x7d5e71c
+  0x7d551f4: add       x0, sp, #1, lsl #12
+CALL 0x7d5520c in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d551f0: bl        #0x7d5e71c
+  0x7d551f4: add       x0, sp, #1, lsl #12
+  0x7d551f8: ldrb      w2, [x26, #0x34]
+  0x7d551fc: adrp      x1, #0xa26000
+  0x7d55200: add       x1, x1, #0x2c5
+  0x7d55204: add       x0, x0, #0x270
+  0x7d55208: mov       w3, wzr
+  0x7d5520c: bl        #0x7d5e71c
+  0x7d55210: add       x0, sp, #1, lsl #12
+CALL 0x7d55228 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d5520c: bl        #0x7d5e71c
+  0x7d55210: add       x0, sp, #1, lsl #12
+  0x7d55214: ldr       w2, [x26, #0x38]
+  0x7d55218: adrp      x1, #0xa5e000
+  0x7d5521c: add       x1, x1, #0xcf5
+  0x7d55220: add       x0, x0, #0x270
+  0x7d55224: mov       w3, wzr
+  0x7d55228: bl        #0x7d5e71c
+  0x7d5522c: add       x0, sp, #1, lsl #12
+CALL 0x7d55244 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d55228: bl        #0x7d5e71c
+  0x7d5522c: add       x0, sp, #1, lsl #12
+  0x7d55230: ldrb      w2, [x26, #0x3d]
+  0x7d55234: adrp      x1, #0xbc9000
+  0x7d55238: add       x1, x1, #0xde6
+  0x7d5523c: add       x0, x0, #0x270
+  0x7d55240: mov       w3, wzr
+  0x7d55244: bl        #0x7d5e71c
+  0x7d55248: add       x8, sp, #1, lsl #12
+CALL 0x7d55654 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d55638: bl        #0x7dd1b74
+  0x7d5563c: mov       w2, w0
+  0x7d55640: add       x0, sp, #1, lsl #12
+  0x7d55644: adrp      x1, #0xb7c000
+  0x7d55648: add       x1, x1, #0x29f
+  0x7d5564c: add       x0, x0, #0x270
+  0x7d55650: mov       w3, wzr
+  0x7d55654: bl        #0x7d5e71c
+  0x7d55658: ldr       x19, [sp, #0x1158]
+CALL 0x7d556a0 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d55684: bl        #0x8b388f0
+  0x7d55688: add       x0, sp, #1, lsl #12
+  0x7d5568c: ldrb      w2, [x26, #0x5c]
+  0x7d55690: adrp      x1, #0xa4b000
+  0x7d55694: add       x1, x1, #0x77b
+  0x7d55698: add       x0, x0, #0x270
+  0x7d5569c: mov       w3, wzr
+  0x7d556a0: bl        #0x7d5e71c
+  0x7d556a4: add       x0, sp, #1, lsl #12
+CALL 0x7d556bc in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d556a0: bl        #0x7d5e71c
+  0x7d556a4: add       x0, sp, #1, lsl #12
+  0x7d556a8: ldrb      w2, [x26, #0x48]
+  0x7d556ac: adrp      x1, #0xb0a000
+  0x7d556b0: add       x1, x1, #0xd08
+  0x7d556b4: add       x0, x0, #0x270
+  0x7d556b8: mov       w3, wzr
+  0x7d556bc: bl        #0x7d5e71c
+  0x7d556c0: add       x0, sp, #1, lsl #12
+CALL 0x7d556d8 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d556bc: bl        #0x7d5e71c
+  0x7d556c0: add       x0, sp, #1, lsl #12
+  0x7d556c4: ldrb      w2, [x26, #0x5d]
+  0x7d556c8: adrp      x1, #0xaf7000
+  0x7d556cc: add       x1, x1, #0x611
+  0x7d556d0: add       x0, x0, #0x270
+  0x7d556d4: mov       w3, wzr
+  0x7d556d8: bl        #0x7d5e71c
+  0x7d556dc: add       x0, sp, #1, lsl #12
+CALL 0x7d556f4 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d556d8: bl        #0x7d5e71c
+  0x7d556dc: add       x0, sp, #1, lsl #12
+  0x7d556e0: ldrb      w2, [x26, #0x4b]
+  0x7d556e4: adrp      x1, #0xa38000
+  0x7d556e8: add       x1, x1, #0xb01
+  0x7d556ec: add       x0, x0, #0x270
+  0x7d556f0: mov       w3, wzr
+  0x7d556f4: bl        #0x7d5e71c
+  0x7d556f8: add       x0, sp, #1, lsl #12
+CALL 0x7d55710 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d556f4: bl        #0x7d5e71c
+  0x7d556f8: add       x0, sp, #1, lsl #12
+  0x7d556fc: ldrb      w2, [x26, #0x4c]
+  0x7d55700: adrp      x1, #0xa13000
+  0x7d55704: add       x1, x1, #0x757
+  0x7d55708: add       x0, x0, #0x270
+  0x7d5570c: mov       w3, wzr
+  0x7d55710: bl        #0x7d5e71c
+  0x7d55714: ldr       w8, [x26, #0x58]
+CALL 0x7d55774 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d55758: mov       w8, #1
+  0x7d5575c: cinc      w2, w8, hs
+  0x7d55760: add       x0, sp, #1, lsl #12
+  0x7d55764: adrp      x1, #0xa00000
+  0x7d55768: add       x1, x1, #0xc66
+  0x7d5576c: add       x0, x0, #0x270
+  0x7d55770: mov       w3, wzr
+  0x7d55774: bl        #0x7d5e71c
+  0x7d55778: add       x0, sp, #1, lsl #12
+CALL 0x7d557b4 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d55798: add       x0, sp, #1, lsl #12
+  0x7d5579c: adrp      x1, #0xba3000
+  0x7d557a0: add       x1, x1, #0x187
+  0x7d557a4: add       x0, x0, #0x270
+  0x7d557a8: mov       w3, wzr
+  0x7d557ac: cmp       w8, #0
+  0x7d557b0: csinv     w2, w8, wzr, ne
+  0x7d557b4: bl        #0x7d5e71c
+  0x7d557b8: bl        #0x28294b8
+CALL 0x7d55870 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d55854: cmp       w0, #0xe
+  0x7d55858: adrp      x1, #0x9c7000
+  0x7d5585c: add       x1, x1, #0xa1
+  0x7d55860: csinv     w2, w0, wzr, lo
+  0x7d55864: add       x0, sp, #1, lsl #12
+  0x7d55868: mov       w3, wzr
+  0x7d5586c: add       x0, x0, #0x270
+  0x7d55870: bl        #0x7d5e71c
+  0x7d55874: bl        #0x2f11b34
+CALL 0x7d583f4 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d583d8: bl        #0x2efa56c
+  0x7d583dc: add       x0, sp, #1, lsl #12
+  0x7d583e0: ldrb      w2, [x25, #0x264]
+  0x7d583e4: adrp      x1, #0xa00000
+  0x7d583e8: add       x1, x1, #0xc91
+  0x7d583ec: add       x0, x0, #0x270
+  0x7d583f0: mov       w3, wzr
+  0x7d583f4: bl        #0x7d5e71c
+  0x7d583f8: movi      v0.2d, #0000000000000000
+CALL 0x7d585d4 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d585b8: bl        #0x2efa56c
+  0x7d585bc: add       x0, sp, #1, lsl #12
+  0x7d585c0: ldrb      w2, [x25, #0x265]
+  0x7d585c4: adrp      x1, #0x9ed000
+  0x7d585c8: add       x1, x1, #0xaf3
+  0x7d585cc: add       x0, x0, #0x270
+  0x7d585d0: mov       w3, wzr
+  0x7d585d4: bl        #0x7d5e71c
+  0x7d585d8: add       x0, sp, #1, lsl #12
+CALL 0x7d58644 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d58628: bl        #0x7d5e834
+  0x7d5862c: add       x0, sp, #1, lsl #12
+  0x7d58630: ldrb      w2, [x25, #0x65]
+  0x7d58634: adrp      x1, #0x9c7000
+  0x7d58638: add       x1, x1, #0xfc
+  0x7d5863c: add       x0, x0, #0x270
+  0x7d58640: mov       w3, wzr
+  0x7d58644: bl        #0x7d5e71c
+  0x7d58648: add       x0, sp, #1, lsl #12
+CALL 0x7d590ec in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d590d0: ldrb      w2, [x19, #0xc0]
+  0x7d590d4: adrp      x1, #0xc02000
+  0x7d590d8: add       x1, x1, #0x89d
+  0x7d590dc: add       x0, x0, #0x270
+  0x7d590e0: mov       w3, wzr
+  0x7d590e4: add       x19, sp, #1, lsl #12
+  0x7d590e8: add       x19, x19, #0x280
+  0x7d590ec: bl        #0x7d5e71c
+  0x7d590f0: ldrb      w8, [x19]
+CALL 0x7d59e54 in 0x7d54c44 strings=['%d_%d', '0x%x', ':[', 'ABNORMALEND_PROBLEM_FLAG', 'ABNORMALEND_REASON', 'ABNORMALEND_REASON_FROM_SERVER', 'AGING_RESULT_ID', 'APP_VERSION', 'APP_YIELD_STATS_ACTIVITY_TIME_MS', 'APP_YIELD_STATS_INACTIVITY_TIME_MS', 'AWAY_SCORE', 'BACKGROUND_MS_LIST', 'BACKGROUND_NOW', 'BPS_RECEIVE_', 'BPS_SEND_', 'CMD_RETRY_REC', 'CS_RESET_UDP_SOCKET_COUNT', 'CS_SERVER_ADDRESS', 'CS_SERVER_LABEL', 'CS_SERVER_NAME']
+  0x7d59e38: bl        #0x7d5e834
+  0x7d59e3c: add       x0, sp, #1, lsl #12
+  0x7d59e40: adrp      x1, #0xc02000
+  0x7d59e44: add       x1, x1, #0x89d
+  0x7d59e48: add       x0, x0, #0x270
+  0x7d59e4c: mov       w2, #0xff
+  0x7d59e50: mov       w3, wzr
+  0x7d59e54: bl        #0x7d5e71c
+  0x7d59e58: add       x0, sp, #0x118
+CALL 0x7d5a9c0 in 0x7d5a774 strings=[]
+  0x7d5a9a4: cmp       w12, #0
+  0x7d5a9a8: mov       w3, wzr
+  0x7d5a9ac: ldr       x8, [x8, #0xc98]
+  0x7d5a9b0: ldrb      w9, [x20, #1]
+  0x7d5a9b4: ccmp      w10, #0, #4, eq
+  0x7d5a9b8: ldrb      w19, [x8]
+  0x7d5a9bc: csel      w2, w9, w19, ne
+  0x7d5a9c0: bl        #0x7d5e71c
+  0x7d5a9c4: ldp       x10, x9, [x22, #8]
+CALL 0x7d5aba0 in 0x7d5a774 strings=[]
+  0x7d5ab84: ldrb      w11, [x20, #3]
+  0x7d5ab88: tst       w8, #1
+  0x7d5ab8c: csel      x1, x26, x9, eq
+  0x7d5ab90: ldrb      w8, [x20, #4]
+  0x7d5ab94: cmp       w10, #0
+  0x7d5ab98: ccmp      w11, #0, #4, eq
+  0x7d5ab9c: csel      w2, w8, w19, ne
+  0x7d5aba0: bl        #0x7d5e71c
+  0x7d5aba4: ldp       x10, x9, [x22, #8]
+
+=== OWNER CONNECTIVITY ===
+owner_to_p2p=NONE
+owner_to_server=NONE
+owner_callers=
+owner_callees=0x2829420,0x2efa52c,0x2efb614,0x2f11ab4,0x2f15088,0x2f1772c,0x2f2e0c8,0x2f4bfc0,0x2f8f730,0x2f912cc,0x2f913c8,0x2f91438,0x2f91730,0x2f92458,0x31b542c,0x792fee8,0x7b31ea0,0x7b3244c,0x7b327d4,0x7b32ab8,0x7bd13cc,0x7bd14c0,0x7bd1b18,0x7bd200c,0x7cda3b8,0x7cda460,0x7cdaf90,0x7cdb14c,0x7cdb51c,0x7d2bf1c,0x7d3ab6c,0x7d3c404,0x7d3ca14,0x7d50030,0x7d51138,0x7d53928,0x7d5a078,0x7d5a534,0x7d5af9c,0x7d5e6e0,0x7d5e720,0x7d5e838,0x7d5e94c,0x7d5ea64,0x7d64114,0x7d64148,0x7d65700,0x7dc3bd8,0x7dd1a3c,0x7dd2040,0x7dd20a8,0x7dd22bc,0x7dd69c0,0x7dd8818,0x813fdd8,0x89f3d40,0x8b35240,0x8b35260,0x8b35290,0x8b352c0,0x8b35310,0x8b35320,0x8b35330,0x8b35360,0x8b38590,0x8b385a0,0x8b385c0,0x8b385d0,0x8b385e0,0x8b38600,0x8b38820,0x8b38830,0x8b38840,0x8b38850,0x8b38860,0x8b388f0,0x8b3ac10
+
+=== VERDICT ===
+DIRECT_SCORE_TO_P2P_NOT_YET_PROVEN
+The HOME_SCORE/AWAY_SCORE loads and their serializer are real, but no direct static serializer-to-P2P call path was proven by this pass. The report identifies exact downstream calls and buffer materializations for the next dataflow pass.
