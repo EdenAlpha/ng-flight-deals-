@@ -1,0 +1,132 @@
+name: eFootball P2P crypto surgery v11
+
+on:
+  push:
+    branches: [ efootball-score-analysis-base-2026-08-24 ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  crypto:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl binutils python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Fetch exact eFootball binary and unpack assets
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/ef/all /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=/tmp/ef/bundle/config.arm64_v8a.apk
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+          i=0
+          for a in /tmp/ef/bundle/*.apk; do
+            d=/tmp/ef/all/apk_$i; mkdir -p "$d"; unzip -q "$a" -d "$d" || true; i=$((i+1))
+          done
+          : > /tmp/out/asset_crypto_hits.txt
+          find /tmp/ef/all -type f -size -80M -print0 | while IFS= read -r -d '' f; do
+            h=$(strings -a "$f" 2>/dev/null | grep -E -i -m 30 'SessionKeyEncryptionAlgorithm|SessionKeyEncryptionKeyLength|KeyExchangeEncryptionAlgorithm|KeyExchangeEncryptionKey|pes-custom-encrypt|ScrambleCode|AES[-_ ]?(128|192|256)?|ChaCha|Poly1305|X25519|ECDH|cipher' || true)
+            if [ -n "$h" ]; then echo "===== $f =====" >> /tmp/out/asset_crypto_hits.txt; printf '%s\n' "$h" >> /tmp/out/asset_crypto_hits.txt; fi
+          done
+      - name: Dissect custom encryption registrations and call graph
+        run: |
+          cat > /tmp/ef/v11.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import re,bisect,collections,hashlib
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+            e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+            loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+          out=[f'SHA256={hashlib.sha256(raw).hexdigest()}']
+          FUNS=[0x7b0bfcc,0x7b2312c,0x7b2eb40,0x7b34ce0,0x7b35cbc,0x7b36b70,0x7b390e8,0x7dc0214,0x7dcad2c,0x7c05844,0x7c05730,0x7be6c3c,0x7bfb458]
+          IMPORTANT=set(FUNS+[0x7bf9ecc,0x7c088e4,0x7c0c670,0x7c0dca0])
+          starts=[]; ins=[]; callers=collections.defaultdict(list)
+          for a,sz,m,o in md.disasm_lite(tb,tva):
+            if m=='stp' and 'x29, x30' in o and '[sp' in o:starts.append(a)
+            if m=='bl' and o.startswith('#0x'):
+              try:t=int(o[1:],16)
+              except:continue
+              if t in IMPORTANT: callers[t].append(a)
+          starts=sorted(set(starts))
+          def fs(a):
+            i=bisect.bisect_right(starts,a)-1; return starts[i] if i>=0 else tva
+          def fe(a):
+            i=bisect.bisect_right(starts,a); return starts[i] if i<len(starts) else tend
+          def vaoff(va):
+            for v,o,n in loads:
+              if v<=va<v+n:return o+va-v
+          def cstr(va,lim=180):
+            o=vaoff(va)
+            if o is None:return None
+            b=raw[o:o+lim].split(b'\0',1)[0]
+            if len(b)<3:return None
+            if sum(32<=x<127 for x in b)/len(b)<.9:return None
+            return b.decode('ascii','replace')
+          def dump(fn,maxlen=0x1200):
+            end=min(fe(fn),fn+maxlen); arr=list(md.disasm(tb[fn-tva:end-tva],fn)); refs={}
+            for i,z in enumerate(arr):
+              if z.mnemonic!='adrp':continue
+              mm=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+              if not mm:continue
+              r=mm.group(1); pg=int(mm.group(2),16)
+              for q in arr[i+1:i+8]:
+                am=re.match(rf'{r}, {r}, #0x([0-9a-f]+)',q.op_str) if q.mnemonic=='add' else None
+                if am:
+                  va=pg+int(am.group(1),16); s=cstr(va)
+                  if s:refs[q.address]=(va,s)
+                  break
+            rr=[]
+            for z in arr:
+              extra=''
+              if z.address in refs:extra=f" ; STR@0x{refs[z.address][0]:x}={refs[z.address][1]!r}"
+              if z.mnemonic in ('bl','blr','br','ret','cmp','cbz','cbnz','tbz','tbnz','adrp','add','mov','movk','movz') or '[x' in z.op_str or extra:
+                rr.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{extra}')
+            return rr
+          out.append('\n=== DIRECT CALLERS OF CRYPTO/P2P NODES ===')
+          for t in sorted(IMPORTANT):
+            if callers.get(t):out.append(f'0x{t:x}: '+' '.join(f'0x{a:x}(fn=0x{fs(a):x})' for a in callers[t]))
+          for fn in FUNS:
+            out.append(f'\n===== SURGERY fn=0x{fn:x} callers={len(callers.get(fn,[]))} =====')
+            out.extend(dump(fn,0x1800))
+
+          # All crypto-ish strings and their nearby addresses. This reveals algorithm names/constants.
+          out.append('\n=== CRYPTO-ISH STRINGS ===')
+          pats=re.compile(rb'(?i)(?:aes|chacha|poly1305|encrypt|decrypt|cipher|session.?key|key.?exchange|scramble|hmac|sha256|ecdh|x25519)[ -~]{0,100}\x00')
+          hits=[]
+          for m in pats.finditer(raw):
+            b=m.group(0)[:-1]
+            if len(b)>160:continue
+            try:s=b.decode('ascii')
+            except:continue
+            va=None
+            for v,o,n in loads:
+              if o<=m.start()<o+n:va=v+(m.start()-o);break
+            if va is not None:hits.append((va,s))
+          for va,s in hits[:2500]:out.append(f'0x{va:x} {s!r}')
+          Path('/tmp/out/p2p_crypto_surgery_v11.txt').write_text('\n'.join(out))
+          print('report_bytes',len('\n'.join(out)))
+          PY
+          python3 /tmp/ef/v11.py
+      - name: Show compact evidence
+        run: |
+          echo '=== custom-encrypt / algorithms ==='
+          grep -E -i -n 'pes-custom-encrypt|AES|ChaCha|Poly1305|SessionKey|KeyExchange|ScrambleCode|encrypt|decrypt|cipher' /tmp/out/p2p_crypto_surgery_v11.txt | head -n 400 || true
+          echo '=== unpacked asset hits ==='
+          cat /tmp/out/asset_crypto_hits.txt | head -n 400 || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efootball-p2p-crypto-surgery-v11
+          path: /tmp/out/
+          retention-days: 7
