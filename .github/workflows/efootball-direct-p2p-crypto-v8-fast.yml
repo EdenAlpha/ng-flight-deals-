@@ -1,0 +1,184 @@
+name: eFootball direct P2P crypto v8 fast
+
+on:
+  push:
+    branches: [ efootball-score-wire-bridge-v3-2026-08-24 ]
+    paths:
+      - '.github/workflows/efootball-direct-p2p-crypto-v8-fast.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+      - name: Download current eFootball binary
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' -o /tmp/ef/efootball.xapk 'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE=$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+      - name: Fast static trace
+        run: |
+          cat > /tmp/ef/fast.py <<'PY'
+          from pathlib import Path
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs,CS_ARCH_ARM64,CS_MODE_ARM
+          import struct,re
+
+          p=Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so'); raw=p.read_bytes()
+          with p.open('rb') as f:
+              e=ELFFile(f); text=e.get_section_by_name('.text'); tb=text.data(); tva=int(text['sh_addr']); tend=tva+len(tb)
+              loads=[(int(s['p_vaddr']),int(s['p_offset']),int(s['p_filesz'])) for s in e.iter_segments() if s['p_type']=='PT_LOAD']
+          md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=False
+
+          def voff(va):
+              for sv,so,fs in loads:
+                  if sv<=va<sv+fs:return so+va-sv
+          def cstr(va,n=180):
+              o=voff(va)
+              if o is None:return None
+              b=raw[o:o+n].split(b'\0',1)[0]
+              if len(b)<3:return None
+              try:s=b.decode('ascii')
+              except:return None
+              return s if sum(32<=x<127 for x in b)/len(b)>.95 else None
+          def dis(lo,hi):
+              lo=max(lo,tva); hi=min(hi,tend); return list(md.disasm(tb[lo-tva:hi-tva],lo))
+          def dump(out,title,lo,hi):
+              out.append(f'\n=== {title} 0x{lo:x}-0x{hi:x} ===')
+              body=dis(lo,hi)
+              pending={}
+              for i,z in enumerate(body):
+                  extra=''
+                  if z.mnemonic=='adrp':
+                      m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if m: pending[m.group(1)]=(z.address,int(m.group(2),16))
+                  elif z.mnemonic=='add':
+                      m=re.match(r'(x\d+), \1, #0x([0-9a-f]+)',z.op_str)
+                      if m and m.group(1) in pending:
+                          va=pending[m.group(1)][1]+int(m.group(2),16); s=cstr(va)
+                          if s: extra=f' ; STR={s!r}'
+                  out.append(f'0x{z.address:x}: {z.mnemonic:9} {z.op_str}{extra}')
+          def branch_target(pc,w):
+              if (w & 0xfc000000)!=0x94000000:return None
+              imm=w & 0x03ffffff
+              if imm & 0x02000000: imm-=0x04000000
+              return pc+(imm<<2)
+          # One linear integer scan only: much faster than full Capstone disassembly.
+          callers={}
+          for i in range(0,len(tb)-3,4):
+              w=struct.unpack_from('<I',tb,i)[0]; pc=tva+i; tg=branch_target(pc,w)
+              if tg is not None: callers.setdefault(tg,[]).append(pc)
+          def fn_start(addr,span=0x1400):
+              best=max(tva,addr-span)
+              for z in dis(max(tva,addr-span),addr+4):
+                  if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp, #-' in z.op_str and ']!' in z.op_str: best=z.address
+              return best
+          def fn_end(fs,span=0x5000):
+              for z in dis(fs+4,min(tend,fs+span)):
+                  if z.mnemonic=='stp' and 'x29, x30' in z.op_str and '[sp, #-' in z.op_str and ']!' in z.op_str:return z.address
+              return min(tend,fs+span)
+          def calls_in(lo,hi):
+              ans=[]
+              for z in dis(lo,hi):
+                  if z.mnemonic=='bl':
+                      m=re.match(r'#0x([0-9a-f]+)$',z.op_str)
+                      if m: ans.append((z.address,int(m.group(1),16)))
+              return ans
+
+          out=[]
+          out.append('FAST DIRECT-P2P CRYPTO TRACE. Question: does direct P2P payload path actually consume crypto/session-key configuration?')
+          out.append(f'.text 0x{tva:x}-0x{tend:x}')
+
+          # Known string xrefs from prior exact scan. Inspect their actual semantics.
+          custom_refs=[0x7b0bfe0,0x7b2313c,0x7b2eb50,0x7b34cf0,0x7b35ccc,0x7b36b80,0x7b390f8]
+          custom_fns=[]
+          for a in custom_refs:
+              fs=fn_start(a); fe=fn_end(fs)
+              if fs not in custom_fns: custom_fns.append(fs)
+              dump(out,f'pes-custom-encrypt semantic window ref 0x{a:x} fn~0x{fs:x}',max(fs,a-0x180),min(fe,a+0x280))
+          out.append('\n=== pes-custom-encrypt FUNCTION STARTS / DIRECT CALLERS ===')
+          for fs in custom_fns:
+              out.append(f'fn=0x{fs:x} direct_callers=' + ','.join(f'0x{x:x}' for x in callers.get(fs,[])[:100]))
+
+          # Crypto parser output tail tells exact profile-object offsets for session fields.
+          dump(out,'CRYPTO PARSER OUTPUT TAIL',0x7c09680,0x7c0986c)
+          out.append('\n=== x19 STORES IN CRYPTO PARSER TAIL ===')
+          for z in dis(0x7c09680,0x7c0986c):
+              if z.mnemonic.startswith('str') and '[x19' in z.op_str: out.append(f'0x{z.address:x}: {z.mnemonic} {z.op_str}')
+
+          # P2P-specific parser including ScrambleEnable/ScrambleCode.
+          dump(out,'P2P CONFIG PARSER SCRAMBLE AREA',0x7c05730,0x7c06080)
+          out.append('\n=== P2P CONFIG PARSER 0x7c05844 DIRECT CALLERS ===')
+          out.append(','.join(f'0x{x:x}' for x in callers.get(0x7c05844,[])))
+
+          # Parent and concrete transport constructors selected after P2P mode parse.
+          dump(out,'PARENT MODE TO CONSTRUCTOR',0x7c0e220,0x7c0e310)
+          ctors=[0x7c54020,0x7c557e0,0x7c56740,0x7c2eca8]
+          for c in ctors:
+              dump(out,f'CONSTRUCTOR 0x{c:x}',c,c+0xb00)
+              cs=calls_in(c,c+0xb00)
+              out.append(f'\nCALLS FROM CTOR 0x{c:x}:')
+              for a,t in cs: out.append(f'0x{a:x}->0x{t:x}')
+
+          # Do concrete constructors directly or one-hop call custom-encrypt functions?
+          custom=set(custom_fns)
+          out.append('\n=== CONSTRUCTOR REACHABILITY TO pes-custom-encrypt FUNCTIONS ===')
+          for c in ctors:
+              direct={t for _,t in calls_in(c,c+0xb00)}
+              hits=direct & custom
+              one=[]
+              for d in direct:
+                  if tva<=d<tend:
+                      fs=fn_start(d,0x200)
+                      # Scan a bounded function-sized window; enough to establish one-hop static reachability.
+                      ts={t for _,t in calls_in(fs,min(tend,fs+0x1000))}
+                      if ts & custom: one.append((d,sorted(ts & custom)))
+              out.append(f'ctor 0x{c:x}: direct={[hex(x) for x in sorted(hits)]} one_hop={[(hex(a),[hex(x) for x in b]) for a,b in one]}')
+
+          # Inspect network-ish calls around all seven custom refs; list strings to identify whether this is HTTP header/plugin registration vs packet cipher.
+          out.append('\n=== CUSTOM-REF NEARBY ASCII REFERENCES SUMMARY ===')
+          for a in custom_refs:
+              body=dis(a-0x240,a+0x300); vals=[]; pending={}
+              for z in body:
+                  if z.mnemonic=='adrp':
+                      m=re.match(r'(x\d+), #0x([0-9a-f]+)',z.op_str)
+                      if m: pending[m.group(1)]=int(m.group(2),16)
+                  elif z.mnemonic=='add':
+                      m=re.match(r'(x\d+), \1, #0x([0-9a-f]+)',z.op_str)
+                      if m and m.group(1) in pending:
+                          s=cstr(pending[m.group(1)]+int(m.group(2),16))
+                          if s and s not in vals: vals.append(s)
+              out.append(f'0x{a:x}: {vals}')
+
+          Path('/tmp/out/efootball-direct-p2p-crypto-v8-fast.txt').write_text('\n'.join(out))
+          print('\n'.join(out[:1600]))
+          PY
+          python3 /tmp/ef/fast.py
+      - name: Commit report
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-direct-p2p-crypto-v8-fast.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-direct-p2p-crypto-v8-fast.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/
+          git commit -m 'Report fast direct eFootball P2P crypto trace v8' || exit 0
+          git push
