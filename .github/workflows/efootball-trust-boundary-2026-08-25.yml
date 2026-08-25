@@ -1,0 +1,361 @@
+name: eFootball trust boundary and relay role map
+
+on:
+  push:
+    branches: [ efootball-trust-boundary-2026-08-25 ]
+    paths:
+      - '.github/workflows/efootball-trust-boundary-2026-08-25.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: efootball-trust-boundary-2026-08-25
+  cancel-in-progress: true
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install native-analysis tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl python3 python3-pip >/dev/null
+          python3 -m pip install --break-system-packages -q pyelftools==0.32 capstone==5.0.6
+
+      - name: Download current official eFootball arm64 native library
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ef/bundle /tmp/ef/native /tmp/out
+          curl -L --fail --retry 5 --retry-delay 2 -A 'Mozilla/5.0' \
+            -o /tmp/ef/efootball.xapk \
+            'https://d.apkpure.net/b/XAPK/jp.konami.pesam?version=latest'
+          unzip -q /tmp/ef/efootball.xapk -d /tmp/ef/bundle
+          NATIVE="$(find /tmp/ef/bundle -type f -name 'config.arm64_v8a.apk' | head -n1)"
+          test -n "$NATIVE"
+          unzip -q "$NATIVE" -d /tmp/ef/native
+          test -f /tmp/ef/native/lib/arm64-v8a/libUE4.so
+          sha256sum /tmp/ef/native/lib/arm64-v8a/libUE4.so | tee /tmp/out/libue4_sha256.txt
+
+      - name: Trace key-exchange, certificate, relay, and endpoint-role ownership
+        run: |
+          cat > /tmp/ef/trace.py <<'PY'
+          from pathlib import Path
+          from collections import defaultdict, deque
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM
+          import bisect, hashlib, re, struct
+
+          P = Path('/tmp/ef/native/lib/arm64-v8a/libUE4.so')
+          raw = P.read_bytes()
+          with P.open('rb') as f:
+              elf = ELFFile(f)
+              text = elf.get_section_by_name('.text')
+              tb = text.data()
+              tva = int(text['sh_addr'])
+              tend = tva + len(tb)
+              loads = [
+                  (int(s['p_vaddr']), int(s['p_offset']), int(s['p_filesz']))
+                  for s in elf.iter_segments()
+                  if s['p_type'] == 'PT_LOAD'
+              ]
+              dyn = elf.get_section_by_name('.dynsym')
+              dyn_names = sorted({s.name for s in dyn.iter_symbols()}) if dyn else []
+
+          md = Cs(CS_ARCH_ARM64, CS_MODE_ARM)
+          md.detail = False
+
+          def va_to_off(va):
+              for sv, so, size in loads:
+                  if sv <= va < sv + size:
+                      return so + va - sv
+              return None
+
+          def off_to_va(off):
+              for sv, so, size in loads:
+                  if so <= off < so + size:
+                      return sv + off - so
+              return None
+
+          def parse_imm(op):
+              m = re.search(r'#0x([0-9a-f]+)', op, re.I)
+              return int(m.group(1), 16) if m else None
+
+          def parse_reg(op):
+              m = re.match(r'(x[0-9]+)', op)
+              return m.group(1) if m else None
+
+          def redact(s):
+              if len(s) > 180 or 'BEGIN ' in s.upper() or 'PRIVATE KEY' in s.upper():
+                  digest = hashlib.sha256(s.encode()).hexdigest()[:16]
+                  return '[redacted literal len=%d sha256=%s]' % (len(s), digest)
+              return s
+
+          # Recover printable literals and classify only high-signal labels.
+          strings = []
+          for sv, so, size in loads:
+              data = raw[so:so + size]
+              for m in re.finditer(rb'[ -~]{4,}', data):
+                  s = m.group().decode('ascii', 'replace')
+                  if len(s) <= 240:
+                      strings.append((sv + m.start(), s))
+          seen = set()
+          strings = [(va, s) for va, s in strings if not ((va, s) in seen or seen.add((va, s)))]
+
+          groups = {
+              'KEX_CONFIG': [
+                  'KeyExchangeEncryptionAlgorithm',
+                  'KeyExchangeEncryptionKey',
+                  'SessionKeyEncryptionAlgorithm',
+                  'SessionKeyEncryptionKeyLength',
+                  'KeyExchangeTimeoutUs',
+                  'KeyExcahngeRetransmissionTimeoutUs',
+                  'LinkUpMode',
+                  'ProtocolTransmission',
+                  'Domain',
+              ],
+              'RELAY_AND_ROLE': [
+                  'HOST_DIRECT',
+                  'HOST_RELAY',
+                  'LOCAL_GAMERELAY',
+                  'CMD_SET_LOCAL_GAMERELAY_LIST',
+                  'START_UDP_HOLE_PUNCHING',
+                  'PUNCHING_FINISHED',
+                  'P2P_LOW_LEVEL',
+                  'P2P_HIGH_LEVEL',
+                  'P2P_ADHOC',
+                  'P2P_ADHOC_WIFIDIRECTLAN',
+                  'P2P_ADHOC_LAN',
+                  'LinkMode',
+              ],
+              'CERT_AND_TRUST': [
+                  'certificate',
+                  'Certificate',
+                  'public key',
+                  'PublicKey',
+                  'public_key',
+                  'X509',
+                  'pinning',
+                  'pin',
+                  'trust anchor',
+                  'verify certificate',
+                  'server identity',
+                  'BEGIN CERTIFICATE',
+                  'BEGIN PUBLIC KEY',
+              ],
+              'CRYPTO_IMPL': [
+                  'KeyExchange',
+                  'SessionKey',
+                  'AES',
+                  'RSA',
+                  'ECDH',
+                  'ECDSA',
+                  'Diffie',
+                  'HMAC',
+                  'ChaCha',
+                  'GCM',
+                  'CBC',
+                  'DTLS',
+                  'TLS',
+                  'SSL',
+                  'encrypt',
+                  'decrypt',
+              ],
+          }
+
+          hits = defaultdict(list)
+          for va, s in strings:
+              low = s.lower()
+              for group, terms in groups.items():
+                  for term in terms:
+                      if term.lower() in low:
+                          hits[(group, term)].append((va, s))
+
+          # Recover function boundaries and direct BL call graph.
+          ins = list(md.disasm(tb, tva))
+          starts = [tva]
+          call_sites = []
+          for z in ins:
+              if z.mnemonic == 'stp' and 'x29, x30' in z.op_str and '[sp' in z.op_str:
+                  starts.append(z.address)
+              if z.mnemonic == 'bl':
+                  dst = parse_imm(z.op_str)
+                  if dst is not None:
+                      call_sites.append((z.address, dst))
+          starts = sorted(set(starts))
+
+          def fstart(pc):
+              i = bisect.bisect_right(starts, pc) - 1
+              return starts[i] if i >= 0 else tva
+
+          def fend(fs):
+              i = bisect.bisect_right(starts, fs)
+              return starts[i] if i < len(starts) else tend
+
+          graph = defaultdict(set)
+          reverse = defaultdict(set)
+          sites = defaultdict(list)
+          for site, dst in call_sites:
+              src_fn = fstart(site)
+              dst_fn = fstart(dst) if tva <= dst < tend else dst
+              if src_fn != dst_fn:
+                  graph[src_fn].add(dst_fn)
+                  reverse[dst_fn].add(src_fn)
+                  sites[(src_fn, dst_fn)].append(site)
+
+          # Find exact ADRP + ADD materializations of high-signal literals.
+          target_vas = {}
+          for key, entries in hits.items():
+              for va, _ in entries:
+                  target_vas.setdefault(va, set()).add(key)
+
+          xrefs = defaultdict(list)
+          for i, z in enumerate(ins):
+              if z.mnemonic != 'adrp':
+                  continue
+              reg = parse_reg(z.op_str)
+              page = parse_imm(z.op_str)
+              if not reg or page is None:
+                  continue
+              for q in ins[i + 1:i + 12]:
+                  if q.mnemonic != 'add':
+                      continue
+                  m = re.match(r'(%s), %s, #0x([0-9a-f]+)' % (reg, reg), q.op_str, re.I)
+                  if not m:
+                      continue
+                  va = page + int(m.group(2), 16)
+                  if va in target_vas:
+                      for key in target_vas[va]:
+                          xrefs[key].append((z.address, q.address, fstart(z.address), va))
+                  break
+
+          def owners(group, term):
+              return sorted({fn for _, _, fn, _ in xrefs.get((group, term), [])})
+
+          def fn_label(fn):
+              known = {
+                  0x7c088e4: 'crypto_config_parser',
+                  0x7bfc91c: 'profile_loader',
+                  0x7c0dca0: 'transport_parent',
+                  0x7bf9ecc: 'p2p_mode_consumer',
+              }
+              return '%s@0x%x' % (known.get(fn, 'fn'), fn)
+
+          def path(src, targets, max_hops=12):
+              targets = set(targets)
+              q = deque([(src, [src])])
+              visited = {src}
+              while q:
+                  node, trail = q.popleft()
+                  if len(trail) - 1 >= max_hops:
+                      continue
+                  for nxt in sorted(graph.get(node, ())):
+                      if nxt in trail:
+                          continue
+                      nt = trail + [nxt]
+                      if nxt in targets:
+                          return nt
+                      if nxt not in visited:
+                          visited.add(nxt)
+                          q.append((nxt, nt))
+              return None
+
+          def fmt_path(trail):
+              return ' -> '.join(fn_label(x) for x in trail) if trail else 'NOT_FOUND'
+
+          out = []
+          out.append('eFootball trust-boundary static trace')
+          out.append('libUE4_sha256=' + hashlib.sha256(raw).hexdigest())
+          out.append('text=0x%x..0x%x functions=%d instructions=%d' % (tva, tend, len(starts), len(ins)))
+          out.append('')
+          out.append('=== HIGH-SIGNAL STRING OWNERSHIP ===')
+          for group, terms in groups.items():
+              out.append('\\n[%s]' % group)
+              for term in terms:
+                  entries = hits.get((group, term), [])
+                  if not entries:
+                      out.append('%s: NOT_FOUND' % term)
+                      continue
+                  out.append('%s: literals=%d xrefs=%d owners=%s' % (
+                      term, len(entries), len(xrefs.get((group, term), [])),
+                      ','.join(fn_label(x) for x in owners(group, term)) or 'NO_CODE_XREF'))
+                  for va, s in entries[:8]:
+                      out.append('  literal_va=0x%x value=%s' % (va, redact(s)))
+                  for a, b, fn, va in xrefs.get((group, term), [])[:20]:
+                      out.append('  xref=0x%x..0x%x owner=%s' % (a, b, fn_label(fn)))
+
+          out.append('\\n=== DIRECT CALL-GRAPH ANCHORS ===')
+          anchors = {
+              'crypto_config_parser': 0x7c088e4,
+              'profile_loader': 0x7bfc91c,
+              'transport_parent': 0x7c0dca0,
+              'p2p_mode_consumer': 0x7bf9ecc,
+          }
+          for name, va in anchors.items():
+              fn = fstart(va)
+              out.append('%s=%s normalized_from=0x%x end=0x%x' % (
+                  name, fn_label(fn), va, fend(fn)))
+              out.append('  callers=' + ','.join(fn_label(x) for x in sorted(reverse.get(fn, ()))[:40]))
+              out.append('  callees=' + ','.join(fn_label(x) for x in sorted(graph.get(fn, ()))[:60]))
+
+          parser_fn = fstart(anchors['crypto_config_parser'])
+          parent_fn = fstart(anchors['transport_parent'])
+          consumer_fn = fstart(anchors['p2p_mode_consumer'])
+          out.append('\\n=== CONFIG/P2P PATH TESTS ===')
+          out.append('parser_to_parent=' + fmt_path(path(parser_fn, {parent_fn})))
+          out.append('parent_to_consumer=' + fmt_path(path(parent_fn, {consumer_fn})))
+          out.append('parser_to_consumer=' + fmt_path(path(parser_fn, {consumer_fn})))
+
+          relay_fns = set()
+          for term in groups['RELAY_AND_ROLE']:
+              relay_fns.update(owners('RELAY_AND_ROLE', term))
+          cert_fns = set()
+          for term in groups['CERT_AND_TRUST']:
+              cert_fns.update(owners('CERT_AND_TRUST', term))
+          crypto_fns = set()
+          for term in groups['CRYPTO_IMPL']:
+              crypto_fns.update(owners('CRYPTO_IMPL', term))
+          out.append('\\nrelay_role_to_consumer=' + fmt_path(path(next(iter(relay_fns), consumer_fn), {consumer_fn})))
+          out.append('cert_owner_to_consumer=' + fmt_path(path(next(iter(cert_fns), consumer_fn), {consumer_fn})))
+          out.append('crypto_owner_to_consumer=' + fmt_path(path(next(iter(crypto_fns), consumer_fn), {consumer_fn})))
+
+          out.append('\\n=== DYNAMIC CRYPTO/NETWORK SYMBOLS ===')
+          for name in dyn_names:
+              if re.search(r'(ssl|tls|x509|crypto|cipher|encrypt|decrypt|aes|rsa|ecdh|ecdsa|hmac|chacha|socket|udp|dtls)', name, re.I):
+                  out.append(name)
+
+          out.append('\\n=== INTERPRETATION FLAGS ===')
+          kex_xrefs = sum(len(xrefs.get(('KEX_CONFIG', term), [])) for term in groups['KEX_CONFIG'])
+          relay_xrefs = sum(len(xrefs.get(('RELAY_AND_ROLE', term), [])) for term in groups['RELAY_AND_ROLE'])
+          cert_xrefs = sum(len(xrefs.get(('CERT_AND_TRUST', term), [])) for term in groups['CERT_AND_TRUST'])
+          out.append('KEX_CONFIG_CODE_XREFS=%d' % kex_xrefs)
+          out.append('RELAY_ROLE_CODE_XREFS=%d' % relay_xrefs)
+          out.append('CERT_TRUST_CODE_XREFS=%d' % cert_xrefs)
+          out.append('KEY_MATERIAL_LITERAL=NOT_PROVEN_BY_LABEL_SCAN')
+          out.append('PUBLIC_CERTIFICATE_LITERAL=NOT_PROVEN_BY_LABEL_SCAN')
+          out.append('NOTE=The trace maps ownership and call paths only; it does not patch the client, bypass trust checks, or dump runtime secrets.')
+          out.append('NOTE=If KeyExchangeEncryptionKey is only read through the config parser, it is a configuration input, not automatically a universal client key.')
+          out.append('NOTE=A public-key pin can identify a server identity but cannot by itself make PeerLink an accepted eFootball endpoint.')
+
+          Path('/tmp/out/efootball-trust-boundary-2026-08-25.txt').write_text('\\n'.join(out))
+          print('\\n'.join(out))
+          PY
+          python3 /tmp/ef/trace.py
+
+      - name: Persist static trace
+        run: |
+          set -euo pipefail
+          mkdir -p analysis-output
+          cp /tmp/out/efootball-trust-boundary-2026-08-25.txt analysis-output/
+          cp /tmp/out/libue4_sha256.txt analysis-output/efootball-trust-boundary-2026-08-25.sha256.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis-output/efootball-trust-boundary-2026-08-25.txt analysis-output/efootball-trust-boundary-2026-08-25.sha256.txt
+          git commit -m 'Add eFootball trust boundary and relay role trace' || exit 0
+          git push origin HEAD:efootball-trust-boundary-2026-08-25
