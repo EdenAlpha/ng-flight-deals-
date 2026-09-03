@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- PeerLink — fixed LIGHT theme (gold + orange + silver-grey). No dark/light toggle. -->
+    <style name="Theme.PeerLink" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/peerlink_gold</item>
+        <item name="colorOnPrimary">@color/peerlink_graphite</item>
+        <item name="colorSecondary">@color/peerlink_orange</item>
+        <item name="colorOnSecondary">@color/peerlink_graphite</item>
+        <item name="android:windowBackground">@color/peerlink_canvas</item>
+        <item name="colorSurface">@color/peerlink_surface</item>
+        <item name="colorOnSurface">@color/peerlink_graphite</item>
+        <item name="android:statusBarColor">@color/peerlink_canvas</item>
+        <item name="android:navigationBarColor">@color/peerlink_canvas</item>
+        <!-- light system bars: dark icons on our light background -->
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>

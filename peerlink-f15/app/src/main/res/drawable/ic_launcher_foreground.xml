@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  LanLink "Neon Monolith Link" icon — Gemini concept, creatively enhanced.
+  Two overlapping hyper-thin geometric diamonds on pure OLED black.
+  Left diamond: ghost-white titanium stroke (peer silhouette).
+  Right diamond: apex yellow solid stroke (you, the active node).
+  Intersection dot: titanium white — the link point.
+  Additional: subtle inner diamond crosshair for premium geometry feel.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+
+    <!-- Left diamond — ghost titanium, receding peer -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.6"
+        android:fillColor="#00000000"
+        android:pathData="M 40,28 L 18,54 L 40,80 L 52,80 L 30,54 L 52,28 Z" />
+
+    <!-- Right diamond — apex yellow, primary node (YOU) -->
+    <path
+        android:strokeColor="#EAB308"
+        android:strokeWidth="2.5"
+        android:fillColor="#00000000"
+        android:pathData="M 68,28 L 90,54 L 68,80 L 56,80 L 78,54 L 56,28 Z" />
+
+    <!-- Inner crosshair — precision geometry detail -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="0.6"
+        android:strokeAlpha="0.18"
+        android:fillColor="#00000000"
+        android:pathData="M 54,38 L 54,70 M 38,54 L 70,54" />
+
+    <!-- Link dot — the connection point, pure white -->
+    <path
+        android:fillColor="#F5F5F7"
+        android:pathData="M 54,50 A 4,4 0 1,1 54,58 A 4,4 0 1,1 54,50 Z" />
+
+    <!-- Apex yellow accent ring around link dot -->
+    <path
+        android:strokeColor="#EAB308"
+        android:strokeWidth="1.0"
+        android:strokeAlpha="0.5"
+        android:fillColor="#00000000"
+        android:pathData="M 54,46 A 8,8 0 1,1 54,62 A 8,8 0 1,1 54,46 Z" />
+
+</vector>
